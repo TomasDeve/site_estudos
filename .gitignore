@@ -1,0 +1,7 @@
+# Ferramentas de editor / agente
+.claude/
+
+# Sistema
+Thumbs.db
+Desktop.ini
+.DS_Store
