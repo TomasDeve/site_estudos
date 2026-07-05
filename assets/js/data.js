@@ -59,20 +59,25 @@ window.DATA = {
     dadm: { nome:"Direito Administrativo", icone:"🏛️", topicos:[
       "Princípios da administração pública (LIMPE)",
       "Regime jurídico administrativo",
+      "Organização administrativa: centralização, descentralização, desconcentração",
+      "Administração direta e indireta (autarquias, fundações, EP, SEM)",
       "Poderes da administração (poder de polícia)",
-      "Serviço público",
+      "Agente público (cargo, emprego e função)",
       "Atos administrativos",
       "Contratos administrativos e licitação",
+      "Serviço público",
       "Bens públicos",
-      "Administração direta e indireta",
       "Controle da administração pública",
       "Responsabilidade civil do Estado"
     ]},
     dpp: { nome:"Direito Processual Penal", icone:"🔎", topicos:[
-      "Inquérito policial",
+      "Disposições preliminares do Código de Processo Penal",
+      "Inquérito policial (natureza, características, titularidade, indiciamento)",
       "Ação penal",
-      "Prisão em flagrante, temporária e preventiva",
-      "Provas"
+      "Prisão em flagrante, temporária e preventiva; liberdade provisória",
+      "Provas",
+      "Lei 9.099/1995 (Juizados Especiais Criminais)",
+      "Disposições constitucionais aplicáveis ao processo penal"
     ]},
     leis: { nome:"Legislação Penal Especial", icone:"⚖️", topicos:[
       "CP — Parte Geral (DL 2.848/1940), Títulos I a III",
@@ -91,8 +96,11 @@ window.DATA = {
       "Leis 9.099/1995 e 10.259/2001 — Juizados Especiais"
     ]},
     dh: { nome:"Direitos Humanos", icone:"🕊️", topicos:[
-      "Conceito, evolução e abrangência",
-      "Sistema de proteção dos direitos humanos",
+      "Teoria geral: conceito, terminologia, estrutura normativa e fundamentação",
+      "Afirmação histórica e evolução dos direitos humanos",
+      "Direitos humanos e responsabilidade do Estado",
+      "Direitos humanos na Constituição Federal",
+      "Sistema de proteção e Política Nacional de Direitos Humanos",
       "Convenção Americana (Pacto de São José / Decreto 678/1992)"
     ]},
 
@@ -149,16 +157,109 @@ window.DATA = {
       "Conselho Permanente e Conselho Especial de Justiça"
     ]},
 
-    /* ---- PC AL (provisória — baseada no padrão Cebraspe, aguardando edital) ---- */
+    /* ---- exclusivas da PC AL ---- */
     dpenal: { nome:"Direito Penal", icone:"🔗", topicos:[
-      "Aplicação da lei penal",
-      "Teoria do crime: fato típico, ilicitude e culpabilidade",
-      "Concurso de pessoas",
-      "Penas: espécies, aplicação e fixação",
+      "Aplicação da lei penal: princípios; lei penal no tempo e no espaço",
+      "Tempo e lugar do crime; lei excepcional, especial e temporária",
+      "Contagem de prazo; irretroatividade da lei penal",
       "Crimes contra a pessoa",
       "Crimes contra o patrimônio",
       "Crimes contra a administração pública",
-      "Extinção da punibilidade"
+      "Disposições constitucionais aplicáveis ao direito penal"
+    ]},
+    ti_seg: { nome:"TI e Segurança Cibernética", icone:"🖥️", topicos:[
+      "Sistemas operacionais (Linux e Windows)",
+      "Pacote Microsoft Office; navegadores; Outlook; nuvem",
+      "Redes de computadores; Internet e intranet",
+      "Segurança da informação: vírus, worms, backup, antivírus, firewall",
+      "Banco de dados; SQL; SGBD; integridade e segurança",
+      "Lei 13.709/2018 (LGPD); serviços públicos digitais; IA",
+      "Linguagens de programação (Java, Python, Apex, C#)",
+      "Fundamentos de segurança (confidencialidade, integridade, disponibilidade)",
+      "Gestão de riscos, conformidade e políticas de segurança",
+      "Segurança de rede: firewall, IDS/IPS, VPN, segmentação",
+      "Criptografia; assinatura e certificação digital",
+      "Gestão de identidade e acesso: SSO, SAML, OAuth2, OpenID",
+      "Ataques, vulnerabilidades e tratamento de incidentes",
+      "Frameworks: MITRE, CIS Controls, NIST CSF; SIEM, IAM, PAM"
+    ]},
+    rlm: { nome:"Raciocínio Lógico-Matemático", icone:"🧮", topicos:[
+      "Princípios de contagem e probabilidade",
+      "Razões, proporções e regra de três simples",
+      "Porcentagens",
+      "Equações de 1º e 2º graus; sequências numéricas",
+      "Progressões aritméticas e geométricas",
+      "Funções e gráficos",
+      "Estruturas lógicas e lógica de argumentação",
+      "Lógica proposicional: proposições, tabelas-verdade, equivalências",
+      "Leis de De Morgan e diagramas lógicos",
+      "Lógica de primeira ordem",
+      "Operações com conjuntos",
+      "Problemas aritméticos, geométricos e matriciais"
+    ]},
+    etica: { nome:"Ética no Serviço Público", icone:"⚖️", topicos:[
+      "Ética e moral; princípios e valores",
+      "Ética e democracia: exercício da cidadania",
+      "Ética e função pública; ética no setor público",
+      "Lei estadual 6.754/2006 (Código de Ética Funcional do Servidor de AL)"
+    ]},
+    leg_al_pc: { nome:"Legislação Institucional de Alagoas", icone:"📗", topicos:[
+      "Constituição do Estado de Alagoas",
+      "Lei estadual 3.437/1975 (Estatuto da Polícia Civil de AL)",
+      "Lei estadual 5.247/1991 (Regime Jurídico Único dos Servidores de AL)",
+      "Lei 14.735/2026 (Lei Orgânica Nacional das Polícias Civis)",
+      "Leis estaduais 6.441/2003, 6.276/2001, 6.479/2004 e 4.590/1984",
+      "Lei 10.826/2003 (Estatuto do Desarmamento)"
+    ]},
+    leis_pc: { nome:"Legislação Penal Especial", icone:"⚖️", topicos:[
+      "Crimes contra as finanças públicas",
+      "Lei 11.343/2006 (Drogas)",
+      "Lei 12.850/2013 (Organização criminosa)",
+      "Lei 7.492/1986 (Crimes contra o Sistema Financeiro Nacional)",
+      "Lei 8.137/1990 (Crimes contra a ordem econômica e tributária)",
+      "Lei 9.613/1998 (Lavagem de dinheiro)",
+      "Lei 8.072/1990 (Crimes hediondos)",
+      "Lei 7.716/1989 (Racismo) e Lei 9.455/1997 (Tortura)",
+      "Lei 9.605/1998 (Crimes ambientais)",
+      "Crimes de responsabilidade (DL 201/1967; Lei 1.079/1950)",
+      "Lei 11.101/2005 (Crimes falimentares)",
+      "Lei 14.133/2021 (Crimes em licitações e contratos)",
+      "Lei 13.869/2019 (Abuso de autoridade)",
+      "Convenção de Budapeste (Dec. 11.491/2023)",
+      "Lei 13.146/2015 (Estatuto da Pessoa com Deficiência) e Lei 10.741/2003 (Idoso)"
+    ]},
+    conta: { nome:"Contabilidade, Análise Financeira e Ordem Tributária", icone:"📊", topicos:[
+      "Conceitos, objetivos e finalidades da contabilidade",
+      "Patrimônio: componentes, equação fundamental e situação líquida",
+      "Atos e fatos administrativos (permutativos, modificativos e mistos)",
+      "Contas, plano de contas e contabilização de operações",
+      "Análise e conciliações contábeis; balancete de verificação",
+      "Balanço patrimonial e Demonstração do Resultado do Exercício (DRE)",
+      "Noções de finanças, orçamento e tributos",
+      "Análise financeira: métodos, ferramentas e gestão de risco",
+      "Lei 9.613/1998 (lavagem) e Lei 8.137/1990 (ordem tributária)",
+      "Indícios de fraude: smurfing, laranjas, movimentações incompatíveis"
+    ]},
+    estat: { nome:"Estatística e Análise de Dados", icone:"📈", topicos:[
+      "Estatística descritiva: gráficos, tabelas e medidas descritivas",
+      "Medidas de tendência central e de dispersão",
+      "Probabilidade: condicional, Bayes e teorema da probabilidade total",
+      "Variáveis aleatórias e distribuições (Bernoulli, binomial, normal)",
+      "Teorema central do limite e técnicas de amostragem",
+      "Inferência: estimação e testes de hipóteses (t de Student, qui-quadrado)",
+      "Correlação de Pearson e regressão linear",
+      "Dados estruturados/não estruturados; ETL; XML, JSON, CSV",
+      "Mineração de dados, clusterização e modelagem preditiva",
+      "Machine Learning e Python (Pandas, Numpy, Sklearn, TensorFlow)"
+    ]},
+    ciber: { nome:"Crimes Cibernéticos e Segurança Digital", icone:"🛰️", topicos:[
+      "Lei 12.737/2012 (crimes cibernéticos)",
+      "Conceito e classificação de crimes cibernéticos",
+      "Busca e apreensão de itens digitais (art. 240 e ss. do CPP)",
+      "Privacidade e cuidados com redes sociais",
+      "Autenticação multifator (MFA) e senhas seguras",
+      "Golpes virtuais: phishing, links suspeitos e malwares",
+      "Lei 13.709/2018 (LGPD)"
     ]}
   },
 
@@ -253,7 +354,47 @@ window.DATA = {
     { materiaId:"dpenal", enunciado:"Segundo o Código Penal, ninguém pode ser punido por fato que lei posterior deixa de considerar crime, cessando a execução e os efeitos penais da sentença condenatória.", gab:true,
       just:"Abolitio criminis — art. 2º do CP; a lei penal mais benéfica retroage." },
     { materiaId:"dpenal", enunciado:"O peculato é crime classificado, no Código Penal, entre os crimes contra o patrimônio particular.", gab:false,
-      just:"Peculato é crime contra a administração pública (art. 312 do CP), praticado por funcionário público." }
+      just:"Peculato é crime contra a administração pública (art. 312 do CP), praticado por funcionário público." },
+    { materiaId:"dpenal", enunciado:"Considera-se praticado o crime no momento da ação ou omissão, ainda que outro seja o momento do resultado (teoria da atividade).", gab:true,
+      just:"Art. 4º do CP adota a teoria da atividade para o tempo do crime." },
+
+    { materiaId:"ti_seg", enunciado:"Os pilares da segurança da informação são confidencialidade, integridade e disponibilidade.", gab:true,
+      just:"Tríade CID (CIA): confidencialidade, integridade e disponibilidade." },
+    { materiaId:"ti_seg", enunciado:"No Linux, o usuário com privilégios administrativos plenos é comumente denominado root.", gab:true,
+      just:"root é o superusuário do Linux, equivalente ao administrador." },
+    { materiaId:"ti_seg", enunciado:"A criptografia simétrica utiliza um par de chaves distintas — uma pública e uma privada — para cifrar e decifrar os dados.", gab:false,
+      just:"Isso descreve a criptografia assimétrica. A simétrica usa a MESMA chave para cifrar e decifrar." },
+
+    { materiaId:"rlm", enunciado:"A negação da proposição “Todo policial é honesto” é “Algum policial não é honesto”.", gab:true,
+      just:"A negação de um “todo A é B” é “existe A que não é B” (algum A não é B)." },
+    { materiaId:"rlm", enunciado:"Pelas Leis de De Morgan, a negação de “p e q” equivale a “não-p ou não-q”.", gab:true,
+      just:"~(p ∧ q) ≡ ~p ∨ ~q — Lei de De Morgan." },
+
+    { materiaId:"leg_al_pc", enunciado:"O regime jurídico dos servidores públicos civis do Estado de Alagoas é disciplinado pela Lei estadual nº 5.247/1991.", gab:true,
+      just:"Lei 5.247/1991 — Regime Jurídico Único dos servidores públicos civis de AL." },
+    { materiaId:"leg_al_pc", enunciado:"O Estatuto da Polícia Civil do Estado de Alagoas é a Lei estadual nº 3.437/1975.", gab:true,
+      just:"Lei estadual 3.437/1975 — Estatuto da Polícia Civil de AL, cobrada no edital." },
+
+    { materiaId:"leis_pc", enunciado:"Na Lei de Lavagem de Dinheiro (Lei 9.613/1998), o crime de lavagem pressupõe a ocultação ou dissimulação da origem de bens provenientes de infração penal.", gab:true,
+      just:"Art. 1º da Lei 9.613/1998 — ocultar/dissimular origem de bens oriundos de infração penal." },
+    { materiaId:"leis_pc", enunciado:"O fracionamento de valores em várias operações para escapar dos controles é conhecido como smurfing.", gab:true,
+      just:"Smurfing (structuring) é a divisão de valores para evitar comunicação de operações suspeitas." },
+
+    { materiaId:"conta", enunciado:"Na equação fundamental do patrimônio, o Patrimônio Líquido é igual ao Ativo menos o Passivo.", gab:true,
+      just:"PL = Ativo − Passivo (situação líquida)." },
+    { materiaId:"conta", enunciado:"Um fato contábil permutativo altera o valor total do patrimônio líquido da entidade.", gab:false,
+      just:"O fato permutativo apenas troca elementos, sem alterar o PL. Quem altera o PL são os fatos modificativos e mistos." },
+
+    { materiaId:"estat", enunciado:"Em uma distribuição de dados, a mediana é a medida de tendência central menos sensível a valores extremos (outliers) do que a média.", gab:true,
+      just:"A mediana é resistente a outliers; a média é fortemente influenciada por valores extremos." },
+    { materiaId:"estat", enunciado:"O desvio padrão é uma medida de tendência central que indica o valor mais frequente do conjunto de dados.", gab:false,
+      just:"Desvio padrão é medida de DISPERSÃO. O valor mais frequente é a moda." },
+
+    { materiaId:"ciber", enunciado:"A Lei nº 12.737/2012 tipificou a invasão de dispositivo informático alheio, sendo conhecida como “Lei Carolina Dieckmann”.", gab:true,
+      just:"Lei 12.737/2012 — invasão de dispositivo informático (art. 154-A do CP)." },
+
+    { materiaId:"etica", enunciado:"No serviço público, o dever de eficiência e a moralidade administrativa integram os padrões éticos exigidos do servidor.", gab:true,
+      just:"Ética funcional decorre dos princípios do art. 37 da CF e dos códigos de ética (incl. o de AL, Lei 6.754/2006)." }
   ],
 
   /* -----------------------------------------------------------
@@ -279,7 +420,18 @@ window.DATA = {
     { materiaId:"dpenal", f:"Abolitio criminis", v:"Lei posterior deixa de considerar o fato crime: cessa execução e efeitos penais da condenação (art. 2º CP)." },
     { materiaId:"dpp", f:"Comunicação da prisão em flagrante (art. 306 CPP)", v:"Imediata ao juiz, ao Ministério Público e à família do preso ou pessoa indicada." },
     { materiaId:"alagoas", f:"Emancipação e Província de Alagoas", v:"Separação de Pernambuco em 1817; elevação a Província em 1821." },
-    { materiaId:"alagoas", f:"Regiões geográficas de Alagoas", v:"Litoral, Zona da Mata, Agreste e Sertão. Rio São Francisco ao sul." }
+    { materiaId:"alagoas", f:"Regiões geográficas de Alagoas", v:"Litoral, Zona da Mata, Agreste e Sertão. Rio São Francisco ao sul." },
+    { materiaId:"ti_seg", f:"Tríade da Segurança da Informação (CID)", v:"Confidencialidade, Integridade e Disponibilidade." },
+    { materiaId:"ti_seg", f:"Criptografia simétrica x assimétrica", v:"Simétrica: mesma chave cifra e decifra. Assimétrica: par de chaves (pública e privada)." },
+    { materiaId:"rlm", f:"Leis de De Morgan", v:"~(p ∧ q) ≡ ~p ∨ ~q  ·  ~(p ∨ q) ≡ ~p ∧ ~q" },
+    { materiaId:"rlm", f:"Negação de “Todo A é B”", v:"“Algum A não é B” (existe A que não é B)." },
+    { materiaId:"dpenal", f:"Tempo do crime (art. 4º CP)", v:"Teoria da atividade: momento da ação ou omissão, ainda que outro seja o do resultado." },
+    { materiaId:"leis_pc", f:"Lavagem de dinheiro (Lei 9.613/98)", v:"Ocultar/dissimular a origem de bens provenientes de infração penal. Smurfing = fracionar valores para escapar de controles." },
+    { materiaId:"leg_al_pc", f:"Leis institucionais da PC/AL", v:"Estatuto da PC: Lei 3.437/1975. RJU dos servidores de AL: Lei 5.247/1991." },
+    { materiaId:"conta", f:"Equação fundamental do patrimônio", v:"Patrimônio Líquido = Ativo − Passivo." },
+    { materiaId:"conta", f:"Fatos contábeis", v:"Permutativos: não alteram o PL. Modificativos e mistos: alteram o PL." },
+    { materiaId:"estat", f:"Média x Mediana x Moda", v:"Média: sensível a outliers. Mediana: resistente a outliers. Moda: valor mais frequente. Desvio padrão = dispersão." },
+    { materiaId:"ciber", f:"Lei 12.737/2012", v:"“Lei Carolina Dieckmann” — tipifica a invasão de dispositivo informático alheio (art. 154-A do CP)." }
   ],
 
   /* -----------------------------------------------------------
@@ -435,27 +587,113 @@ window.DATA = {
 
     {
       id:"pc_al",
-      nome:"PC AL — Polícia Civil de Alagoas",
-      curto:"PC · Alagoas",
+      nome:"PC AL 2026 — Escrivão de Polícia Civil",
+      curto:"PC AL · Escrivão",
       orgao:"Polícia Civil de Alagoas",
-      banca:"Cebraspe (histórico)",
-      status:"em_breve",
+      banca:"Cebraspe",
+      status:"ativo",
       icone:"🚔",
       cor:"#4f9dde",
-      dataProvaOficial:"",
-      notaData:"Edital ainda não publicado. Conteúdo provisório baseado no padrão da banca no concurso anterior (2021) — será ajustado quando sair o novo edital.",
-      duracaoProva:"—",
-      totalDias:0,
+      dataProvaOficial:"2026-12-06",
+      notaData:"Cronograma do edital PC AL 2026 (prova em 06/12/2026). O conteúdo específico é o mesmo para Agente e Escrivão.",
+      duracaoProva:"4h30",
+      totalDias:40,
       estrutura:[
-        { prova:"Objetiva", area:"Conhecimentos gerais + específicos (a confirmar no edital)", itens:null, carater:"Eliminatório e classificatório" },
-        { prova:"Discursiva / demais fases", area:"A definir conforme o cargo e o edital", itens:null, carater:"—" }
+        { prova:"P1 — Objetiva", area:"Conhecimentos Básicos", itens:50, carater:"Eliminatório e classificatório" },
+        { prova:"P2 — Objetiva", area:"Conhecimentos Específicos", itens:70, carater:"Eliminatório e classificatório" },
+        { prova:"P3 — Discursiva", area:"Redação sobre Atualidades (até 30 linhas — 5 pts)", itens:1, carater:"Eliminatório e classificatório" },
+        { prova:"Prova prática de digitação", area:"Específica do Escrivão", itens:null, carater:"Eliminatório" },
+        { prova:"Capacidade física + exames + psicológico + investigação", area:"Demais fases da 1ª etapa", itens:null, carater:"Eliminatório" },
+        { prova:"Curso de formação policial (2ª etapa)", area:"—", itens:null, carater:"Eliminatório e classificatório" }
       ],
-      pesos:[],
+      pesos:[
+        { materia:"Língua Portuguesa", area:"P1", qEst:15, cor:"#4f9dde" },
+        { materia:"TI e Segurança Cibernética", area:"P1", qEst:12, cor:"#4f9dde" },
+        { materia:"Raciocínio Lógico-Matemático", area:"P1", qEst:12, cor:"#4f9dde" },
+        { materia:"Noções de Direitos Humanos", area:"P1", qEst:6, cor:"#4f9dde" },
+        { materia:"Atualidades e Ética", area:"P1", qEst:5, cor:"#4f9dde" },
+        { materia:"Direito Penal", area:"P2", qEst:10, cor:"#e0a83e" },
+        { materia:"Legislação Penal Especial", area:"P2", qEst:10, cor:"#e0a83e" },
+        { materia:"Contabilidade e Análise Financeira", area:"P2", qEst:8, cor:"#e0a83e" },
+        { materia:"Estatística e Análise de Dados", area:"P2", qEst:8, cor:"#e0a83e" },
+        { materia:"Legislação Institucional de AL", area:"P2", qEst:8, cor:"#e0a83e" },
+        { materia:"Direito Administrativo", area:"P2", qEst:8, cor:"#e0a83e" },
+        { materia:"Direito Processual Penal", area:"P2", qEst:8, cor:"#e0a83e" },
+        { materia:"Direito Constitucional", area:"P2", qEst:6, cor:"#e0a83e" },
+        { materia:"Crimes Cibernéticos", area:"P2", qEst:4, cor:"#e0a83e" }
+      ],
       blocos:[
-        { titulo:"Núcleo comum — já conta para o PMAL", badge:"b-sh", materias:["portugues","informatica","dconst","dadm","dpp","leis","dh"] },
-        { titulo:"Específicas de Polícia Civil (provisório — aguardando edital)", badge:"b-p2", materias:["dpenal"] }
+        { titulo:"Conhecimentos Básicos · 50 itens", badge:"b-p1", materias:["portugues","ti_seg","rlm","dh","atualidades","etica"] },
+        { titulo:"Conhecimentos Específicos · 70 itens", badge:"b-p2", materias:["dpenal","dpp","dconst","dadm","leg_al_pc","leis_pc","conta","estat","ciber"] }
       ],
-      sessoes:[]
+      sessoes:[
+        { materiaId:"dpenal", area:"P2", titulo:"Direito Penal — Aplicação da lei penal (tempo, espaço e princípios)",
+          tarefas:["Lei penal no tempo e no espaço","Tempo e lugar do crime; irretroatividade","15 questões C/E"] },
+        { materiaId:"rlm", area:"P1", titulo:"RLM — Proporções, regra de três e porcentagem",
+          tarefas:["Razões e proporções","Regra de três simples","Porcentagem: 15 exercícios"] },
+        { materiaId:"ti_seg", area:"P1", titulo:"TI — Sistemas operacionais (Linux/Windows), Office, redes e Internet",
+          tarefas:["Diferenças Linux x Windows","Office e navegadores","Internet x intranet","15 questões C/E"] },
+        { materiaId:"leg_al_pc", area:"P2", titulo:"Legislação Institucional — Estatuto da Polícia Civil de AL (Lei 3.437/1975)",
+          tarefas:["Estrutura e carreira da PC/AL","Direitos e deveres do escrivão","15 questões C/E"] },
+        { materiaId:"portugues", area:"P1", titulo:"Português — Interpretação de texto e gêneros (revisão do núcleo comum)",
+          tarefas:["Estratégia de leitura Cebraspe","15 questões de interpretação","Aproveita o que já viu no PMAL"] },
+        { materiaId:"dpenal", area:"P2", titulo:"Direito Penal — Crimes contra a pessoa e contra o patrimônio",
+          tarefas:["Homicídio, lesão, ameaça","Furto, roubo, estelionato","20 questões C/E"] },
+        { materiaId:"ti_seg", area:"P1", titulo:"TI — Segurança da informação, banco de dados e SQL",
+          tarefas:["Malware, firewall, backup","Modelos de dados e SGBD","Comandos SQL básicos","15 questões C/E"] },
+        { materiaId:"rlm", area:"P1", titulo:"RLM — Lógica proposicional: proposições, tabelas-verdade e equivalências",
+          tarefas:["Conectivos e tabelas-verdade","Equivalências e Leis de De Morgan","15 questões de lógica"] },
+        { materiaId:"leis_pc", area:"P2", titulo:"Leg. Penal Especial — Drogas (11.343/06) e Organização criminosa (12.850/13)",
+          tarefas:["Usuário x traficante","Colaboração premiada e infiltração","20 questões C/E"] },
+        { materiaId:"dconst", area:"P2", titulo:"Constitucional — Direitos fundamentais e Segurança Pública (revisão comum)",
+          tarefas:["Art. 5º e remédios constitucionais","Art. 144 (segurança pública)","15 questões C/E"] },
+        { materiaId:"conta", area:"P2", titulo:"Contabilidade — Patrimônio, contas e plano de contas",
+          tarefas:["Equação do patrimônio; situação líquida","Fatos permutativos/modificativos/mistos","Débito x crédito"] },
+        { materiaId:"dpp", area:"P2", titulo:"Processo Penal — Inquérito policial e disposições preliminares (revisão comum)",
+          tarefas:["Natureza e características do IP","Indiciamento e garantias","15 questões C/E"] },
+        { materiaId:"ti_seg", area:"P1", titulo:"Segurança Cibernética — Criptografia, IDS/IPS, IAM e frameworks",
+          tarefas:["Confidencialidade, integridade, disponibilidade","VPN, IDS/IPS, SIEM, PAM","NIST CSF, MITRE, CIS","15 questões C/E"] },
+        { materiaId:"leg_al_pc", area:"P2", titulo:"Legislação Institucional — Regime Jurídico Único de AL (Lei 5.247/1991)",
+          tarefas:["Provimento, posse e exercício","Deveres, proibições e responsabilidades","Regime disciplinar","15 questões C/E"] },
+        { materiaId:"dpenal", area:"P2", titulo:"Direito Penal — Crimes contra a administração pública",
+          tarefas:["Peculato, corrupção, concussão","Prevaricação e advocacia administrativa","15 questões C/E"] },
+        { materiaId:"estat", area:"P2", titulo:"Estatística — Descritiva e medidas de posição/dispersão",
+          tarefas:["Média, mediana, moda","Variância, desvio padrão, CV","Ler tabelas e gráficos"] },
+        { materiaId:"leis_pc", area:"P2", titulo:"Leg. Penal Especial — Crimes financeiros e lavagem (7.492/86, 9.613/98)",
+          tarefas:["Crimes contra o SFN","Lavagem de dinheiro: fases e sanções","20 questões C/E"] },
+        { materiaId:"dadm", area:"P2", titulo:"Administrativo — Organização, atos e poderes (revisão comum)",
+          tarefas:["Administração direta/indireta","Atos administrativos","Poderes e poder de polícia","15 questões C/E"] },
+        { materiaId:"rlm", area:"P1", titulo:"RLM — Probabilidade, contagem e operações com conjuntos",
+          tarefas:["Princípios de contagem","Probabilidade e Bayes","Conjuntos e diagramas"] },
+        { materiaId:"ciber", area:"P2", titulo:"Crimes Cibernéticos — Lei 12.737/2012 e busca/apreensão digital",
+          tarefas:["Invasão de dispositivo (Lei Carolina Dieckmann)","Busca e apreensão (art. 240 CPP)","15 questões C/E"] },
+        { materiaId:"conta", area:"P2", titulo:"Análise Financeira e Crimes contra a Ordem Tributária",
+          tarefas:["Balanço patrimonial e DRE","Indícios de fraude: smurfing, laranjas","Lei 8.137/1990"] },
+        { materiaId:"leg_al_pc", area:"P2", titulo:"Legislação Institucional — Constituição de AL + Lei Orgânica Nacional das PC",
+          tarefas:["Pontos-chave da Constituição estadual","Lei 14.735/2026 (LONPC)","15 questões C/E"] },
+        { materiaId:"estat", area:"P2", titulo:"Estatística — Probabilidade, distribuições e inferência",
+          tarefas:["Distribuições (Bernoulli, binomial, normal)","TCL e amostragem","Testes de hipótese"] },
+        { materiaId:"leis_pc", area:"P2", titulo:"Leg. Penal Especial — Hediondos, tortura, racismo e ambientais",
+          tarefas:["Rol de hediondos e efeitos","Tortura e racismo","Crimes ambientais","20 questões C/E"] },
+        { materiaId:"etica", area:"P1", titulo:"Ética no Serviço Público + Código de Ética de AL (6.754/2006)",
+          tarefas:["Ética, moral e função pública","Deveres e vedações do servidor","10 questões C/E"] },
+        { materiaId:"portugues", area:"P1", titulo:"Português — Concordância, regência e crase (revisão comum)",
+          tarefas:["Concordância verbal e nominal","Regência e crase","20 questões C/E"] },
+        { materiaId:"estat", area:"P2", titulo:"Análise de Dados — Mineração, Machine Learning e Python",
+          tarefas:["ETL, CRISP-DM, clusterização","Overfitting/underfitting; validação","Bibliotecas Python (Pandas, Sklearn)"] },
+        { materiaId:"leis_pc", area:"P2", titulo:"Leg. Penal Especial — Responsabilidade, falimentar, licitações, abuso, PcD e idoso",
+          tarefas:["Crimes de responsabilidade e falimentares","Crimes em licitações (14.133/21) e abuso (13.869/19)","Estatutos da PcD e do Idoso","20 questões C/E"] },
+        { materiaId:"dh", area:"P1", titulo:"Direitos Humanos — Teoria geral e Pacto de São José (revisão comum)",
+          tarefas:["Características e dimensões dos DH","DH na CF e Política Nacional","Pacto de São José","15 questões C/E"] },
+        { materiaId:"ti_seg", area:"P1", titulo:"TI — LGPD, Inteligência Artificial, programação e serviços digitais",
+          tarefas:["Lei 13.709/2018 (LGPD): princípios e direitos","Noções de IA","Java/Python/C# (conceitos)","15 questões C/E"] },
+        { materiaId:"dpp", area:"P2", titulo:"Processo Penal — Prisão, liberdade provisória e Lei 9.099/95 (revisão comum)",
+          tarefas:["Espécies de prisão","Liberdade provisória","Juizados Especiais Criminais","15 questões C/E"] },
+        { materiaId:"dadm", area:"P2", titulo:"Administrativo — Licitações, controle e responsabilidade do Estado (revisão)",
+          tarefas:["Licitação: princípios e modalidades","Controle judicial e legislativo","Responsabilidade objetiva do Estado","15 questões C/E"] },
+        { materiaId:"atualidades", area:"P1", titulo:"Atualidades — temas quentes e treino da discursiva",
+          tarefas:["Segurança pública, política e economia","Tecnologia e meio ambiente","Escrever 1 redação de até 30 linhas"] }
+      ]
     }
   ]
 };
