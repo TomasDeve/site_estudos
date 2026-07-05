@@ -3,38 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estudos PMAL 2026 — Soldado (CFP)</title>
-<meta name="description" content="Site de estudos para o concurso da Polícia Militar de Alagoas 2026 — Soldado do Quadro de Praças. Plano de 55 dias, edital verticalizado, questões e flashcards.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>Meus Estudos — Plataforma de Concursos</title>
+<meta name="description" content="Plataforma pessoal de estudos para concursos públicos: planos, edital verticalizado, questões e flashcards, com progresso compartilhado entre concursos.">
 <link rel="stylesheet" href="assets/css/styles.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎖️</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
 </head>
 <body>
 
   <!-- topo mobile -->
   <div class="mobile-top">
     <button id="menuBtn">☰</button>
-    <b id="mobTitle">Central de Comando</b>
+    <b id="mobTitle">Meus Estudos</b>
   </div>
 
   <div class="app">
     <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="brand">
-        <div class="shield">AL</div>
-        <h1>PMAL 2026<span>Soldado · CFP</span></h1>
-      </div>
-      <div class="brand-sub">Banca Cebraspe · 55 dias de guerra</div>
-
-      <nav class="nav">
-        <button data-v="dash"       data-label="Central de Comando" class="active"><span class="ico">🎯</span> Central</button>
-        <button data-v="plano"      data-label="Plano de 55 dias"><span class="ico">🗓️</span> Plano de 55 dias</button>
-        <button data-v="edital"     data-label="Edital verticalizado"><span class="ico">📋</span> Edital</button>
-        <button data-v="quiz"       data-label="Banco de questões"><span class="ico">✍️</span> Questões</button>
-        <button data-v="flash"      data-label="Flashcards"><span class="ico">🃏</span> Flashcards</button>
-        <button data-v="estrategia" data-label="Estratégia & pesos"><span class="ico">♟️</span> Estratégia</button>
-      </nav>
-
+      <div id="sideTop"></div>
+      <nav class="nav" id="nav"></nav>
       <div class="side-foot">
         Seu progresso é salvo automaticamente neste navegador.
         <button id="resetAll">⟲ Zerar tudo</button>
@@ -43,7 +29,8 @@
 
     <!-- MAIN -->
     <main class="main">
-      <section id="view-dash"       class="view active"></section>
+      <section id="view-hub"        class="view"></section>
+      <section id="view-dash"       class="view"></section>
       <section id="view-plano"      class="view"></section>
       <section id="view-edital"     class="view"></section>
       <section id="view-quiz"       class="view"></section>

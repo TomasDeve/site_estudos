@@ -126,6 +126,25 @@ button{font-family:inherit;cursor:pointer}
 .b-p2{background:rgba(224,168,62,.16);color:var(--gold-soft);border:1px solid rgba(224,168,62,.4)}
 .b-sim{background:rgba(63,191,127,.16);color:var(--green);border:1px solid rgba(63,191,127,.4)}
 .b-rev{background:rgba(229,86,75,.14);color:#f2857c;border:1px solid rgba(229,86,75,.4)}
+.b-sh{background:rgba(120,200,180,.16);color:#7fe0c0;border:1px solid rgba(120,200,180,.4)}
+
+/* hub */
+.conc-card{cursor:pointer;transition:.18s;border-top:3px solid var(--accent,var(--gold))}
+.conc-card:hover{transform:translateY(-3px);border-color:var(--accent,var(--line));box-shadow:0 14px 34px rgba(0,0,0,.45)}
+.conc-top{display:flex;align-items:center;gap:14px}
+.conc-ic{width:52px;height:52px;flex:0 0 auto;border-radius:14px;border:1px solid var(--line);display:grid;place-items:center;font-size:26px}
+.conc-top h3{font-size:17px;line-height:1.2}
+.conc-org{font-size:12px;color:var(--txt-dim);margin-top:3px}
+.conc-stats{display:flex;gap:18px;font-size:12px;color:var(--txt-dim);margin-bottom:16px}
+.conc-stats b{color:var(--txt);font-size:15px;margin-right:3px}
+.conc-enter{width:100%;border:0;color:#10161f;font-weight:800;padding:11px;border-radius:11px;font-size:14px;letter-spacing:.3px}
+.conc-enter:hover{filter:brightness(1.08)}
+.shared-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.shared-pill{background:var(--navy-900);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--txt-dim)}
+.shared-pill b{color:#7fe0c0;margin-left:4px}
+.comum-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#7fe0c0;background:rgba(120,200,180,.14);border:1px solid rgba(120,200,180,.4);border-radius:20px;padding:1px 7px;vertical-align:middle}
+.back-btn{width:100%;background:transparent;border:1px solid var(--line);color:var(--txt-dim);padding:9px;border-radius:9px;font-size:12px;font-weight:600;text-align:left}
+.back-btn:hover{border-color:var(--gold);color:var(--gold-soft)}
 
 /* plano */
 .plano-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
