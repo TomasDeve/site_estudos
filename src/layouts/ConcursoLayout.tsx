@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LogOut,
+  Repeat,
   Wrench,
 } from "lucide-react";
 import type { Concurso } from "@/types/db";
@@ -33,6 +34,7 @@ export function useConcursoAtual(): Concurso {
 const NAV = [
   { to: ".", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
+  { to: "ciclo", label: "Ciclo", icon: Repeat, end: false },
   { to: "metas", label: "Metas", icon: CalendarCheck, end: false },
   { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
   { to: "apoio", label: "Apoio", icon: Wrench, end: false },
@@ -236,7 +238,7 @@ export function ConcursoLayout() {
       </main>
 
       {/* ===== Tab bar mobile ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line/50 bg-navy-900/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line/50 bg-navy-900/95 backdrop-blur md:hidden">
         {navLink(true)}
       </nav>
     </div>

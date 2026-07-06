@@ -73,6 +73,57 @@ export type Database = {
           },
         ]
       }
+      ciclo_itens: {
+        Row: {
+          concluido: boolean
+          concluido_at: string | null
+          concurso_id: string
+          created_at: string
+          id: string
+          materia_id: string
+          ordem: number
+          user_id: string
+          voltas: number
+        }
+        Insert: {
+          concluido?: boolean
+          concluido_at?: string | null
+          concurso_id: string
+          created_at?: string
+          id?: string
+          materia_id: string
+          ordem?: number
+          user_id?: string
+          voltas?: number
+        }
+        Update: {
+          concluido?: boolean
+          concluido_at?: string | null
+          concurso_id?: string
+          created_at?: string
+          id?: string
+          materia_id?: string
+          ordem?: number
+          user_id?: string
+          voltas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ciclo_itens_concurso_id_fkey"
+            columns: ["concurso_id"]
+            isOneToOne: false
+            referencedRelation: "concursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ciclo_itens_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       concurso_materias: {
         Row: {
           area: string
@@ -714,6 +765,7 @@ export type Concurso = Tables<"concursos">
 export type Materia = Tables<"materias">
 export type Topico = Tables<"topicos">
 export type ConcursoMateria = Tables<"concurso_materias">
+export type CicloItem = Tables<"ciclo_itens">
 export type TopicoLink = Tables<"topico_links">
 export type MetaPeriodo = Tables<"metas_periodo">
 export type BlocoDia = Tables<"blocos_dia">

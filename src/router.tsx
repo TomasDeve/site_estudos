@@ -10,6 +10,7 @@ import { FullScreenSpinner } from "@/components/Spinner";
 const HomePage = lazy(() => import("@/features/home/HomePage").then((m) => ({ default: m.HomePage })));
 const DashboardPage = lazy(() => import("@/features/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const ConteudosPage = lazy(() => import("@/features/conteudos/ConteudosPage").then((m) => ({ default: m.ConteudosPage })));
+const CicloPage = lazy(() => import("@/features/ciclo/CicloPage").then((m) => ({ default: m.CicloPage })));
 const MetasPage = lazy(() => import("@/features/metas/MetasPage").then((m) => ({ default: m.MetasPage })));
 const MetricasPage = lazy(() => import("@/features/metricas/MetricasPage").then((m) => ({ default: m.MetricasPage })));
 const ImportarPage = lazy(() => import("@/features/importar/ImportarPage").then((m) => ({ default: m.ImportarPage })));
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: pagina(<DashboardPage />) },
           { path: "conteudos", element: pagina(<ConteudosPage />) },
+          { path: "ciclo", element: pagina(<CicloPage />) },
           { path: "metas", element: pagina(<MetasPage />) },
           { path: "metricas", element: pagina(<MetricasPage />) },
           { path: "metricas/importar", element: pagina(<ImportarPage />) },
