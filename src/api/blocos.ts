@@ -40,6 +40,46 @@ export function useAtualizarBloco() {
   });
 }
 
+/**
+ * Ajusta o tempo (duração) de um bloco. Se o bloco já estiver concluído,
+ * atualiza também a sessão de estudo gerada, para o gráfico refletir o tempo real.
+ */
+export function useAtualizarDuracaoBloco() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ bloco, minutos }: { bloco: BlocoDia; minutos: number }) => {
+      const { error } = await supabase
+        .from("blocos_dia")
+        .update({ duracao_min: minutos })
+        .eq("id", bloco.id);
+      if (error) throw error;
+      if (bloco.concluido) {
+        const { error: e2 } = await supabase
+          .from("sessoes_estudo")
+          .update({ minutos })
+          .eq("bloco_id", bloco.id);
+        if (e2) throw e2;
+      }
+    },
+    // otimista: a barra da meta e a badge mudam na hora
+    onMutate: async ({ bloco, minutos }) => {
+      await qc.cancelQueries({ queryKey: ["blocos", bloco.data] });
+      const prev = qc.getQueryData<BlocoDia[]>(["blocos", bloco.data]);
+      qc.setQueryData<BlocoDia[]>(["blocos", bloco.data], (old) =>
+        old?.map((b) => (b.id === bloco.id ? { ...b, duracao_min: minutos } : b))
+      );
+      return { prev, data: bloco.data };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["blocos", ctx.data], ctx.prev);
+    },
+    onSettled: (_d, _e, { bloco }) => {
+      qc.invalidateQueries({ queryKey: ["blocos", bloco.data] });
+      qc.invalidateQueries({ queryKey: ["sessoes"] });
+    },
+  });
+}
+
 export function useExcluirBloco() {
   const qc = useQueryClient();
   return useMutation({

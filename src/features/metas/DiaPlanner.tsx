@@ -3,7 +3,13 @@ import { addDays, format, parseISO } from "date-fns";
 import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Plus, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import type { BlocoDia } from "@/types/db";
-import { useBlocosDia, useCopiarBlocos, useExcluirBloco, useToggleBloco } from "@/api/blocos";
+import {
+  useAtualizarDuracaoBloco,
+  useBlocosDia,
+  useCopiarBlocos,
+  useExcluirBloco,
+  useToggleBloco,
+} from "@/api/blocos";
 import { useMetas, metaVigente } from "@/api/metas";
 import {
   calcStreak,
@@ -20,6 +26,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { Modal } from "@/components/Modal";
 import { Pencil, Trash2 } from "lucide-react";
 import { BlocoFormModal } from "./BlocoFormModal";
+import { DuracaoBadge } from "./DuracaoBadge";
 import { celebrar } from "./celebration";
 
 export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) {
@@ -34,6 +41,7 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
   const toggle = useToggleBloco();
   const excluir = useExcluirBloco();
   const copiar = useCopiarBlocos();
+  const atualizarDuracao = useAtualizarDuracaoBloco();
   const concluirDia = useConcluirDia();
   const desfazerDia = useDesfazerDia();
 
@@ -204,9 +212,11 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
                       </p>
                     )}
                   </div>
-                  <span className="shrink-0 rounded-md bg-navy-700 px-2 py-0.5 text-[11px] font-bold tabular-nums text-dim">
-                    {fmtMinutos(b.duracao_min)}
-                  </span>
+                  <DuracaoBadge
+                    minutos={b.duracao_min}
+                    bloqueado={concluido}
+                    onSalvar={(minutos) => atualizarDuracao.mutate({ bloco: b, minutos })}
+                  />
                   {!concluido && (
                     <span className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 max-md:opacity-100">
                       <button
