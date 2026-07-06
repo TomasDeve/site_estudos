@@ -15,10 +15,18 @@ interface Props {
   onClose: () => void;
   dataISO: string;
   bloco: BlocoDia | null;
+  concursoIdPadrao?: string;
   proximaOrdem: number;
 }
 
-export function BlocoFormModal({ open, onClose, dataISO, bloco, proximaOrdem }: Props) {
+export function BlocoFormModal({
+  open,
+  onClose,
+  dataISO,
+  bloco,
+  concursoIdPadrao,
+  proximaOrdem,
+}: Props) {
   const { data: materias } = useMaterias();
   const { data: concursos } = useConcursos();
   const criar = useCriarBloco();
@@ -34,8 +42,8 @@ export function BlocoFormModal({ open, onClose, dataISO, bloco, proximaOrdem }: 
     setTitulo(bloco?.titulo ?? "");
     setDuracao(String(bloco?.duracao_min ?? 30));
     setMateriaId(bloco?.materia_id ?? "");
-    setConcursoId(bloco?.concurso_id ?? "");
-  }, [open, bloco]);
+    setConcursoId(bloco?.concurso_id ?? concursoIdPadrao ?? "");
+  }, [open, bloco, concursoIdPadrao]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

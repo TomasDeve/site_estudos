@@ -101,7 +101,7 @@ export function DashboardPage() {
         />
         <StatCard icon="⏱️" label="Estudo hoje" value={fmtMinutos(minutosHoje) || "0min"} />
         <StatCard icon="🔥" label="Sequência" value={`${streak} ${streak === 1 ? "dia" : "dias"}`} />
-        <Link to="/metas" className="block">
+        <Link to="metas" className="block">
           <StatCard icon="🗓️" label="Planejar" value="Metas do dia" sub="abrir planner →" />
         </Link>
       </div>

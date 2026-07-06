@@ -81,7 +81,7 @@ export function ImportarPage() {
         }))
       );
       toast.success(`${validas.length} registros importados! 🎉`);
-      navigate("/metricas");
+      navigate("..");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -91,7 +91,7 @@ export function ImportarPage() {
     <div className="space-y-5">
       <div>
         <Link
-          to="/metricas"
+          to=".."
           className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium text-mut hover:text-dim"
         >
           <ArrowLeft className="size-3.5" /> Métricas

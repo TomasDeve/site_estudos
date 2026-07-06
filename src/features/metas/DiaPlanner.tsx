@@ -22,7 +22,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { BlocoFormModal } from "./BlocoFormModal";
 import { celebrar } from "./celebration";
 
-export function DiaPlanner() {
+export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) {
   const hoje = hojeISO();
   const [data, setData] = useState(hoje);
 
@@ -277,6 +277,7 @@ export function DiaPlanner() {
         onClose={() => setModalBloco(false)}
         dataISO={data}
         bloco={editandoBloco}
+        concursoIdPadrao={concursoIdPadrao}
         proximaOrdem={(blocos ?? []).reduce((m, b) => Math.max(m, b.ordem), -1) + 1}
       />
 

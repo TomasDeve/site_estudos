@@ -27,7 +27,7 @@ export function MetricasPage() {
         title="Métricas de questões"
         subtitle="Acompanhe volume e taxa de acerto — combustível da aprovação"
         action={
-          <Link to="/metricas/importar">
+          <Link to="importar">
             <Button variant="secondary">
               <Import className="size-4" /> Importar do Qconcursos
             </Button>

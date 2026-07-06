@@ -1,11 +1,12 @@
 import { taxaConstancia, useDiasConcluidos } from "@/api/diasConcluidos";
+import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { DiaPlanner } from "./DiaPlanner";
 import { MetaRangeList } from "./MetaRangeList";
-import { StreakBadge } from "./StreakBadge";
 
 export function MetasPage() {
+  const concurso = useConcursoAtual();
   const { data: dias } = useDiasConcluidos();
   const constancia = taxaConstancia(dias);
 
@@ -14,12 +15,11 @@ export function MetasPage() {
       <PageHeader
         title="Prazos e Metas"
         subtitle="Planeje o dia em blocos e feche com chave de ouro"
-        action={<StreakBadge />}
       />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
-          <DiaPlanner />
+          <DiaPlanner concursoIdPadrao={concurso.id} />
         </div>
         <div className="space-y-5">
           <MetaRangeList />

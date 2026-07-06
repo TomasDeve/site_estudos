@@ -1,10 +1,25 @@
-import { NavLink, Outlet, useOutletContext, useParams, Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, NavLink, Outlet, useOutletContext, useParams } from "react-router";
+import {
+  BarChart3,
+  BookOpen,
+  CalendarCheck,
+  Check,
+  ChevronsUpDown,
+  LayoutDashboard,
+  LayoutGrid,
+  LogOut,
+  Wrench,
+} from "lucide-react";
 import type { Concurso } from "@/types/db";
 import { useConcurso } from "@/api/concursos";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/auth/AuthProvider";
+import { setConcursoAtual } from "@/lib/currentConcurso";
+import { diasAte, fmtData } from "@/lib/dates";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
-import { diasAte, fmtData } from "@/lib/dates";
+import { StreakBadge } from "@/features/metas/StreakBadge";
 
 interface Ctx {
   concurso: Concurso;
@@ -15,93 +30,215 @@ export function useConcursoAtual(): Concurso {
   return useOutletContext<Ctx>().concurso;
 }
 
-const abas = [
-  { to: ".", label: "Dashboard", end: true },
-  { to: "conteudos", label: "Conteúdos", end: false },
+const NAV = [
+  { to: ".", label: "Painel", icon: LayoutDashboard, end: true },
+  { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
+  { to: "metas", label: "Metas", icon: CalendarCheck, end: false },
+  { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
+  { to: "apoio", label: "Apoio", icon: Wrench, end: false },
 ];
 
 export function ConcursoLayout() {
   const { concursoId } = useParams();
-  const { concurso, isLoading } = useConcurso(concursoId);
+  const { concurso, concursos, isLoading } = useConcurso(concursoId);
+  const { session } = useAuth();
+  const [switcherAberto, setSwitcherAberto] = useState(false);
+
+  useEffect(() => {
+    if (concursoId) setConcursoAtual(concursoId);
+  }, [concursoId]);
 
   if (isLoading) return <FullScreenSpinner />;
   if (!concurso) {
     return (
-      <EmptyState
-        icon="🔍"
-        title="Concurso não encontrado"
-        message="Ele pode ter sido excluído."
-        action={
-          <Link to="/" className="text-sm font-semibold text-gold hover:underline">
-            Voltar para o início
-          </Link>
-        }
-      />
+      <div className="mx-auto max-w-lg px-4 py-16">
+        <EmptyState
+          icon="🔍"
+          title="Concurso não encontrado"
+          message="Ele pode ter sido excluído."
+          action={
+            <Link to="/concursos" className="text-sm font-semibold text-gold hover:underline">
+              Ver meus concursos
+            </Link>
+          }
+        />
+      </div>
     );
   }
 
+  const cor = concurso.cor;
   const dias = concurso.data_prova ? diasAte(concurso.data_prova) : null;
+  const outros = (concursos ?? []).filter((c) => c.status !== "arquivado");
+
+  const navLink = (mobile: boolean) =>
+    NAV.map(({ to, label, icon: Icon, end }) => (
+      <NavLink
+        key={to}
+        to={to}
+        end={end}
+        onClick={() => setSwitcherAberto(false)}
+        className={({ isActive }) =>
+          mobile
+            ? `flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors ${
+                isActive ? "" : "text-dim"
+              }`
+            : `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                isActive ? "" : "text-dim hover:bg-navy-700/70 hover:text-txt"
+              }`
+        }
+        style={({ isActive }) =>
+          isActive
+            ? mobile
+              ? { color: cor }
+              : { background: `${cor}1f`, color: cor }
+            : undefined
+        }
+      >
+        <Icon className={mobile ? "size-5" : "size-4.5"} />
+        {label}
+      </NavLink>
+    ));
 
   return (
-    <div>
-      <div className="mb-5">
-        <Link
-          to="/"
-          className="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-mut transition-colors hover:text-dim"
-        >
-          <ArrowLeft className="size-3.5" /> Todos os concursos
-        </Link>
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className="flex size-12 items-center justify-center rounded-xl text-2xl"
-            style={{ background: `${concurso.cor}1a` }}
+    <div className="min-h-dvh md:flex">
+      {/* ===== Sidebar desktop — 100% sobre o concurso ativo ===== */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line/50 bg-navy-900/90 md:flex">
+        {/* seletor de concurso */}
+        <div className="relative px-3 pt-4">
+          <button
+            onClick={() => setSwitcherAberto((v) => !v)}
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl border border-line/60 bg-navy-800 px-3 py-2.5 text-left transition-colors hover:border-line"
           >
-            {concurso.icone}
-          </span>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-bold leading-tight tracking-tight sm:text-xl">
-              {concurso.nome}
-            </h1>
-            <p className="mt-0.5 text-xs text-dim">
-              {[concurso.orgao, concurso.banca].filter(Boolean).join(" · ")}
-              {concurso.data_prova && (
-                <>
-                  {" · "}
-                  {dias !== null && dias >= 0 ? (
-                    <span className="font-semibold" style={{ color: concurso.cor }}>
-                      {dias === 0 ? "prova HOJE" : `${dias} ${dias === 1 ? "dia" : "dias"} para a prova`}
+            <span
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-lg"
+              style={{ background: `${cor}1a` }}
+            >
+              {concurso.icone}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-bold text-txt">
+                {concurso.nome_curto ?? concurso.nome}
+              </span>
+              <span className="block truncate text-[11px] text-mut">
+                {concurso.banca ?? concurso.orgao ?? "concurso"}
+              </span>
+            </span>
+            <ChevronsUpDown className="size-4 shrink-0 text-mut" />
+          </button>
+
+          {switcherAberto && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setSwitcherAberto(false)} />
+              <div className="absolute inset-x-3 z-20 mt-1 rounded-xl border border-line bg-navy-700 p-1 shadow-2xl">
+                {outros.map((c) => (
+                  <Link
+                    key={c.id}
+                    to={`/concurso/${c.id}`}
+                    onClick={() => setSwitcherAberto(false)}
+                    className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-navy-600"
+                  >
+                    <span
+                      className="flex size-7 shrink-0 items-center justify-center rounded-md text-sm"
+                      style={{ background: `${c.cor}1a` }}
+                    >
+                      {c.icone}
                     </span>
-                  ) : (
-                    "prova realizada"
-                  )}{" "}
-                  ({fmtData(concurso.data_prova)})
+                    <span className="min-w-0 flex-1 truncate text-txt">
+                      {c.nome_curto ?? c.nome}
+                    </span>
+                    {c.id === concurso.id && <Check className="size-4 shrink-0 text-gold" />}
+                  </Link>
+                ))}
+                <div className="my-1 border-t border-line/50" />
+                <Link
+                  to="/concursos"
+                  onClick={() => setSwitcherAberto(false)}
+                  className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-dim transition-colors hover:bg-navy-600 hover:text-txt"
+                >
+                  <LayoutGrid className="size-4" /> Gerenciar concursos
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* dias para a prova + sequência */}
+        <div className="px-4 pb-1 pt-3">
+          {dias !== null && (
+            <p className="text-[11px] text-dim">
+              {dias >= 0 ? (
+                <>
+                  <strong className="font-bold" style={{ color: cor }}>
+                    {dias}
+                  </strong>{" "}
+                  {dias === 1 ? "dia" : "dias"} para a prova
                 </>
+              ) : (
+                "prova realizada"
               )}
+              <span className="text-mut"> · {fmtData(concurso.data_prova)}</span>
             </p>
+          )}
+          <div className="mt-2.5">
+            <StreakBadge />
           </div>
         </div>
 
-        <nav className="mt-4 flex gap-1 border-b border-line/50">
-          {abas.map((a) => (
-            <NavLink
-              key={a.to}
-              to={a.to}
-              end={a.end}
-              className={({ isActive }) =>
-                `-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "border-gold text-gold"
-                    : "border-transparent text-dim hover:border-line hover:text-txt"
-                }`
-              }
-            >
-              {a.label}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
+        <nav className="mt-3 flex-1 space-y-1 px-3">{navLink(false)}</nav>
 
-      <Outlet context={{ concurso } satisfies Ctx} />
+        <div className="border-t border-line/40 px-4 py-4">
+          <p className="truncate text-[11px] text-mut">{session?.user.email}</p>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-dim transition-colors hover:text-red"
+          >
+            <LogOut className="size-3.5" /> Sair
+          </button>
+        </div>
+      </aside>
+
+      {/* ===== Topo mobile ===== */}
+      <header className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-line/50 bg-navy-900/95 px-4 py-2.5 backdrop-blur md:hidden">
+        <Link to="/concursos" className="flex min-w-0 items-center gap-2">
+          <span
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-base"
+            style={{ background: `${cor}1a` }}
+          >
+            {concurso.icone}
+          </span>
+          <span className="min-w-0">
+            <span className="flex items-center gap-1 text-sm font-bold text-txt">
+              <span className="truncate">{concurso.nome_curto ?? concurso.nome}</span>
+              <ChevronsUpDown className="size-3.5 shrink-0 text-mut" />
+            </span>
+            {dias !== null && dias >= 0 && (
+              <span className="block text-[10px] text-mut">{dias} dias p/ prova</span>
+            )}
+          </span>
+        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <StreakBadge />
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="cursor-pointer p-1 text-mut hover:text-red"
+            aria-label="Sair"
+          >
+            <LogOut className="size-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* ===== Conteúdo ===== */}
+      <main className="min-w-0 flex-1 pb-20 md:ml-60 md:pb-8">
+        <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 md:py-8">
+          <Outlet context={{ concurso } satisfies Ctx} />
+        </div>
+      </main>
+
+      {/* ===== Tab bar mobile ===== */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line/50 bg-navy-900/95 backdrop-blur md:hidden">
+        {navLink(true)}
+      </nav>
     </div>
   );
 }
