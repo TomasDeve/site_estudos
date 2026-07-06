@@ -1,13 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Link,
-  NavLink,
-  Outlet,
-  useLocation,
-  useOutletContext,
-  useParams,
-  useSearchParams,
-} from "react-router";
+import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams } from "react-router";
 import {
   BarChart3,
   BookOpen,
@@ -58,7 +50,6 @@ export function ConcursoLayout() {
   const { concurso, concursos, isLoading } = useConcurso(concursoId);
   const { session } = useAuth();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const [switcherAberto, setSwitcherAberto] = useState(false);
   const [conteudosAberto, setConteudosAberto] = useState(() =>
     location.pathname.includes("/conteudos")
@@ -106,8 +97,7 @@ export function ConcursoLayout() {
   const cor = concurso.cor;
   const dias = concurso.data_prova ? diasAte(concurso.data_prova) : null;
   const outros = (concursos ?? []).filter((c) => c.status !== "arquivado");
-  const emConteudos = location.pathname.includes("/conteudos");
-  const materiaAtiva = emConteudos ? searchParams.get("m") : null;
+  const materiaAtiva = location.pathname.match(/\/conteudos\/([^/?#]+)/)?.[1] ?? null;
 
   const itemDesktop = (isActive: boolean) =>
     `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -285,7 +275,7 @@ export function ConcursoLayout() {
                       return (
                         <li key={vinculoId}>
                           <Link
-                            to={`conteudos?m=${materia.id}`}
+                            to={`conteudos/${materia.id}`}
                             onClick={() => setSwitcherAberto(false)}
                             className={`group flex flex-col gap-1 rounded-lg px-2.5 py-1.5 transition-colors ${
                               ativa ? "bg-navy-700/60" : "hover:bg-navy-700/50"
