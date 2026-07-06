@@ -1,53 +1,42 @@
 # Meus Estudos — Plataforma de Concursos
 
-Plataforma pessoal de estudos para concursos públicos. Um **hub** lista os concursos e, ao entrar em cada um, você tem plano de estudos, edital verticalizado, banco de questões, flashcards e estratégia próprios.
+Plataforma pessoal de estudos para concursos (v2, reescrita do zero): hub multi-concurso,
+dashboard com progresso do edital, metas diárias em blocos com streak 🔥, edital
+verticalizado com links por tópico, métricas de questões e importador do Qconcursos.
 
-O diferencial: **matérias em comum compartilham o progresso**. Português, Informática, Direito Constitucional, Administrativo, Direitos Humanos, Legislação Penal Especial e Processo Penal caem em vários concursos — você estuda uma vez e o progresso conta para todos.
+**Stack:** React 19 + Vite + TypeScript + Tailwind v4 · Supabase (Postgres + Auth, RLS) ·
+TanStack Query · Recharts · deploy nginx via Docker (Easypanel).
 
-Site estático (HTML/CSS/JS puro), sem dependências e sem build. Todo o progresso é salvo no navegador (`localStorage`).
+## Rodando local
 
-## Concursos incluídos
-
-- **PMAL 2026 — Soldado (CFP)** — Polícia Militar de Alagoas · Cebraspe. Completo (plano de 55 dias, edital, questões, flashcards).
-- **PC AL — Polícia Civil de Alagoas** — provisório, aguardando edital. Já traz o núcleo comum para estudar desde já.
-
-## Como usar
-
-Abra o arquivo [`index.html`](index.html) no navegador (duplo clique).
-
-> Opcional — servidor local:
-> ```bash
-> python -m http.server 5599
-> ```
-
-## Funcionalidades (por concurso)
-
-| Aba | O que faz |
-|-----|-----------|
-| **Central** | Contagem regressiva, % do edital dominado, matérias em comum e "missão de hoje" |
-| **Plano de estudos** | Roteiro dia a dia (diagnóstico → fundamentos → aprofundamento → simulados → véspera) |
-| **Edital** | Conteúdo programático verticalizado com status por tópico; matérias comuns marcadas |
-| **Questões** | Itens Certo/Errado no estilo Cebraspe, com gabarito, justificativa e placar |
-| **Flashcards** | Cartões de "lei seca" de alta incidência |
-| **Estratégia** | Pesos estimados por matéria, táticas de prova e fases do concurso |
-
-## Estrutura de arquivos
-
-```
-index.html
-assets/
-  css/styles.css
-  js/data.js    # catálogo de matérias + concursos (edital, plano, questões, flashcards)
-  js/app.js     # hub, navegação por concurso, progresso compartilhado e persistência
+```bash
+npm install
+cp .env.example .env.local   # preencha com a URL e a publishable key do Supabase
+npm run dev                  # http://localhost:5173
 ```
 
-## Como adicionar um novo concurso
+Scripts: `npm run dev` · `npm run build` (typecheck + bundle) · `npm test` (parser do Qconcursos).
 
-Em `assets/js/data.js`:
-1. Reutilize matérias do catálogo `materias` (ou crie novas). Matérias com o mesmo `id` compartilham progresso.
-2. Adicione um objeto em `concursos[]` com `blocos` referenciando os ids das matérias.
-3. Opcional: adicione `sessoes` (plano dia a dia), `pesos` e `estrutura`.
+## Banco (Supabase)
 
-## Observações
+- Migrations em [`supabase/migrations/`](supabase/migrations/) (aplicadas no projeto `estudo_concurso`).
+- Todas as tabelas com RLS `user_id = auth.uid()` — a anon key é pública por design.
+- Matérias são um catálogo **global por usuário**: o progresso de tópicos vale para todos
+  os concursos que usam a mesma matéria.
+- Regra de ouro: consultas a tabelas de série temporal sempre por janela de datas
+  (PostgREST corta em 1000 linhas — ver `src/lib/fetchAll.ts`).
 
-- Datas e pesos por matéria são estimativas/provisórios até a confirmação de cada edital — todos editáveis/marcados no app.
+## Deploy (Easypanel)
+
+Build via `Dockerfile` (multi-stage: node build → nginx). Configurar no serviço os build args:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+## Primeiro acesso
+
+1. Crie sua conta na tela de login ("Primeiro acesso") e confirme o e-mail.
+2. Desative novos cadastros no dashboard Supabase (Auth → Sign In / Up).
+3. Na Home, clique em **Importar PMAL + PC AL** para carregar o catálogo
+   (22 matérias, 194 tópicos) e, se quiser, migre o progresso do site antigo
+   colando o `localStorage` da versão v1.

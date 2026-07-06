@@ -1,3 +1,12 @@
+# Dependências e build
+node_modules/
+dist/
+
+# Ambiente (chaves locais)
+.env
+.env.local
+.env.*.local
+
 # Ferramentas de editor / agente
 .claude/
 
@@ -5,3 +14,6 @@
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Logs
+npm-debug.log*
