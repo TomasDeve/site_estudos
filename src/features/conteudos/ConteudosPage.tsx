@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { Plus } from "lucide-react";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
@@ -29,6 +30,8 @@ export function ConteudosPage() {
   const { data: links, isLoading: l4 } = useTopicoLinks();
   const { data: logs } = useQuestaoLogsPorTopico();
 
+  const [searchParams] = useSearchParams();
+  const materiaAlvo = searchParams.get("m");
   const [modalMateria, setModalMateria] = useState(false);
 
   const meusVinculos = useMemo(
@@ -132,6 +135,7 @@ export function ConteudosPage() {
                       logs={logs ?? []}
                       comum={comuns.has(materia.id)}
                       corConcurso={concurso.cor}
+                      abrir={materiaAlvo === materia.id}
                     />
                   );
                 })}

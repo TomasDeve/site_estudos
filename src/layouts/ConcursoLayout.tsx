@@ -1,10 +1,19 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useOutletContext, useParams } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLocation,
+  useOutletContext,
+  useParams,
+  useSearchParams,
+} from "react-router";
 import {
   BarChart3,
   BookOpen,
   CalendarCheck,
   Check,
+  ChevronRight,
   ChevronsUpDown,
   LayoutDashboard,
   LayoutGrid,
@@ -14,10 +23,14 @@ import {
 } from "lucide-react";
 import type { Concurso } from "@/types/db";
 import { useConcurso } from "@/api/concursos";
+import { useConcursoMaterias, useMaterias } from "@/api/materias";
+import { useTopicos } from "@/api/topicos";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { setConcursoAtual } from "@/lib/currentConcurso";
 import { diasAte, fmtData } from "@/lib/dates";
+import { progressoMateria } from "@/lib/progresso";
+import { ProgressBar } from "@/components/ProgressBar";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { StreakBadge } from "@/features/metas/StreakBadge";
@@ -44,7 +57,29 @@ export function ConcursoLayout() {
   const { concursoId } = useParams();
   const { concurso, concursos, isLoading } = useConcurso(concursoId);
   const { session } = useAuth();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [switcherAberto, setSwitcherAberto] = useState(false);
+  const [conteudosAberto, setConteudosAberto] = useState(() =>
+    location.pathname.includes("/conteudos")
+  );
+
+  const { data: materias } = useMaterias();
+  const { data: vinculos } = useConcursoMaterias();
+  const { data: topicos } = useTopicos();
+
+  // Matérias do concurso ativo, na ordem do edital, com progresso para o submenu.
+  const materiasDoConcurso = useMemo(() => {
+    return (vinculos ?? [])
+      .filter((v) => v.concurso_id === concurso?.id)
+      .sort((a, b) => a.ordem - b.ordem)
+      .map((v) => {
+        const materia = (materias ?? []).find((m) => m.id === v.materia_id);
+        if (!materia) return null;
+        return { vinculoId: v.id, materia, progresso: progressoMateria(materia.id, topicos ?? []) };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+  }, [vinculos, materias, topicos, concurso?.id]);
 
   useEffect(() => {
     if (concursoId) setConcursoAtual(concursoId);
@@ -71,6 +106,15 @@ export function ConcursoLayout() {
   const cor = concurso.cor;
   const dias = concurso.data_prova ? diasAte(concurso.data_prova) : null;
   const outros = (concursos ?? []).filter((c) => c.status !== "arquivado");
+  const emConteudos = location.pathname.includes("/conteudos");
+  const materiaAtiva = emConteudos ? searchParams.get("m") : null;
+
+  const itemDesktop = (isActive: boolean) =>
+    `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+      isActive ? "" : "text-dim hover:bg-navy-700/70 hover:text-txt"
+    }`;
+  const estiloAtivo = (isActive: boolean) =>
+    isActive ? { background: `${cor}1f`, color: cor } : undefined;
 
   const navLink = (mobile: boolean) =>
     NAV.map(({ to, label, icon: Icon, end }) => (
@@ -186,7 +230,92 @@ export function ConcursoLayout() {
           </div>
         </div>
 
-        <nav className="mt-3 flex-1 space-y-1 px-3">{navLink(false)}</nav>
+        <nav className="mt-3 flex-1 space-y-1 overflow-y-auto px-3">
+          {NAV.map(({ to, label, icon: Icon, end }) => {
+            if (to !== "conteudos") {
+              return (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  onClick={() => setSwitcherAberto(false)}
+                  className={({ isActive }) => itemDesktop(isActive)}
+                  style={({ isActive }) => estiloAtivo(isActive)}
+                >
+                  <Icon className="size-4.5" />
+                  {label}
+                </NavLink>
+              );
+            }
+            // "Conteúdos" com submenu de matérias
+            return (
+              <div key={to}>
+                <div className="flex items-center gap-1">
+                  <NavLink
+                    to={to}
+                    end={end}
+                    onClick={() => {
+                      setSwitcherAberto(false);
+                      setConteudosAberto(true);
+                    }}
+                    className={({ isActive }) => `${itemDesktop(isActive)} min-w-0 flex-1`}
+                    style={({ isActive }) => estiloAtivo(isActive)}
+                  >
+                    <Icon className="size-4.5 shrink-0" />
+                    <span className="truncate">{label}</span>
+                  </NavLink>
+                  {materiasDoConcurso.length > 0 && (
+                    <button
+                      onClick={() => setConteudosAberto((v) => !v)}
+                      className="shrink-0 cursor-pointer rounded-lg p-1.5 text-mut transition-colors hover:bg-navy-700/70 hover:text-txt"
+                      aria-label={conteudosAberto ? "Recolher matérias" : "Expandir matérias"}
+                      aria-expanded={conteudosAberto}
+                    >
+                      <ChevronRight
+                        className={`size-4 transition-transform ${conteudosAberto ? "rotate-90" : ""}`}
+                      />
+                    </button>
+                  )}
+                </div>
+
+                {conteudosAberto && materiasDoConcurso.length > 0 && (
+                  <ul className="mb-1 ml-5 mt-1 space-y-0.5 border-l border-line/40 pl-2">
+                    {materiasDoConcurso.map(({ vinculoId, materia, progresso }) => {
+                      const ativa = materiaAtiva === materia.id;
+                      return (
+                        <li key={vinculoId}>
+                          <Link
+                            to={`conteudos?m=${materia.id}`}
+                            onClick={() => setSwitcherAberto(false)}
+                            className={`group flex flex-col gap-1 rounded-lg px-2.5 py-1.5 transition-colors ${
+                              ativa ? "bg-navy-700/60" : "hover:bg-navy-700/50"
+                            }`}
+                            title={`${materia.nome} — ${progresso.concluidos}/${progresso.total} tópicos`}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <span className="shrink-0 text-sm">{materia.icone}</span>
+                              <span
+                                className={`min-w-0 flex-1 truncate text-xs ${
+                                  ativa ? "text-txt" : "text-dim group-hover:text-txt"
+                                }`}
+                              >
+                                {materia.nome}
+                              </span>
+                              <span className="shrink-0 text-[10px] font-semibold tabular-nums text-mut">
+                                {progresso.total === 0 ? "—" : `${progresso.pct}%`}
+                              </span>
+                            </span>
+                            <ProgressBar value={progresso.pct} color={cor} size="sm" />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </nav>
 
         <div className="border-t border-line/40 px-4 py-4">
           <p className="truncate text-[11px] text-mut">{session?.user.email}</p>

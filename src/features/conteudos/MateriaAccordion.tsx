@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ChevronDown, Plus, Unlink } from "lucide-react";
 import { toast } from "sonner";
 import type { ConcursoMateria, Materia, QuestaoLog, Topico, TopicoLink } from "@/types/db";
@@ -18,13 +18,34 @@ interface Props {
   logs: QuestaoLog[];
   comum: boolean;
   corConcurso: string;
+  /** Abre e rola até esta matéria (deep-link do submenu da sidebar). */
+  abrir?: boolean;
 }
 
-export function MateriaAccordion({ vinculo, materia, topicos, links, logs, comum, corConcurso }: Props) {
+export function MateriaAccordion({
+  vinculo,
+  materia,
+  topicos,
+  links,
+  logs,
+  comum,
+  corConcurso,
+  abrir = false,
+}: Props) {
   const [aberta, setAberta] = useState(false);
   const [adicionando, setAdicionando] = useState(false);
   const [novoTopico, setNovoTopico] = useState("");
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!abrir) return;
+    setAberta(true);
+    const raf = requestAnimationFrame(() =>
+      containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
+    return () => cancelAnimationFrame(raf);
+  }, [abrir]);
 
   const criarTopico = useCriarTopico();
   const desvincular = useDesvincularMateria();
@@ -73,7 +94,10 @@ export function MateriaAccordion({ vinculo, materia, topicos, links, logs, comum
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-line/60 bg-navy-800/80">
+    <div
+      ref={containerRef}
+      className="scroll-mt-20 overflow-hidden rounded-card border border-line/60 bg-navy-800/80"
+    >
       <button
         onClick={() => setAberta((v) => !v)}
         className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-navy-700/40"
