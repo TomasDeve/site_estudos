@@ -458,6 +458,7 @@ export type Database = {
           materia_id: string | null
           materia_texto: string | null
           origem: string
+          topico_id: string | null
           total: number
           user_id: string
         }
@@ -469,6 +470,7 @@ export type Database = {
           materia_id?: string | null
           materia_texto?: string | null
           origem?: string
+          topico_id?: string | null
           total: number
           user_id?: string
         }
@@ -480,6 +482,7 @@ export type Database = {
           materia_id?: string | null
           materia_texto?: string | null
           origem?: string
+          topico_id?: string | null
           total?: number
           user_id?: string
         }
@@ -489,6 +492,13 @@ export type Database = {
             columns: ["materia_id"]
             isOneToOne: false
             referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questao_logs_topico_id_fkey"
+            columns: ["topico_id"]
+            isOneToOne: false
+            referencedRelation: "topicos"
             referencedColumns: ["id"]
           },
         ]

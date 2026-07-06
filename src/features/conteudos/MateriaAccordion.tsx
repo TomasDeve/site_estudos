@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { ChevronDown, Plus, Unlink } from "lucide-react";
 import { toast } from "sonner";
-import type { ConcursoMateria, Materia, Topico, TopicoLink } from "@/types/db";
+import type { ConcursoMateria, Materia, QuestaoLog, Topico, TopicoLink } from "@/types/db";
 import { useCriarTopico } from "@/api/topicos";
 import { useDesvincularMateria } from "@/api/materias";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -15,11 +15,12 @@ interface Props {
   materia: Materia;
   topicos: Topico[];
   links: TopicoLink[];
+  logs: QuestaoLog[];
   comum: boolean;
   corConcurso: string;
 }
 
-export function MateriaAccordion({ vinculo, materia, topicos, links, comum, corConcurso }: Props) {
+export function MateriaAccordion({ vinculo, materia, topicos, links, logs, comum, corConcurso }: Props) {
   const [aberta, setAberta] = useState(false);
   const [adicionando, setAdicionando] = useState(false);
   const [novoTopico, setNovoTopico] = useState("");
@@ -44,6 +45,16 @@ export function MateriaAccordion({ vinculo, materia, topicos, links, comum, corC
     }
     return mapa;
   }, [links]);
+  const logsPorTopico = useMemo(() => {
+    const mapa = new Map<string, QuestaoLog[]>();
+    for (const l of logs) {
+      if (!l.topico_id) continue;
+      const arr = mapa.get(l.topico_id) ?? [];
+      arr.push(l);
+      mapa.set(l.topico_id, arr);
+    }
+    return mapa;
+  }, [logs]);
 
   const concluidos = meusTopicos.filter((t) => t.status === "concluido").length;
   const pct = meusTopicos.length === 0 ? 0 : Math.round((concluidos / meusTopicos.length) * 100);
@@ -97,7 +108,12 @@ export function MateriaAccordion({ vinculo, materia, topicos, links, comum, corC
         <div className="border-t border-line/40 px-3 pb-3 pt-2">
           <ul>
             {meusTopicos.map((t) => (
-              <TopicoRow key={t.id} topico={t} links={linksPorTopico.get(t.id) ?? []} />
+              <TopicoRow
+                key={t.id}
+                topico={t}
+                links={linksPorTopico.get(t.id) ?? []}
+                logs={logsPorTopico.get(t.id) ?? []}
+              />
             ))}
           </ul>
 

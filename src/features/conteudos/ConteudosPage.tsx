@@ -4,6 +4,7 @@ import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
+import { useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { materiasComuns, progressoConcurso } from "@/lib/progresso";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -26,6 +27,7 @@ export function ConteudosPage() {
   const { data: vinculos, isLoading: l2 } = useConcursoMaterias();
   const { data: topicos, isLoading: l3 } = useTopicos();
   const { data: links, isLoading: l4 } = useTopicoLinks();
+  const { data: logs } = useQuestaoLogsPorTopico();
 
   const [modalMateria, setModalMateria] = useState(false);
 
@@ -127,6 +129,7 @@ export function ConteudosPage() {
                       materia={materia}
                       topicos={topicos ?? []}
                       links={links ?? []}
+                      logs={logs ?? []}
                       comum={comuns.has(materia.id)}
                       corConcurso={concurso.cor}
                     />

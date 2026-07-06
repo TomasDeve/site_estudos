@@ -1,8 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { fetchAll } from "@/lib/fetchAll";
 import type { QuestaoLog, TablesInsert } from "@/types/db";
 
 export const PAGINA_HISTORICO = 25;
+
+/** Todos os registros vinculados a um tópico (assunto) — para o desempenho no edital. */
+export function useQuestaoLogsPorTopico() {
+  return useQuery({
+    queryKey: ["questao_logs", "por_topico"],
+    queryFn: () =>
+      fetchAll<QuestaoLog>((f, t) =>
+        supabase
+          .from("questao_logs")
+          .select("*")
+          .not("topico_id", "is", null)
+          .order("data", { ascending: false })
+          .order("created_at", { ascending: false })
+          .range(f, t)
+      ),
+  });
+}
 
 /** Logs numa janela de datas (gráficos, "hoje"). */
 export function useQuestaoLogsJanela(inicioISO: string, fimISO: string) {
