@@ -91,26 +91,29 @@ export function useReiniciarVolta() {
   });
 }
 
-/** Move uma matéria uma posição para cima/baixo dentro do ciclo do concurso. */
-export function useMoverItem() {
+/**
+ * Reordena o ciclo a partir da lista já na nova ordem (arrastar-e-soltar).
+ * Grava `ordem = índice` apenas nas matérias cuja posição mudou.
+ */
+export function useReordenarCiclo() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ a, b }: { a: CicloItem; b: CicloItem }) => {
-      // troca os valores de `ordem` entre os dois vizinhos
-      const { error } = await supabase
-        .from("ciclo_itens")
-        .upsert([
-          { ...a, ordem: b.ordem },
-          { ...b, ordem: a.ordem },
-        ]);
+    mutationFn: async (itensOrdenados: CicloItem[]) => {
+      const linhas = itensOrdenados
+        .map((item, i) => ({ item, novaOrdem: i }))
+        .filter(({ item, novaOrdem }) => item.ordem !== novaOrdem)
+        .map(({ item, novaOrdem }) => ({ ...item, ordem: novaOrdem }));
+      if (linhas.length === 0) return;
+      const { error } = await supabase.from("ciclo_itens").upsert(linhas);
       if (error) throw error;
     },
-    onMutate: async ({ a, b }) => {
+    onMutate: async (itensOrdenados) => {
       await qc.cancelQueries({ queryKey: KEY });
       const prev = qc.getQueryData<CicloItem[]>(KEY);
+      const novaOrdemPorId = new Map(itensOrdenados.map((it, i) => [it.id, i]));
       qc.setQueryData<CicloItem[]>(KEY, (old) =>
         old?.map((c) =>
-          c.id === a.id ? { ...c, ordem: b.ordem } : c.id === b.id ? { ...c, ordem: a.ordem } : c
+          novaOrdemPorId.has(c.id) ? { ...c, ordem: novaOrdemPorId.get(c.id)! } : c
         )
       );
       return { prev };

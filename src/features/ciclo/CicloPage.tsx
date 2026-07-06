@@ -1,15 +1,25 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  RotateCcw,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { ArrowRight, Check, Plus, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { CicloItem } from "@/types/db";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
@@ -18,9 +28,9 @@ import { useTopicos } from "@/api/topicos";
 import {
   useCicloItens,
   useGerarCiclo,
-  useMoverItem,
   useReiniciarVolta,
   useRemoverDoCiclo,
+  useReordenarCiclo,
   useSetItemConcluido,
 } from "@/api/ciclo";
 import { sugerirOrdemCiclo } from "@/lib/cicloOrder";
@@ -34,6 +44,7 @@ import { StatCard } from "@/components/StatCard";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { AdicionarMateriaModal } from "./AdicionarMateriaModal";
+import { CicloItemRow } from "./CicloItemRow";
 
 export function CicloPage() {
   const concurso = useConcursoAtual();
@@ -46,8 +57,14 @@ export function CicloPage() {
   const gerar = useGerarCiclo();
   const setConcluido = useSetItemConcluido();
   const reiniciar = useReiniciarVolta();
-  const mover = useMoverItem();
+  const reordenar = useReordenarCiclo();
   const remover = useRemoverDoCiclo();
+
+  const sensors = useSensors(
+    // distância de ativação: um clique curto na alça não conta como arraste
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const [modalAdd, setModalAdd] = useState(false);
 
@@ -136,11 +153,13 @@ export function CicloPage() {
     }
   }
 
-  function moverItem(i: number, dir: -1 | 1) {
-    const alvo = meusItens[i + dir];
-    const item = meusItens[i];
-    if (!alvo || !item) return;
-    mover.mutate({ a: item, b: alvo });
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const de = meusItens.findIndex((i) => i.id === active.id);
+    const para = meusItens.findIndex((i) => i.id === over.id);
+    if (de < 0 || para < 0) return;
+    reordenar.mutate(arrayMove(meusItens, de, para));
   }
 
   const jaNoCiclo = new Set(meusItens.map((i) => i.materia_id));
@@ -333,95 +352,44 @@ export function CicloPage() {
               </Button>
             </div>
 
-            <ul className="space-y-1.5">
-              {meusItens.map((item, i) => {
-                const p = progresso(item.materia_id);
-                const ehAtual = item.id === atual?.id;
-                return (
-                  <li
-                    key={item.id}
-                    className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all ${
-                      item.concluido
-                        ? "border-green/25 bg-green/8"
-                        : ehAtual
-                          ? "border-line bg-navy-800"
-                          : "border-line/50 bg-navy-900/50 hover:border-line"
-                    }`}
-                    style={ehAtual ? { borderColor: `${cor}88` } : undefined}
-                  >
-                    <button
-                      onClick={() =>
-                        setConcluido.mutate({ item, concluido: !item.concluido })
-                      }
-                      className={`flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all ${
-                        item.concluido
-                          ? "border-green bg-green text-navy-950"
-                          : "border-mut hover:scale-110"
-                      }`}
-                      style={!item.concluido ? { borderColor: `${cor}99` } : undefined}
-                      aria-label={item.concluido ? "Desmarcar matéria" : "Concluir matéria"}
-                    >
-                      {item.concluido ? (
-                        <Check className="size-4" />
-                      ) : (
-                        <span className="text-[11px] font-bold tabular-nums text-dim">
-                          {i + 1}
-                        </span>
-                      )}
-                    </button>
+            <p className="mb-2 text-[11px] text-mut">
+              Arraste pela alça à esquerda de cada matéria para reordenar o ciclo.
+            </p>
 
-                    <span className="text-lg">{icone(item)}</span>
-
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className={`truncate text-sm ${
-                          item.concluido ? "text-mut line-through" : "text-txt"
-                        }`}
-                      >
-                        {nome(item)}
-                      </p>
-                      {p.total > 0 && (
-                        <div className="mt-1 flex items-center gap-2">
-                          <div className="h-1 w-24 overflow-hidden rounded-full bg-navy-900">
-                            <div
-                              className="h-full rounded-full"
-                              style={{ width: `${p.pct}%`, background: cor }}
-                            />
-                          </div>
-                          <span className="text-[10px] tabular-nums text-mut">{p.pct}%</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 max-md:opacity-100">
-                      <button
-                        onClick={() => moverItem(i, -1)}
-                        disabled={i === 0}
-                        className="cursor-pointer rounded-md p-1 text-mut hover:bg-navy-600 hover:text-txt disabled:cursor-not-allowed disabled:opacity-30"
-                        aria-label="Mover para cima"
-                      >
-                        <ChevronUp className="size-4" />
-                      </button>
-                      <button
-                        onClick={() => moverItem(i, 1)}
-                        disabled={i === meusItens.length - 1}
-                        className="cursor-pointer rounded-md p-1 text-mut hover:bg-navy-600 hover:text-txt disabled:cursor-not-allowed disabled:opacity-30"
-                        aria-label="Mover para baixo"
-                      >
-                        <ChevronDown className="size-4" />
-                      </button>
-                      <button
-                        onClick={() => remover.mutate(item.id)}
-                        className="cursor-pointer rounded-md p-1 text-mut hover:bg-red/10 hover:text-red"
-                        aria-label="Remover do ciclo"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+              onDragEnd={onDragEnd}
+            >
+              <SortableContext
+                items={meusItens.map((i) => i.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className="space-y-1.5">
+                  {meusItens.map((item, i) => {
+                    const p = progresso(item.materia_id);
+                    return (
+                      <CicloItemRow
+                        key={item.id}
+                        item={item}
+                        index={i}
+                        ehAtual={item.id === atual?.id}
+                        cor={cor}
+                        nome={nome(item)}
+                        icone={icone(item)}
+                        pct={p.pct}
+                        temTopicos={p.total > 0}
+                        onToggle={() =>
+                          setConcluido.mutate({ item, concluido: !item.concluido })
+                        }
+                        onRemover={() => remover.mutate(item.id)}
+                      />
+                    );
+                  })}
+                </ul>
+              </SortableContext>
+            </DndContext>
 
             {!voltaCompleta && (
               <button
