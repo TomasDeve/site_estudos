@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { Link2, Trash2, ExternalLink, Plus, Target, X } from "lucide-react";
+import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoStatus } from "@/types/db";
-import { CICLO_STATUS, useExcluirTopico, useSetTopicoStatus } from "@/api/topicos";
+import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoStatus } from "@/api/topicos";
 import { useCriarTopicoLink, useExcluirTopicoLink } from "@/api/topicoLinks";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
@@ -29,12 +29,15 @@ interface Props {
 
 export function TopicoRow({ topico, links, logs }: Props) {
   const setStatus = useSetTopicoStatus();
+  const atualizar = useAtualizarTopico();
   const excluirTopico = useExcluirTopico();
   const criarLink = useCriarTopicoLink();
   const excluirLink = useExcluirTopicoLink();
 
   const [painel, setPainel] = useState<Painel>(null);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [tituloEdit, setTituloEdit] = useState(topico.titulo);
 
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novaUrl, setNovaUrl] = useState("");
@@ -52,6 +55,26 @@ export function TopicoRow({ topico, links, logs }: Props) {
 
   function alternar(p: Painel) {
     setPainel((atual) => (atual === p ? null : p));
+  }
+
+  function abrirEdicao() {
+    setTituloEdit(topico.titulo);
+    setEditando(true);
+  }
+
+  async function salvarTitulo() {
+    const t = tituloEdit.trim();
+    setEditando(false);
+    if (!t || t === topico.titulo) {
+      setTituloEdit(topico.titulo);
+      return;
+    }
+    try {
+      await atualizar.mutateAsync({ id: topico.id, titulo: t });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+      setTituloEdit(topico.titulo);
+    }
   }
 
   async function onAddLink(e: FormEvent) {
@@ -87,13 +110,46 @@ export function TopicoRow({ topico, links, logs }: Props) {
           title={`${info.label} → clique: ${STATUS_INFO[CICLO_STATUS[status]].label}`}
           aria-label={`${topico.titulo}: ${info.label}`}
         />
-        <span
-          className={`min-w-0 flex-1 text-sm leading-snug ${
-            status === "concluido" ? "text-mut" : "text-txt"
-          }`}
-        >
-          {topico.titulo}
-        </span>
+        {editando ? (
+          <input
+            autoFocus
+            value={tituloEdit}
+            onChange={(e) => setTituloEdit(e.target.value)}
+            onBlur={salvarTitulo}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                salvarTitulo();
+              } else if (e.key === "Escape") {
+                setTituloEdit(topico.titulo);
+                setEditando(false);
+              }
+            }}
+            className="min-w-0 flex-1 rounded-md border border-line bg-navy-950 px-2 py-1 text-sm text-txt outline-none focus:border-gold/60"
+            placeholder="Nome do assunto"
+          />
+        ) : (
+          <span
+            onDoubleClick={abrirEdicao}
+            className={`min-w-0 flex-1 text-sm leading-snug ${
+              status === "concluido" ? "text-mut" : "text-txt"
+            }`}
+          >
+            {topico.titulo}
+          </span>
+        )}
+
+        {/* renomear assunto */}
+        {!editando && (
+          <button
+            onClick={abrirEdicao}
+            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
+            title="Renomear assunto"
+            aria-label={`Renomear ${topico.titulo}`}
+          >
+            <Pencil className="size-3.5" />
+          </button>
+        )}
 
         {/* desempenho: mostra a taxa de acerto, ou convida a registrar */}
         <button
