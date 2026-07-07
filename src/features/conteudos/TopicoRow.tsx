@@ -110,7 +110,11 @@ export function TopicoRow({ topico, links, logs }: Props) {
           }
         >
           <Target className="size-3.5" />
-          {resumo.pct !== null && <span className="tabular-nums">{resumo.pct}%</span>}
+          {resumo.pct !== null && (
+            <span className="tabular-nums">
+              {resumo.total}Q · {resumo.pct}%
+            </span>
+          )}
         </button>
 
         {/* adicionar/gerenciar links */}
