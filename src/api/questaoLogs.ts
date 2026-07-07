@@ -80,6 +80,59 @@ export function useCriarQuestaoLogsEmLote() {
   });
 }
 
+/**
+ * Registra uma questão por clique (+Acerto / +Erro) somando tudo num único
+ * registro do dia (origem 'clique'). O incremento é atômico no banco, então
+ * toques rápidos não se perdem. Atualiza a janela do dia de forma otimista.
+ */
+export function useRegistrarClique() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { data: string; materiaId: string | null; acerto: boolean }) => {
+      const { data, error } = await supabase.rpc("registrar_clique_questao", {
+        p_data: input.data,
+        p_materia: input.materiaId,
+        p_acerto: input.acerto,
+      });
+      if (error) throw error;
+      return data as QuestaoLog;
+    },
+    onMutate: async (input) => {
+      const key = ["questao_logs", "janela", input.data, input.data];
+      await qc.cancelQueries({ queryKey: key });
+      const anterior = qc.getQueryData<QuestaoLog[]>(key);
+      const inc = input.acerto ? 1 : 0;
+      qc.setQueryData<QuestaoLog[]>(key, (old) => {
+        const rows = old ? [...old] : [];
+        const alvo = (input.materiaId ?? null);
+        const idx = rows.findIndex((r) => r.origem === "clique" && r.materia_id === alvo);
+        if (idx >= 0) {
+          rows[idx] = { ...rows[idx], total: rows[idx].total + 1, acertos: rows[idx].acertos + inc };
+        } else {
+          rows.push({
+            id: `otimista-${input.data}-${alvo ?? "geral"}`,
+            data: input.data,
+            total: 1,
+            acertos: inc,
+            materia_id: alvo,
+            materia_texto: null,
+            topico_id: null,
+            origem: "clique",
+            created_at: new Date().toISOString(),
+            user_id: "",
+          });
+        }
+        return rows;
+      });
+      return { key, anterior };
+    },
+    onError: (_err, _input, ctx) => {
+      if (ctx) qc.setQueryData(ctx.key, ctx.anterior);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["questao_logs"] }),
+  });
+}
+
 export function useExcluirQuestaoLog() {
   const qc = useQueryClient();
   return useMutation({

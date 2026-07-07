@@ -642,7 +642,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      registrar_clique_questao: {
+        Args: {
+          p_data: string
+          p_materia: string | null
+          p_acerto: boolean
+        }
+        Returns: {
+          acertos: number
+          created_at: string
+          data: string
+          id: string
+          materia_id: string | null
+          materia_texto: string | null
+          origem: string
+          topico_id: string | null
+          total: number
+          user_id: string
+        }
+      }
     }
     Enums: {
       [_ in never]: never
