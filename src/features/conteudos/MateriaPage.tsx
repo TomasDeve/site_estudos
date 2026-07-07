@@ -6,7 +6,7 @@ import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useDesvincularMateria, useMaterias } from "@/api/materias";
 import { useCriarTopico, useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
-import { useQuestaoLogsPorTopico } from "@/api/questaoLogs";
+import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { materiasComuns } from "@/lib/progresso";
 import type { QuestaoLog, TopicoLink } from "@/types/db";
 import { Card, CardBody } from "@/components/Card";
@@ -17,6 +17,7 @@ import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TopicoRow } from "./TopicoRow";
+import { RegistroQuestoes } from "./RegistroQuestoes";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
 
@@ -36,6 +37,7 @@ export function MateriaPage() {
   const { data: topicos, isLoading: l3 } = useTopicos();
   const { data: links, isLoading: l4 } = useTopicoLinks();
   const { data: logs } = useQuestaoLogsPorTopico();
+  const { data: logsMateria } = useQuestaoLogsPorMateria(materiaId);
 
   const criarTopico = useCriarTopico();
   const desvincular = useDesvincularMateria();
@@ -43,6 +45,7 @@ export function MateriaPage() {
   const [novoTopico, setNovoTopico] = useState("");
   const [adicionando, setAdicionando] = useState(false);
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
+  const [abrirQuestoes, setAbrirQuestoes] = useState(false);
 
   const irPara = `/concurso/${concurso.id}/conteudos`;
 
@@ -86,11 +89,19 @@ export function MateriaPage() {
     return mapa;
   }, [logs]);
 
-  // Desempenho em questões acumulado da matéria (soma dos tópicos).
+  // Registros avulsos da matéria (sem tópico), somados no dia via +Acerto/+Erro
+  // ou registrados em bateria direto na matéria.
+  const geral = useMemo(() => {
+    const t = (logsMateria ?? []).reduce((s, l) => s + l.total, 0);
+    const a = (logsMateria ?? []).reduce((s, l) => s + l.acertos, 0);
+    return { total: t, acertos: a, pct: t > 0 ? Math.round((a / t) * 100) : null };
+  }, [logsMateria]);
+
+  // Desempenho em questões acumulado da matéria (tópicos + registros avulsos).
   const desempenho = useMemo(() => {
     const ids = new Set(meusTopicos.map((t) => t.id));
-    let total = 0;
-    let acertos = 0;
+    let total = geral.total;
+    let acertos = geral.acertos;
     for (const l of logs ?? []) {
       if (l.topico_id && ids.has(l.topico_id)) {
         total += l.total;
@@ -98,7 +109,7 @@ export function MateriaPage() {
       }
     }
     return { total, acertos, pct: total > 0 ? Math.round((acertos / total) * 100) : null };
-  }, [logs, meusTopicos]);
+  }, [logs, meusTopicos, geral]);
 
   if (l1 || l2 || l3 || l4) return <FullScreenSpinner />;
 
@@ -196,6 +207,35 @@ export function MateriaPage() {
               </div>
             </div>
           </div>
+        </CardBody>
+      </Card>
+
+      {/* Questões resolvidas direto na matéria (misturando assuntos) */}
+      <Card>
+        <CardBody>
+          <button
+            onClick={() => setAbrirQuestoes((v) => !v)}
+            className="flex w-full cursor-pointer items-center justify-between gap-3 text-left"
+          >
+            <span className="flex items-center gap-2 text-sm font-semibold text-txt">
+              <Target className="size-4 text-gold" /> Questões da matéria (geral)
+            </span>
+            <span className="flex items-center gap-2 text-xs text-mut">
+              {geral.pct !== null ? `${geral.acertos}/${geral.total} · ${geral.pct}%` : "registrar"}
+              <ChevronRight
+                className={`size-4 transition-transform ${abrirQuestoes ? "rotate-90" : ""}`}
+              />
+            </span>
+          </button>
+          {abrirQuestoes && (
+            <div className="mt-3 border-t border-line/30 pt-3">
+              <p className="mb-3 text-xs text-mut">
+                Resolveu questões misturando vários assuntos no filtro? Registre direto aqui, sem
+                escolher um tópico.
+              </p>
+              <RegistroQuestoes materiaId={materia.id} topicoId={null} logs={logsMateria ?? []} />
+            </div>
+          )}
         </CardBody>
       </Card>
 

@@ -646,6 +646,7 @@ export type Database = {
         Args: {
           p_data: string
           p_materia: string | null
+          p_topico: string | null
           p_acerto: boolean
         }
         Returns: {

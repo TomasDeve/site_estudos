@@ -1,17 +1,15 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Link2, Trash2, ExternalLink, Plus, Target, X } from "lucide-react";
-import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoStatus } from "@/types/db";
 import { CICLO_STATUS, useExcluirTopico, useSetTopicoStatus } from "@/api/topicos";
 import { useCriarTopicoLink, useExcluirTopicoLink } from "@/api/topicoLinks";
-import { useCriarQuestaoLog, useExcluirQuestaoLog } from "@/api/questaoLogs";
-import { hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
+import { RegistroQuestoes } from "./RegistroQuestoes";
 
 const TIPO_LINK: Record<string, string> = {
   questoes: "✍️",
@@ -34,8 +32,6 @@ export function TopicoRow({ topico, links, logs }: Props) {
   const excluirTopico = useExcluirTopico();
   const criarLink = useCriarTopicoLink();
   const excluirLink = useExcluirTopicoLink();
-  const criarLog = useCriarQuestaoLog();
-  const excluirLog = useExcluirQuestaoLog();
 
   const [painel, setPainel] = useState<Painel>(null);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
@@ -43,10 +39,6 @@ export function TopicoRow({ topico, links, logs }: Props) {
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novaUrl, setNovaUrl] = useState("");
   const [novoTipo, setNovoTipo] = useState("questoes");
-
-  const [total, setTotal] = useState("");
-  const [acertos, setAcertos] = useState("");
-  const [dataLog, setDataLog] = useState(hojeISO());
 
   const status = topico.status as TopicoStatus;
   const info = STATUS_INFO[status];
@@ -74,30 +66,6 @@ export function TopicoRow({ topico, links, logs }: Props) {
       });
       setNovoTitulo("");
       setNovaUrl("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err));
-    }
-  }
-
-  async function onAddLog(e: FormEvent) {
-    e.preventDefault();
-    const t = Number(total);
-    const a = Number(acertos);
-    if (!Number.isInteger(t) || t <= 0) return toast.error("Total de questões inválido.");
-    if (!Number.isInteger(a) || a < 0 || a > t)
-      return toast.error("Acertos deve ficar entre 0 e o total.");
-    try {
-      await criarLog.mutateAsync({
-        data: dataLog,
-        total: t,
-        acertos: a,
-        materia_id: topico.materia_id,
-        topico_id: topico.id,
-        origem: "manual",
-      });
-      toast.success(`${a}/${t} (${Math.round((a / t) * 100)}%) registrado 🎯`);
-      setTotal("");
-      setAcertos("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -201,88 +169,8 @@ export function TopicoRow({ topico, links, logs }: Props) {
 
       {/* Painel: registrar/ver desempenho do assunto. */}
       {painel === "questoes" && (
-        <div className="mb-2 ml-7 space-y-3 rounded-lg border border-line/50 bg-navy-900/60 p-3">
-          {resumo.pct !== null && cor ? (
-            <div className="flex items-center gap-3">
-              <span className={`text-2xl font-bold tabular-nums ${cor.texto}`}>{resumo.pct}%</span>
-              <span className="text-xs text-mut">
-                {resumo.acertos}/{resumo.total} questões ·{" "}
-                {logs.length} {logs.length === 1 ? "registro" : "registros"}
-              </span>
-            </div>
-          ) : (
-            <p className="text-xs text-mut">
-              Fez questões deste assunto? Anote quantas e quantas acertou.
-            </p>
-          )}
-
-          <form onSubmit={onAddLog} className="flex flex-wrap items-end gap-2">
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium text-dim">Questões</span>
-              <Input
-                type="number"
-                required
-                min="1"
-                placeholder="30"
-                value={total}
-                onChange={(e) => setTotal(e.target.value)}
-                className="!h-8 w-20 !text-xs"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium text-dim">Acertos</span>
-              <Input
-                type="number"
-                required
-                min="0"
-                placeholder="24"
-                value={acertos}
-                onChange={(e) => setAcertos(e.target.value)}
-                className="!h-8 w-20 !text-xs"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium text-dim">Data</span>
-              <Input
-                type="date"
-                value={dataLog}
-                onChange={(e) => setDataLog(e.target.value)}
-                className="!h-8 w-36 !text-xs"
-              />
-            </label>
-            <Button size="sm" type="submit" variant="secondary" loading={criarLog.isPending}>
-              <Plus className="size-3.5" /> Registrar
-            </Button>
-          </form>
-
-          {logs.length > 0 && (
-            <ul className="space-y-1 border-t border-line/30 pt-2">
-              {logs.slice(0, 5).map((l) => {
-                const pct = Math.round((l.acertos / l.total) * 100);
-                return (
-                  <li key={l.id} className="flex items-center gap-2 text-xs text-dim">
-                    <span className="w-12 shrink-0 tabular-nums text-mut">
-                      {format(parseISO(l.data), "dd/MM")}
-                    </span>
-                    <span className="tabular-nums">
-                      {l.acertos}/{l.total}
-                    </span>
-                    <span className={`font-semibold tabular-nums ${corDesempenho(pct).texto}`}>
-                      {pct}%
-                    </span>
-                    <button
-                      onClick={() => excluirLog.mutate(l.id)}
-                      className="ml-auto shrink-0 cursor-pointer p-0.5 text-mut transition-colors hover:text-red"
-                      aria-label="Excluir registro"
-                      title="Excluir registro"
-                    >
-                      <Trash2 className="size-3" />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+        <div className="mb-2 ml-7 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+          <RegistroQuestoes materiaId={topico.materia_id} topicoId={topico.id} logs={logs} />
         </div>
       )}
 
