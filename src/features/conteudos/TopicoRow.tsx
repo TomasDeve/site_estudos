@@ -1,15 +1,17 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil } from "lucide-react";
+import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen } from "lucide-react";
 import { toast } from "sonner";
-import type { QuestaoLog, Topico, TopicoLink, TopicoStatus } from "@/types/db";
+import type { QuestaoLog, Topico, TopicoLink, TopicoTexto, TopicoStatus } from "@/types/db";
 import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoStatus } from "@/api/topicos";
 import { useCriarTopicoLink, useExcluirTopicoLink } from "@/api/topicoLinks";
+import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
 import { RegistroQuestoes } from "./RegistroQuestoes";
+import { TextoReaderModal } from "./TextoReaderModal";
 
 const TIPO_LINK: Record<string, string> = {
   questoes: "✍️",
@@ -19,25 +21,29 @@ const TIPO_LINK: Record<string, string> = {
   outro: "🔗",
 };
 
-type Painel = null | "links" | "questoes";
+type Painel = null | "links" | "questoes" | "textos";
 
 interface Props {
   topico: Topico;
   links: TopicoLink[];
   logs: QuestaoLog[];
+  textos: TopicoTexto[];
 }
 
-export function TopicoRow({ topico, links, logs }: Props) {
+export function TopicoRow({ topico, links, logs, textos }: Props) {
   const setStatus = useSetTopicoStatus();
   const atualizar = useAtualizarTopico();
   const excluirTopico = useExcluirTopico();
   const criarLink = useCriarTopicoLink();
   const excluirLink = useExcluirTopicoLink();
+  const criarTexto = useCriarTopicoTexto();
+  const excluirTexto = useExcluirTopicoTexto();
 
   const [painel, setPainel] = useState<Painel>(null);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   const [editando, setEditando] = useState(false);
   const [tituloEdit, setTituloEdit] = useState(topico.titulo);
+  const [textoAberto, setTextoAberto] = useState<TopicoTexto | null>(null);
 
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novaUrl, setNovaUrl] = useState("");
@@ -89,6 +95,19 @@ export function TopicoRow({ topico, links, logs }: Props) {
       });
       setNovoTitulo("");
       setNovaUrl("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onNovoTexto() {
+    try {
+      const novo = await criarTexto.mutateAsync({
+        topico_id: topico.id,
+        titulo: "Texto de lei",
+        ordem: textos.length,
+      });
+      setTextoAberto(novo);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -173,6 +192,20 @@ export function TopicoRow({ topico, links, logs }: Props) {
           )}
         </button>
 
+        {/* textos de lei */}
+        <button
+          onClick={() => alternar("textos")}
+          className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
+            textos.length > 0
+              ? "text-gold hover:bg-gold/10"
+              : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+          } ${painel === "textos" ? "ring-1 ring-line" : ""}`}
+          title="Textos de lei deste assunto"
+        >
+          <BookOpen className="size-3.5" />
+          {textos.length > 0 && <span className="font-semibold">{textos.length}</span>}
+        </button>
+
         {/* adicionar/gerenciar links */}
         <button
           onClick={() => alternar("links")}
@@ -234,6 +267,51 @@ export function TopicoRow({ topico, links, logs }: Props) {
         </div>
       )}
 
+      {/* Painel: textos de lei do assunto. */}
+      {painel === "textos" && (
+        <div className="mb-2 ml-7 space-y-2 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+          {textos.length === 0 ? (
+            <p className="text-xs text-mut">
+              Nenhum texto ainda. Adicione o texto de lei deste assunto para ler aqui, marcar e
+              acompanhar as leituras.
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {textos.map((t) => (
+                <li key={t.id} className="group/txt flex items-center gap-1">
+                  <button
+                    onClick={() => setTextoAberto(t)}
+                    className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-txt transition-colors hover:bg-navy-700/50"
+                  >
+                    <BookOpen className="size-3.5 shrink-0 text-gold" />
+                    <span className="min-w-0 flex-1 truncate">{t.titulo}</span>
+                    {t.leituras > 0 && (
+                      <span className="shrink-0 text-[10px] tabular-nums text-mut">
+                        Lido {t.leituras}x
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => excluirTexto.mutate(t.id)}
+                    className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-red/10 hover:text-red group-hover/txt:opacity-100 max-md:opacity-100"
+                    aria-label={`Excluir ${t.titulo}`}
+                    title="Excluir texto"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button
+            onClick={onNovoTexto}
+            className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-dim transition-colors hover:text-gold"
+          >
+            <Plus className="size-3.5" /> Novo texto
+          </button>
+        </div>
+      )}
+
       {/* Painel: adicionar link (só abre no clique). */}
       {painel === "links" && (
         <div className="mb-2 ml-7 rounded-lg border border-line/50 bg-navy-900/60 p-3">
@@ -267,6 +345,10 @@ export function TopicoRow({ topico, links, logs }: Props) {
             </Button>
           </form>
         </div>
+      )}
+
+      {textoAberto && (
+        <TextoReaderModal texto={textoAberto} onClose={() => setTextoAberto(null)} />
       )}
 
       <ConfirmDialog

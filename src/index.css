@@ -66,3 +66,52 @@ body {
 .streak-glow {
   animation: glow-pulse 2.2s ease-in-out infinite;
 }
+
+/* Leitor/editor de textos de lei */
+.conteudo-lei {
+  color: var(--color-txt);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.conteudo-lei p,
+.conteudo-lei div {
+  margin: 0 0 0.75rem;
+}
+.conteudo-lei h1,
+.conteudo-lei h2,
+.conteudo-lei h3 {
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+.conteudo-lei mark,
+.conteudo-lei [style*="background"] {
+  border-radius: 3px;
+  padding: 0 1px;
+}
+/* placeholder do editor vazio */
+.conteudo-lei[contenteditable]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-mut);
+}
+/* marcador "parei aqui" no modo leitura */
+.conteudo-lei .parei-aqui {
+  position: relative;
+  border-left: 2px solid var(--color-gold);
+  padding-left: 0.6rem;
+  margin-left: -0.6rem;
+}
+.conteudo-lei .parei-aqui::before {
+  content: "▸ parei aqui";
+  display: inline-block;
+  margin-bottom: 0.2rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-navy-950);
+  background: var(--color-gold);
+  border-radius: 4px;
+  padding: 1px 6px;
+}

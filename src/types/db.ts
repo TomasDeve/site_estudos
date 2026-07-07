@@ -599,6 +599,53 @@ export type Database = {
           },
         ]
       }
+      topico_textos: {
+        Row: {
+          atualizado_em: string
+          conteudo: string
+          created_at: string
+          id: string
+          leituras: number
+          marcador: string | null
+          ordem: number
+          titulo: string
+          topico_id: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          conteudo?: string
+          created_at?: string
+          id?: string
+          leituras?: number
+          marcador?: string | null
+          ordem?: number
+          titulo?: string
+          topico_id: string
+          user_id?: string
+        }
+        Update: {
+          atualizado_em?: string
+          conteudo?: string
+          created_at?: string
+          id?: string
+          leituras?: number
+          marcador?: string | null
+          ordem?: number
+          titulo?: string
+          topico_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topico_textos_topico_id_fkey"
+            columns: ["topico_id"]
+            isOneToOne: false
+            referencedRelation: "topicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topicos: {
         Row: {
           created_at: string
@@ -796,6 +843,7 @@ export type Topico = Tables<"topicos">
 export type ConcursoMateria = Tables<"concurso_materias">
 export type CicloItem = Tables<"ciclo_itens">
 export type TopicoLink = Tables<"topico_links">
+export type TopicoTexto = Tables<"topico_textos">
 export type MetaPeriodo = Tables<"metas_periodo">
 export type BlocoDia = Tables<"blocos_dia">
 export type DiaConcluido = Tables<"dias_concluidos">

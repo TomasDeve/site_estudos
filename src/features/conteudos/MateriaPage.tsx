@@ -6,9 +6,10 @@ import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useDesvincularMateria, useMaterias } from "@/api/materias";
 import { useCriarTopico, useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
+import { useTopicoTextos } from "@/api/topicoTextos";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { materiasComuns } from "@/lib/progresso";
-import type { QuestaoLog, TopicoLink } from "@/types/db";
+import type { QuestaoLog, TopicoLink, TopicoTexto } from "@/types/db";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/Button";
@@ -36,6 +37,7 @@ export function MateriaPage() {
   const { data: vinculos, isLoading: l2 } = useConcursoMaterias();
   const { data: topicos, isLoading: l3 } = useTopicos();
   const { data: links, isLoading: l4 } = useTopicoLinks();
+  const { data: textos } = useTopicoTextos();
   const { data: logs } = useQuestaoLogsPorTopico();
   const { data: logsMateria } = useQuestaoLogsPorMateria(materiaId);
 
@@ -78,6 +80,15 @@ export function MateriaPage() {
     }
     return mapa;
   }, [links]);
+  const textosPorTopico = useMemo(() => {
+    const mapa = new Map<string, TopicoTexto[]>();
+    for (const t of textos ?? []) {
+      const arr = mapa.get(t.topico_id) ?? [];
+      arr.push(t);
+      mapa.set(t.topico_id, arr);
+    }
+    return mapa;
+  }, [textos]);
   const logsPorTopico = useMemo(() => {
     const mapa = new Map<string, QuestaoLog[]>();
     for (const l of logs ?? []) {
@@ -272,6 +283,7 @@ export function MateriaPage() {
                   topico={t}
                   links={linksPorTopico.get(t.id) ?? []}
                   logs={logsPorTopico.get(t.id) ?? []}
+                  textos={textosPorTopico.get(t.id) ?? []}
                 />
               ))}
             </ul>
