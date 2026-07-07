@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Highlighter, Eraser, Bookmark, BookmarkCheck, Pencil, Eye, Check } from "lucide-react";
+import {
+  Highlighter,
+  Eraser,
+  Bookmark,
+  BookmarkCheck,
+  Pencil,
+  Eye,
+  Check,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { TopicoTexto } from "@/types/db";
 import {
@@ -32,6 +42,7 @@ export function TextoReaderModal({ texto, onClose }: Props) {
   const setMarcador = useAtualizarMarcador();
 
   const [modo, setModo] = useState<"ler" | "editar">(texto.conteudo ? "ler" : "editar");
+  const [telaCheia, setTelaCheia] = useState(false);
   const [tituloLocal, setTituloLocal] = useState(texto.titulo);
   const [conteudoLocal, setConteudoLocal] = useState(texto.conteudo);
   const [leiturasLocal, setLeiturasLocal] = useState(texto.leituras);
@@ -131,6 +142,7 @@ export function TextoReaderModal({ texto, onClose }: Props) {
       open
       onClose={onClose}
       width="max-w-3xl"
+      fullscreen={telaCheia}
       title={
         <input
           value={tituloLocal}
@@ -141,7 +153,7 @@ export function TextoReaderModal({ texto, onClose }: Props) {
         />
       }
     >
-      <div className="flex min-h-0 flex-col gap-3">
+      <div className="flex h-full min-h-0 flex-col gap-3">
         {/* Barra de controles */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex overflow-hidden rounded-lg border border-line">
@@ -162,6 +174,15 @@ export function TextoReaderModal({ texto, onClose }: Props) {
               <Pencil className="size-3.5" /> Editar
             </button>
           </div>
+
+          <button
+            onClick={() => setTelaCheia((v) => !v)}
+            className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
+            title={telaCheia ? "Sair da tela cheia" : "Tela cheia"}
+          >
+            {telaCheia ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+            <span className="max-sm:hidden">{telaCheia ? "Reduzir" : "Tela cheia"}</span>
+          </button>
 
           <span className="flex items-center gap-1.5 rounded-lg bg-navy-900 px-2.5 py-1.5 text-xs text-dim">
             📖 Lido <strong className="tabular-nums text-txt">{leiturasLocal}x</strong>
@@ -231,7 +252,9 @@ export function TextoReaderModal({ texto, onClose }: Props) {
         {/* Conteúdo */}
         <div
           ref={scrollRef}
-          className="relative max-h-[58vh] min-h-[30vh] overflow-y-auto rounded-lg border border-line/50 bg-navy-950/40 p-4"
+          className={`relative overflow-y-auto rounded-lg border border-line/50 bg-navy-950/40 p-4 ${
+            telaCheia ? "min-h-0 flex-1" : "max-h-[58vh] min-h-[30vh]"
+          }`}
         >
           {modo === "ler" ? (
             conteudoLocal ? (

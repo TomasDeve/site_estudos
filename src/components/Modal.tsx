@@ -9,9 +9,19 @@ interface ModalProps {
   footer?: ReactNode;
   /** max-width tailwind class */
   width?: string;
+  /** ocupa a tela inteira */
+  fullscreen?: boolean;
 }
 
-export function Modal({ open, onClose, title, children, footer, width = "max-w-lg" }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  width = "max-w-lg",
+  fullscreen = false,
+}: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -29,13 +39,19 @@ export function Modal({ open, onClose, title, children, footer, width = "max-w-l
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy-950/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className={`fixed inset-0 z-50 flex justify-center bg-navy-950/80 backdrop-blur-sm ${
+        fullscreen ? "items-stretch p-0" : "items-end p-0 sm:items-center sm:p-4"
+      }`}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className={`flex max-h-[92dvh] w-full ${width} flex-col rounded-t-card border border-line bg-navy-800 shadow-2xl sm:rounded-card`}
+        className={
+          fullscreen
+            ? "flex h-dvh w-full flex-col border-line bg-navy-800 shadow-2xl"
+            : `flex max-h-[92dvh] w-full ${width} flex-col rounded-t-card border border-line bg-navy-800 shadow-2xl sm:rounded-card`
+        }
       >
         <div className="flex items-center justify-between border-b border-line/40 px-5 py-4">
           <h2 className="text-sm font-semibold text-txt">{title}</h2>

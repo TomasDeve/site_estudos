@@ -75,6 +75,11 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
 }
+/* Ignora a cor de texto que vem colada (ex.: preto do site de origem) e usa a
+   cor legível do tema. Marca-texto (fundo) e negrito são preservados. */
+.conteudo-lei * {
+  color: inherit !important;
+}
 .conteudo-lei p,
 .conteudo-lei div {
   margin: 0 0 0.75rem;
