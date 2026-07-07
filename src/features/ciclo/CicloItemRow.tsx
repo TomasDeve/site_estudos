@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Check, GripVertical, Trash2 } from "lucide-react";
@@ -12,6 +13,8 @@ interface Props {
   icone: string;
   pct: number;
   temTopicos: boolean;
+  /** Rota da página da matéria (clique no nome). */
+  to: string;
   onToggle: () => void;
   onRemover: () => void;
 }
@@ -25,6 +28,7 @@ export function CicloItemRow({
   icone,
   pct,
   temTopicos,
+  to,
   onToggle,
   onRemover,
 }: Props) {
@@ -86,24 +90,33 @@ export function CicloItemRow({
         )}
       </button>
 
-      <span className="text-lg">{icone}</span>
-
-      <div className="min-w-0 flex-1">
-        <p className={`truncate text-sm ${item.concluido ? "text-mut line-through" : "text-txt"}`}>
-          {nome}
-        </p>
-        {temTopicos && (
-          <div className="mt-1 flex items-center gap-2">
-            <div className="h-1 w-24 overflow-hidden rounded-full bg-navy-900">
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${pct}%`, background: cor }}
-              />
+      <Link
+        to={to}
+        className="group/mat flex min-w-0 flex-1 items-center gap-2 rounded-md py-0.5"
+        title={`Abrir ${nome}`}
+      >
+        <span className="text-lg">{icone}</span>
+        <div className="min-w-0 flex-1">
+          <p
+            className={`truncate text-sm transition-colors ${
+              item.concluido ? "text-mut line-through" : "text-txt group-hover/mat:text-gold"
+            }`}
+          >
+            {nome}
+          </p>
+          {temTopicos && (
+            <div className="mt-1 flex items-center gap-2">
+              <div className="h-1 w-24 overflow-hidden rounded-full bg-navy-900">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${pct}%`, background: cor }}
+                />
+              </div>
+              <span className="text-[10px] tabular-nums text-mut">{pct}%</span>
             </div>
-            <span className="text-[10px] tabular-nums text-mut">{pct}%</span>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </Link>
 
       <button
         onClick={onRemover}

@@ -321,7 +321,7 @@ export function CicloPage() {
 
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <Link
-                      to="../conteudos"
+                      to={`../conteudos/${atual.materia_id}`}
                       className="text-xs font-semibold text-gold hover:underline"
                     >
                       Ver tópicos em Conteúdos
@@ -380,6 +380,7 @@ export function CicloPage() {
                         icone={icone(item)}
                         pct={p.pct}
                         temTopicos={p.total > 0}
+                        to={`../conteudos/${item.materia_id}`}
                         onToggle={() =>
                           setConcluido.mutate({ item, concluido: !item.concluido })
                         }
