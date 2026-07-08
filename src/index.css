@@ -107,6 +107,15 @@ body {
   padding: 0.5rem 0.75rem;
   margin: 0.5rem 0 0.75rem;
 }
+/* caixinha inline: contorna exatamente o trecho selecionado */
+.conteudo-lei .caixa-lei-inline {
+  border: 1.5px solid var(--color-gold);
+  border-radius: 6px;
+  background: rgb(224 168 62 / 0.07);
+  padding: 0.05rem 0.3rem;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
 /* placeholder do editor vazio */
 .conteudo-lei[contenteditable]:empty::before {
   content: attr(data-placeholder);

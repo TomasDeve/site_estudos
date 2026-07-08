@@ -11,6 +11,8 @@ import {
   Square,
   ChevronDown,
   MoveRight,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { TopicoTexto } from "@/types/db";
@@ -191,7 +193,7 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
     agendarSalvar();
   }
 
-  function comando(cmd: "bold" | "underline" | "strikeThrough") {
+  function comando(cmd: "bold" | "underline" | "strikeThrough" | "undo" | "redo") {
     editorRef.current?.focus();
     document.execCommand(cmd, false);
     agendarSalvar();
@@ -204,18 +206,49 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
     agendarSalvar();
   }
 
-  /** Liga/desliga a caixinha de destaque nos parágrafos tocados pela seleção. */
+  /**
+   * Caixinha de destaque em volta do que estiver selecionado. Sem seleção,
+   * emoldura o parágrafo do cursor; dentro de uma caixinha, desfaz. Usa
+   * insertHTML para a ação entrar no histórico do desfazer (Ctrl+Z).
+   */
   function alternarCaixa() {
     const cont = editorRef.current;
     const sel = window.getSelection();
     if (!cont || !sel || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
-    const alvos = blocos(cont).filter((b) => range.intersectsNode(b));
-    if (alvos.length === 0) return;
-    const ligar = alvos.some((b) => !b.classList.contains("caixa-lei"));
-    for (const b of alvos) {
-      b.classList.toggle("caixa-lei", ligar);
-      if (!b.getAttribute("class")) b.removeAttribute("class");
+    if (!cont.contains(range.commonAncestorContainer)) return;
+    cont.focus();
+
+    const base =
+      range.commonAncestorContainer instanceof Element
+        ? range.commonAncestorContainer
+        : range.commonAncestorContainer.parentElement;
+    const caixa = base?.closest<HTMLElement>(".caixa-lei, .caixa-lei-inline");
+
+    if (caixa && caixa !== cont && cont.contains(caixa)) {
+      // Já está numa caixinha: desfaz. Invólucro criado aqui (div/span) é
+      // substituído pelo próprio conteúdo; bloco antigo com classe só a perde.
+      if (caixa.tagName === "DIV" || caixa.tagName === "SPAN") {
+        const r = document.createRange();
+        r.selectNode(caixa);
+        sel.removeAllRanges();
+        sel.addRange(r);
+        document.execCommand("insertHTML", false, caixa.innerHTML);
+      } else {
+        caixa.classList.remove("caixa-lei", "caixa-lei-inline");
+        if (!caixa.getAttribute("class")) caixa.removeAttribute("class");
+      }
+    } else if (range.collapsed) {
+      const alvo = blocos(cont).find((b) => b.contains(range.commonAncestorContainer));
+      if (alvo) alvo.classList.add("caixa-lei");
+    } else {
+      const tmp = document.createElement("div");
+      tmp.appendChild(range.cloneContents());
+      // seleção com parágrafos inteiros vira caixa de bloco; trecho curto, caixa inline
+      const temBloco = tmp.querySelector("p, div, h1, h2, h3, ul, ol, blockquote") != null;
+      const tag = temBloco ? "div" : "span";
+      const classe = temBloco ? "caixa-lei" : "caixa-lei-inline";
+      document.execCommand("insertHTML", false, `<${tag} class="${classe}">${tmp.innerHTML}</${tag}>`);
     }
     agendarSalvar();
   }
@@ -296,6 +329,30 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
           </button>
         </div>
 
+        {/* Desfazer/refazer (também no celular) */}
+        <div className="flex items-center gap-0.5 rounded-lg border border-line/60 bg-navy-900/60 px-1 py-1">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => comando("undo")}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Desfazer (Ctrl+Z)"
+            aria-label="Desfazer"
+          >
+            <Undo2 className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => comando("redo")}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Refazer (Ctrl+Y)"
+            aria-label="Refazer"
+          >
+            <Redo2 className="size-3.5" />
+          </button>
+        </div>
+
         {/* Formatação básica (também no celular) */}
         <div className="flex items-center gap-0.5 rounded-lg border border-line/60 bg-navy-900/60 px-1 py-1">
           <button
@@ -337,7 +394,7 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
             onMouseDown={(e) => e.preventDefault()}
             onClick={alternarCaixa}
             className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
-            title="Caixinha de destaque no parágrafo selecionado (clique de novo para tirar)"
+            title="Caixinha de destaque em volta do trecho selecionado (clique dentro dela para tirar)"
             aria-label="Caixinha de destaque"
           >
             <Square className="size-3.5" />
