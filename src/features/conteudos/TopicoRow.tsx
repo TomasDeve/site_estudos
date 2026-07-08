@@ -291,6 +291,16 @@ export function TopicoRow({ topico, links, logs, textos }: Props) {
                       </span>
                     )}
                   </button>
+                  <a
+                    href={`/texto/${t.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-navy-700 hover:text-gold group-hover/txt:opacity-100 max-md:opacity-100"
+                    aria-label={`Abrir ${t.titulo} em tela cheia`}
+                    title="Abrir em tela cheia (nova aba)"
+                  >
+                    <ExternalLink className="size-3.5" />
+                  </a>
                   <button
                     onClick={() => excluirTexto.mutate(t.id)}
                     className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-red/10 hover:text-red group-hover/txt:opacity-100 max-md:opacity-100"
