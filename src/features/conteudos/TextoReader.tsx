@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  Highlighter,
-  Eraser,
-  Bookmark,
-  BookmarkCheck,
-  Pencil,
-  Eye,
-  Check,
-} from "lucide-react";
+import { Highlighter, Eraser, Bookmark, BookmarkCheck, Check } from "lucide-react";
 import { toast } from "sonner";
 import type { TopicoTexto } from "@/types/db";
 import {
@@ -15,7 +7,6 @@ import {
   useRegistrarLeitura,
   useAtualizarMarcador,
 } from "@/api/topicoTextos";
-import { Button } from "@/components/Button";
 
 const CORES = [
   { nome: "Amarelo", valor: "rgba(232,185,62,0.40)", swatch: "#e8b93e" },
@@ -24,8 +15,29 @@ const CORES = [
   { nome: "Rosa", valor: "rgba(229,86,75,0.34)", swatch: "#e5564b" },
 ];
 
+const FONTE_PADRAO = 18;
+const FONTE_MIN = 14;
+const FONTE_MAX = 28;
+const FONTE_KEY = "leitor-fonte-px";
+
+function fonteSalva(): number {
+  const f = Number(localStorage.getItem(FONTE_KEY));
+  return Number.isFinite(f) && f >= FONTE_MIN && f <= FONTE_MAX ? f : FONTE_PADRAO;
+}
+
 function blocos(el: HTMLElement): HTMLElement[] {
   return Array.from(el.children).filter((c): c is HTMLElement => c instanceof HTMLElement);
+}
+
+/** Remove marcações visuais de UI ("parei aqui") antes de persistir o HTML. */
+function limparHtml(bruto: string): string {
+  const tmp = document.createElement("div");
+  tmp.innerHTML = bruto;
+  tmp.querySelectorAll(".parei-aqui").forEach((n) => {
+    n.classList.remove("parei-aqui");
+    if (!n.getAttribute("class")) n.removeAttribute("class");
+  });
+  return tmp.innerHTML;
 }
 
 /** Título editável do texto (salva ao sair do campo). Usado no modal e na página. */
@@ -62,32 +74,38 @@ interface TextoReaderProps {
   acoes?: ReactNode;
 }
 
-/** Leitor/editor do texto de lei: marca-texto, contagem de leituras e "parei aqui". */
+/**
+ * Leitor/editor unificado do texto de lei: o texto fica sempre editável
+ * (ler = marcar, ajustar, anotar), com salvamento automático, marca-texto,
+ * tamanho de fonte ajustável, contagem de leituras e "parei aqui".
+ */
 export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderProps) {
   const atualizar = useAtualizarTopicoTexto();
   const registrarLeitura = useRegistrarLeitura();
   const setMarcador = useAtualizarMarcador();
 
-  const [modo, setModo] = useState<"ler" | "editar">(texto.conteudo ? "ler" : "editar");
-  const [conteudoLocal, setConteudoLocal] = useState(texto.conteudo);
+  const [fonte, setFonte] = useState(fonteSalva);
   const [leiturasLocal, setLeiturasLocal] = useState(texto.leituras);
   const [marcadorLocal, setMarcadorLocal] = useState<string | null>(texto.marcador);
+  const [salvamento, setSalvamento] = useState<"salvo" | "pendente" | "salvando">("salvo");
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<number>(undefined);
+  // último HTML digitado e último persistido: o editor some do DOM antes do
+  // cleanup de unmount, então o flush final não pode depender do ref do editor.
+  const htmlDigitadoRef = useRef<string | null>(null);
+  const htmlSalvoRef = useRef(texto.conteudo);
 
-  // Ao entrar em edição, carrega o HTML uma vez (não a cada render, senão o cursor pula).
+  // Carrega o HTML uma vez (não a cada render, senão o cursor pula).
   useEffect(() => {
-    if (modo === "editar" && editorRef.current) {
-      editorRef.current.innerHTML = conteudoLocal || "";
-    }
+    if (editorRef.current) editorRef.current.innerHTML = texto.conteudo || "";
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modo]);
+  }, [texto.id]);
 
-  // Marca visualmente o bloco "parei aqui" no modo leitura.
+  // Marca visualmente o bloco "parei aqui".
   useEffect(() => {
-    if (modo !== "ler") return;
-    const cont = scrollRef.current?.querySelector<HTMLElement>(".conteudo-lei");
+    const cont = editorRef.current;
     if (!cont) return;
     const bs = blocos(cont);
     bs.forEach((b) => b.classList.remove("parei-aqui"));
@@ -95,29 +113,75 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
       const alvo = bs[Number(marcadorLocal)];
       if (alvo) alvo.classList.add("parei-aqui");
     }
-  }, [modo, marcadorLocal, conteudoLocal]);
+  }, [marcadorLocal, texto.id]);
+
+  async function salvarAgora() {
+    const bruto = editorRef.current ? editorRef.current.innerHTML : htmlDigitadoRef.current;
+    if (bruto == null) return;
+    const html = limparHtml(bruto);
+    if (html === htmlSalvoRef.current) {
+      setSalvamento("salvo");
+      return;
+    }
+    setSalvamento("salvando");
+    try {
+      await atualizar.mutateAsync({ id: texto.id, conteudo: html });
+      htmlSalvoRef.current = html;
+      setSalvamento("salvo");
+    } catch (err) {
+      setSalvamento("pendente");
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  const salvarRef = useRef(salvarAgora);
+  salvarRef.current = salvarAgora;
+
+  function agendarSalvar() {
+    htmlDigitadoRef.current = editorRef.current?.innerHTML ?? htmlDigitadoRef.current;
+    setSalvamento("pendente");
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => salvarRef.current(), 1200);
+  }
+
+  function salvarJa() {
+    window.clearTimeout(timerRef.current);
+    salvarRef.current();
+  }
+
+  // Flush ao fechar/trocar de aba e ao desmontar (fechar modal, sair da página).
+  useEffect(() => {
+    const aoOcultar = () => {
+      if (document.visibilityState === "hidden") salvarRef.current();
+    };
+    document.addEventListener("visibilitychange", aoOcultar);
+    return () => {
+      document.removeEventListener("visibilitychange", aoOcultar);
+      window.clearTimeout(timerRef.current);
+      salvarRef.current();
+    };
+  }, []);
 
   function aplicarMarca(cor: string) {
     editorRef.current?.focus();
     document.execCommand("styleWithCSS", false, "true");
     document.execCommand("hiliteColor", false, cor);
+    agendarSalvar();
   }
 
   function apagarMarca() {
     editorRef.current?.focus();
     document.execCommand("styleWithCSS", false, "true");
     document.execCommand("hiliteColor", false, "transparent");
+    agendarSalvar();
   }
 
-  async function salvar() {
-    const html = editorRef.current?.innerHTML ?? conteudoLocal;
-    setConteudoLocal(html);
-    setModo("ler");
-    try {
-      await atualizar.mutateAsync({ id: texto.id, conteudo: html });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err));
-    }
+  function mudarFonte(delta: number) {
+    setFonte((f) => {
+      const nova = Math.min(FONTE_MAX, Math.max(FONTE_MIN, f + delta));
+      localStorage.setItem(FONTE_KEY, String(nova));
+      return nova;
+    });
   }
 
   function contarLeitura() {
@@ -130,7 +194,7 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
 
   function marcarAqui() {
     const scroll = scrollRef.current;
-    const cont = scroll?.querySelector<HTMLElement>(".conteudo-lei");
+    const cont = editorRef.current;
     if (!scroll || !cont) return;
     const bs = blocos(cont);
     if (bs.length === 0) return;
@@ -149,82 +213,28 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
 
   function continuar() {
     const scroll = scrollRef.current;
-    const cont = scroll?.querySelector<HTMLElement>(".conteudo-lei");
+    const cont = editorRef.current;
     if (!scroll || !cont || marcadorLocal == null) return;
     const alvo = blocos(cont)[Number(marcadorLocal)];
     if (alvo) scroll.scrollTo({ top: Math.max(0, alvo.offsetTop - 8), behavior: "smooth" });
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      {/* Barra de controles */}
+    <div className="flex h-full min-h-0 flex-col gap-2.5">
+      {/* Barra única de controles: marca-texto, fonte, leituras, marcador */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex overflow-hidden rounded-lg border border-line">
-          <button
-            onClick={() => setModo("ler")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-              modo === "ler" ? "bg-navy-600 text-txt" : "text-mut hover:text-txt"
-            }`}
-          >
-            <Eye className="size-3.5" /> Ler
-          </button>
-          <button
-            onClick={() => setModo("editar")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-              modo === "editar" ? "bg-navy-600 text-txt" : "text-mut hover:text-txt"
-            }`}
-          >
-            <Pencil className="size-3.5" /> Editar
-          </button>
-        </div>
-
-        {acoes}
-
-        <span className="flex items-center gap-1.5 rounded-lg bg-navy-900 px-2.5 py-1.5 text-xs text-dim">
-          📖 Lido <strong className="tabular-nums text-txt">{leiturasLocal}x</strong>
-        </span>
-        <button
-          onClick={contarLeitura}
-          className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
+        <div
+          className="flex items-center gap-1.5 rounded-lg border border-line/60 bg-navy-900/60 px-2 py-1.5"
+          title="Selecione um trecho do texto e toque numa cor"
         >
-          <Check className="size-3.5" /> Li +1
-        </button>
-
-        {modo === "ler" && (
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={marcarAqui}
-              className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
-              title="Guardar o ponto onde você parou de ler"
-            >
-              <Bookmark className="size-3.5" /> Parei aqui
-            </button>
-            {marcadorLocal != null && (
-              <button
-                onClick={continuar}
-                className="flex items-center gap-1.5 rounded-lg bg-gold/15 px-2.5 py-1.5 text-xs font-semibold text-gold transition-colors hover:bg-gold/25"
-                title="Rolar até onde você parou"
-              >
-                <BookmarkCheck className="size-3.5" /> Continuar
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Toolbar de marca-texto (só na edição) */}
-      {modo === "editar" && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line/60 bg-navy-900/60 p-2">
-          <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-mut">
-            <Highlighter className="size-3.5" /> Marca-texto
-          </span>
+          <Highlighter className="size-3.5 text-mut" />
           {CORES.map((c) => (
             <button
               key={c.nome}
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => aplicarMarca(c.valor)}
-              className="size-6 rounded-md border border-line transition-transform hover:scale-110"
+              className="size-5 cursor-pointer rounded-md border border-line transition-transform hover:scale-110"
               style={{ background: c.swatch }}
               title={`Destacar em ${c.nome}`}
               aria-label={`Destacar em ${c.nome}`}
@@ -234,59 +244,92 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={apagarMarca}
-            className="flex items-center gap-1.5 rounded-md border border-line px-2 py-1 text-xs text-mut transition-colors hover:text-txt"
+            className="cursor-pointer rounded-md p-1 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
             title="Remover o destaque da seleção"
+            aria-label="Remover destaque"
           >
-            <Eraser className="size-3.5" /> Limpar
+            <Eraser className="size-3.5" />
           </button>
-          <span className="ml-auto text-[11px] text-mut">
-            Selecione o trecho e escolha uma cor.
-          </span>
         </div>
-      )}
 
-      {/* Conteúdo */}
+        <div className="flex items-center overflow-hidden rounded-lg border border-line">
+          <button
+            onClick={() => mudarFonte(-1)}
+            className="cursor-pointer px-2 py-1.5 text-[11px] font-bold text-dim transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Diminuir fonte"
+            aria-label="Diminuir fonte"
+          >
+            A−
+          </button>
+          <span className="min-w-6 text-center text-[11px] tabular-nums text-mut">{fonte}</span>
+          <button
+            onClick={() => mudarFonte(1)}
+            className="cursor-pointer px-2 py-1.5 text-sm font-bold leading-none text-dim transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Aumentar fonte"
+            aria-label="Aumentar fonte"
+          >
+            A+
+          </button>
+        </div>
+
+        <span className="flex items-center gap-1.5 rounded-lg bg-navy-900 px-2.5 py-1.5 text-xs text-dim">
+          📖 <strong className="tabular-nums text-txt">{leiturasLocal}x</strong>
+        </span>
+        <button
+          onClick={contarLeitura}
+          className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
+          title="Registrar mais uma leitura completa"
+        >
+          <Check className="size-3.5" /> Li +1
+        </button>
+
+        {acoes}
+
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-[11px] text-mut" aria-live="polite">
+            {salvamento === "salvo" ? "Salvo ✓" : salvamento === "salvando" ? "Salvando…" : "Não salvo"}
+          </span>
+          <button
+            onClick={marcarAqui}
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
+            title="Guardar o ponto onde você parou de ler"
+          >
+            <Bookmark className="size-3.5" /> <span className="max-sm:hidden">Parei aqui</span>
+          </button>
+          {marcadorLocal != null && (
+            <button
+              onClick={continuar}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-gold/15 px-2.5 py-1.5 text-xs font-semibold text-gold transition-colors hover:bg-gold/25"
+              title="Rolar até onde você parou"
+            >
+              <BookmarkCheck className="size-3.5" /> <span className="max-sm:hidden">Continuar</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Texto sempre editável: marque, apague, anote direto na leitura */}
       <div
         ref={scrollRef}
-        className={`relative overflow-y-auto rounded-lg border border-line/50 bg-navy-950/40 p-4 ${
+        onClick={(e) => {
+          if (e.target === e.currentTarget) editorRef.current?.focus();
+        }}
+        className={`relative overflow-y-auto rounded-lg border border-line/50 bg-navy-950/40 p-4 sm:p-6 ${
           paginaCheia ? "min-h-0 flex-1" : "max-h-[58vh] min-h-[30vh]"
         }`}
       >
-        {modo === "ler" ? (
-          conteudoLocal ? (
-            <div
-              className="conteudo-lei"
-              // conteúdo do próprio usuário (app single-user, RLS por dono)
-              dangerouslySetInnerHTML={{ __html: conteudoLocal }}
-            />
-          ) : (
-            <p className="py-10 text-center text-sm text-mut">
-              Sem conteúdo ainda. Clique em <strong className="text-dim">Editar</strong> e cole o
-              texto de lei.
-            </p>
-          )
-        ) : (
-          <div
-            ref={editorRef}
-            className="conteudo-lei min-h-[24vh] outline-none"
-            contentEditable
-            suppressContentEditableWarning
-            data-placeholder="Cole aqui o texto de lei e organize à vontade…"
-          />
-        )}
+        <div
+          ref={editorRef}
+          className="conteudo-lei min-h-[24vh] outline-none"
+          style={{ fontSize: `${fonte}px` }}
+          contentEditable
+          suppressContentEditableWarning
+          spellCheck={false}
+          onInput={agendarSalvar}
+          onBlur={salvarJa}
+          data-placeholder="Cole aqui o texto de lei e organize à vontade…"
+        />
       </div>
-
-      {/* Ações da edição */}
-      {modo === "editar" && (
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setModo("ler")}>
-            Cancelar
-          </Button>
-          <Button size="sm" onClick={salvar} loading={atualizar.isPending}>
-            <Check className="size-4" /> Salvar
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
