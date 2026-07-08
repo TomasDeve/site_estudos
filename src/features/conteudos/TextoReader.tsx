@@ -244,11 +244,18 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
     } else {
       const tmp = document.createElement("div");
       tmp.appendChild(range.cloneContents());
-      // seleção com parágrafos inteiros vira caixa de bloco; trecho curto, caixa inline
-      const temBloco = tmp.querySelector("p, div, h1, h2, h3, ul, ol, blockquote") != null;
-      const tag = temBloco ? "div" : "span";
-      const classe = temBloco ? "caixa-lei" : "caixa-lei-inline";
-      document.execCommand("insertHTML", false, `<${tag} class="${classe}">${tmp.innerHTML}</${tag}>`);
+      // Seleção em mais de uma linha vira UMA caixa de bloco em volta de tudo
+      // (inline contornaria linha por linha). Linhas podem ser parágrafos de
+      // verdade, quebras \n do pre-wrap ou só o texto dobrando na tela.
+      const linhas = new Set(Array.from(range.getClientRects()).map((r) => Math.round(r.top)));
+      const bloco =
+        linhas.size > 1 ||
+        tmp.innerHTML.includes("\n") ||
+        tmp.querySelector("p, div, h1, h2, h3, ul, ol, blockquote, br") != null;
+      const html = bloco ? tmp.innerHTML.replace(/^\n+|\n+$/g, "") : tmp.innerHTML;
+      const tag = bloco ? "div" : "span";
+      const classe = bloco ? "caixa-lei" : "caixa-lei-inline";
+      document.execCommand("insertHTML", false, `<${tag} class="${classe}">${html}</${tag}>`);
     }
     agendarSalvar();
   }
