@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Highlighter, Eraser, Bookmark, BookmarkCheck, Check } from "lucide-react";
+import {
+  Highlighter,
+  Eraser,
+  Bookmark,
+  BookmarkCheck,
+  Check,
+  Bold,
+  Underline,
+  Strikethrough,
+  Square,
+  ChevronDown,
+  MoveRight,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { TopicoTexto } from "@/types/db";
 import {
@@ -14,6 +26,8 @@ const CORES = [
   { nome: "Azul", valor: "rgba(79,157,222,0.38)", swatch: "#4f9dde" },
   { nome: "Rosa", valor: "rgba(229,86,75,0.34)", swatch: "#e5564b" },
 ];
+
+const SIMBOLOS = ["→", "⇒", "↳", "•", "✓", "✗", "§"];
 
 const FONTE_PADRAO = 18;
 const FONTE_MIN = 14;
@@ -88,6 +102,7 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
   const [leiturasLocal, setLeiturasLocal] = useState(texto.leituras);
   const [marcadorLocal, setMarcadorLocal] = useState<string | null>(texto.marcador);
   const [salvamento, setSalvamento] = useState<"salvo" | "pendente" | "salvando">("salvo");
+  const [simbolosAberto, setSimbolosAberto] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -176,6 +191,35 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
     agendarSalvar();
   }
 
+  function comando(cmd: "bold" | "underline" | "strikeThrough") {
+    editorRef.current?.focus();
+    document.execCommand(cmd, false);
+    agendarSalvar();
+  }
+
+  function inserirSimbolo(s: string) {
+    editorRef.current?.focus();
+    document.execCommand("insertText", false, s);
+    setSimbolosAberto(false);
+    agendarSalvar();
+  }
+
+  /** Liga/desliga a caixinha de destaque nos parágrafos tocados pela seleção. */
+  function alternarCaixa() {
+    const cont = editorRef.current;
+    const sel = window.getSelection();
+    if (!cont || !sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    const alvos = blocos(cont).filter((b) => range.intersectsNode(b));
+    if (alvos.length === 0) return;
+    const ligar = alvos.some((b) => !b.classList.contains("caixa-lei"));
+    for (const b of alvos) {
+      b.classList.toggle("caixa-lei", ligar);
+      if (!b.getAttribute("class")) b.removeAttribute("class");
+    }
+    agendarSalvar();
+  }
+
   function mudarFonte(delta: number) {
     setFonte((f) => {
       const nova = Math.min(FONTE_MAX, Math.max(FONTE_MIN, f + delta));
@@ -250,6 +294,87 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
           >
             <Eraser className="size-3.5" />
           </button>
+        </div>
+
+        {/* Formatação básica (também no celular) */}
+        <div className="flex items-center gap-0.5 rounded-lg border border-line/60 bg-navy-900/60 px-1 py-1">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => comando("bold")}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Negrito (Ctrl+B)"
+            aria-label="Negrito"
+          >
+            <Bold className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => comando("underline")}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Sublinhado (Ctrl+U)"
+            aria-label="Sublinhado"
+          >
+            <Underline className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => comando("strikeThrough")}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Tachado (ex.: artigo revogado)"
+            aria-label="Tachado"
+          >
+            <Strikethrough className="size-3.5" />
+          </button>
+        </div>
+
+        {/* Caixinha e setinhas/símbolos (uso de desktop) */}
+        <div className="flex items-center gap-0.5 rounded-lg border border-line/60 bg-navy-900/60 px-1 py-1 max-sm:hidden">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={alternarCaixa}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Caixinha de destaque no parágrafo selecionado (clique de novo para tirar)"
+            aria-label="Caixinha de destaque"
+          >
+            <Square className="size-3.5" />
+          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setSimbolosAberto((v) => !v)}
+              className="flex cursor-pointer items-center gap-0.5 rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+              title="Inserir setinha ou símbolo no ponto do cursor"
+              aria-label="Inserir símbolo"
+              aria-expanded={simbolosAberto}
+            >
+              <MoveRight className="size-3.5" />
+              <ChevronDown className="size-3 opacity-60" />
+            </button>
+            {simbolosAberto && (
+              <>
+                <div className="fixed inset-0 z-10" onMouseDown={() => setSimbolosAberto(false)} />
+                <div className="absolute left-0 top-full z-20 mt-1 flex gap-0.5 rounded-lg border border-line bg-navy-700 p-1 shadow-2xl">
+                  {SIMBOLOS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => inserirSimbolo(s)}
+                      className="size-7 cursor-pointer rounded-md text-sm text-txt transition-colors hover:bg-navy-600"
+                      title={`Inserir ${s}`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center overflow-hidden rounded-lg border border-line">

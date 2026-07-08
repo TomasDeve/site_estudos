@@ -75,10 +75,14 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
 }
-/* Ignora a cor de texto que vem colada (ex.: preto do site de origem) e usa a
-   cor legível do tema. Marca-texto (fundo) e negrito são preservados. */
+/* Ignora cor e tipografia que vêm coladas (ex.: preto/Calibri do site de origem)
+   e usa o tema — inclusive o tamanho de fonte, senão o ajuste A−/A+ do leitor
+   não tem efeito no texto colado. Marca-texto (fundo) e negrito são preservados. */
 .conteudo-lei * {
   color: inherit !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 .conteudo-lei p,
 .conteudo-lei div {
@@ -94,6 +98,14 @@ body {
 .conteudo-lei [style*="background"] {
   border-radius: 3px;
   padding: 0 1px;
+}
+/* caixinha de destaque em volta de um bloco (ex.: artigo importante) */
+.conteudo-lei .caixa-lei {
+  border: 1.5px solid var(--color-gold);
+  border-radius: 8px;
+  background: rgb(224 168 62 / 0.07);
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0 0.75rem;
 }
 /* placeholder do editor vazio */
 .conteudo-lei[contenteditable]:empty::before {
