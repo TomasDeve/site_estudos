@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
-import type { TablesInsert, TopicoLink } from "@/types/db";
+import type { TablesInsert, TablesUpdate, TopicoLink } from "@/types/db";
 
 export function useTopicoLinks() {
   return useQuery({
@@ -18,6 +18,17 @@ export function useCriarTopicoLink() {
   return useMutation({
     mutationFn: async (input: TablesInsert<"topico_links">) => {
       const { error } = await supabase.from("topico_links").insert(input);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["topico_links"] }),
+  });
+}
+
+export function useAtualizarTopicoLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...campos }: { id: string } & TablesUpdate<"topico_links">) => {
+      const { error } = await supabase.from("topico_links").update(campos).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["topico_links"] }),

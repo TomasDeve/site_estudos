@@ -33,9 +33,12 @@ import {
   useReordenarCiclo,
   useSetItemConcluido,
 } from "@/api/ciclo";
+import { useBlocosDia } from "@/api/blocos";
+import { hojeISO } from "@/lib/dates";
 import { sugerirOrdemCiclo } from "@/lib/cicloOrder";
 import { progressoMateria } from "@/lib/progresso";
 import { celebrar } from "@/features/metas/celebration";
+import { BlocoFormModal } from "@/features/metas/BlocoFormModal";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardBody } from "@/components/Card";
 import { Button } from "@/components/Button";
@@ -53,6 +56,8 @@ export function CicloPage() {
   const { data: vinculos, isLoading: l2 } = useConcursoMaterias();
   const { data: topicos, isLoading: l3 } = useTopicos();
   const { data: itens, isLoading: l4 } = useCicloItens();
+  const hoje = hojeISO();
+  const { data: blocosHoje } = useBlocosDia(hoje);
 
   const gerar = useGerarCiclo();
   const setConcluido = useSetItemConcluido();
@@ -67,6 +72,7 @@ export function CicloPage() {
   );
 
   const [modalAdd, setModalAdd] = useState(false);
+  const [modalConcluir, setModalConcluir] = useState(false);
 
   const materiaById = useMemo(
     () => new Map((materias ?? []).map((m) => [m.id, m])),
@@ -326,7 +332,7 @@ export function CicloPage() {
                     >
                       Ver tópicos em Conteúdos
                     </Link>
-                    <Button onClick={onConcluirAtual} loading={setConcluido.isPending}>
+                    <Button onClick={() => setModalConcluir(true)} loading={setConcluido.isPending}>
                       <Check className="size-4" /> Concluir e avançar
                     </Button>
                   </div>
@@ -413,6 +419,24 @@ export function CicloPage() {
         jaNoCiclo={jaNoCiclo}
         proximaOrdem={meusItens.reduce((m, i) => Math.max(m, i.ordem), -1) + 1}
       />
+
+      {/* Ao concluir a matéria do ciclo: registra o estudo do dia em Metas e avança. */}
+      {atual && (
+        <BlocoFormModal
+          open={modalConcluir}
+          onClose={() => setModalConcluir(false)}
+          dataISO={hoje}
+          bloco={null}
+          tituloPadrao={nome(atual)}
+          materiaIdPadrao={atual.materia_id}
+          concursoIdPadrao={concurso.id}
+          proximaOrdem={(blocosHoje ?? []).reduce((m, b) => Math.max(m, b.ordem), -1) + 1}
+          concluirAoSalvar
+          onSalvo={onConcluirAtual}
+          tituloModal="Registrar estudo e avançar"
+          labelSalvar="Salvar e avançar"
+        />
+      )}
     </div>
   );
 }

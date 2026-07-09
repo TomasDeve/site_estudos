@@ -29,6 +29,39 @@ export function useCriarBloco() {
   });
 }
 
+/**
+ * Cria um bloco já concluído e registra a sessão de estudo correspondente,
+ * somando o tempo no dia (e no gráfico da semana). Usado pelo Ciclo de Estudos
+ * ao concluir a matéria: o estudo entra em Metas como feito, de uma vez.
+ */
+export function useRegistrarBlocoConcluido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: TablesInsert<"blocos_dia">) => {
+      const { data: bloco, error } = await supabase
+        .from("blocos_dia")
+        .insert({ ...input, concluido: true, concluido_at: new Date().toISOString() })
+        .select()
+        .single();
+      if (error) throw error;
+      const { error: e2 } = await supabase.from("sessoes_estudo").insert({
+        data: bloco.data,
+        minutos: bloco.duracao_min,
+        materia_id: bloco.materia_id,
+        concurso_id: bloco.concurso_id,
+        origem: "bloco",
+        bloco_id: bloco.id,
+      });
+      if (e2) throw e2;
+      return bloco;
+    },
+    onSuccess: (bloco) => {
+      qc.invalidateQueries({ queryKey: ["blocos", bloco.data] });
+      qc.invalidateQueries({ queryKey: ["sessoes"] });
+    },
+  });
+}
+
 export function useAtualizarBloco() {
   const qc = useQueryClient();
   return useMutation({

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import type { BlocoDia } from "@/types/db";
-import { useAtualizarBloco, useCriarBloco } from "@/api/blocos";
+import { useAtualizarBloco, useCriarBloco, useRegistrarBlocoConcluido } from "@/api/blocos";
 import { useMaterias } from "@/api/materias";
 import { useConcursos } from "@/api/concursos";
 import { Modal } from "@/components/Modal";
@@ -17,6 +17,16 @@ interface Props {
   bloco: BlocoDia | null;
   concursoIdPadrao?: string;
   proximaOrdem: number;
+  /** Valores iniciais quando é um bloco novo (ex.: vindo do Ciclo). */
+  tituloPadrao?: string;
+  materiaIdPadrao?: string;
+  /** Ao salvar, cria o bloco já concluído e soma o tempo no dia. */
+  concluirAoSalvar?: boolean;
+  /** Chamado após salvar com sucesso (ex.: avançar o ciclo). */
+  onSalvo?: () => void | Promise<void>;
+  /** Sobrescreve o título/botão do modal (ex.: no Ciclo). */
+  tituloModal?: string;
+  labelSalvar?: string;
 }
 
 export function BlocoFormModal({
@@ -26,10 +36,17 @@ export function BlocoFormModal({
   bloco,
   concursoIdPadrao,
   proximaOrdem,
+  tituloPadrao,
+  materiaIdPadrao,
+  concluirAoSalvar,
+  onSalvo,
+  tituloModal,
+  labelSalvar,
 }: Props) {
   const { data: materias } = useMaterias();
   const { data: concursos } = useConcursos();
   const criar = useCriarBloco();
+  const registrarConcluido = useRegistrarBlocoConcluido();
   const atualizar = useAtualizarBloco();
 
   const [titulo, setTitulo] = useState("");
@@ -39,11 +56,11 @@ export function BlocoFormModal({
 
   useEffect(() => {
     if (!open) return;
-    setTitulo(bloco?.titulo ?? "");
+    setTitulo(bloco?.titulo ?? tituloPadrao ?? "");
     setDuracao(String(bloco?.duracao_min ?? 30));
-    setMateriaId(bloco?.materia_id ?? "");
+    setMateriaId(bloco?.materia_id ?? materiaIdPadrao ?? "");
     setConcursoId(bloco?.concurso_id ?? concursoIdPadrao ?? "");
-  }, [open, bloco, concursoIdPadrao]);
+  }, [open, bloco, concursoIdPadrao, tituloPadrao, materiaIdPadrao]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -61,9 +78,12 @@ export function BlocoFormModal({
       };
       if (bloco) {
         await atualizar.mutateAsync({ id: bloco.id, ...campos });
+      } else if (concluirAoSalvar) {
+        await registrarConcluido.mutateAsync({ ...campos, data: dataISO, ordem: proximaOrdem });
       } else {
         await criar.mutateAsync({ ...campos, data: dataISO, ordem: proximaOrdem });
       }
+      await onSalvo?.();
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
@@ -74,14 +94,18 @@ export function BlocoFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={bloco ? "Editar bloco" : "Novo bloco de estudo"}
+      title={tituloModal ?? (bloco ? "Editar bloco" : "Novo bloco de estudo")}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" form="form-bloco" loading={criar.isPending || atualizar.isPending}>
-            Salvar
+          <Button
+            type="submit"
+            form="form-bloco"
+            loading={criar.isPending || atualizar.isPending || registrarConcluido.isPending}
+          >
+            {labelSalvar ?? "Salvar"}
           </Button>
         </>
       }

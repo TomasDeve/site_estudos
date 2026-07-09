@@ -1,9 +1,9 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal } from "lucide-react";
+import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoTexto, TopicoStatus } from "@/types/db";
 import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
-import { useCriarTopicoLink, useExcluirTopicoLink } from "@/api/topicoLinks";
+import { useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink } from "@/api/topicoLinks";
 import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
@@ -38,6 +38,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
   const atualizar = useAtualizarTopico();
   const excluirTopico = useExcluirTopico();
   const criarLink = useCriarTopicoLink();
+  const atualizarLink = useAtualizarTopicoLink();
   const excluirLink = useExcluirTopicoLink();
   const criarTexto = useCriarTopicoTexto();
   const excluirTexto = useExcluirTopicoTexto();
@@ -51,6 +52,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novaUrl, setNovaUrl] = useState("");
   const [novoTipo, setNovoTipo] = useState("questoes");
+  const [editandoLink, setEditandoLink] = useState<TopicoLink | null>(null);
 
   const status = topico.status as TopicoStatus;
   const info = STATUS_INFO[status];
@@ -86,18 +88,37 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
     }
   }
 
-  async function onAddLink(e: FormEvent) {
+  function limparFormLink() {
+    setEditandoLink(null);
+    setNovoTitulo("");
+    setNovaUrl("");
+    setNovoTipo("questoes");
+  }
+
+  function abrirNovoLink() {
+    limparFormLink();
+    alternar("links");
+  }
+
+  function iniciarEdicaoLink(l: TopicoLink) {
+    setEditandoLink(l);
+    setNovoTitulo(l.titulo);
+    setNovaUrl(l.url);
+    setNovoTipo(l.tipo);
+    setPainel("links");
+  }
+
+  async function onSubmitLink(e: FormEvent) {
     e.preventDefault();
     try {
       const url = novaUrl.trim().startsWith("http") ? novaUrl.trim() : `https://${novaUrl.trim()}`;
-      await criarLink.mutateAsync({
-        topico_id: topico.id,
-        titulo: novoTitulo.trim() || novoTipo,
-        url,
-        tipo: novoTipo,
-      });
-      setNovoTitulo("");
-      setNovaUrl("");
+      const dados = { titulo: novoTitulo.trim() || novoTipo, url, tipo: novoTipo };
+      if (editandoLink) {
+        await atualizarLink.mutateAsync({ id: editandoLink.id, ...dados });
+      } else {
+        await criarLink.mutateAsync({ topico_id: topico.id, ...dados });
+      }
+      limparFormLink();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -211,7 +232,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
 
         {/* adicionar/gerenciar links */}
         <button
-          onClick={() => alternar("links")}
+          onClick={abrirNovoLink}
           className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
             links.length > 0
               ? "text-gold hover:bg-gold/10"
@@ -273,8 +294,18 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
                 <ExternalLink className="size-3 shrink-0 opacity-60" />
               </a>
               <button
+                onClick={() => iniciarEdicaoLink(l)}
+                className={`flex h-full items-center px-1 opacity-0 transition-colors hover:text-gold group-hover/chip:opacity-100 max-md:opacity-100 ${
+                  editandoLink?.id === l.id ? "text-gold opacity-100" : "text-mut"
+                }`}
+                aria-label={`Editar link ${l.titulo}`}
+                title="Editar link"
+              >
+                <Pencil className="size-3" />
+              </button>
+              <button
                 onClick={() => excluirLink.mutate(l.id)}
-                className="flex h-full items-center px-1 text-mut opacity-0 transition-colors hover:text-red group-hover/chip:opacity-100 max-md:opacity-100"
+                className="flex h-full items-center px-1 pr-1.5 text-mut opacity-0 transition-colors hover:text-red group-hover/chip:opacity-100 max-md:opacity-100"
                 aria-label={`Excluir link ${l.titulo}`}
                 title="Excluir link"
               >
@@ -347,10 +378,13 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
         </div>
       )}
 
-      {/* Painel: adicionar link (só abre no clique). */}
+      {/* Painel: adicionar/editar link (só abre no clique). */}
       {painel === "links" && (
         <div className="mb-2 ml-7 rounded-lg border border-line/50 bg-navy-900/60 p-3">
-          <form onSubmit={onAddLink} className="flex flex-wrap items-center gap-2">
+          {editandoLink && (
+            <p className="mb-2 text-xs font-medium text-gold">Editando link</p>
+          )}
+          <form onSubmit={onSubmitLink} className="flex flex-wrap items-center gap-2">
             <Select
               value={novoTipo}
               onChange={(e) => setNovoTipo(e.target.value)}
@@ -375,9 +409,27 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
               onChange={(e) => setNovaUrl(e.target.value)}
               className="!h-8 w-40 flex-[2] !text-xs"
             />
-            <Button size="sm" type="submit" variant="secondary" loading={criarLink.isPending}>
-              <Plus className="size-3.5" /> Adicionar
+            <Button
+              size="sm"
+              type="submit"
+              variant="secondary"
+              loading={editandoLink ? atualizarLink.isPending : criarLink.isPending}
+            >
+              {editandoLink ? (
+                <>
+                  <Check className="size-3.5" /> Salvar
+                </>
+              ) : (
+                <>
+                  <Plus className="size-3.5" /> Adicionar
+                </>
+              )}
             </Button>
+            {editandoLink && (
+              <Button size="sm" type="button" variant="ghost" onClick={limparFormLink}>
+                Cancelar
+              </Button>
+            )}
           </form>
         </div>
       )}
