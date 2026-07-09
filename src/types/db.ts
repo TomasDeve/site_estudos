@@ -563,6 +563,7 @@ export type Database = {
       }
       topico_links: {
         Row: {
+          arquivo_path: string | null
           created_at: string
           id: string
           tipo: string
@@ -572,6 +573,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          arquivo_path?: string | null
           created_at?: string
           id?: string
           tipo?: string
@@ -581,6 +583,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          arquivo_path?: string | null
           created_at?: string
           id?: string
           tipo?: string

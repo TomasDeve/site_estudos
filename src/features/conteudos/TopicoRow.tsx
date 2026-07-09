@@ -1,10 +1,11 @@
-import { useMemo, useState, type FormEvent } from "react";
-import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check } from "lucide-react";
+import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoTexto, TopicoStatus } from "@/types/db";
 import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
-import { useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink } from "@/api/topicoLinks";
+import { useAnexarPdf, useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink, removerArquivosPdf } from "@/api/topicoLinks";
 import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
+import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -40,8 +41,11 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
   const criarLink = useCriarTopicoLink();
   const atualizarLink = useAtualizarTopicoLink();
   const excluirLink = useExcluirTopicoLink();
+  const anexarPdf = useAnexarPdf();
   const criarTexto = useCriarTopicoTexto();
   const excluirTexto = useExcluirTopicoTexto();
+  const { session } = useAuth();
+  const arquivoRef = useRef<HTMLInputElement>(null);
 
   const [painel, setPainel] = useState<Painel>(null);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
@@ -119,6 +123,36 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
         await criarLink.mutateAsync({ topico_id: topico.id, ...dados });
       }
       limparFormLink();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onArquivoSelecionado(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite reenviar o mesmo arquivo depois
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Selecione um arquivo PDF.");
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("O PDF deve ter no máximo 50 MB.");
+      return;
+    }
+    if (!session) {
+      toast.error("Sessão expirada. Entre novamente.");
+      return;
+    }
+    try {
+      await anexarPdf.mutateAsync({
+        file,
+        topico_id: topico.id,
+        user_id: session.user.id,
+        titulo: novoTitulo,
+      });
+      limparFormLink();
+      toast.success("PDF enviado.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -304,7 +338,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
                 <Pencil className="size-3" />
               </button>
               <button
-                onClick={() => excluirLink.mutate(l.id)}
+                onClick={() => excluirLink.mutate(l)}
                 className="flex h-full items-center px-1 pr-1.5 text-mut opacity-0 transition-colors hover:text-red group-hover/chip:opacity-100 max-md:opacity-100"
                 aria-label={`Excluir link ${l.titulo}`}
                 title="Excluir link"
@@ -431,6 +465,27 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
               </Button>
             )}
           </form>
+          {!editandoLink && (
+            <div className="mt-2 flex items-center gap-2 border-t border-line/30 pt-2">
+              <span className="text-xs text-mut">ou envie um arquivo do seu computador:</span>
+              <input
+                ref={arquivoRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={onArquivoSelecionado}
+              />
+              <Button
+                size="sm"
+                type="button"
+                variant="ghost"
+                loading={anexarPdf.isPending}
+                onClick={() => arquivoRef.current?.click()}
+              >
+                <FileUp className="size-3.5" /> Enviar PDF
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -447,6 +502,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
         open={confirmarExclusao}
         onClose={() => setConfirmarExclusao(false)}
         onConfirm={() => {
+          removerArquivosPdf(links).catch(() => {}); // limpa PDFs órfãos do Storage
           excluirTopico.mutate(topico.id);
           setConfirmarExclusao(false);
         }}
