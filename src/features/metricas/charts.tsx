@@ -24,6 +24,8 @@ const tooltipStyle = {
   fontSize: 12,
   color: "#e8eef6",
 };
+const tooltipLabelStyle = { color: "#9db0c7", fontWeight: 600, marginBottom: 2 };
+const tooltipItemStyle = { color: "#e8eef6" };
 
 /** % de acertos por dia. */
 export function AcertosChart({ logs }: { logs: QuestaoLog[] }) {
@@ -58,6 +60,8 @@ export function AcertosChart({ logs }: { logs: QuestaoLog[] }) {
               <YAxis domain={[0, 100]} tick={{ fill: CORES.texto, fontSize: 11 }} tickLine={false} axisLine={false} unit="%" />
               <Tooltip
                 contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
                 formatter={(v, nome) =>
                   nome === "pct" ? [`${Number(v)}%`, "acerto"] : [Number(v), "questões"]
                 }
@@ -123,6 +127,8 @@ export function PorMateriaChart({ logs, materias }: { logs: QuestaoLog[]; materi
               />
               <Tooltip
                 contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
                 formatter={(v, nome) =>
                   nome === "questoes" ? [Number(v), "questões"] : [`${Number(v)}%`, "acerto"]
                 }

@@ -55,6 +55,8 @@ export function WeekStudyChart() {
                 fontSize: 12,
                 color: "#e8eef6",
               }}
+              labelStyle={{ color: "#9db0c7", fontWeight: 600, marginBottom: 2 }}
+              itemStyle={{ color: "#e8eef6" }}
               formatter={(v) => [fmtMinutos(Number(v)), "estudado"]}
             />
             <Bar dataKey="minutos" radius={[6, 6, 0, 0]}>
