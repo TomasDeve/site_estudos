@@ -277,13 +277,14 @@ export function MateriaPage() {
             </p>
           ) : (
             <ul className="mt-1">
-              {meusTopicos.map((t) => (
+              {meusTopicos.map((t, i) => (
                 <TopicoRow
                   key={t.id}
                   topico={t}
                   links={linksPorTopico.get(t.id) ?? []}
                   logs={logsPorTopico.get(t.id) ?? []}
                   textos={textosPorTopico.get(t.id) ?? []}
+                  isLast={i === meusTopicos.length - 1}
                 />
               ))}
             </ul>

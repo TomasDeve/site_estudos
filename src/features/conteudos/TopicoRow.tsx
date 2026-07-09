@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen } from "lucide-react";
+import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoTexto, TopicoStatus } from "@/types/db";
-import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoStatus } from "@/api/topicos";
+import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
 import { useCriarTopicoLink, useExcluirTopicoLink } from "@/api/topicoLinks";
 import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
 import { Button } from "@/components/Button";
@@ -28,10 +28,13 @@ interface Props {
   links: TopicoLink[];
   logs: QuestaoLog[];
   textos: TopicoTexto[];
+  /** Último tópico da lista: não mostra linha divisória "solta" no fim. */
+  isLast?: boolean;
 }
 
-export function TopicoRow({ topico, links, logs, textos }: Props) {
+export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
   const setStatus = useSetTopicoStatus();
+  const setSeparador = useSetTopicoSeparador();
   const atualizar = useAtualizarTopico();
   const excluirTopico = useExcluirTopico();
   const criarLink = useCriarTopicoLink();
@@ -220,6 +223,28 @@ export function TopicoRow({ topico, links, logs, textos }: Props) {
           {links.length > 0 && <span className="font-semibold">{links.length}</span>}
         </button>
 
+        {/* linha divisória após o assunto: agrupa assuntos estudados juntos */}
+        <button
+          onClick={() =>
+            setSeparador.mutate({ id: topico.id, separador_apos: !topico.separador_apos })
+          }
+          className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors ${
+            topico.separador_apos
+              ? "text-gold hover:bg-gold/10"
+              : "text-mut opacity-0 hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
+          }`}
+          title={
+            topico.separador_apos
+              ? "Remover linha divisória após este assunto"
+              : "Adicionar linha divisória após este assunto"
+          }
+          aria-label={
+            topico.separador_apos ? "Remover linha divisória" : "Adicionar linha divisória"
+          }
+        >
+          <SeparatorHorizontal className="size-3.5" />
+        </button>
+
         <button
           onClick={() => setConfirmarExclusao(true)}
           className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/topico:opacity-100"
@@ -355,6 +380,11 @@ export function TopicoRow({ topico, links, logs, textos }: Props) {
             </Button>
           </form>
         </div>
+      )}
+
+      {/* Linha divisória que separa este assunto do próximo grupo. */}
+      {topico.separador_apos && !isLast && (
+        <div className="mx-2 my-2.5 border-t border-dashed border-line" role="separator" />
       )}
 
       {textoAberto && (

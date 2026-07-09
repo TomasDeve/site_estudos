@@ -652,6 +652,7 @@ export type Database = {
           id: string
           materia_id: string
           ordem: number
+          separador_apos: boolean
           status: string
           titulo: string
           user_id: string
@@ -661,6 +662,7 @@ export type Database = {
           id?: string
           materia_id: string
           ordem?: number
+          separador_apos?: boolean
           status?: string
           titulo: string
           user_id?: string
@@ -670,6 +672,7 @@ export type Database = {
           id?: string
           materia_id?: string
           ordem?: number
+          separador_apos?: boolean
           status?: string
           titulo?: string
           user_id?: string

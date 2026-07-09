@@ -44,6 +44,29 @@ export function useSetTopicoStatus() {
   });
 }
 
+export function useSetTopicoSeparador() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, separador_apos }: { id: string; separador_apos: boolean }) => {
+      const { error } = await supabase.from("topicos").update({ separador_apos }).eq("id", id);
+      if (error) throw error;
+    },
+    // update otimista: a linha aparece/some na hora
+    onMutate: async ({ id, separador_apos }) => {
+      await qc.cancelQueries({ queryKey: ["topicos"] });
+      const prev = qc.getQueryData<Topico[]>(["topicos"]);
+      qc.setQueryData<Topico[]>(["topicos"], (old) =>
+        old?.map((t) => (t.id === id ? { ...t, separador_apos } : t))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["topicos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
+  });
+}
+
 export function useCriarTopico() {
   const qc = useQueryClient();
   return useMutation({
