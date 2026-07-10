@@ -602,6 +602,62 @@ export type Database = {
           },
         ]
       }
+      topico_questoes: {
+        Row: {
+          comentario: string
+          contexto: string | null
+          created_at: string
+          enunciado: string
+          fonte: string | null
+          gabarito: boolean
+          id: string
+          ordem: number
+          respondida_em: string | null
+          resposta: boolean | null
+          status: string
+          topico_id: string
+          user_id: string
+        }
+        Insert: {
+          comentario?: string
+          contexto?: string | null
+          created_at?: string
+          enunciado: string
+          fonte?: string | null
+          gabarito: boolean
+          id?: string
+          ordem?: number
+          respondida_em?: string | null
+          resposta?: boolean | null
+          status?: string
+          topico_id: string
+          user_id?: string
+        }
+        Update: {
+          comentario?: string
+          contexto?: string | null
+          created_at?: string
+          enunciado?: string
+          fonte?: string | null
+          gabarito?: boolean
+          id?: string
+          ordem?: number
+          respondida_em?: string | null
+          resposta?: boolean | null
+          status?: string
+          topico_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topico_questoes_topico_id_fkey"
+            columns: ["topico_id"]
+            isOneToOne: false
+            referencedRelation: "topicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topico_textos: {
         Row: {
           atualizado_em: string
@@ -850,6 +906,7 @@ export type ConcursoMateria = Tables<"concurso_materias">
 export type CicloItem = Tables<"ciclo_itens">
 export type TopicoLink = Tables<"topico_links">
 export type TopicoTexto = Tables<"topico_textos">
+export type TopicoQuestao = Tables<"topico_questoes">
 export type MetaPeriodo = Tables<"metas_periodo">
 export type BlocoDia = Tables<"blocos_dia">
 export type DiaConcluido = Tables<"dias_concluidos">
@@ -861,3 +918,4 @@ export type Nota = Tables<"notas">
 export type Ferramenta = Tables<"ferramentas">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
+export type QuestaoStatus = "ativa" | "revisar" | "arquivada"

@@ -7,6 +7,7 @@ import { useConcursoMaterias, useDesvincularMateria, useMaterias } from "@/api/m
 import { useCriarTopico, useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
 import { useTopicoTextos } from "@/api/topicoTextos";
+import { useQuestoesResumo, type QuestaoResumo } from "@/api/topicoQuestoes";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { materiasComuns } from "@/lib/progresso";
 import type { QuestaoLog, TopicoLink, TopicoTexto } from "@/types/db";
@@ -38,6 +39,7 @@ export function MateriaPage() {
   const { data: topicos, isLoading: l3 } = useTopicos();
   const { data: links, isLoading: l4 } = useTopicoLinks();
   const { data: textos } = useTopicoTextos();
+  const { data: questoes } = useQuestoesResumo();
   const { data: logs } = useQuestaoLogsPorTopico();
   const { data: logsMateria } = useQuestaoLogsPorMateria(materiaId);
 
@@ -89,6 +91,15 @@ export function MateriaPage() {
     }
     return mapa;
   }, [textos]);
+  const questoesPorTopico = useMemo(() => {
+    const mapa = new Map<string, QuestaoResumo[]>();
+    for (const q of questoes ?? []) {
+      const arr = mapa.get(q.topico_id) ?? [];
+      arr.push(q);
+      mapa.set(q.topico_id, arr);
+    }
+    return mapa;
+  }, [questoes]);
   const logsPorTopico = useMemo(() => {
     const mapa = new Map<string, QuestaoLog[]>();
     for (const l of logs ?? []) {
@@ -284,6 +295,7 @@ export function MateriaPage() {
                   links={linksPorTopico.get(t.id) ?? []}
                   logs={logsPorTopico.get(t.id) ?? []}
                   textos={textosPorTopico.get(t.id) ?? []}
+                  questoes={questoesPorTopico.get(t.id) ?? []}
                   isLast={i === meusTopicos.length - 1}
                 />
               ))}

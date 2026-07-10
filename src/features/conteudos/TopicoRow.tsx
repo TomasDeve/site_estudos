@@ -1,10 +1,11 @@
 import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp } from "lucide-react";
+import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoTexto, TopicoStatus } from "@/types/db";
 import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
 import { useAnexarPdf, useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink, removerArquivosPdf } from "@/api/topicoLinks";
 import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
+import type { QuestaoResumo } from "@/api/topicoQuestoes";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
@@ -13,6 +14,7 @@ import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { TextoReaderModal } from "./TextoReaderModal";
+import { QuestoesIAModal } from "./QuestoesIAModal";
 
 const TIPO_LINK: Record<string, string> = {
   questoes: "✍️",
@@ -29,11 +31,12 @@ interface Props {
   links: TopicoLink[];
   logs: QuestaoLog[];
   textos: TopicoTexto[];
+  questoes: QuestaoResumo[];
   /** Último tópico da lista: não mostra linha divisória "solta" no fim. */
   isLast?: boolean;
 }
 
-export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
+export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Props) {
   const setStatus = useSetTopicoStatus();
   const setSeparador = useSetTopicoSeparador();
   const atualizar = useAtualizarTopico();
@@ -52,6 +55,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
   const [editando, setEditando] = useState(false);
   const [tituloEdit, setTituloEdit] = useState(topico.titulo);
   const [textoAberto, setTextoAberto] = useState<TopicoTexto | null>(null);
+  const [questoesAbertas, setQuestoesAbertas] = useState(false);
 
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novaUrl, setNovaUrl] = useState("");
@@ -67,6 +71,15 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
     const a = logs.reduce((s, l) => s + l.acertos, 0);
     return { total: t, acertos: a, pct: t > 0 ? Math.round((a / t) * 100) : null };
   }, [logs]);
+
+  // Caderno de questões por IA: as arquivadas saem de vista.
+  const caderno = useMemo(() => {
+    const emJogo = questoes.filter((q) => q.status !== "arquivada");
+    return {
+      total: emJogo.length,
+      pendentes: emJogo.filter((q) => q.resposta === null).length,
+    };
+  }, [questoes]);
 
   function alternar(p: Painel) {
     setPainel((atual) => (atual === p ? null : p));
@@ -246,6 +259,33 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
           {resumo.pct !== null && (
             <span className="tabular-nums">
               {resumo.total}Q · {resumo.pct}%
+            </span>
+          )}
+        </button>
+
+        {/* questões geradas por IA a partir do material do assunto */}
+        <button
+          onClick={() => setQuestoesAbertas(true)}
+          className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
+            caderno.total === 0
+              ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+              : caderno.pendentes > 0
+                ? "text-gold hover:bg-gold/10"
+                : "text-green hover:bg-green/10"
+          }`}
+          title={
+            caderno.total === 0
+              ? "Questões por IA deste assunto"
+              : `Questões por IA — ${caderno.total} ${caderno.total === 1 ? "questão" : "questões"} · ${
+                  caderno.pendentes > 0 ? `${caderno.pendentes} a resolver` : "todas resolvidas"
+                }`
+          }
+          aria-label={`Questões por IA de ${topico.titulo}`}
+        >
+          <Sparkles className="size-3.5" />
+          {caderno.total > 0 && (
+            <span className="font-semibold tabular-nums">
+              {caderno.pendentes > 0 ? caderno.pendentes : caderno.total}
             </span>
           )}
         </button>
@@ -499,6 +539,10 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
 
       {textoAberto && (
         <TextoReaderModal texto={textoAberto} onClose={() => setTextoAberto(null)} />
+      )}
+
+      {questoesAbertas && (
+        <QuestoesIAModal topico={topico} onClose={() => setQuestoesAbertas(false)} />
       )}
 
       <ConfirmDialog
