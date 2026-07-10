@@ -918,4 +918,4 @@ export type Nota = Tables<"notas">
 export type Ferramenta = Tables<"ferramentas">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
-export type QuestaoStatus = "ativa" | "revisar" | "arquivada"
+export type QuestaoStatus = "ativa" | "reforco" | "arquivada"

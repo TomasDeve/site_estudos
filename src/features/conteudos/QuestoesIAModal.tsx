@@ -31,7 +31,7 @@ import { parsearQuestoesJson } from "./questoesJson";
 
 const ABAS: { chave: QuestaoStatus; label: string }[] = [
   { chave: "ativa", label: "Ativas" },
-  { chave: "revisar", label: "Para revisar" },
+  { chave: "reforco", label: "Reforço com IA" },
   { chave: "arquivada", label: "Arquivadas" },
 ];
 
@@ -53,8 +53,9 @@ interface Props {
 /**
  * Caderno de questões geradas por IA a partir do material do assunto. O item é
  * no estilo da banca (certo/errado); resolvido, abre o gabarito comentado e as
- * opções de destino: refazer, salvar para revisão, arquivar ou apagar.
- * A primeira resposta de cada questão também entra no desempenho do assunto.
+ * opções de destino: refazer, marcar para reforço com IA, arquivar ou apagar.
+ * As marcadas para reforço formam o conjunto usado ao pedir novas questões de
+ * reforço. A primeira resposta de cada questão também entra no desempenho do assunto.
  */
 export function QuestoesIAModal({ topico, onClose }: Props) {
   const { data: questoes, isLoading } = useTopicoQuestoes(topico.id);
@@ -78,7 +79,7 @@ export function QuestoesIAModal({ topico, onClose }: Props) {
   );
 
   const contagem = useMemo(() => {
-    const c: Record<QuestaoStatus, number> = { ativa: 0, revisar: 0, arquivada: 0 };
+    const c: Record<QuestaoStatus, number> = { ativa: 0, reforco: 0, arquivada: 0 };
     for (const q of todas) c[q.status as QuestaoStatus]++;
     return c;
   }, [todas]);
@@ -201,7 +202,11 @@ export function QuestoesIAModal({ topico, onClose }: Props) {
               {todas.length === 0
                 ? "Nenhuma questão ainda. Peça as questões à IA a partir do PDF ou do conteúdo deste assunto e importe o JSON abaixo."
                 : `Nenhuma questão ${
-                    filtro === "ativa" ? "ativa" : filtro === "revisar" ? "salva para revisão" : "arquivada"
+                    filtro === "ativa"
+                      ? "ativa"
+                      : filtro === "reforco"
+                        ? "marcada para reforço com IA"
+                        : "arquivada"
                   }.`}
             </p>
           ) : (
@@ -307,9 +312,9 @@ function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir }: C
         <span className="shrink-0 whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-mut">
           Questão {numero}
         </span>
-        {status === "revisar" && (
+        {status === "reforco" && (
           <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold">
-            Revisão
+            Reforço IA
           </span>
         )}
         {status === "arquivada" && (
@@ -384,21 +389,21 @@ function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir }: C
               Refazer
             </AcaoQuestao>
             <AcaoQuestao
-              ativo={status === "revisar"}
+              ativo={status === "reforco"}
               icone={
-                status === "revisar" ? (
+                status === "reforco" ? (
                   <BookmarkCheck className="size-3.5" />
                 ) : (
                   <Bookmark className="size-3.5" />
                 )
               }
               onClick={() =>
-                status === "revisar"
-                  ? onStatus(q, "ativa", "Removida da revisão.")
-                  : onStatus(q, "revisar", "Salva para revisão 🔖")
+                status === "reforco"
+                  ? onStatus(q, "ativa", "Removida do reforço com IA.")
+                  : onStatus(q, "reforco", "Marcada para reforço com IA 🔖")
               }
             >
-              {status === "revisar" ? "Na revisão" : "Salvar para revisão"}
+              {status === "reforco" ? "No reforço com IA" : "Marcar para reforço com IA"}
             </AcaoQuestao>
             <AcaoQuestao
               icone={
