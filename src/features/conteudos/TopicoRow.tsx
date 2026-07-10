@@ -162,7 +162,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
     try {
       const novo = await criarTexto.mutateAsync({
         topico_id: topico.id,
-        titulo: "Texto de lei",
+        titulo: "Novo texto",
         ordem: textos.length,
       });
       setTextoAberto(novo);
@@ -250,7 +250,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
           )}
         </button>
 
-        {/* textos de lei */}
+        {/* textos e resumos */}
         <button
           onClick={() => alternar("textos")}
           className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
@@ -258,7 +258,7 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
               ? "text-gold hover:bg-gold/10"
               : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
           } ${painel === "textos" ? "ring-1 ring-line" : ""}`}
-          title="Textos de lei deste assunto"
+          title="Textos e resumos deste assunto"
         >
           <BookOpen className="size-3.5" />
           {textos.length > 0 && <span className="font-semibold">{textos.length}</span>}
@@ -357,13 +357,16 @@ export function TopicoRow({ topico, links, logs, textos, isLast }: Props) {
         </div>
       )}
 
-      {/* Painel: textos de lei do assunto. */}
+      {/* Painel: textos e resumos do assunto. */}
       {painel === "textos" && (
         <div className="mb-2 ml-7 space-y-2 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-mut">
+            Textos e resumos
+          </p>
           {textos.length === 0 ? (
             <p className="text-xs text-mut">
-              Nenhum texto ainda. Adicione o texto de lei deste assunto para ler aqui, marcar e
-              acompanhar as leituras.
+              Nenhum texto ainda. Adicione o texto de lei, um resumo ou qualquer anotação deste
+              assunto para ler aqui, marcar e acompanhar as leituras.
             </p>
           ) : (
             <ul className="space-y-1">

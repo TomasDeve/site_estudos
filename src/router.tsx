@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
       { index: true, element: <EntryRedirect /> },
       // hub de gerenciamento (escolher/criar/arquivar)
       { path: "concursos", element: pagina(<HomePage />) },
-      // leitura imersiva de um texto de lei (abre em aba própria, sem sidebar)
+      // leitura imersiva de um texto/resumo (abre em aba própria, sem sidebar)
       { path: "texto/:textoId", element: pagina(<TextoLeiPage />) },
       // tudo abaixo vive dentro do concurso ativo
       {

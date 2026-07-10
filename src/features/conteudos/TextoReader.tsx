@@ -11,6 +11,7 @@ import {
   Square,
   ChevronDown,
   MoveRight,
+  Minus,
   Undo2,
   Redo2,
 } from "lucide-react";
@@ -41,8 +42,11 @@ function fonteSalva(): number {
   return Number.isFinite(f) && f >= FONTE_MIN && f <= FONTE_MAX ? f : FONTE_PADRAO;
 }
 
+/** Blocos que podem receber o "parei aqui" / a caixinha — a linha divisória não conta. */
 function blocos(el: HTMLElement): HTMLElement[] {
-  return Array.from(el.children).filter((c): c is HTMLElement => c instanceof HTMLElement);
+  return Array.from(el.children).filter(
+    (c): c is HTMLElement => c instanceof HTMLElement && c.tagName !== "HR"
+  );
 }
 
 /** Remove marcações visuais de UI ("parei aqui") antes de persistir o HTML. */
@@ -62,7 +66,7 @@ export function TituloTextoInput({ texto, className }: { texto: TopicoTexto; cla
   const [titulo, setTitulo] = useState(texto.titulo);
 
   function salvarTitulo() {
-    const t = titulo.trim() || "Texto de lei";
+    const t = titulo.trim() || "Novo texto";
     if (t !== titulo) setTitulo(t);
     if (t === texto.titulo) return;
     atualizar.mutate({ id: texto.id, titulo: t });
@@ -91,7 +95,7 @@ interface TextoReaderProps {
 }
 
 /**
- * Leitor/editor unificado do texto de lei: o texto fica sempre editável
+ * Leitor/editor unificado de textos e resumos: o texto fica sempre editável
  * (ler = marcar, ajustar, anotar), com salvamento automático, marca-texto,
  * tamanho de fonte ajustável, contagem de leituras e "parei aqui".
  */
@@ -206,6 +210,13 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
     agendarSalvar();
   }
 
+  /** Linha divisória no ponto do cursor, para separar ideias. */
+  function inserirLinha() {
+    editorRef.current?.focus();
+    document.execCommand("insertHTML", false, "<hr>");
+    agendarSalvar();
+  }
+
   /**
    * Caixinha de destaque em volta do que estiver selecionado. Sem seleção,
    * emoldura o parágrafo do cursor; dentro de uma caixinha, desfaz. Usa
@@ -251,7 +262,7 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
       const bloco =
         linhas.size > 1 ||
         tmp.innerHTML.includes("\n") ||
-        tmp.querySelector("p, div, h1, h2, h3, ul, ol, blockquote, br") != null;
+        tmp.querySelector("p, div, h1, h2, h3, ul, ol, blockquote, br, hr") != null;
       const html = bloco ? tmp.innerHTML.replace(/^\n+|\n+$/g, "") : tmp.innerHTML;
       const tag = bloco ? "div" : "span";
       const classe = bloco ? "caixa-lei" : "caixa-lei-inline";
@@ -392,6 +403,16 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
           >
             <Strikethrough className="size-3.5" />
           </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={inserirLinha}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+            title="Linha divisória para separar ideias"
+            aria-label="Inserir linha divisória"
+          >
+            <Minus className="size-3.5" />
+          </button>
         </div>
 
         {/* Caixinha e setinhas/símbolos (uso de desktop) */}
@@ -516,7 +537,7 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
           spellCheck={false}
           onInput={agendarSalvar}
           onBlur={salvarJa}
-          data-placeholder="Cole aqui o texto de lei e organize à vontade…"
+          data-placeholder="Cole aqui o texto ou resumo e organize à vontade…"
         />
       </div>
     </div>

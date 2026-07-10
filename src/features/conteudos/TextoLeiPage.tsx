@@ -6,7 +6,7 @@ import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { TextoReader, TituloTextoInput } from "./TextoReader";
 
-/** Página dedicada de um texto de lei — leitura imersiva em tela cheia (abre em outra aba). */
+/** Página dedicada de um texto/resumo — leitura imersiva em tela cheia (abre em outra aba). */
 export function TextoLeiPage() {
   const { textoId } = useParams();
   const navigate = useNavigate();
