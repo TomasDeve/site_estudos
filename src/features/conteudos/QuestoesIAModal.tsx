@@ -147,8 +147,8 @@ export function QuestoesIAModal({ topico, onClose }: Props) {
       onClose={onClose}
       width="max-w-3xl"
       title={
-        <span className="flex items-center gap-2">
-          <Sparkles className="size-4 text-gold" />
+        <span className="flex min-w-0 items-center gap-2">
+          <Sparkles className="size-4 shrink-0 text-gold" />
           <span className="min-w-0 truncate">Questões por IA · {topico.titulo}</span>
         </span>
       }
@@ -179,13 +179,13 @@ export function QuestoesIAModal({ topico, onClose }: Props) {
             </div>
           )}
 
-          {/* Abas por destino da questão */}
-          <div className="flex gap-1 border-b border-line/40">
+          {/* Abas por destino da questão — rolam na horizontal em telas estreitas */}
+          <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-line/40 px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
             {ABAS.map((a) => (
               <button
                 key={a.chave}
                 onClick={() => setFiltro(a.chave)}
-                className={`-mb-px cursor-pointer border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${
+                className={`-mb-px shrink-0 cursor-pointer whitespace-nowrap border-b-2 px-3 py-2.5 text-xs font-semibold transition-colors ${
                   filtro === a.chave
                     ? "border-gold text-gold"
                     : "border-transparent text-mut hover:text-dim"
@@ -313,12 +313,12 @@ function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir }: C
           Questão {numero}
         </span>
         {status === "reforco" && (
-          <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold">
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold">
             Reforço IA
           </span>
         )}
         {status === "arquivada" && (
-          <span className="rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mut">
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mut">
             Arquivada
           </span>
         )}
@@ -349,13 +349,13 @@ function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir }: C
         <div className="mt-3 flex gap-2">
           <button
             onClick={() => onResponder(q, true)}
-            className="flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-green/30 bg-green/15 text-sm font-semibold text-green transition-all hover:bg-green/25 active:scale-[0.97]"
+            className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-green/30 bg-green/15 text-sm font-semibold text-green transition-all hover:bg-green/25 active:scale-[0.97]"
           >
             <Check className="size-4" /> Certo
           </button>
           <button
             onClick={() => onResponder(q, false)}
-            className="flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red/30 bg-red/15 text-sm font-semibold text-red transition-all hover:bg-red/25 active:scale-[0.97]"
+            className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red/30 bg-red/15 text-sm font-semibold text-red transition-all hover:bg-red/25 active:scale-[0.97]"
           >
             <X className="size-4" /> Errado
           </button>

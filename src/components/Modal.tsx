@@ -53,19 +53,19 @@ export function Modal({
             : `flex max-h-[92dvh] w-full ${width} flex-col rounded-t-card border border-line bg-navy-800 shadow-2xl sm:rounded-card`
         }
       >
-        <div className="flex items-center justify-between border-b border-line/40 px-5 py-4">
-          <h2 className="text-sm font-semibold text-txt">{title}</h2>
+        <div className="flex items-center justify-between gap-3 border-b border-line/40 px-4 py-4 sm:px-5">
+          <h2 className="min-w-0 flex-1 text-sm font-semibold text-txt">{title}</h2>
           <button
             onClick={onClose}
-            className="cursor-pointer rounded-lg p-1 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+            className="shrink-0 cursor-pointer rounded-lg p-1 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
             aria-label="Fechar"
           >
             <X className="size-4" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-line/40 px-5 py-3">{footer}</div>
+          <div className="flex justify-end gap-2 border-t border-line/40 px-4 py-3 sm:px-5">{footer}</div>
         )}
       </div>
     </div>
