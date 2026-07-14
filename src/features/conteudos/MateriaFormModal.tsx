@@ -33,6 +33,7 @@ export function MateriaFormModal({ open, onClose, concursoId, materias, vinculos
   const [nome, setNome] = useState("");
   const [icone, setIcone] = useState("📚");
   const [area, setArea] = useState("P1");
+  const [redacao, setRedacao] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -41,6 +42,7 @@ export function MateriaFormModal({ open, onClose, concursoId, materias, vinculos
     setNome("");
     setIcone("📚");
     setArea("P1");
+    setRedacao(false);
   }, [open, disponiveis]);
 
   const busy = criarNova.isPending || vincular.isPending;
@@ -56,7 +58,12 @@ export function MateriaFormModal({ open, onClose, concursoId, materias, vinculos
         await criarNova.mutateAsync({
           concursoId,
           area,
-          materia: { nome: nome.trim(), icone: icone.trim() || "📚", slug: slugify(nome) },
+          materia: {
+            nome: nome.trim(),
+            icone: icone.trim() || (redacao ? "✍️" : "📚"),
+            slug: slugify(nome),
+            tipo: redacao ? "redacao" : "normal",
+          },
         });
         toast.success("Matéria criada e vinculada!");
       }
@@ -123,23 +130,37 @@ export function MateriaFormModal({ open, onClose, concursoId, materias, vinculos
             </p>
           )
         ) : (
-          <div className="grid grid-cols-[88px_1fr] gap-3">
-            <Field label="Ícone">
-              <Input
-                value={icone}
-                maxLength={4}
-                className="text-center text-lg"
-                onChange={(e) => setIcone(e.target.value)}
+          <div className="space-y-3">
+            <div className="grid grid-cols-[88px_1fr] gap-3">
+              <Field label="Ícone">
+                <Input
+                  value={icone}
+                  maxLength={4}
+                  className="text-center text-lg"
+                  onChange={(e) => setIcone(e.target.value)}
+                />
+              </Field>
+              <Field label="Nome da matéria">
+                <Input
+                  required={modo === "nova"}
+                  placeholder="Ex.: Direito Penal"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                />
+              </Field>
+            </div>
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line/60 bg-navy-900/50 px-3 py-2.5">
+              <input
+                type="checkbox"
+                checked={redacao}
+                onChange={(e) => setRedacao(e.target.checked)}
+                className="mt-0.5 size-4 accent-gold"
               />
-            </Field>
-            <Field label="Nome da matéria">
-              <Input
-                required={modo === "nova"}
-                placeholder="Ex.: Direito Penal"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-              />
-            </Field>
+              <span className="text-xs text-dim">
+                <strong className="text-txt">Matéria de redação</strong> — habilita o painel para
+                lançar as notas das redações (em vez de questões).
+              </span>
+            </label>
           </div>
         )}
 

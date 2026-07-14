@@ -188,165 +188,171 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
 
   return (
     <li className="group/topico">
-      <div className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-navy-700/40">
-        {/* bolinha de status: clique cicla */}
-        <button
-          onClick={() => setStatus.mutate({ id: topico.id, status: CICLO_STATUS[status] })}
-          className="size-4.5 shrink-0 cursor-pointer rounded-full border-2 transition-all hover:scale-125"
-          style={{
-            borderColor: info.cor,
-            background: status === "nao_estudado" ? "transparent" : info.cor,
-          }}
-          title={`${info.label} → clique: ${STATUS_INFO[CICLO_STATUS[status]].label}`}
-          aria-label={`${topico.titulo}: ${info.label}`}
-        />
-        {editando ? (
-          <input
-            autoFocus
-            value={tituloEdit}
-            onChange={(e) => setTituloEdit(e.target.value)}
-            onBlur={salvarTitulo}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                salvarTitulo();
-              } else if (e.key === "Escape") {
-                setTituloEdit(topico.titulo);
-                setEditando(false);
-              }
-            }}
-            className="min-w-0 flex-1 rounded-md border border-line bg-navy-950 px-2 py-1 text-sm text-txt outline-none focus:border-gold/60"
-            placeholder="Nome do assunto"
-          />
-        ) : (
-          <span
-            onDoubleClick={abrirEdicao}
-            className={`min-w-0 flex-1 text-sm leading-snug ${
-              status === "concluido" ? "text-mut" : "text-txt"
-            }`}
-          >
-            {topico.titulo}
-          </span>
-        )}
-
-        {/* renomear assunto */}
-        {!editando && (
+      <div className="flex flex-col gap-1 rounded-lg px-2 py-2 transition-colors hover:bg-navy-700/40 sm:flex-row sm:items-center sm:gap-2.5">
+        {/* bolinha de status + título do assunto */}
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          {/* bolinha de status: clique cicla */}
           <button
-            onClick={abrirEdicao}
-            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
-            title="Renomear assunto"
-            aria-label={`Renomear ${topico.titulo}`}
+            onClick={() => setStatus.mutate({ id: topico.id, status: CICLO_STATUS[status] })}
+            className="size-4.5 shrink-0 cursor-pointer rounded-full border-2 transition-all hover:scale-125"
+            style={{
+              borderColor: info.cor,
+              background: status === "nao_estudado" ? "transparent" : info.cor,
+            }}
+            title={`${info.label} → clique: ${STATUS_INFO[CICLO_STATUS[status]].label}`}
+            aria-label={`${topico.titulo}: ${info.label}`}
+          />
+          {editando ? (
+            <input
+              autoFocus
+              value={tituloEdit}
+              onChange={(e) => setTituloEdit(e.target.value)}
+              onBlur={salvarTitulo}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  salvarTitulo();
+                } else if (e.key === "Escape") {
+                  setTituloEdit(topico.titulo);
+                  setEditando(false);
+                }
+              }}
+              className="min-w-0 flex-1 rounded-md border border-line bg-navy-950 px-2 py-1 text-sm text-txt outline-none focus:border-gold/60"
+              placeholder="Nome do assunto"
+            />
+          ) : (
+            <span
+              onDoubleClick={abrirEdicao}
+              className={`min-w-0 flex-1 text-sm leading-snug ${
+                status === "concluido" ? "text-mut" : "text-txt"
+              }`}
+            >
+              {topico.titulo}
+            </span>
+          )}
+        </div>
+
+        {/* ações do assunto: no celular quebram para uma segunda linha */}
+        <div className="flex shrink-0 items-center gap-0.5 pl-7 sm:gap-1 sm:pl-0">
+          {/* renomear assunto */}
+          {!editando && (
+            <button
+              onClick={abrirEdicao}
+              className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
+              title="Renomear assunto"
+              aria-label={`Renomear ${topico.titulo}`}
+            >
+              <Pencil className="size-3.5" />
+            </button>
+          )}
+
+          {/* desempenho: mostra a taxa de acerto, ou convida a registrar */}
+          <button
+            onClick={() => alternar("questoes")}
+            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
+              cor
+                ? `${cor.texto} ${cor.fundo}`
+                : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+            } ${painel === "questoes" ? "ring-1 ring-line" : ""}`}
+            title={
+              resumo.pct !== null
+                ? `${resumo.acertos}/${resumo.total} questões · ${resumo.pct}% de acerto`
+                : "Registrar questões deste assunto"
+            }
           >
-            <Pencil className="size-3.5" />
+            <Target className="size-3.5" />
+            {resumo.pct !== null && (
+              <span className="tabular-nums">
+                {resumo.total}Q · {resumo.pct}%
+              </span>
+            )}
           </button>
-        )}
 
-        {/* desempenho: mostra a taxa de acerto, ou convida a registrar */}
-        <button
-          onClick={() => alternar("questoes")}
-          className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
-            cor
-              ? `${cor.texto} ${cor.fundo}`
-              : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-          } ${painel === "questoes" ? "ring-1 ring-line" : ""}`}
-          title={
-            resumo.pct !== null
-              ? `${resumo.acertos}/${resumo.total} questões · ${resumo.pct}% de acerto`
-              : "Registrar questões deste assunto"
-          }
-        >
-          <Target className="size-3.5" />
-          {resumo.pct !== null && (
-            <span className="tabular-nums">
-              {resumo.total}Q · {resumo.pct}%
-            </span>
-          )}
-        </button>
+          {/* questões geradas por IA a partir do material do assunto */}
+          <button
+            onClick={() => setQuestoesAbertas(true)}
+            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
+              caderno.total === 0
+                ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+                : caderno.pendentes > 0
+                  ? "text-gold hover:bg-gold/10"
+                  : "text-green hover:bg-green/10"
+            }`}
+            title={
+              caderno.total === 0
+                ? "Questões por IA deste assunto"
+                : `Questões por IA — ${caderno.total} ${caderno.total === 1 ? "questão" : "questões"} · ${
+                    caderno.pendentes > 0 ? `${caderno.pendentes} a resolver` : "todas resolvidas"
+                  }`
+            }
+            aria-label={`Questões por IA de ${topico.titulo}`}
+          >
+            <Sparkles className="size-3.5" />
+            {caderno.total > 0 && (
+              <span className="font-semibold tabular-nums">
+                {caderno.pendentes > 0 ? caderno.pendentes : caderno.total}
+              </span>
+            )}
+          </button>
 
-        {/* questões geradas por IA a partir do material do assunto */}
-        <button
-          onClick={() => setQuestoesAbertas(true)}
-          className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
-            caderno.total === 0
-              ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-              : caderno.pendentes > 0
+          {/* textos e resumos */}
+          <button
+            onClick={() => alternar("textos")}
+            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
+              textos.length > 0
                 ? "text-gold hover:bg-gold/10"
-                : "text-green hover:bg-green/10"
-          }`}
-          title={
-            caderno.total === 0
-              ? "Questões por IA deste assunto"
-              : `Questões por IA — ${caderno.total} ${caderno.total === 1 ? "questão" : "questões"} · ${
-                  caderno.pendentes > 0 ? `${caderno.pendentes} a resolver` : "todas resolvidas"
-                }`
-          }
-          aria-label={`Questões por IA de ${topico.titulo}`}
-        >
-          <Sparkles className="size-3.5" />
-          {caderno.total > 0 && (
-            <span className="font-semibold tabular-nums">
-              {caderno.pendentes > 0 ? caderno.pendentes : caderno.total}
-            </span>
-          )}
-        </button>
+                : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+            } ${painel === "textos" ? "ring-1 ring-line" : ""}`}
+            title="Textos e resumos deste assunto"
+          >
+            <BookOpen className="size-3.5" />
+            {textos.length > 0 && <span className="font-semibold">{textos.length}</span>}
+          </button>
 
-        {/* textos e resumos */}
-        <button
-          onClick={() => alternar("textos")}
-          className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
-            textos.length > 0
-              ? "text-gold hover:bg-gold/10"
-              : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-          } ${painel === "textos" ? "ring-1 ring-line" : ""}`}
-          title="Textos e resumos deste assunto"
-        >
-          <BookOpen className="size-3.5" />
-          {textos.length > 0 && <span className="font-semibold">{textos.length}</span>}
-        </button>
+          {/* adicionar/gerenciar links */}
+          <button
+            onClick={abrirNovoLink}
+            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
+              links.length > 0
+                ? "text-gold hover:bg-gold/10"
+                : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+            } ${painel === "links" ? "ring-1 ring-line" : ""}`}
+            title="Links do tópico (questões, aulas...)"
+          >
+            <Link2 className="size-3.5" />
+            {links.length > 0 && <span className="font-semibold">{links.length}</span>}
+          </button>
 
-        {/* adicionar/gerenciar links */}
-        <button
-          onClick={abrirNovoLink}
-          className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
-            links.length > 0
-              ? "text-gold hover:bg-gold/10"
-              : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-          } ${painel === "links" ? "ring-1 ring-line" : ""}`}
-          title="Links do tópico (questões, aulas...)"
-        >
-          <Link2 className="size-3.5" />
-          {links.length > 0 && <span className="font-semibold">{links.length}</span>}
-        </button>
+          {/* linha divisória após o assunto: agrupa assuntos estudados juntos */}
+          <button
+            onClick={() =>
+              setSeparador.mutate({ id: topico.id, separador_apos: !topico.separador_apos })
+            }
+            className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors ${
+              topico.separador_apos
+                ? "text-gold hover:bg-gold/10"
+                : "text-mut opacity-0 hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
+            }`}
+            title={
+              topico.separador_apos
+                ? "Remover linha divisória após este assunto"
+                : "Adicionar linha divisória após este assunto"
+            }
+            aria-label={
+              topico.separador_apos ? "Remover linha divisória" : "Adicionar linha divisória"
+            }
+          >
+            <SeparatorHorizontal className="size-3.5" />
+          </button>
 
-        {/* linha divisória após o assunto: agrupa assuntos estudados juntos */}
-        <button
-          onClick={() =>
-            setSeparador.mutate({ id: topico.id, separador_apos: !topico.separador_apos })
-          }
-          className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors ${
-            topico.separador_apos
-              ? "text-gold hover:bg-gold/10"
-              : "text-mut opacity-0 hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
-          }`}
-          title={
-            topico.separador_apos
-              ? "Remover linha divisória após este assunto"
-              : "Adicionar linha divisória após este assunto"
-          }
-          aria-label={
-            topico.separador_apos ? "Remover linha divisória" : "Adicionar linha divisória"
-          }
-        >
-          <SeparatorHorizontal className="size-3.5" />
-        </button>
-
-        <button
-          onClick={() => setConfirmarExclusao(true)}
-          className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/topico:opacity-100"
-          title="Excluir tópico"
-        >
-          <Trash2 className="size-3.5" />
-        </button>
+          <button
+            onClick={() => setConfirmarExclusao(true)}
+            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/topico:opacity-100 max-md:opacity-100"
+            title="Excluir tópico"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Chips dos links — sempre visíveis, abrem direto. */}

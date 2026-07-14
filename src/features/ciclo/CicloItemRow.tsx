@@ -1,13 +1,15 @@
 import { Link } from "react-router";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, GripVertical, Trash2 } from "lucide-react";
+import { Check, GripVertical, SkipForward, Trash2, Undo2 } from "lucide-react";
 import type { CicloItem } from "@/types/db";
 
 interface Props {
   item: CicloItem;
   index: number;
   ehAtual: boolean;
+  /** Matéria adiada ("reserva"): fica fixada como próxima. */
+  adiada: boolean;
   cor: string;
   nome: string;
   icone: string;
@@ -16,6 +18,8 @@ interface Props {
   /** Rota da página da matéria (clique no nome). */
   to: string;
   onToggle: () => void;
+  onAdiar: () => void;
+  onRetomar: () => void;
   onRemover: () => void;
 }
 
@@ -23,6 +27,7 @@ export function CicloItemRow({
   item,
   index,
   ehAtual,
+  adiada,
   cor,
   nome,
   icone,
@@ -30,6 +35,8 @@ export function CicloItemRow({
   temTopicos,
   to,
   onToggle,
+  onAdiar,
+  onRetomar,
   onRemover,
 }: Props) {
   const {
@@ -45,7 +52,7 @@ export function CicloItemRow({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    borderColor: ehAtual && !item.concluido ? `${cor}88` : undefined,
+    borderColor: ehAtual && !item.concluido && !adiada ? `${cor}88` : undefined,
   };
 
   return (
@@ -57,9 +64,11 @@ export function CicloItemRow({
       } ${
         item.concluido
           ? "border-green/25 bg-green/8"
-          : ehAtual
-            ? "border-line bg-navy-800"
-            : "border-line/50 bg-navy-900/50 hover:border-line"
+          : adiada
+            ? "border-gold/40 bg-gold/[0.06]"
+            : ehAtual
+              ? "border-line bg-navy-800"
+              : "border-line/50 bg-navy-900/50 hover:border-line"
       }`}
     >
       {/* alça de arrastar */}
@@ -98,11 +107,16 @@ export function CicloItemRow({
         <span className="text-lg">{icone}</span>
         <div className="min-w-0 flex-1">
           <p
-            className={`truncate text-sm transition-colors ${
+            className={`flex items-center gap-1.5 truncate text-sm transition-colors ${
               item.concluido ? "text-mut line-through" : "text-txt group-hover/mat:text-gold"
             }`}
           >
-            {nome}
+            <span className="truncate">{nome}</span>
+            {adiada && !item.concluido && (
+              <span className="shrink-0 rounded-full bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold">
+                Reserva
+              </span>
+            )}
           </p>
           {temTopicos && (
             <div className="mt-1 flex items-center gap-2">
@@ -117,6 +131,28 @@ export function CicloItemRow({
           )}
         </div>
       </Link>
+
+      {/* pular (adiar) / retomar — só para matérias ainda não concluídas */}
+      {!item.concluido &&
+        (adiada ? (
+          <button
+            onClick={onRetomar}
+            className="shrink-0 cursor-pointer rounded-md p-1 text-gold transition-colors hover:bg-gold/10"
+            aria-label={`Retomar ${nome} no ciclo`}
+            title="Retomar: tira da reserva e devolve à ordem normal"
+          >
+            <Undo2 className="size-3.5" />
+          </button>
+        ) : (
+          <button
+            onClick={onAdiar}
+            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-navy-600 hover:text-gold group-hover:opacity-100 max-md:opacity-100"
+            aria-label={`Pular ${nome} (deixar como reserva)`}
+            title="Pular: deixa como reserva (próxima)"
+          >
+            <SkipForward className="size-3.5" />
+          </button>
+        ))}
 
       <button
         onClick={onRemover}

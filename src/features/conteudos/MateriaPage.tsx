@@ -9,6 +9,7 @@ import { useTopicoLinks } from "@/api/topicoLinks";
 import { useTopicoTextos } from "@/api/topicoTextos";
 import { useQuestoesResumo, type QuestaoResumo } from "@/api/topicoQuestoes";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
+import { useRedacoes } from "@/api/redacoes";
 import { materiasComuns } from "@/lib/progresso";
 import type { QuestaoLog, TopicoLink, TopicoTexto } from "@/types/db";
 import { Card, CardBody } from "@/components/Card";
@@ -20,6 +21,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TopicoRow } from "./TopicoRow";
 import { RegistroQuestoes } from "./RegistroQuestoes";
+import { MateriaResumos } from "./MateriaResumos";
+import { RedacoesPanel } from "./RedacoesPanel";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
 
@@ -42,6 +45,7 @@ export function MateriaPage() {
   const { data: questoes } = useQuestoesResumo();
   const { data: logs } = useQuestaoLogsPorTopico();
   const { data: logsMateria } = useQuestaoLogsPorMateria(materiaId);
+  const { data: redacoes } = useRedacoes();
 
   const criarTopico = useCriarTopico();
   const desvincular = useDesvincularMateria();
@@ -85,6 +89,7 @@ export function MateriaPage() {
   const textosPorTopico = useMemo(() => {
     const mapa = new Map<string, TopicoTexto[]>();
     for (const t of textos ?? []) {
+      if (!t.topico_id) continue; // textos gerais da matéria não entram por tópico
       const arr = mapa.get(t.topico_id) ?? [];
       arr.push(t);
       mapa.set(t.topico_id, arr);
@@ -157,6 +162,12 @@ export function MateriaPage() {
   const nomeDe = (mId: string) => (materias ?? []).find((m) => m.id === mId)?.nome ?? "matéria";
   const iconeDe = (mId: string) => (materias ?? []).find((m) => m.id === mId)?.icone ?? "📘";
   const cor = desempenho.pct !== null ? corDesempenho(desempenho.pct) : null;
+
+  const ehRedacao = materia.tipo === "redacao";
+  const textosDaMateria = (textos ?? []).filter((t) => t.materia_id === materia.id);
+  const redacoesDaMateria = (redacoes ?? []).filter(
+    (r) => r.materia_id === materia.id && r.concurso_id === concurso.id
+  );
 
   async function onAddTopico(e: FormEvent) {
     e.preventDefault();
@@ -232,34 +243,49 @@ export function MateriaPage() {
         </CardBody>
       </Card>
 
-      {/* Questões resolvidas direto na matéria (misturando assuntos) */}
-      <Card>
-        <CardBody>
-          <button
-            onClick={() => setAbrirQuestoes((v) => !v)}
-            className="flex w-full cursor-pointer items-center justify-between gap-3 text-left"
-          >
-            <span className="flex items-center gap-2 text-sm font-semibold text-txt">
-              <Target className="size-4 text-gold" /> Questões da matéria (geral)
-            </span>
-            <span className="flex items-center gap-2 text-xs text-mut">
-              {geral.pct !== null ? `${geral.acertos}/${geral.total} · ${geral.pct}%` : "registrar"}
-              <ChevronRight
-                className={`size-4 transition-transform ${abrirQuestoes ? "rotate-90" : ""}`}
-              />
-            </span>
-          </button>
-          {abrirQuestoes && (
-            <div className="mt-3 border-t border-line/30 pt-3">
-              <p className="mb-3 text-xs text-mut">
-                Resolveu questões misturando vários assuntos no filtro? Registre direto aqui, sem
-                escolher um tópico.
-              </p>
-              <RegistroQuestoes materiaId={materia.id} topicoId={null} logs={logsMateria ?? []} />
-            </div>
-          )}
-        </CardBody>
-      </Card>
+      {/* Redação: notas dos treinos. Demais matérias: questões gerais. */}
+      {ehRedacao ? (
+        <RedacoesPanel
+          concursoId={concurso.id}
+          materiaId={materia.id}
+          cor={concurso.cor}
+          vinculo={vinculo}
+          redacoes={redacoesDaMateria}
+        />
+      ) : (
+        <Card>
+          <CardBody>
+            <button
+              onClick={() => setAbrirQuestoes((v) => !v)}
+              className="flex w-full cursor-pointer items-center justify-between gap-3 text-left"
+            >
+              <span className="flex items-center gap-2 text-sm font-semibold text-txt">
+                <Target className="size-4 text-gold" /> Questões da matéria (geral)
+              </span>
+              <span className="flex items-center gap-2 text-xs text-mut">
+                {geral.pct !== null
+                  ? `${geral.acertos}/${geral.total} · ${geral.pct}%`
+                  : "registrar"}
+                <ChevronRight
+                  className={`size-4 transition-transform ${abrirQuestoes ? "rotate-90" : ""}`}
+                />
+              </span>
+            </button>
+            {abrirQuestoes && (
+              <div className="mt-3 border-t border-line/30 pt-3">
+                <p className="mb-3 text-xs text-mut">
+                  Resolveu questões misturando vários assuntos no filtro? Registre direto aqui, sem
+                  escolher um tópico.
+                </p>
+                <RegistroQuestoes materiaId={materia.id} topicoId={null} logs={logsMateria ?? []} />
+              </div>
+            )}
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Resumos gerais da matéria (não presos a um assunto) */}
+      <MateriaResumos materiaId={materia.id} textos={textosDaMateria} />
 
       {/* Tópicos da matéria */}
       <Card>

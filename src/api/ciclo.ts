@@ -48,6 +48,8 @@ export function useSetItemConcluido() {
           concluido,
           concluido_at: concluido ? new Date().toISOString() : null,
           voltas: concluido ? item.voltas + 1 : Math.max(0, item.voltas - 1),
+          // ao concluir, a matéria deixa de ser "reserva" (adiada).
+          ...(concluido ? { adiado_em: null } : {}),
         })
         .eq("id", item.id);
       if (error) throw error;
@@ -63,6 +65,7 @@ export function useSetItemConcluido() {
                 ...c,
                 concluido,
                 voltas: concluido ? c.voltas + 1 : Math.max(0, c.voltas - 1),
+                adiado_em: concluido ? null : c.adiado_em,
               }
             : c
         )
@@ -76,14 +79,45 @@ export function useSetItemConcluido() {
   });
 }
 
-/** Inicia uma nova volta: zera o "concluído" de todas as matérias do concurso. */
+/**
+ * "Pular" (adiar=true) ou "retomar" (adiar=false) uma matéria do ciclo.
+ * Uma matéria adiada sai do "Estude agora" e fica fixada como a PRÓXIMA
+ * (reserva). Quanto mais cedo foi adiada, mais à frente ela fica na fila.
+ */
+export function useAdiarItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, adiar }: { id: string; adiar: boolean }) => {
+      const { error } = await supabase
+        .from("ciclo_itens")
+        .update({ adiado_em: adiar ? new Date().toISOString() : null })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, adiar }) => {
+      await qc.cancelQueries({ queryKey: KEY });
+      const prev = qc.getQueryData<CicloItem[]>(KEY);
+      const agora = new Date().toISOString();
+      qc.setQueryData<CicloItem[]>(KEY, (old) =>
+        old?.map((c) => (c.id === id ? { ...c, adiado_em: adiar ? agora : null } : c))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(KEY, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+/** Inicia uma nova volta: zera o "concluído" e as reservas de todas as matérias do concurso. */
 export function useReiniciarVolta() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (concursoId: string) => {
       const { error } = await supabase
         .from("ciclo_itens")
-        .update({ concluido: false, concluido_at: null })
+        .update({ concluido: false, concluido_at: null, adiado_em: null })
         .eq("concurso_id", concursoId);
       if (error) throw error;
     },

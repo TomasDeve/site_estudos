@@ -75,6 +75,7 @@ export type Database = {
       }
       ciclo_itens: {
         Row: {
+          adiado_em: string | null
           concluido: boolean
           concluido_at: string | null
           concurso_id: string
@@ -86,6 +87,7 @@ export type Database = {
           voltas: number
         }
         Insert: {
+          adiado_em?: string | null
           concluido?: boolean
           concluido_at?: string | null
           concurso_id: string
@@ -97,6 +99,7 @@ export type Database = {
           voltas?: number
         }
         Update: {
+          adiado_em?: string | null
           concluido?: boolean
           concluido_at?: string | null
           concurso_id?: string
@@ -131,6 +134,7 @@ export type Database = {
           created_at: string
           id: string
           materia_id: string
+          meta: number | null
           ordem: number
           peso_questoes: number | null
           user_id: string
@@ -141,6 +145,7 @@ export type Database = {
           created_at?: string
           id?: string
           materia_id: string
+          meta?: number | null
           ordem?: number
           peso_questoes?: number | null
           user_id?: string
@@ -151,6 +156,7 @@ export type Database = {
           created_at?: string
           id?: string
           materia_id?: string
+          meta?: number | null
           ordem?: number
           peso_questoes?: number | null
           user_id?: string
@@ -369,6 +375,7 @@ export type Database = {
           id: string
           nome: string
           slug: string
+          tipo: string
           user_id: string
         }
         Insert: {
@@ -377,6 +384,7 @@ export type Database = {
           id?: string
           nome: string
           slug: string
+          tipo?: string
           user_id?: string
         }
         Update: {
@@ -385,6 +393,7 @@ export type Database = {
           id?: string
           nome?: string
           slug?: string
+          tipo?: string
           user_id?: string
         }
         Relationships: []
@@ -499,6 +508,63 @@ export type Database = {
             columns: ["topico_id"]
             isOneToOne: false
             referencedRelation: "topicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      redacoes: {
+        Row: {
+          concurso_id: string
+          created_at: string
+          data: string
+          id: string
+          materia_id: string | null
+          nota: number | null
+          nota_max: number | null
+          numero: number
+          observacoes: string
+          tema: string
+          user_id: string
+        }
+        Insert: {
+          concurso_id: string
+          created_at?: string
+          data?: string
+          id?: string
+          materia_id?: string | null
+          nota?: number | null
+          nota_max?: number | null
+          numero?: number
+          observacoes?: string
+          tema?: string
+          user_id?: string
+        }
+        Update: {
+          concurso_id?: string
+          created_at?: string
+          data?: string
+          id?: string
+          materia_id?: string | null
+          nota?: number | null
+          nota_max?: number | null
+          numero?: number
+          observacoes?: string
+          tema?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redacoes_concurso_id_fkey"
+            columns: ["concurso_id"]
+            isOneToOne: false
+            referencedRelation: "concursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redacoes_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
             referencedColumns: ["id"]
           },
         ]
@@ -666,9 +732,10 @@ export type Database = {
           id: string
           leituras: number
           marcador: string | null
+          materia_id: string | null
           ordem: number
           titulo: string
-          topico_id: string
+          topico_id: string | null
           user_id: string
         }
         Insert: {
@@ -678,9 +745,10 @@ export type Database = {
           id?: string
           leituras?: number
           marcador?: string | null
+          materia_id?: string | null
           ordem?: number
           titulo?: string
-          topico_id: string
+          topico_id?: string | null
           user_id?: string
         }
         Update: {
@@ -690,12 +758,20 @@ export type Database = {
           id?: string
           leituras?: number
           marcador?: string | null
+          materia_id?: string | null
           ordem?: number
           titulo?: string
-          topico_id?: string
+          topico_id?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "topico_textos_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "topico_textos_topico_id_fkey"
             columns: ["topico_id"]
@@ -916,6 +992,8 @@ export type MateriaAlias = Tables<"materia_aliases">
 export type Evento = Tables<"eventos">
 export type Nota = Tables<"notas">
 export type Ferramenta = Tables<"ferramentas">
+export type Redacao = Tables<"redacoes">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "reforco" | "arquivada"
+export type MateriaTipo = "normal" | "redacao"

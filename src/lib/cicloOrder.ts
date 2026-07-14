@@ -1,4 +1,4 @@
-import type { ConcursoMateria } from "@/types/db";
+import type { CicloItem, ConcursoMateria } from "@/types/db";
 
 // Peso usado para matérias sem peso definido no edital: entram DEPOIS das
 // que têm peso, preservando a ordem original do edital como desempate.
@@ -44,4 +44,41 @@ export function sugerirOrdemCiclo(vinculos: ConcursoMateria[]): string[] {
     if (i < b.length) ordem.push(b[i]);
   }
   return [...ordem, ...outros];
+}
+
+export interface EstadoCiclo {
+  /** Matéria que está em "Estude agora". */
+  atual: CicloItem | null;
+  /** A próxima da fila efetiva (primeira reserva, se houver). */
+  proxima: CicloItem | null;
+  /** Fila efetiva depois da atual: reservas primeiro, depois o resto. */
+  fila: CicloItem[];
+  /** Matérias adiadas ("reserva"), da mais antiga para a mais recente. */
+  adiadas: CicloItem[];
+  /** Itens ativos (não concluídos) da volta. */
+  ativos: CicloItem[];
+}
+
+/**
+ * Estado de estudo do ciclo levando em conta as matérias "puladas" (reserva).
+ *
+ * A atual é a primeira matéria ativa NÃO adiada (na ordem do ciclo). As adiadas
+ * flutuam para logo depois da atual, virando a "próxima" — e permanecem lá
+ * (ordenadas pela hora em que foram adiadas) mesmo que outras sejam puladas.
+ * Se todas as ativas estiverem adiadas, a atual passa a ser a reserva mais antiga.
+ */
+export function estadoCiclo(itens: CicloItem[]): EstadoCiclo {
+  const ativos = itens.filter((i) => !i.concluido).sort((a, b) => a.ordem - b.ordem);
+  const adiadas = ativos
+    .filter((i) => i.adiado_em)
+    .sort((a, b) =>
+      a.adiado_em! < b.adiado_em! ? -1 : a.adiado_em! > b.adiado_em! ? 1 : a.ordem - b.ordem
+    );
+  const naoAdiadas = ativos.filter((i) => !i.adiado_em);
+
+  const atual = naoAdiadas[0] ?? adiadas[0] ?? null;
+  const fila =
+    naoAdiadas.length > 0 ? [...adiadas, ...naoAdiadas.slice(1)] : adiadas.slice(1);
+
+  return { atual, proxima: fila[0] ?? null, fila, adiadas, ativos };
 }

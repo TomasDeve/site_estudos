@@ -89,10 +89,38 @@ export function useDesvincularMateria() {
 export function useAtualizarMateria() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...patch }: { id: string; nome?: string; icone?: string }) => {
+    mutationFn: async ({
+      id,
+      ...patch
+    }: {
+      id: string;
+      nome?: string;
+      icone?: string;
+      tipo?: string;
+    }) => {
       const { error } = await supabase.from("materias").update(patch).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["materias"] }),
+  });
+}
+
+/** Atualiza campos do vínculo matéria↔concurso (ex.: a meta de redações). */
+export function useAtualizarConcursoMateria() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...patch
+    }: {
+      id: string;
+      area?: string;
+      meta?: number | null;
+      peso_questoes?: number | null;
+    }) => {
+      const { error } = await supabase.from("concurso_materias").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
   });
 }

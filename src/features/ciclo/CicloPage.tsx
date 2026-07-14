@@ -19,13 +19,14 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { ArrowRight, Check, Plus, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Plus, RotateCcw, SkipForward, Sparkles, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import type { CicloItem } from "@/types/db";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import {
+  useAdiarItem,
   useCicloItens,
   useGerarCiclo,
   useReiniciarVolta,
@@ -35,7 +36,7 @@ import {
 } from "@/api/ciclo";
 import { useBlocosDia } from "@/api/blocos";
 import { hojeISO } from "@/lib/dates";
-import { sugerirOrdemCiclo } from "@/lib/cicloOrder";
+import { estadoCiclo, sugerirOrdemCiclo } from "@/lib/cicloOrder";
 import { progressoMateria } from "@/lib/progresso";
 import { celebrar } from "@/features/metas/celebration";
 import { BlocoFormModal } from "@/features/metas/BlocoFormModal";
@@ -64,6 +65,7 @@ export function CicloPage() {
   const reiniciar = useReiniciarVolta();
   const reordenar = useReordenarCiclo();
   const remover = useRemoverDoCiclo();
+  const adiar = useAdiarItem();
 
   const sensors = useSensors(
     // distância de ativação: um clique curto na alça não conta como arraste
@@ -104,12 +106,12 @@ export function CicloPage() {
   const total = meusItens.length;
   const concluidosNaVolta = meusItens.filter((i) => i.concluido).length;
   const pctVolta = total === 0 ? 0 : Math.round((concluidosNaVolta / total) * 100);
-  const atual = meusItens.find((i) => !i.concluido) ?? null;
+  const { atual, proxima, adiadas, ativos } = estadoCiclo(meusItens);
   const indexAtual = atual ? meusItens.indexOf(atual) : -1;
-  const proxima =
-    indexAtual >= 0
-      ? meusItens.slice(indexAtual + 1).find((i) => !i.concluido) ?? null
-      : null;
+  const adiadaIds = new Set(adiadas.map((i) => i.id));
+  // só dá para pular se a atual não é reserva e há outra matéria para onde ir.
+  const podeAdiar = !!atual && !atual.adiado_em && ativos.length > 1;
+  const proximaEhReserva = !!proxima && adiadaIds.has(proxima.id);
   const voltaCompleta = total > 0 && concluidosNaVolta === total;
   // voltas concluídas = quantas vezes o ciclo inteiro já foi percorrido.
   const voltasCompletas = total === 0 ? 0 : Math.min(...meusItens.map((i) => i.voltas));
@@ -131,6 +133,26 @@ export function CicloPage() {
         const prox = proxima ? `${icone(proxima)} ${nome(proxima)}` : "a próxima matéria";
         toast.success(`✓ ${nome(atual)} concluída. Agora: ${prox}`);
       }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onPular() {
+    if (!atual) return;
+    const alvo = atual;
+    try {
+      await adiar.mutateAsync({ id: alvo.id, adiar: true });
+      toast.success(`${icone(alvo)} ${nome(alvo)} ficou como reserva (próxima).`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onRetomar(item: CicloItem) {
+    try {
+      await adiar.mutateAsync({ id: item.id, adiar: false });
+      toast.success(`${nome(item)} voltou para a ordem normal do ciclo.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -330,16 +352,33 @@ export function CicloPage() {
                       to={`../conteudos/${atual.materia_id}`}
                       className="text-xs font-semibold text-gold hover:underline"
                     >
-                      Ver tópicos em Conteúdos
+                      Abrir matéria em Conteúdos
                     </Link>
-                    <Button onClick={() => setModalConcluir(true)} loading={setConcluido.isPending}>
-                      <Check className="size-4" /> Concluir e avançar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {podeAdiar && (
+                        <Button variant="secondary" onClick={onPular} loading={adiar.isPending}>
+                          <SkipForward className="size-4" /> Pular
+                        </Button>
+                      )}
+                      {atual.adiado_em && (
+                        <Button variant="secondary" onClick={() => onRetomar(atual)} loading={adiar.isPending}>
+                          <Undo2 className="size-4" /> Tirar da reserva
+                        </Button>
+                      )}
+                      <Button onClick={() => setModalConcluir(true)} loading={setConcluido.isPending}>
+                        <Check className="size-4" /> Concluir e avançar
+                      </Button>
+                    </div>
                   </div>
 
                   {proxima && (
                     <p className="flex items-center gap-1.5 border-t border-line/30 pt-3 text-xs text-mut">
                       <ArrowRight className="size-3.5" /> A seguir: {icone(proxima)} {nome(proxima)}
+                      {proximaEhReserva && (
+                        <span className="rounded-full bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold">
+                          Reserva
+                        </span>
+                      )}
                     </p>
                   )}
                 </CardBody>
@@ -359,7 +398,9 @@ export function CicloPage() {
             </div>
 
             <p className="mb-2 text-[11px] text-mut">
-              Arraste pela alça à esquerda de cada matéria para reordenar o ciclo.
+              Arraste pela alça para reordenar. Toque em <SkipForward className="inline size-3" /> para
+              pular uma matéria: ela vira <span className="font-semibold text-gold">reserva</span> e fica
+              fixada como próxima até você retomá-la em <Undo2 className="inline size-3" />.
             </p>
 
             <DndContext
@@ -381,6 +422,7 @@ export function CicloPage() {
                         item={item}
                         index={i}
                         ehAtual={item.id === atual?.id}
+                        adiada={adiadaIds.has(item.id)}
                         cor={cor}
                         nome={nome(item)}
                         icone={icone(item)}
@@ -390,6 +432,8 @@ export function CicloPage() {
                         onToggle={() =>
                           setConcluido.mutate({ item, concluido: !item.concluido })
                         }
+                        onAdiar={() => adiar.mutate({ id: item.id, adiar: true })}
+                        onRetomar={() => onRetomar(item)}
                         onRemover={() => remover.mutate(item.id)}
                       />
                     );
@@ -435,6 +479,8 @@ export function CicloPage() {
           onSalvo={onConcluirAtual}
           tituloModal="Registrar estudo e avançar"
           labelSalvar="Salvar e avançar"
+          avancarSemRegistrar
+          labelPular="Já registrei"
         />
       )}
     </div>

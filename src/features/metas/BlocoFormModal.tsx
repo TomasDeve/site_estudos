@@ -27,6 +27,12 @@ interface Props {
   /** Sobrescreve o título/botão do modal (ex.: no Ciclo). */
   tituloModal?: string;
   labelSalvar?: string;
+  /**
+   * Mostra o atalho "Já registrei": avança (chama `onSalvo`) sem criar bloco
+   * nem somar tempo — para quando o estudo já foi lançado em outro lugar.
+   */
+  avancarSemRegistrar?: boolean;
+  labelPular?: string;
 }
 
 export function BlocoFormModal({
@@ -42,6 +48,8 @@ export function BlocoFormModal({
   onSalvo,
   tituloModal,
   labelSalvar,
+  avancarSemRegistrar,
+  labelPular,
 }: Props) {
   const { data: materias } = useMaterias();
   const { data: concursos } = useConcursos();
@@ -53,6 +61,7 @@ export function BlocoFormModal({
   const [duracao, setDuracao] = useState("30");
   const [materiaId, setMateriaId] = useState("");
   const [concursoId, setConcursoId] = useState("");
+  const [pulando, setPulando] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -90,6 +99,19 @@ export function BlocoFormModal({
     }
   }
 
+  /** Avança sem criar bloco nem somar tempo (o estudo já foi registrado). */
+  async function onJaRegistrei() {
+    setPulando(true);
+    try {
+      await onSalvo?.();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPulando(false);
+    }
+  }
+
   return (
     <Modal
       open={open}
@@ -100,6 +122,11 @@ export function BlocoFormModal({
           <Button variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
+          {avancarSemRegistrar && (
+            <Button variant="secondary" onClick={onJaRegistrei} loading={pulando}>
+              {labelPular ?? "Já registrei"}
+            </Button>
+          )}
           <Button
             type="submit"
             form="form-bloco"
