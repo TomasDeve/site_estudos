@@ -88,7 +88,7 @@ export function HistoricoTable() {
                     <td className="px-2 py-2 text-right tabular-nums text-txt">{l.acertos}</td>
                     <td
                       className={`px-2 py-2 text-right font-bold tabular-nums ${
-                        pct >= 80 ? "text-green" : pct >= 60 ? "text-amber" : "text-red"
+                        pct >= 81 ? "text-cyan" : pct >= 80 ? "text-green" : pct >= 60 ? "text-amber" : "text-red"
                       }`}
                     >
                       {pct}%
