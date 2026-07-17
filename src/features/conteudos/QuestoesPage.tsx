@@ -8,6 +8,7 @@ import {
   BookmarkCheck,
   Check,
   ChevronRight,
+  MessageCircleQuestion,
   RotateCcw,
   Sparkles,
   Trash2,
@@ -23,6 +24,7 @@ import {
   useTopicoQuestoes,
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
+import { useMaterias } from "@/api/materias";
 import { useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
@@ -31,6 +33,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { corDesempenho } from "./desempenho";
 import { parsearQuestoesJson } from "./questoesJson";
+import { ResumoRapido } from "./ResumoRapido";
+import { DuvidaIAModal } from "./DuvidaIAModal";
 
 const ABAS: { chave: QuestaoStatus; label: string }[] = [
   { chave: "ativa", label: "Ativas" },
@@ -111,6 +115,9 @@ export function QuestoesPage() {
       <main className="mx-auto w-full max-w-3xl flex-1 px-3 py-4 sm:px-6 sm:py-6">
         <Caderno topico={topico} />
       </main>
+
+      {/* Bloco de resumo sempre à mão durante a rolagem */}
+      <ResumoRapido topico={topico} />
     </div>
   );
 }
@@ -124,6 +131,7 @@ export function QuestoesPage() {
  */
 function Caderno({ topico }: { topico: Topico }) {
   const { data: questoes, isLoading } = useTopicoQuestoes(topico.id);
+  const { data: materias } = useMaterias();
   const responder = useResponderQuestao();
   const setStatus = useSetQuestaoStatus();
   const excluir = useExcluirQuestao();
@@ -134,6 +142,9 @@ function Caderno({ topico }: { topico: Topico }) {
   const [importando, setImportando] = useState(false);
   const [json, setJson] = useState("");
   const [aExcluir, setAExcluir] = useState<TopicoQuestao | null>(null);
+  const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
+
+  const materiaNome = (materias ?? []).find((m) => m.id === topico.materia_id)?.nome;
 
   const todas = useMemo(() => questoes ?? [], [questoes]);
 
@@ -274,6 +285,7 @@ function Caderno({ topico }: { topico: Topico }) {
                   onResponder={onResponder}
                   onStatus={mudarStatus}
                   onExcluir={() => setAExcluir(q)}
+                  onDuvida={() => setDuvida(q)}
                 />
               ))}
             </ul>
@@ -344,6 +356,15 @@ function Caderno({ topico }: { topico: Topico }) {
         confirmLabel="Apagar"
         danger
       />
+
+      {duvida && (
+        <DuvidaIAModal
+          questao={duvida}
+          materiaNome={materiaNome}
+          assunto={topico.titulo}
+          onClose={() => setDuvida(null)}
+        />
+      )}
     </>
   );
 }
@@ -354,9 +375,10 @@ interface CardProps {
   onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
   onExcluir: () => void;
+  onDuvida: () => void;
 }
 
-function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir }: CardProps) {
+function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir, onDuvida }: CardProps) {
   const resolvida = q.resposta !== null;
   const acertou = q.resposta === q.gabarito;
   const status = q.status as QuestaoStatus;
@@ -440,6 +462,12 @@ function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir }: C
           )}
 
           <div className="flex flex-wrap gap-1.5 border-t border-line/30 pt-2.5">
+            <AcaoQuestao
+              icone={<MessageCircleQuestion className="size-3.5 text-gold" />}
+              onClick={onDuvida}
+            >
+              Tirar dúvida com IA
+            </AcaoQuestao>
             <AcaoQuestao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
               Refazer
             </AcaoQuestao>

@@ -21,3 +21,7 @@ if (!url || !anonKey) {
 }
 
 export const supabase = createClient<Database>(url, anonKey);
+
+// Usados para chamar Edge Functions direto via fetch (streaming da IA).
+export const supabaseUrl = url;
+export const supabaseAnonKey = anonKey;

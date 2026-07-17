@@ -5,6 +5,7 @@ import {
   Bookmark,
   BookmarkCheck,
   Check,
+  MessageCircleQuestion,
   RotateCcw,
   Shuffle,
   X,
@@ -23,6 +24,8 @@ import { hojeISO } from "@/lib/dates";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { corDesempenho } from "./desempenho";
+import { ResumoRapido } from "./ResumoRapido";
+import { DuvidaIAModal } from "./DuvidaIAModal";
 
 const ABAS = [
   { chave: "responder", label: "Para responder" },
@@ -74,6 +77,7 @@ export function QuestoesMistasPage() {
 
   const [semente, setSemente] = useState(gerarSemente);
   const [aba, setAba] = useState<Aba>("responder");
+  const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
   // Respondidas nesta sessão seguem à mostra em "Para responder", para dar
   // tempo de ler o gabarito comentado antes de irem para "Resolvidas".
   const [respondidasAgora, setRespondidasAgora] = useState<ReadonlySet<string>>(new Set());
@@ -254,6 +258,7 @@ export function QuestoesMistasPage() {
                     materia={materiaPorId.get(topicoPorId.get(q.topico_id)?.materia_id ?? "")}
                     onResponder={onResponder}
                     onStatus={mudarStatus}
+                    onDuvida={() => setDuvida(q)}
                   />
                 ))}
               </ul>
@@ -261,6 +266,18 @@ export function QuestoesMistasPage() {
           </div>
         )}
       </main>
+
+      {/* Bloco de resumo sempre à mão — escolhe a matéria onde a nota entra */}
+      <ResumoRapido materias={materias ?? []} />
+
+      {duvida && (
+        <DuvidaIAModal
+          questao={duvida}
+          materiaNome={materiaPorId.get(topicoPorId.get(duvida.topico_id)?.materia_id ?? "")?.nome}
+          assunto={topicoPorId.get(duvida.topico_id)?.titulo}
+          onClose={() => setDuvida(null)}
+        />
+      )}
     </div>
   );
 }
@@ -270,10 +287,11 @@ interface CardProps {
   materia: Materia | undefined;
   onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
+  onDuvida: () => void;
 }
 
 /** Card do modo misturado: só a matéria no topo — sem assunto, fonte ou número. */
-function QuestaoMistaCard({ questao: q, materia, onResponder, onStatus }: CardProps) {
+function QuestaoMistaCard({ questao: q, materia, onResponder, onStatus, onDuvida }: CardProps) {
   const resolvida = q.resposta !== null;
   const acertou = q.resposta === q.gabarito;
   const status = q.status as QuestaoStatus;
@@ -335,6 +353,9 @@ function QuestaoMistaCard({ questao: q, materia, onResponder, onStatus }: CardPr
           )}
 
           <div className="flex flex-wrap gap-1.5 border-t border-line/30 pt-2.5">
+            <Acao icone={<MessageCircleQuestion className="size-3.5 text-gold" />} onClick={onDuvida}>
+              Tirar dúvida com IA
+            </Acao>
             <Acao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
               Refazer
             </Acao>

@@ -19,6 +19,29 @@ export function useTopicoTextos() {
   });
 }
 
+/** Título fixo do resumo criado pelo bloco flutuante das páginas de questões. */
+export const TITULO_RESUMO_QUESTOES = "Resumo das questões";
+
+/**
+ * Busca só o resumo rápido de um destino (assunto ou matéria), sem baixar
+ * todos os textos — os textos de lei são pesados demais para a página de questões.
+ */
+export function useResumoQuestoes(destino: { topicoId?: string; materiaId?: string }) {
+  return useQuery({
+    queryKey: ["topico_textos", "resumo-questoes", destino.topicoId ?? null, destino.materiaId ?? null],
+    enabled: !!destino.topicoId || !!destino.materiaId,
+    queryFn: async (): Promise<TopicoTexto | null> => {
+      let q = supabase.from("topico_textos").select("*").eq("titulo", TITULO_RESUMO_QUESTOES);
+      q = destino.topicoId
+        ? q.eq("topico_id", destino.topicoId)
+        : q.eq("materia_id", destino.materiaId!).is("topico_id", null);
+      const { data, error } = await q.order("created_at").limit(1);
+      if (error) throw error;
+      return data[0] ?? null;
+    },
+  });
+}
+
 export function useCriarTopicoTexto() {
   const qc = useQueryClient();
   return useMutation({
