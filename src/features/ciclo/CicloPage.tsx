@@ -19,7 +19,16 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { ArrowRight, Check, Plus, RotateCcw, SkipForward, Sparkles, Undo2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Plus,
+  RotateCcw,
+  SkipForward,
+  Sparkles,
+  Undo2,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { CicloItem } from "@/types/db";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
@@ -106,11 +115,12 @@ export function CicloPage() {
   const total = meusItens.length;
   const concluidosNaVolta = meusItens.filter((i) => i.concluido).length;
   const pctVolta = total === 0 ? 0 : Math.round((concluidosNaVolta / total) * 100);
-  const { atual, proxima, adiadas, ativos } = estadoCiclo(meusItens);
+  const { atual, proxima, adiadas, ativos, ultimaConcluida } = estadoCiclo(meusItens);
   const indexAtual = atual ? meusItens.indexOf(atual) : -1;
   const adiadaIds = new Set(adiadas.map((i) => i.id));
+  const atualEhReserva = !!atual && adiadaIds.has(atual.id);
   // só dá para pular se a atual não é reserva e há outra matéria para onde ir.
-  const podeAdiar = !!atual && !atual.adiado_em && ativos.length > 1;
+  const podeAdiar = !!atual && !atualEhReserva && ativos.length > 1;
   const proximaEhReserva = !!proxima && adiadaIds.has(proxima.id);
   const voltaCompleta = total > 0 && concluidosNaVolta === total;
   // voltas concluídas = quantas vezes o ciclo inteiro já foi percorrido.
@@ -144,6 +154,18 @@ export function CicloPage() {
     try {
       await adiar.mutateAsync({ id: alvo.id, adiar: true });
       toast.success(`${icone(alvo)} ${nome(alvo)} ficou como reserva (próxima).`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  /** Desfaz o avanço: a última matéria concluída volta a ser a "Estude agora". */
+  async function onVoltar() {
+    if (!ultimaConcluida) return;
+    const alvo = ultimaConcluida;
+    try {
+      await setConcluido.mutateAsync({ item: alvo, concluido: false });
+      toast.success(`↩ ${icone(alvo)} ${nome(alvo)} voltou para o ciclo.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -298,9 +320,21 @@ export function CicloPage() {
                     revisão e fixação.
                   </p>
                 </div>
-                <Button onClick={onReiniciar} loading={reiniciar.isPending}>
-                  <RotateCcw className="size-4" /> Iniciar volta {proximaVolta}
-                </Button>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {ultimaConcluida && (
+                    <Button
+                      variant="secondary"
+                      onClick={onVoltar}
+                      loading={setConcluido.isPending}
+                      title={`Voltar para ${nome(ultimaConcluida)}`}
+                    >
+                      <ArrowLeft className="size-4" /> Voltar
+                    </Button>
+                  )}
+                  <Button onClick={onReiniciar} loading={reiniciar.isPending}>
+                    <RotateCcw className="size-4" /> Iniciar volta {proximaVolta}
+                  </Button>
+                </div>
               </CardBody>
             </Card>
           ) : (
@@ -355,12 +389,22 @@ export function CicloPage() {
                       Abrir matéria em Conteúdos
                     </Link>
                     <div className="flex items-center gap-2">
+                      {ultimaConcluida && (
+                        <Button
+                          variant="secondary"
+                          onClick={onVoltar}
+                          loading={setConcluido.isPending}
+                          title={`Voltar para ${nome(ultimaConcluida)}`}
+                        >
+                          <ArrowLeft className="size-4" /> Voltar
+                        </Button>
+                      )}
                       {podeAdiar && (
                         <Button variant="secondary" onClick={onPular} loading={adiar.isPending}>
                           <SkipForward className="size-4" /> Pular
                         </Button>
                       )}
-                      {atual.adiado_em && (
+                      {atualEhReserva && (
                         <Button variant="secondary" onClick={() => onRetomar(atual)} loading={adiar.isPending}>
                           <Undo2 className="size-4" /> Tirar da reserva
                         </Button>
@@ -399,8 +443,9 @@ export function CicloPage() {
 
             <p className="mb-2 text-[11px] text-mut">
               Arraste pela alça para reordenar. Toque em <SkipForward className="inline size-3" /> para
-              pular uma matéria: ela vira <span className="font-semibold text-gold">reserva</span> e fica
-              fixada como próxima até você retomá-la em <Undo2 className="inline size-3" />.
+              pular uma matéria: ela vira <span className="font-semibold text-gold">reserva</span>, fica
+              fixada como próxima e volta a ser a da vez assim que você concluir a matéria que estudou no
+              lugar dela. Em <Undo2 className="inline size-3" /> você a retoma na hora.
             </p>
 
             <DndContext

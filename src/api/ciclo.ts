@@ -64,6 +64,9 @@ export function useSetItemConcluido() {
             ? {
                 ...c,
                 concluido,
+                // `concluido_at` decide quem é a atual (as reservas valem até a
+                // conclusão seguinte), então precisa acompanhar já no otimista.
+                concluido_at: concluido ? new Date().toISOString() : null,
                 voltas: concluido ? c.voltas + 1 : Math.max(0, c.voltas - 1),
                 adiado_em: concluido ? null : c.adiado_em,
               }

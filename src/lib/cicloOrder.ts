@@ -57,28 +57,48 @@ export interface EstadoCiclo {
   adiadas: CicloItem[];
   /** Itens ativos (não concluídos) da volta. */
   ativos: CicloItem[];
+  /** Última matéria concluída na volta — a que o "Voltar" retoma. */
+  ultimaConcluida: CicloItem | null;
+}
+
+/** Instante em ms; sem data vira -Infinity (ordena por último / nunca "vence"). */
+const quando = (iso: string | null) => (iso ? Date.parse(iso) : -Infinity);
+
+function porConclusaoDesc(a: CicloItem, b: CicloItem) {
+  const ta = quando(a.concluido_at);
+  const tb = quando(b.concluido_at);
+  return ta === tb ? b.ordem - a.ordem : tb - ta;
+}
+
+function porAdiamentoAsc(a: CicloItem, b: CicloItem) {
+  const ta = quando(a.adiado_em);
+  const tb = quando(b.adiado_em);
+  return ta === tb ? a.ordem - b.ordem : ta - tb;
 }
 
 /**
  * Estado de estudo do ciclo levando em conta as matérias "puladas" (reserva).
  *
- * A atual é a primeira matéria ativa NÃO adiada (na ordem do ciclo). As adiadas
- * flutuam para logo depois da atual, virando a "próxima" — e permanecem lá
- * (ordenadas pela hora em que foram adiadas) mesmo que outras sejam puladas.
- * Se todas as ativas estiverem adiadas, a atual passa a ser a reserva mais antiga.
+ * Pular cede a vez para UMA matéria: a pulada sai do "Estude agora", fica fixada
+ * como a próxima (é o que a linha "A seguir" promete) e volta a ser a atual assim
+ * que a matéria estudada no lugar dela é concluída. Por isso a reserva vale só até
+ * a conclusão seguinte: `adiado_em` posterior à última conclusão da volta.
+ *
+ * Enquanto valem, as reservas ficam logo depois da atual, da mais antiga para a
+ * mais recente. Se todas as ativas forem reservas, a atual é a reserva mais antiga.
  */
 export function estadoCiclo(itens: CicloItem[]): EstadoCiclo {
+  const ultimaConcluida = itens.filter((i) => i.concluido).sort(porConclusaoDesc)[0] ?? null;
+  const ultimaConclusao = quando(ultimaConcluida?.concluido_at ?? null);
+  const emReserva = (i: CicloItem) => quando(i.adiado_em) > ultimaConclusao;
+
   const ativos = itens.filter((i) => !i.concluido).sort((a, b) => a.ordem - b.ordem);
-  const adiadas = ativos
-    .filter((i) => i.adiado_em)
-    .sort((a, b) =>
-      a.adiado_em! < b.adiado_em! ? -1 : a.adiado_em! > b.adiado_em! ? 1 : a.ordem - b.ordem
-    );
-  const naoAdiadas = ativos.filter((i) => !i.adiado_em);
+  const adiadas = ativos.filter(emReserva).sort(porAdiamentoAsc);
+  const naoAdiadas = ativos.filter((i) => !emReserva(i));
 
   const atual = naoAdiadas[0] ?? adiadas[0] ?? null;
   const fila =
     naoAdiadas.length > 0 ? [...adiadas, ...naoAdiadas.slice(1)] : adiadas.slice(1);
 
-  return { atual, proxima: fila[0] ?? null, fila, adiadas, ativos };
+  return { atual, proxima: fila[0] ?? null, fila, adiadas, ativos, ultimaConcluida };
 }
