@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, NotebookPen, X } from "lucide-react";
+import { ExternalLink, NotebookPen, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Materia, TablesInsert, Topico, TopicoTexto } from "@/types/db";
 import {
@@ -8,28 +8,38 @@ import {
   useCriarTopicoTexto,
   useResumoQuestoes,
 } from "@/api/topicoTextos";
+import { useMaterias } from "@/api/materias";
 import { Spinner } from "@/components/Spinner";
+import { ChatIA } from "./ChatIA";
 
 const MATERIA_KEY = "resumo-rapido-materia-id";
 
 interface Props {
-  /** Caderno de um assunto: o resumo gruda no tópico e aparece nos textos dele. */
+  /**
+   * Caderno de um assunto: o resumo gruda no tópico e aparece nos textos dele.
+   * Sem tópico (modo misturado), o painel tem um seletor de matéria e o resumo
+   * vai para os "Resumos da matéria (geral)".
+   */
   topico?: Topico;
-  /** Modo misturado: o resumo vai para os "Resumos da matéria (geral)" da matéria escolhida. */
-  materias?: Materia[];
 }
 
 /**
  * Botão flutuante presente durante toda a rolagem das páginas de questões.
  * Abre um bloco de notas que salva sozinho (debounce) em `topico_textos`,
  * reaproveitando o mesmo leitor/editor dos resumos do site — dá para abrir
- * depois em tela cheia, marcar com marca-texto etc.
+ * depois em tela cheia, marcar com marca-texto etc. O botão "Verificar com IA"
+ * manda o texto atual para a IA revisar (erros, lacunas, melhorias).
  */
-export function ResumoRapido({ topico, materias }: Props) {
+export function ResumoRapido({ topico }: Props) {
   const [aberto, setAberto] = useState(false);
   // Depois de aberto uma vez, o painel só é escondido (não desmontado): o texto
   // digitado e o cursor sobrevivem ao fechar/abrir, sem corrida de salvamento.
   const [jaAbriu, setJaAbriu] = useState(false);
+  const [verificando, setVerificando] = useState(false);
+
+  const { data: materias } = useMaterias();
+  // Lê o texto puro atual do editor (registrado pelo EditorResumo montado).
+  const pegarTextoRef = useRef<(() => string) | null>(null);
 
   function alternar() {
     setAberto((v) => !v);
@@ -39,8 +49,8 @@ export function ResumoRapido({ topico, materias }: Props) {
   const opcoes = useMemo(
     () =>
       (materias ?? [])
-        .filter((m) => m.tipo === "normal")
-        .sort((a, b) => a.nome.localeCompare(b.nome)),
+        .filter((m: Materia) => m.tipo === "normal")
+        .sort((a: Materia, b: Materia) => a.nome.localeCompare(b.nome)),
     [materias]
   );
   const [materiaId, setMateriaId] = useState<string>(
@@ -55,9 +65,23 @@ export function ResumoRapido({ topico, materias }: Props) {
     : { materiaId: materiaEscolhida?.id };
   const { data: resumo, isLoading } = useResumoQuestoes(destino);
 
+  // Nome da matéria em pauta (contexto para a revisão por IA).
+  const materiaNome = topico
+    ? (materias ?? []).find((m) => m.id === topico.materia_id)?.nome
+    : materiaEscolhida?.nome;
+
   function escolherMateria(id: string) {
     setMateriaId(id);
     localStorage.setItem(MATERIA_KEY, id);
+  }
+
+  function abrirVerificacao() {
+    const txt = pegarTextoRef.current?.().trim();
+    if (!txt) {
+      toast.error("Escreva algo no resumo antes de pedir a verificação.");
+      return;
+    }
+    setVerificando(true);
   }
 
   // A linha nova segue a convenção do site: texto de tópico só tem topico_id;
@@ -128,7 +152,14 @@ export function ResumoRapido({ topico, materias }: Props) {
               <Spinner className="size-5" />
             </div>
           ) : topico || materiaEscolhida ? (
-            <EditorResumo key={chave} existente={resumo ?? null} linhaNova={linhaNova} ativo={aberto} />
+            <EditorResumo
+              key={chave}
+              existente={resumo ?? null}
+              linhaNova={linhaNova}
+              ativo={aberto}
+              pegarTextoRef={pegarTextoRef}
+              onVerificar={abrirVerificacao}
+            />
           ) : null}
         </div>
       )}
@@ -141,6 +172,41 @@ export function ResumoRapido({ topico, materias }: Props) {
       >
         {aberto ? <X className="size-5" /> : <NotebookPen className="size-5" />}
       </button>
+
+      {verificando && (
+        <ChatIA
+          titulo={
+            <span className="flex items-center gap-2">
+              <Sparkles className="size-4 shrink-0 text-gold" /> Verificar resumo com IA
+            </span>
+          }
+          chave={`resumo-${chave}`}
+          montarPayload={() => ({
+            materia: materiaNome ?? null,
+            assunto: topico?.titulo ?? null,
+            resumo: { conteudo: pegarTextoRef.current?.() ?? "" },
+          })}
+          sugestoes={[
+            "Tem algum erro no que escrevi?",
+            "O que está faltando de importante?",
+            "Como deixo esse resumo mais completo e organizado?",
+          ]}
+          recap={
+            <p className="rounded-lg border border-line/40 bg-navy-900/60 px-3 py-2.5 text-xs text-mut">
+              A IA recebe o texto atual do seu resumo
+              {materiaNome ? (
+                <>
+                  {" "}
+                  de <span className="font-semibold text-dim">{materiaNome}</span>
+                </>
+              ) : null}
+              {topico ? ` (${topico.titulo})` : null}. Se você editar o resumo, as próximas
+              perguntas já usam a versão nova.
+            </p>
+          }
+          onClose={() => setVerificando(false)}
+        />
+      )}
     </>
   );
 }
@@ -153,11 +219,16 @@ function EditorResumo({
   existente,
   linhaNova,
   ativo,
+  pegarTextoRef,
+  onVerificar,
 }: {
   existente: TopicoTexto | null;
   linhaNova: TablesInsert<"topico_textos">;
   /** Painel visível — foca o editor ao abrir. */
   ativo: boolean;
+  /** Registra aqui a função que devolve o texto puro atual (para a revisão por IA). */
+  pegarTextoRef: React.MutableRefObject<(() => string) | null>;
+  onVerificar: () => void;
 }) {
   const atualizar = useAtualizarTopicoTexto();
   const criar = useCriarTopicoTexto();
@@ -189,7 +260,14 @@ function EditorResumo({
     if (ativo) editorRef.current?.focus();
   }, [ativo]);
 
-  // Flush ao desmontar (fechar painel / sair da página) sem perder o digitado.
+  useEffect(() => {
+    pegarTextoRef.current = () => editorRef.current?.innerText ?? "";
+    return () => {
+      pegarTextoRef.current = null;
+    };
+  }, [pegarTextoRef]);
+
+  // Flush ao desmontar (trocar de destino / sair da página) sem perder o digitado.
   useEffect(
     () => () => {
       window.clearTimeout(timerRef.current);
@@ -270,9 +348,13 @@ function EditorResumo({
         className="conteudo-lei min-h-44 flex-1 overflow-y-auto px-3 py-2.5 outline-none"
       />
       <div className="flex items-center justify-between border-t border-line/30 px-3 py-1.5">
-        <span className="text-[10px] text-mut">
-          {existente || idRef.current ? "Também aparece nos resumos do site" : "Criado ao digitar"}
-        </span>
+        <button
+          onClick={onVerificar}
+          className="flex cursor-pointer items-center gap-1 rounded-md px-1 py-0.5 text-[10px] font-semibold text-gold transition-colors hover:bg-gold/10"
+          title="A IA revisa seu resumo: erros, lacunas e melhorias"
+        >
+          <Sparkles className="size-3" /> Verificar com IA
+        </button>
         <span
           className={`text-[10px] font-medium ${
             estado === "salvo" ? "text-green" : estado === "salvando" ? "text-dim" : "text-amber"

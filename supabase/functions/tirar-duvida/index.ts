@@ -1,6 +1,6 @@
-// Edge Function "tirar-duvida" — chat com IA sobre uma questão do caderno.
-// Recebe a questão + histórico da conversa e devolve a resposta em streaming
-// (texto puro, pedaço a pedaço), para a resposta começar a aparecer em ~1s.
+// Edge Function "tirar-duvida" — chat com IA sobre uma questão do caderno OU
+// revisão do resumo do aluno. Recebe o contexto + histórico da conversa e
+// devolve a resposta em streaming (texto puro, pedaço a pedaço).
 //
 // Segredo necessário (Dashboard → Edge Functions → Secrets):
 //   ANTHROPIC_API_KEY = chave da API da Anthropic
@@ -15,13 +15,14 @@ const CORS = {
 interface Payload {
   materia?: string | null;
   assunto?: string | null;
-  questao: {
+  questao?: {
     contexto?: string | null;
     enunciado: string;
     gabarito: boolean;
     comentario?: string | null;
     resposta?: boolean | null;
   };
+  resumo?: { conteudo: string };
   mensagens: { role: "user" | "assistant"; content: string }[];
 }
 
@@ -34,6 +35,69 @@ function erro(mensagem: string, status: number): Response {
 
 function rotulo(v: boolean): string {
   return v ? "CERTO" : "ERRADO";
+}
+
+const BASE =
+  "Você é um professor particular preparando um candidato para o concurso de Soldado da PMAL 2026 (banca CEBRASPE, itens de Certo/Errado).";
+
+const REGRAS_COMUNS = [
+  "- Português do Brasil, tom de professor direto. Vá direto ao ponto.",
+  "- Texto corrido, sem markdown (nada de asteriscos ou cerquilhas). Para listas curtas, use travessão (—) no começo da linha.",
+  "- Não invente lei, número de artigo ou jurisprudência; se não tiver certeza, diga que não tem.",
+];
+
+function systemQuestao(p: Payload): string {
+  const q = p.questao!;
+  const situacao = q.resposta === null || q.resposta === undefined
+    ? "O aluno ainda não respondeu este item."
+    : `O aluno respondeu ${rotulo(q.resposta)} e ${
+      q.resposta === q.gabarito ? "ACERTOU" : "ERROU"
+    }.`;
+  return [
+    `${BASE} O aluno está resolvendo questões e abriu um chat para tirar dúvida sobre O ITEM ABAIXO.`,
+    "",
+    p.materia ? `Matéria: ${p.materia}` : null,
+    p.assunto ? `Assunto: ${p.assunto}` : null,
+    q.contexto ? `Comando da questão: ${q.contexto}` : null,
+    `Item: ${q.enunciado}`,
+    `Gabarito: ${rotulo(q.gabarito)}`,
+    situacao,
+    q.comentario ? `Comentário do gabarito: ${q.comentario}` : null,
+    "",
+    "Regras da resposta:",
+    "- Na maioria das vezes, 2 a 6 frases bastam.",
+    ...REGRAS_COMUNS,
+    "- Foque no que derruba candidato na prova: pegadinhas, troca de termos, prazos, autoridades competentes, exceções.",
+    "- Se o aluno errou, aponte onde o raciocínio dele provavelmente escorregou.",
+    "- Quando couber, feche com um macete curto ou com o jeito que a banca costuma cobrar o tema.",
+  ]
+    .filter((linha) => linha !== null)
+    .join("\n");
+}
+
+function systemResumo(p: Payload): string {
+  // Limite defensivo: resumo gigante não deve estourar o prompt.
+  const conteudo = p.resumo!.conteudo.slice(0, 12000);
+  return [
+    `${BASE} O aluno escreveu um RESUMO próprio enquanto resolvia questões e pediu que você o revise.`,
+    "",
+    p.materia ? `Matéria: ${p.materia}` : null,
+    p.assunto ? `Assunto: ${p.assunto}` : null,
+    "Resumo do aluno (entre as tags):",
+    "<resumo>",
+    conteudo,
+    "</resumo>",
+    "",
+    "Regras da resposta:",
+    ...REGRAS_COMUNS,
+    "- O MAIS IMPORTANTE: aponte erros de conteúdo (conceito trocado, prazo errado, autoridade errada, lei desatualizada) e dê a correção direta de cada um.",
+    "- Depois, diga o que falta de essencial para a prova sobre esse tema, em lista curta.",
+    "- Sugira melhorias de organização/clareza só quando realmente ajudarem a memorizar.",
+    "- Se estiver tudo certo, diga isso claramente e reforce os 2 ou 3 pontos-chave do tema.",
+    "- Resposta enxuta: revisão útil, não redação nova. Não reescreva o resumo inteiro, a menos que o aluno peça.",
+  ]
+    .filter((linha) => linha !== null)
+    .join("\n");
 }
 
 Deno.serve(async (req: Request) => {
@@ -55,9 +119,10 @@ Deno.serve(async (req: Request) => {
     return erro("Corpo inválido: envie JSON.", 400);
   }
 
-  const { questao, materia, assunto } = payload;
-  if (!questao?.enunciado || !Array.isArray(payload.mensagens)) {
-    return erro("Envie `questao.enunciado` e `mensagens`.", 400);
+  const temResumo = !!payload.resumo?.conteudo?.trim();
+  const temQuestao = !!payload.questao?.enunciado;
+  if ((!temResumo && !temQuestao) || !Array.isArray(payload.mensagens)) {
+    return erro("Envie `questao` ou `resumo`, e `mensagens`.", 400);
   }
 
   // Só as últimas trocas — mantém o prompt curto e a resposta rápida.
@@ -69,33 +134,7 @@ Deno.serve(async (req: Request) => {
     return erro("A última mensagem precisa ser do aluno.", 400);
   }
 
-  const situacao = questao.resposta === null || questao.resposta === undefined
-    ? "O aluno ainda não respondeu este item."
-    : `O aluno respondeu ${rotulo(questao.resposta)} e ${
-      questao.resposta === questao.gabarito ? "ACERTOU" : "ERROU"
-    }.`;
-
-  const system = [
-    "Você é um professor particular preparando um candidato para o concurso de Soldado da PMAL 2026 (banca CEBRASPE, itens de Certo/Errado). O aluno está resolvendo questões e abriu um chat para tirar dúvida sobre O ITEM ABAIXO.",
-    "",
-    materia ? `Matéria: ${materia}` : null,
-    assunto ? `Assunto: ${assunto}` : null,
-    questao.contexto ? `Comando da questão: ${questao.contexto}` : null,
-    `Item: ${questao.enunciado}`,
-    `Gabarito: ${rotulo(questao.gabarito)}`,
-    situacao,
-    questao.comentario ? `Comentário do gabarito: ${questao.comentario}` : null,
-    "",
-    "Regras da resposta:",
-    "- Português do Brasil, tom de professor direto. Vá direto ao ponto: na maioria das vezes, 2 a 6 frases bastam.",
-    "- Texto corrido, sem markdown (nada de asteriscos ou cerquilhas). Para listas curtas, use travessão (—) no começo da linha.",
-    "- Foque no que derruba candidato na prova: pegadinhas, troca de termos, prazos, autoridades competentes, exceções.",
-    "- Se o aluno errou, aponte onde o raciocínio dele provavelmente escorregou.",
-    "- Não invente lei, número de artigo ou jurisprudência; se não tiver certeza, diga que não tem.",
-    "- Quando couber, feche com um macete curto ou com o jeito que a banca costuma cobrar o tema.",
-  ]
-    .filter((linha) => linha !== null)
-    .join("\n");
+  const system = temResumo ? systemResumo(payload) : systemQuestao(payload);
 
   const client = new Anthropic({ apiKey });
 
@@ -103,7 +142,7 @@ Deno.serve(async (req: Request) => {
   // chega rápido e o aluno não perde o ritmo.
   const stream = client.messages.stream({
     model: "claude-opus-4-8",
-    max_tokens: 1200,
+    max_tokens: 1600,
     output_config: { effort: "low" },
     system,
     messages: mensagens,

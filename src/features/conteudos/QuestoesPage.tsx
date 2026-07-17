@@ -36,11 +36,24 @@ import { parsearQuestoesJson } from "./questoesJson";
 import { ResumoRapido } from "./ResumoRapido";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 
-const ABAS: { chave: QuestaoStatus; label: string }[] = [
-  { chave: "ativa", label: "Ativas" },
+// "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
+// o que você acabou de responder segue à mostra (para ler o comentário), mas
+// na próxima visita já está guardado em "Resolvidas" — sem rolagem inútil.
+type AbaCaderno = "responder" | "resolvidas" | "reforco" | "arquivada";
+
+const ABAS: { chave: AbaCaderno; label: string }[] = [
+  { chave: "responder", label: "Para responder" },
+  { chave: "resolvidas", label: "Resolvidas" },
   { chave: "reforco", label: "Reforço com IA" },
   { chave: "arquivada", label: "Arquivadas" },
 ];
+
+/** Em qual aba a questão aparece agora (as respondidas nesta sessão ainda não "somem"). */
+function abaDe(q: TopicoQuestao, respondidasAgora: ReadonlySet<string>): AbaCaderno {
+  if (q.status === "reforco") return "reforco";
+  if (q.status === "arquivada") return "arquivada";
+  return q.resposta === null || respondidasAgora.has(q.id) ? "responder" : "resolvidas";
+}
 
 const EXEMPLO_JSON = `[
   {
@@ -138,11 +151,14 @@ function Caderno({ topico }: { topico: Topico }) {
   const criarEmLote = useCriarQuestoesEmLote();
   const clique = useRegistrarClique();
 
-  const [filtro, setFiltro] = useState<QuestaoStatus>("ativa");
+  const [filtro, setFiltro] = useState<AbaCaderno>("responder");
   const [importando, setImportando] = useState(false);
   const [json, setJson] = useState("");
   const [aExcluir, setAExcluir] = useState<TopicoQuestao | null>(null);
   const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
+  // Respondidas nesta sessão seguem em "Para responder", para dar tempo de ler
+  // o gabarito comentado antes de irem para "Resolvidas".
+  const [respondidasAgora, setRespondidasAgora] = useState<ReadonlySet<string>>(new Set());
 
   const materiaNome = (materias ?? []).find((m) => m.id === topico.materia_id)?.nome;
 
@@ -155,10 +171,10 @@ function Caderno({ topico }: { topico: Topico }) {
   );
 
   const contagem = useMemo(() => {
-    const c: Record<QuestaoStatus, number> = { ativa: 0, reforco: 0, arquivada: 0 };
-    for (const q of todas) c[q.status as QuestaoStatus]++;
+    const c: Record<AbaCaderno, number> = { responder: 0, resolvidas: 0, reforco: 0, arquivada: 0 };
+    for (const q of todas) c[abaDe(q, respondidasAgora)]++;
     return c;
-  }, [todas]);
+  }, [todas, respondidasAgora]);
 
   // Placar considera tudo que já foi respondido, em qualquer aba.
   const placar = useMemo(() => {
@@ -171,7 +187,7 @@ function Caderno({ topico }: { topico: Topico }) {
     };
   }, [todas]);
 
-  const lista = todas.filter((q) => q.status === filtro);
+  const lista = todas.filter((q) => abaDe(q, respondidasAgora) === filtro);
   const cor = placar.pct !== null ? corDesempenho(placar.pct) : null;
 
   /** `resposta: null` é o "refazer": limpa o gabarito e devolve a questão ao início. */
@@ -179,6 +195,12 @@ function Caderno({ topico }: { topico: Topico }) {
     const estreia = resposta !== null && q.resposta === null;
     try {
       await responder.mutateAsync({ id: q.id, resposta });
+      setRespondidasAgora((s) => {
+        const n = new Set(s);
+        if (resposta === null) n.delete(q.id);
+        else n.add(q.id);
+        return n;
+      });
       // Só a estreia conta no desempenho — refazer a questão não infla a estatística.
       if (estreia) {
         clique.mutate({
@@ -211,7 +233,7 @@ function Caderno({ topico }: { topico: Topico }) {
       toast.success(`${n} ${n === 1 ? "questão importada" : "questões importadas"} 🎯`);
       setJson("");
       setImportando(false);
-      setFiltro("ativa");
+      setFiltro("responder");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -267,13 +289,13 @@ function Caderno({ topico }: { topico: Topico }) {
             <p className="py-8 text-center text-sm text-mut">
               {todas.length === 0
                 ? "Nenhuma questão ainda. Peça as questões à IA a partir do PDF ou do conteúdo deste assunto e importe o JSON abaixo."
-                : `Nenhuma questão ${
-                    filtro === "ativa"
-                      ? "ativa"
-                      : filtro === "reforco"
-                        ? "marcada para reforço com IA"
-                        : "arquivada"
-                  }.`}
+                : filtro === "responder"
+                  ? "Tudo respondido 🎉 As já resolvidas ficam na aba “Resolvidas”."
+                  : filtro === "resolvidas"
+                    ? "Nenhuma questão resolvida ainda."
+                    : filtro === "reforco"
+                      ? "Nenhuma questão marcada para reforço com IA."
+                      : "Nenhuma questão arquivada."}
             </p>
           ) : (
             <ul className="space-y-3">

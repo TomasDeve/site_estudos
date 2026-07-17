@@ -268,7 +268,7 @@ export function QuestoesMistasPage() {
       </main>
 
       {/* Bloco de resumo sempre à mão — escolhe a matéria onde a nota entra */}
-      <ResumoRapido materias={materias ?? []} />
+      <ResumoRapido />
 
       {duvida && (
         <DuvidaIAModal
