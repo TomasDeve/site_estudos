@@ -14,7 +14,6 @@ import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { TextoReaderModal } from "./TextoReaderModal";
-import { QuestoesIAModal } from "./QuestoesIAModal";
 
 const TIPO_LINK: Record<string, string> = {
   questoes: "✍️",
@@ -55,7 +54,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
   const [editando, setEditando] = useState(false);
   const [tituloEdit, setTituloEdit] = useState(topico.titulo);
   const [textoAberto, setTextoAberto] = useState<TopicoTexto | null>(null);
-  const [questoesAbertas, setQuestoesAbertas] = useState(false);
 
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novaUrl, setNovaUrl] = useState("");
@@ -268,9 +266,11 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
             )}
           </button>
 
-          {/* questões geradas por IA a partir do material do assunto */}
-          <button
-            onClick={() => setQuestoesAbertas(true)}
+          {/* questões geradas por IA — caderno em aba própria, com espaço para resolver */}
+          <a
+            href={`/questoes/${topico.id}`}
+            target="_blank"
+            rel="noreferrer"
             className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
               caderno.total === 0
                 ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
@@ -280,10 +280,10 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
             }`}
             title={
               caderno.total === 0
-                ? "Questões por IA deste assunto"
+                ? "Questões por IA deste assunto (nova aba)"
                 : `Questões por IA — ${caderno.total} ${caderno.total === 1 ? "questão" : "questões"} · ${
                     caderno.pendentes > 0 ? `${caderno.pendentes} a resolver` : "todas resolvidas"
-                  }`
+                  } (nova aba)`
             }
             aria-label={`Questões por IA de ${topico.titulo}`}
           >
@@ -293,7 +293,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
                 {caderno.pendentes > 0 ? caderno.pendentes : caderno.total}
               </span>
             )}
-          </button>
+          </a>
 
           {/* textos e resumos */}
           <button
@@ -545,10 +545,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
 
       {textoAberto && (
         <TextoReaderModal texto={textoAberto} onClose={() => setTextoAberto(null)} />
-      )}
-
-      {questoesAbertas && (
-        <QuestoesIAModal topico={topico} onClose={() => setQuestoesAbertas(false)} />
       )}
 
       <ConfirmDialog

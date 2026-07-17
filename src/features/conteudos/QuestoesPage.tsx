@@ -1,7 +1,9 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import {
   Archive,
   ArchiveRestore,
+  ArrowLeft,
   Bookmark,
   BookmarkCheck,
   Check,
@@ -20,11 +22,12 @@ import {
   useSetQuestaoStatus,
   useTopicoQuestoes,
 } from "@/api/topicoQuestoes";
+import { useTopicos } from "@/api/topicos";
 import { useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
-import { Modal } from "@/components/Modal";
 import { Button } from "@/components/Button";
-import { Spinner } from "@/components/Spinner";
+import { FullScreenSpinner, Spinner } from "@/components/Spinner";
+import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { corDesempenho } from "./desempenho";
 import { parsearQuestoesJson } from "./questoesJson";
@@ -45,9 +48,71 @@ const EXEMPLO_JSON = `[
   }
 ]`;
 
-interface Props {
-  topico: Topico;
-  onClose: () => void;
+/** Página dedicada do caderno — abre em aba própria, com espaço para ler e resolver. */
+export function QuestoesPage() {
+  const { topicoId } = useParams();
+  const navigate = useNavigate();
+  const { data: topicos, isLoading } = useTopicos();
+
+  const topico = (topicos ?? []).find((t) => t.id === topicoId);
+
+  // Nome do assunto na aba do navegador, já que a página vive em aba própria.
+  useEffect(() => {
+    if (!topico) return;
+    const anterior = document.title;
+    document.title = `Questões · ${topico.titulo}`;
+    return () => {
+      document.title = anterior;
+    };
+  }, [topico]);
+
+  if (isLoading) return <FullScreenSpinner />;
+
+  if (!topico) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16">
+        <EmptyState
+          icon="🔍"
+          title="Assunto não encontrado"
+          message="Ele pode ter sido excluído."
+          action={
+            <Link to="/" className="text-sm font-semibold text-gold hover:underline">
+              ← Ir para o painel
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
+
+  function voltar() {
+    // Aba aberta direto no caderno não tem histórico: tenta fechar a aba.
+    if (window.history.length > 1) navigate(-1);
+    else window.close();
+  }
+
+  return (
+    <div className="flex min-h-dvh flex-col">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center gap-3 border-b border-line/50 bg-navy-900/90 px-4 py-3 backdrop-blur-sm">
+        <button
+          onClick={voltar}
+          className="shrink-0 cursor-pointer rounded-lg p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+          title="Voltar"
+          aria-label="Voltar"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
+        <Sparkles className="size-4 shrink-0 text-gold" />
+        <h1 className="min-w-0 truncate text-base font-semibold text-txt">
+          Questões por IA · {topico.titulo}
+        </h1>
+      </header>
+
+      <main className="mx-auto w-full max-w-3xl flex-1 px-3 py-4 sm:px-6 sm:py-6">
+        <Caderno topico={topico} />
+      </main>
+    </div>
+  );
 }
 
 /**
@@ -57,7 +122,7 @@ interface Props {
  * As marcadas para reforço formam o conjunto usado ao pedir novas questões de
  * reforço. A primeira resposta de cada questão também entra no desempenho do assunto.
  */
-export function QuestoesIAModal({ topico, onClose }: Props) {
+function Caderno({ topico }: { topico: Topico }) {
   const { data: questoes, isLoading } = useTopicoQuestoes(topico.id);
   const responder = useResponderQuestao();
   const setStatus = useSetQuestaoStatus();
@@ -142,17 +207,7 @@ export function QuestoesIAModal({ topico, onClose }: Props) {
   }
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      width="max-w-3xl"
-      title={
-        <span className="flex min-w-0 items-center gap-2">
-          <Sparkles className="size-4 shrink-0 text-gold" />
-          <span className="min-w-0 truncate">Questões por IA · {topico.titulo}</span>
-        </span>
-      }
-    >
+    <>
       {isLoading ? (
         <div className="flex justify-center py-10">
           <Spinner className="size-6" />
@@ -180,7 +235,7 @@ export function QuestoesIAModal({ topico, onClose }: Props) {
           )}
 
           {/* Abas por destino da questão — rolam na horizontal em telas estreitas */}
-          <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-line/40 px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-1 overflow-x-auto border-b border-line/40 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {ABAS.map((a) => (
               <button
                 key={a.chave}
@@ -289,7 +344,7 @@ export function QuestoesIAModal({ topico, onClose }: Props) {
         confirmLabel="Apagar"
         danger
       />
-    </Modal>
+    </>
   );
 }
 
