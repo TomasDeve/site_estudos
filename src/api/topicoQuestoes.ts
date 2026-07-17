@@ -21,6 +21,17 @@ export function useQuestoesResumo() {
   });
 }
 
+/** Todas as questões de todos os assuntos — alimentam o modo misturado. */
+export function useTodasQuestoes() {
+  return useQuery({
+    queryKey: ["topico_questoes", "todas"],
+    queryFn: () =>
+      fetchAll<TopicoQuestao>((f, t) =>
+        supabase.from("topico_questoes").select("*").order("id").range(f, t)
+      ),
+  });
+}
+
 /** Questões completas de um assunto — só busca quando o painel está aberto. */
 export function useTopicoQuestoes(topicoId: string | null) {
   return useQuery({

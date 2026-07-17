@@ -11,7 +11,9 @@ import {
   LayoutGrid,
   LogOut,
   Repeat,
+  Shuffle,
   Wrench,
+  type LucideIcon,
 } from "lucide-react";
 import type { Concurso } from "@/types/db";
 import { useConcurso } from "@/api/concursos";
@@ -36,9 +38,11 @@ export function useConcursoAtual(): Concurso {
   return useOutletContext<Ctx>().concurso;
 }
 
-const NAV = [
+const NAV: { to: string; label: string; icon: LucideIcon; end: boolean; novaAba?: boolean }[] = [
   { to: ".", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
+  // modo misturado: todas as questões do site, em aba própria como o caderno
+  { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },
   { to: "ciclo", label: "Ciclo", icon: Repeat, end: false },
   { to: "metas", label: "Metas", icon: CalendarCheck, end: false },
   { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
@@ -107,33 +111,53 @@ export function ConcursoLayout() {
     isActive ? { background: `${cor}1f`, color: cor } : undefined;
 
   const navLink = (mobile: boolean) =>
-    NAV.map(({ to, label, icon: Icon, end }) => (
-      <NavLink
-        key={to}
-        to={to}
-        end={end}
-        onClick={() => setSwitcherAberto(false)}
-        className={({ isActive }) =>
-          mobile
-            ? `flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors ${
-                isActive ? "" : "text-dim"
-              }`
-            : `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive ? "" : "text-dim hover:bg-navy-700/70 hover:text-txt"
-              }`
-        }
-        style={({ isActive }) =>
-          isActive
-            ? mobile
-              ? { color: cor }
-              : { background: `${cor}1f`, color: cor }
-            : undefined
-        }
-      >
-        <Icon className={mobile ? "size-5" : "size-4.5"} />
-        {label}
-      </NavLink>
-    ));
+    NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
+      if (novaAba) {
+        return (
+          <a
+            key={to}
+            href={to}
+            target="_blank"
+            rel="noreferrer"
+            className={
+              mobile
+                ? "flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-dim transition-colors"
+                : "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-dim transition-colors hover:bg-navy-700/70 hover:text-txt"
+            }
+          >
+            <Icon className={mobile ? "size-5" : "size-4.5"} />
+            {label}
+          </a>
+        );
+      }
+      return (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          onClick={() => setSwitcherAberto(false)}
+          className={({ isActive }) =>
+            mobile
+              ? `flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors ${
+                  isActive ? "" : "text-dim"
+                }`
+              : `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                  isActive ? "" : "text-dim hover:bg-navy-700/70 hover:text-txt"
+                }`
+          }
+          style={({ isActive }) =>
+            isActive
+              ? mobile
+                ? { color: cor }
+                : { background: `${cor}1f`, color: cor }
+              : undefined
+          }
+        >
+          <Icon className={mobile ? "size-5" : "size-4.5"} />
+          {label}
+        </NavLink>
+      );
+    });
 
   return (
     <div className="min-h-dvh md:flex">
@@ -221,7 +245,21 @@ export function ConcursoLayout() {
         </div>
 
         <nav className="mt-3 flex-1 space-y-1 overflow-y-auto px-3">
-          {NAV.map(({ to, label, icon: Icon, end }) => {
+          {NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
+            if (novaAba) {
+              return (
+                <a
+                  key={to}
+                  href={to}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={itemDesktop(false)}
+                >
+                  <Icon className="size-4.5" />
+                  {label}
+                </a>
+              );
+            }
             if (to !== "conteudos") {
               return (
                 <NavLink
@@ -357,7 +395,7 @@ export function ConcursoLayout() {
       </main>
 
       {/* ===== Tab bar mobile ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line/50 bg-navy-900/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-line/50 bg-navy-900/95 backdrop-blur md:hidden">
         {navLink(true)}
       </nav>
     </div>
