@@ -14,6 +14,24 @@ import { ChatIA } from "./ChatIA";
 
 const MATERIA_KEY = "resumo-rapido-materia-id";
 
+// Editores montados na tela, por destino ("t-<topicoId>" / "m-<materiaId>").
+// O "Adicionar ao resumo" anexa pelo editor quando ele está aberto — assim o
+// texto aparece na hora e não briga com o que você está digitando.
+const editoresAbertos = new Map<string, (html: string) => void>();
+
+/** Anexa HTML ao editor aberto do destino; false se ele não estiver montado. */
+export function anexarAoResumoAberto(chaveDestino: string, html: string): boolean {
+  const anexa = editoresAbertos.get(chaveDestino);
+  if (!anexa) return false;
+  anexa(html);
+  return true;
+}
+
+/** Chave do destino do resumo — a mesma usada no registro de editores. */
+export function chaveDestinoResumo(destino: { topicoId?: string; materiaId?: string }): string {
+  return destino.topicoId ? `t-${destino.topicoId}` : `m-${destino.materiaId}`;
+}
+
 interface Props {
   /**
    * Caderno de um assunto: o resumo gruda no tópico e aparece nos textos dele.
@@ -154,6 +172,7 @@ export function ResumoRapido({ topico }: Props) {
           ) : topico || materiaEscolhida ? (
             <EditorResumo
               key={chave}
+              chaveDestino={chave}
               existente={resumo ?? null}
               linhaNova={linhaNova}
               ativo={aberto}
@@ -216,12 +235,14 @@ export function ResumoRapido({ topico }: Props) {
  * salvamento automático. A linha só é criada no primeiro conteúdo digitado.
  */
 function EditorResumo({
+  chaveDestino,
   existente,
   linhaNova,
   ativo,
   pegarTextoRef,
   onVerificar,
 }: {
+  chaveDestino: string;
   existente: TopicoTexto | null;
   linhaNova: TablesInsert<"topico_textos">;
   /** Painel visível — foca o editor ao abrir. */
@@ -250,11 +271,15 @@ function EditorResumo({
   const linhaNovaRef = useRef(linhaNova);
   linhaNovaRef.current = linhaNova;
 
+  // Espelha o conteúdo do servidor no editor sempre que NÃO houver digitação
+  // pendente — cobre a montagem e trechos adicionados por fora ("Adicionar ao
+  // resumo" com o painel fechado). Nunca sobrescreve o que está sendo digitado.
+  const conteudoServidor = existente?.conteudo ?? "";
   useEffect(() => {
-    if (editorRef.current) editorRef.current.innerHTML = existente?.conteudo ?? "";
-    // conteúdo inicial só na montagem — o key do componente troca por destino
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const el = editorRef.current;
+    if (!el || pendenteRef.current || salvandoRef.current) return;
+    if (el.innerHTML !== conteudoServidor) el.innerHTML = conteudoServidor;
+  }, [conteudoServidor]);
 
   useEffect(() => {
     if (ativo) editorRef.current?.focus();
@@ -266,6 +291,22 @@ function EditorResumo({
       pegarTextoRef.current = null;
     };
   }, [pegarTextoRef]);
+
+  // Entra no registro: o "Adicionar ao resumo" anexa direto aqui quando este
+  // destino está montado, caindo no salvamento automático normal.
+  useEffect(() => {
+    editoresAbertos.set(chaveDestino, (html) => {
+      const el = editorRef.current;
+      if (!el) return;
+      el.insertAdjacentHTML("beforeend", html);
+      onInput();
+    });
+    return () => {
+      editoresAbertos.delete(chaveDestino);
+    };
+    // onInput só usa refs e setState — estável entre renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveDestino]);
 
   // Flush ao desmontar (trocar de destino / sair da página) sem perder o digitado.
   useEffect(

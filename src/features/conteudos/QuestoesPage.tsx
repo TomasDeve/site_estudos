@@ -9,6 +9,7 @@ import {
   Check,
   ChevronRight,
   MessageCircleQuestion,
+  NotebookPen,
   RotateCcw,
   Sparkles,
   Trash2,
@@ -35,6 +36,7 @@ import { corDesempenho } from "./desempenho";
 import { parsearQuestoesJson } from "./questoesJson";
 import { ResumoRapido } from "./ResumoRapido";
 import { DuvidaIAModal } from "./DuvidaIAModal";
+import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
@@ -159,6 +161,7 @@ function Caderno({ topico }: { topico: Topico }) {
   // Respondidas nesta sessão seguem em "Para responder", para dar tempo de ler
   // o gabarito comentado antes de irem para "Resolvidas".
   const [respondidasAgora, setRespondidasAgora] = useState<ReadonlySet<string>>(new Set());
+  const { adicionar: adicionarAoResumo, pendenteId: resumindoId } = useAdicionarQuestaoAoResumo();
 
   const materiaNome = (materias ?? []).find((m) => m.id === topico.materia_id)?.nome;
 
@@ -308,6 +311,15 @@ function Caderno({ topico }: { topico: Topico }) {
                   onStatus={mudarStatus}
                   onExcluir={() => setAExcluir(q)}
                   onDuvida={() => setDuvida(q)}
+                  onAdicionarResumo={() =>
+                    void adicionarAoResumo({
+                      questao: q,
+                      materiaNome,
+                      assunto: topico.titulo,
+                      destino: { topicoId: topico.id },
+                    })
+                  }
+                  resumindo={resumindoId === q.id}
                 />
               ))}
             </ul>
@@ -398,9 +410,20 @@ interface CardProps {
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
   onExcluir: () => void;
   onDuvida: () => void;
+  onAdicionarResumo: () => void;
+  resumindo: boolean;
 }
 
-function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir, onDuvida }: CardProps) {
+function QuestaoCard({
+  questao: q,
+  numero,
+  onResponder,
+  onStatus,
+  onExcluir,
+  onDuvida,
+  onAdicionarResumo,
+  resumindo,
+}: CardProps) {
   const resolvida = q.resposta !== null;
   const acertou = q.resposta === q.gabarito;
   const status = q.status as QuestaoStatus;
@@ -489,6 +512,18 @@ function QuestaoCard({ questao: q, numero, onResponder, onStatus, onExcluir, onD
               onClick={onDuvida}
             >
               Tirar dúvida com IA
+            </AcaoQuestao>
+            <AcaoQuestao
+              icone={
+                resumindo ? (
+                  <Spinner className="size-3.5" />
+                ) : (
+                  <NotebookPen className="size-3.5 text-gold" />
+                )
+              }
+              onClick={onAdicionarResumo}
+            >
+              {resumindo ? "Adicionando…" : "Adicionar ao resumo"}
             </AcaoQuestao>
             <AcaoQuestao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
               Refazer

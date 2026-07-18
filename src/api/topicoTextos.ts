@@ -42,6 +42,51 @@ export function useResumoQuestoes(destino: { topicoId?: string; materiaId?: stri
   });
 }
 
+/**
+ * Anexa um trecho (HTML) ao fim do resumo rápido de um destino, criando a
+ * linha se ainda não existir. Usado pelo "Adicionar ao resumo" das questões
+ * quando o bloco de resumo não está aberto na tela.
+ */
+export function useAnexarResumoQuestoes() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      topicoId,
+      materiaId,
+      html,
+    }: {
+      topicoId?: string;
+      materiaId?: string;
+      html: string;
+    }) => {
+      let q = supabase.from("topico_textos").select("*").eq("titulo", TITULO_RESUMO_QUESTOES);
+      q = topicoId
+        ? q.eq("topico_id", topicoId)
+        : q.eq("materia_id", materiaId!).is("topico_id", null);
+      const { data, error } = await q.order("created_at").limit(1);
+      if (error) throw error;
+
+      const existente = data[0] as TopicoTexto | undefined;
+      if (existente) {
+        const { error: errAtualizar } = await supabase
+          .from("topico_textos")
+          .update({ conteudo: existente.conteudo + html })
+          .eq("id", existente.id);
+        if (errAtualizar) throw errAtualizar;
+      } else {
+        const { error: errCriar } = await supabase.from("topico_textos").insert({
+          titulo: TITULO_RESUMO_QUESTOES,
+          ordem: 999,
+          conteudo: html,
+          ...(topicoId ? { topico_id: topicoId } : { materia_id: materiaId }),
+        });
+        if (errCriar) throw errCriar;
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["topico_textos"] }),
+  });
+}
+
 export function useCriarTopicoTexto() {
   const qc = useQueryClient();
   return useMutation({

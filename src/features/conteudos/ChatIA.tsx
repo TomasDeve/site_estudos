@@ -13,6 +13,34 @@ export interface MensagemIA {
 // ao recarregar/fechar a aba do navegador (fica só em memória).
 const historicos = new Map<string, MensagemIA[]>();
 
+/** Chama a Edge Function `tirar-duvida` autenticada; devolve a Response (streaming). */
+export async function fetchIA(
+  body: Record<string, unknown>,
+  signal?: AbortSignal
+): Promise<Response> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) throw new Error("Sessão expirada — entre de novo no site.");
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/tirar-duvida`, {
+    method: "POST",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: supabaseAnonKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok || !res.body) {
+    const detalhe = await res.text().catch(() => "");
+    throw new Error(detalhe.trim() || `A IA não respondeu (HTTP ${res.status}).`);
+  }
+  return res;
+}
+
 interface Props {
   titulo: ReactNode;
   /** Identifica a conversa: mesmo valor = mesmo histórico ao reabrir. */
@@ -62,28 +90,9 @@ export function ChatIA({ titulo, chave, montarPayload, sugestoes, recap, onClose
     abortRef.current = ctrl;
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) throw new Error("Sessão expirada — entre de novo no site.");
+      const res = await fetchIA({ ...montarPayload(), mensagens: historico }, ctrl.signal);
 
-      const res = await fetch(`${supabaseUrl}/functions/v1/tirar-duvida`, {
-        method: "POST",
-        signal: ctrl.signal,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-          apikey: supabaseAnonKey,
-        },
-        body: JSON.stringify({ ...montarPayload(), mensagens: historico }),
-      });
-
-      if (!res.ok || !res.body) {
-        const detalhe = await res.text().catch(() => "");
-        throw new Error(detalhe.trim() || `A IA não respondeu (HTTP ${res.status}).`);
-      }
-
-      const reader = res.body.getReader();
+      const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       for (;;) {
         const { done, value } = await reader.read();

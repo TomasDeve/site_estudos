@@ -13,6 +13,8 @@ const CORS = {
 };
 
 interface Payload {
+  /** "resumir" = gera o trecho "Adicionar ao resumo" da questão; padrão é chat. */
+  acao?: string;
   materia?: string | null;
   assunto?: string | null;
   questao?: {
@@ -70,6 +72,28 @@ function systemQuestao(p: Payload): string {
     "- Foque no que derruba candidato na prova: pegadinhas, troca de termos, prazos, autoridades competentes, exceções.",
     "- Se o aluno errou, aponte onde o raciocínio dele provavelmente escorregou.",
     "- Quando couber, feche com um macete curto ou com o jeito que a banca costuma cobrar o tema.",
+  ]
+    .filter((linha) => linha !== null)
+    .join("\n");
+}
+
+function systemResumirQuestao(p: Payload): string {
+  const q = p.questao!;
+  return [
+    `${BASE} O aluno acabou de responder o item abaixo e quer ADICIONAR AO RESUMO dele o núcleo desse aprendizado.`,
+    "",
+    p.materia ? `Matéria: ${p.materia}` : null,
+    p.assunto ? `Assunto: ${p.assunto}` : null,
+    q.contexto ? `Comando da questão: ${q.contexto}` : null,
+    `Item: ${q.enunciado}`,
+    `Gabarito: ${rotulo(q.gabarito)}`,
+    q.comentario ? `Comentário do gabarito: ${q.comentario}` : null,
+    "",
+    "Responda SOMENTE com o trecho pronto para colar no resumo — sem preâmbulo, sem conversa, sem repetir o enunciado:",
+    "- 1 a 3 linhas curtas, cada uma começando com \"— \".",
+    "- Cada linha traz o conhecimento que evita errar itens parecidos: o conceito correto, o prazo, a autoridade competente, a exceção ou a pegadinha.",
+    "- Escreva o fato em si, sem citar \"a questão\", \"o item\" ou \"o gabarito\".",
+    "- Sem markdown. Não invente lei ou número de artigo.",
   ]
     .filter((linha) => linha !== null)
     .join("\n");
@@ -134,15 +158,21 @@ Deno.serve(async (req: Request) => {
     return erro("A última mensagem precisa ser do aluno.", 400);
   }
 
-  const system = temResumo ? systemResumo(payload) : systemQuestao(payload);
+  const resumirQuestao = payload.acao === "resumir" && temQuestao;
+  const system = resumirQuestao
+    ? systemResumirQuestao(payload)
+    : temResumo
+      ? systemResumo(payload)
+      : systemQuestao(payload);
 
   const client = new Anthropic({ apiKey });
 
   // Opus 4.8 sem thinking (padrão ao omitir) + streaming: primeira palavra
-  // chega rápido e o aluno não perde o ritmo.
+  // chega rápido e o aluno não perde o ritmo. O trecho de resumo é curto de
+  // propósito — gasta pouco token por clique.
   const stream = client.messages.stream({
     model: "claude-opus-4-8",
-    max_tokens: 1600,
+    max_tokens: resumirQuestao ? 300 : 1600,
     output_config: { effort: "low" },
     system,
     messages: mensagens,
