@@ -28,6 +28,7 @@ import { corDesempenho } from "./desempenho";
 import { ResumoRapido } from "./ResumoRapido";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
+import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
 
 const ABAS = [
   { chave: "responder", label: "Para responder" },
@@ -127,6 +128,8 @@ export function QuestoesMistasPage() {
     resolvidas: resolvidas.length,
   };
   const cor = placar.pct !== null ? corDesempenho(placar.pct) : null;
+  // Modo bloquinhos: resolve de 5 em 5. Embaralhar recomeça do primeiro bloco.
+  const bloco = useBloquinhos(lista, `${aba}-${semente}`);
 
   if (carregandoQuestoes || carregandoTopicos || carregandoMaterias) {
     return <FullScreenSpinner />;
@@ -211,7 +214,7 @@ export function QuestoesMistasPage() {
         ) : (
           <div className="space-y-4">
             {/* Placar geral */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-line/50 bg-navy-900/60 px-3 py-2.5">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line/50 bg-navy-900/60 px-3 py-2.5">
               <span className="text-xs text-dim">
                 Resolvidas{" "}
                 <strong className="tabular-nums text-txt">
@@ -223,9 +226,10 @@ export function QuestoesMistasPage() {
                   {placar.acertos} acertos · {placar.pct}%
                 </span>
               )}
-              <span className="ml-auto text-[11px] text-mut">
+              <span className="text-[11px] text-mut">
                 A 1ª resposta entra no desempenho do assunto
               </span>
+              <BotaoBloquinhos b={bloco} className="ml-auto" />
             </div>
 
             {/* Abas — rolam na horizontal em telas estreitas */}
@@ -253,28 +257,32 @@ export function QuestoesMistasPage() {
                   : "Nenhuma questão resolvida ainda."}
               </p>
             ) : (
-              <ul className="space-y-3">
-                {lista.map((q) => (
-                  <QuestaoMistaCard
-                    key={q.id}
-                    questao={q}
-                    materia={materiaPorId.get(topicoPorId.get(q.topico_id)?.materia_id ?? "")}
-                    onResponder={onResponder}
-                    onStatus={mudarStatus}
-                    onDuvida={() => setDuvida(q)}
-                    onAdicionarResumo={() => {
-                      const topicoDaQuestao = topicoPorId.get(q.topico_id);
-                      void adicionarAoResumo({
-                        questao: q,
-                        materiaNome: materiaPorId.get(topicoDaQuestao?.materia_id ?? "")?.nome,
-                        assunto: topicoDaQuestao?.titulo,
-                        destino: { materiaId: topicoDaQuestao?.materia_id },
-                      });
-                    }}
-                    resumindo={resumindoId === q.id}
-                  />
-                ))}
-              </ul>
+              <div className="space-y-3">
+                <CabecalhoBloco b={bloco} />
+                <ul className="space-y-3">
+                  {bloco.lista.map((q) => (
+                    <QuestaoMistaCard
+                      key={q.id}
+                      questao={q}
+                      materia={materiaPorId.get(topicoPorId.get(q.topico_id)?.materia_id ?? "")}
+                      onResponder={onResponder}
+                      onStatus={mudarStatus}
+                      onDuvida={() => setDuvida(q)}
+                      onAdicionarResumo={() => {
+                        const topicoDaQuestao = topicoPorId.get(q.topico_id);
+                        void adicionarAoResumo({
+                          questao: q,
+                          materiaNome: materiaPorId.get(topicoDaQuestao?.materia_id ?? "")?.nome,
+                          assunto: topicoDaQuestao?.titulo,
+                          destino: { materiaId: topicoDaQuestao?.materia_id },
+                        });
+                      }}
+                      resumindo={resumindoId === q.id}
+                    />
+                  ))}
+                </ul>
+                <RodapeBloco b={bloco} />
+              </div>
             )}
           </div>
         )}

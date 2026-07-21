@@ -37,6 +37,7 @@ import { parsearQuestoesJson } from "./questoesJson";
 import { ResumoRapido } from "./ResumoRapido";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
+import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
@@ -192,6 +193,8 @@ function Caderno({ topico }: { topico: Topico }) {
 
   const lista = todas.filter((q) => abaDe(q, respondidasAgora) === filtro);
   const cor = placar.pct !== null ? corDesempenho(placar.pct) : null;
+  // Modo bloquinhos: resolve de 5 em 5, com placar próprio do bloco.
+  const bloco = useBloquinhos(lista, filtro);
 
   /** `resposta: null` é o "refazer": limpa o gabarito e devolve a questão ao início. */
   async function onResponder(q: TopicoQuestao, resposta: boolean | null) {
@@ -252,7 +255,7 @@ function Caderno({ topico }: { topico: Topico }) {
         <div className="space-y-4">
           {/* Placar do caderno */}
           {todas.length > 0 && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-line/50 bg-navy-900/60 px-3 py-2.5">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line/50 bg-navy-900/60 px-3 py-2.5">
               <span className="text-xs text-dim">
                 Resolvidas{" "}
                 <strong className="tabular-nums text-txt">
@@ -264,9 +267,10 @@ function Caderno({ topico }: { topico: Topico }) {
                   {placar.acertos} acertos · {placar.pct}%
                 </span>
               )}
-              <span className="ml-auto text-[11px] text-mut">
+              <span className="text-[11px] text-mut">
                 A 1ª resposta entra no desempenho do assunto
               </span>
+              <BotaoBloquinhos b={bloco} className="ml-auto" />
             </div>
           )}
 
@@ -301,28 +305,32 @@ function Caderno({ topico }: { topico: Topico }) {
                       : "Nenhuma questão arquivada."}
             </p>
           ) : (
-            <ul className="space-y-3">
-              {lista.map((q) => (
-                <QuestaoCard
-                  key={q.id}
-                  questao={q}
-                  numero={numeroDe.get(q.id) ?? 0}
-                  onResponder={onResponder}
-                  onStatus={mudarStatus}
-                  onExcluir={() => setAExcluir(q)}
-                  onDuvida={() => setDuvida(q)}
-                  onAdicionarResumo={() =>
-                    void adicionarAoResumo({
-                      questao: q,
-                      materiaNome,
-                      assunto: topico.titulo,
-                      destino: { topicoId: topico.id },
-                    })
-                  }
-                  resumindo={resumindoId === q.id}
-                />
-              ))}
-            </ul>
+            <div className="space-y-3">
+              <CabecalhoBloco b={bloco} />
+              <ul className="space-y-3">
+                {bloco.lista.map((q) => (
+                  <QuestaoCard
+                    key={q.id}
+                    questao={q}
+                    numero={numeroDe.get(q.id) ?? 0}
+                    onResponder={onResponder}
+                    onStatus={mudarStatus}
+                    onExcluir={() => setAExcluir(q)}
+                    onDuvida={() => setDuvida(q)}
+                    onAdicionarResumo={() =>
+                      void adicionarAoResumo({
+                        questao: q,
+                        materiaNome,
+                        assunto: topico.titulo,
+                        destino: { topicoId: topico.id },
+                      })
+                    }
+                    resumindo={resumindoId === q.id}
+                  />
+                ))}
+              </ul>
+              <RodapeBloco b={bloco} />
+            </div>
           )}
 
           {/* Entrada das questões geradas pela IA */}
