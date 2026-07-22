@@ -1,4 +1,11 @@
-import { format, parseISO, differenceInCalendarDays, startOfWeek, addDays } from "date-fns";
+import {
+  format,
+  parseISO,
+  differenceInCalendarDays,
+  formatDistanceToNow,
+  startOfWeek,
+  addDays,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 /** Data de hoje no fuso local como "YYYY-MM-DD" (não usar toISOString: vira UTC). */
@@ -24,6 +31,11 @@ export function fmtDataCurta(iso: string): string {
 /** "2026-07-19" → "19 de julho de 2026" */
 export function fmtDataLonga(iso: string): string {
   return format(parseISO(iso), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+}
+
+/** Timestamp → "há 3 dias" / "há cerca de 2 horas". */
+export function fmtDesdeAgora(iso: string): string {
+  return formatDistanceToNow(parseISO(iso), { addSuffix: true, locale: ptBR });
 }
 
 /** Dias de hoje até a data (negativo se já passou). */

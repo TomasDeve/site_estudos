@@ -52,7 +52,11 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
   const meta = metaVigente(metas, data);
   const metaMin = meta ? Math.round(Number(meta.horas_dia) * 60) : null;
   const feitosMin = (blocos ?? []).filter((b) => b.concluido).reduce((s, b) => s + b.duracao_min, 0);
-  const pctMeta = metaMin ? Math.min(100, Math.round((feitosMin / metaMin) * 100)) : null;
+  const planejadoMin = (blocos ?? []).reduce((s, b) => s + b.duracao_min, 0);
+  // Sem faixa de meta no dia, o total ainda aparece: mede-se contra o que foi planejado.
+  const usaMeta = metaMin !== null && metaMin > 0;
+  const baseMin = usaMeta ? metaMin! : planejadoMin;
+  const pctDia = baseMin > 0 ? Math.min(100, Math.round((feitosMin / baseMin) * 100)) : 0;
 
   const concluido = diaEstaConcluido(diasConcluidos, data);
   const todosFeitos = (blocos ?? []).length > 0 && (blocos ?? []).every((b) => b.concluido);
@@ -136,17 +140,17 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
           </div>
         </div>
 
-        {/* barra da meta */}
-        {metaMin !== null && (
+        {/* soma do dia: contra a meta quando há faixa vigente, senão contra o planejado */}
+        {baseMin > 0 && (
           <div>
             <div className="mb-1.5 flex justify-between text-xs">
               <span className="text-dim">
                 Cumprido <strong className="text-txt">{fmtMinutos(feitosMin)}</strong> de{" "}
-                {fmtMinutos(metaMin)}
+                {usaMeta ? fmtMinutos(baseMin) : `${fmtMinutos(baseMin)} planejados`}
               </span>
-              <span className="font-bold tabular-nums text-gold">{pctMeta}%</span>
+              <span className="font-bold tabular-nums text-gold">{pctDia}%</span>
             </div>
-            <ProgressBar value={pctMeta ?? 0} />
+            <ProgressBar value={pctDia} />
           </div>
         )}
 

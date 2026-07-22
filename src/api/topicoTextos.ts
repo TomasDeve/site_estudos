@@ -43,6 +43,74 @@ export function useResumoQuestoes(destino: { topicoId?: string; materiaId?: stri
 }
 
 /**
+ * Só o índice (id/título) dos textos de um assunto — sem o `conteudo`, que num
+ * texto de lei inteiro passa de 700 KB. Deixa o "Conferir na lei" escolher qual
+ * texto abrir antes de baixar qualquer coisa pesada.
+ */
+export function useIndiceTextosDoTopico(topicoId: string | undefined) {
+  return useQuery({
+    queryKey: ["topico_textos", "indice", topicoId ?? null],
+    enabled: !!topicoId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topico_textos")
+        .select("id, titulo, ordem")
+        .eq("topico_id", topicoId!)
+        .order("ordem")
+        .order("created_at");
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/** Assuntos com ao menos um texto salvo — decide se o "Conferir na lei" aparece. */
+export function useTopicosComLei() {
+  return useQuery({
+    queryKey: ["topico_textos", "com-lei"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topico_textos")
+        .select("topico_id")
+        .not("topico_id", "is", null);
+      if (error) throw error;
+      return new Set(data.map((t) => t.topico_id as string));
+    },
+  });
+}
+
+/**
+ * Um texto inteiro, com o conteúdo. Fica fora da chave que o salvamento
+ * automático do leitor invalida — assim digitar não rebaixa centenas de KB a
+ * cada gravação.
+ *
+ * `gcTime: 0` é o que impede perder marcação: sem cache guardado, reabrir o
+ * leitor sempre espera a versão do banco. Servir uma cópia velha faria o editor
+ * carregar o HTML de antes e o salvamento seguinte regravaria por cima do que
+ * você tinha acabado de marcar.
+ */
+export function useTexto(id: string | undefined) {
+  return useQuery({
+    queryKey: ["texto-lei", id ?? null],
+    enabled: !!id,
+    gcTime: 0,
+    staleTime: 0,
+    // Com o leitor aberto o dono do conteúdo é o editor: rebaixar o texto ao
+    // voltar para a janela só gastaria banda.
+    refetchOnWindowFocus: false,
+    queryFn: async (): Promise<TopicoTexto> => {
+      const { data, error } = await supabase
+        .from("topico_textos")
+        .select("*")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data as TopicoTexto;
+    },
+  });
+}
+
+/**
  * Anexa um trecho (HTML) ao fim do resumo rápido de um destino, criando a
  * linha se ainda não existir. Usado pelo "Adicionar ao resumo" das questões
  * quando o bloco de resumo não está aberto na tela.

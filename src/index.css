@@ -129,6 +129,15 @@ body {
   content: attr(data-placeholder);
   color: var(--color-mut);
 }
+/* artigo citado pela questão, destacado pelo "Conferir na lei" (não é salvo) */
+.conteudo-lei .lei-foco {
+  border-left: 2px solid var(--color-blue);
+  background: rgb(79 157 222 / 0.1);
+  border-radius: 0 6px 6px 0;
+  padding: 0.3rem 0.5rem 0.3rem 0.6rem;
+  margin-left: -0.6rem;
+}
+
 /* marcador "parei aqui" no modo leitura */
 .conteudo-lei .parei-aqui {
   position: relative;

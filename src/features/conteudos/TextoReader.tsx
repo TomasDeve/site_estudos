@@ -49,15 +49,33 @@ function blocos(el: HTMLElement): HTMLElement[] {
   );
 }
 
-/** Remove marcações visuais de UI ("parei aqui") antes de persistir o HTML. */
+/** Remove marcações visuais de UI ("parei aqui", artigo em foco) antes de persistir o HTML. */
 function limparHtml(bruto: string): string {
   const tmp = document.createElement("div");
   tmp.innerHTML = bruto;
-  tmp.querySelectorAll(".parei-aqui").forEach((n) => {
-    n.classList.remove("parei-aqui");
+  tmp.querySelectorAll(".parei-aqui, .lei-foco").forEach((n) => {
+    n.classList.remove("parei-aqui", "lei-foco");
     if (!n.getAttribute("class")) n.removeAttribute("class");
   });
   return tmp.innerHTML;
+}
+
+/**
+ * Acha o bloco do artigo `n`. Nos textos de lei cada artigo começa um bloco,
+ * então a primeira passada exige "Art. n" no início; a segunda aceita a citação
+ * no meio do bloco. O `(?!\d)` evita que o art. 4º case com o art. 44.
+ */
+function blocoDoArtigo(cont: HTMLElement, n: number): HTMLElement | null {
+  const bs = blocos(cont);
+  const numero = `art\\.?\\s*0*${n}(?!\\d)`;
+  const noInicio = new RegExp(`^\\s*${numero}`, "i");
+  const emQualquerLugar = new RegExp(`\\b${numero}`, "i");
+  const texto = (b: HTMLElement) => (b.textContent ?? "").replace(/ /g, " ");
+  return (
+    bs.find((b) => noInicio.test(texto(b))) ??
+    bs.find((b) => emQualquerLugar.test(texto(b))) ??
+    null
+  );
 }
 
 /** Título editável do texto (salva ao sair do campo). Usado no modal e na página. */
@@ -92,6 +110,10 @@ interface TextoReaderProps {
   paginaCheia?: boolean;
   /** Botões extras na barra de controles (ex.: abrir em tela cheia). */
   acoes?: ReactNode;
+  /** Número do artigo a destacar e rolar até ele ao abrir (ex.: 4 para "art. 4º"). */
+  artigoFoco?: number | null;
+  /** Avisa se o artigo pedido em `artigoFoco` foi encontrado no texto. */
+  onArtigoFoco?: (achou: boolean) => void;
 }
 
 /**
@@ -99,7 +121,13 @@ interface TextoReaderProps {
  * (ler = marcar, ajustar, anotar), com salvamento automático, marca-texto,
  * tamanho de fonte ajustável, contagem de leituras e "parei aqui".
  */
-export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderProps) {
+export function TextoReader({
+  texto,
+  paginaCheia = false,
+  acoes,
+  artigoFoco = null,
+  onArtigoFoco,
+}: TextoReaderProps) {
   const atualizar = useAtualizarTopicoTexto();
   const registrarLeitura = useRegistrarLeitura();
   const setMarcador = useAtualizarMarcador();
@@ -135,6 +163,22 @@ export function TextoReader({ texto, paginaCheia = false, acoes }: TextoReaderPr
       if (alvo) alvo.classList.add("parei-aqui");
     }
   }, [marcadorLocal, texto.id]);
+
+  // Rola até o artigo citado pela questão e o destaca enquanto o leitor estiver
+  // aberto. A classe é só visual: `limparHtml` a tira antes de gravar.
+  const avisoFocoRef = useRef(onArtigoFoco);
+  avisoFocoRef.current = onArtigoFoco;
+  useEffect(() => {
+    const cont = editorRef.current;
+    const scroll = scrollRef.current;
+    if (!cont || !scroll || artigoFoco == null) return;
+    const alvo = blocoDoArtigo(cont, artigoFoco);
+    avisoFocoRef.current?.(!!alvo);
+    if (!alvo) return;
+    alvo.classList.add("lei-foco");
+    scroll.scrollTo({ top: Math.max(0, alvo.offsetTop - 12) });
+    return () => alvo.classList.remove("lei-foco");
+  }, [artigoFoco, texto.id]);
 
   async function salvarAgora() {
     const bruto = editorRef.current ? editorRef.current.innerHTML : htmlDigitadoRef.current;

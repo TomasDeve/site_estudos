@@ -21,6 +21,7 @@ import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TopicoRow } from "./TopicoRow";
+import { MateriaEstudo } from "./MateriaEstudo";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
 import { RedacoesPanel } from "./RedacoesPanel";
@@ -248,6 +249,9 @@ export function MateriaPage() {
           </div>
         </CardBody>
       </Card>
+
+      {/* Recado de estudo da matéria: primeira coisa que se lê ao abrir */}
+      <MateriaEstudo materia={materia} />
 
       {/* Redação: notas dos treinos. Demais matérias: questões gerais. */}
       {ehRedacao ? (

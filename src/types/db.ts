@@ -371,6 +371,8 @@ export type Database = {
       materias: {
         Row: {
           created_at: string
+          estudo: string
+          estudo_em: string | null
           icone: string
           id: string
           nome: string
@@ -380,6 +382,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          estudo?: string
+          estudo_em?: string | null
           icone?: string
           id?: string
           nome: string
@@ -389,6 +393,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          estudo?: string
+          estudo_em?: string | null
           icone?: string
           id?: string
           nome?: string

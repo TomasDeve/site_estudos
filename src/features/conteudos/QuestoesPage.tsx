@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Bookmark,
   BookmarkCheck,
+  BookOpen,
   Check,
   ChevronRight,
   MessageCircleQuestion,
@@ -26,6 +27,7 @@ import {
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
 import { useMaterias } from "@/api/materias";
+import { useIndiceTextosDoTopico } from "@/api/topicoTextos";
 import { useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
@@ -38,6 +40,7 @@ import { ResumoRapido } from "./ResumoRapido";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
+import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
@@ -159,10 +162,15 @@ function Caderno({ topico }: { topico: Topico }) {
   const [json, setJson] = useState("");
   const [aExcluir, setAExcluir] = useState<TopicoQuestao | null>(null);
   const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
+  const [naLei, setNaLei] = useState<TopicoQuestao | null>(null);
   // Respondidas nesta sessão seguem em "Para responder", para dar tempo de ler
   // o gabarito comentado antes de irem para "Resolvidas".
   const [respondidasAgora, setRespondidasAgora] = useState<ReadonlySet<string>>(new Set());
   const { adicionar: adicionarAoResumo, pendenteId: resumindoId } = useAdicionarQuestaoAoResumo();
+  // Índice leve (sem o conteúdo) só para saber se há lei salva neste assunto —
+  // sem texto, o "Conferir na lei" nem aparece. Já deixa o modal pronto também.
+  const { data: indiceLei } = useIndiceTextosDoTopico(topico.id);
+  const temLei = (indiceLei ?? []).length > 0;
 
   const materiaNome = (materias ?? []).find((m) => m.id === topico.materia_id)?.nome;
 
@@ -317,6 +325,7 @@ function Caderno({ topico }: { topico: Topico }) {
                     onStatus={mudarStatus}
                     onExcluir={() => setAExcluir(q)}
                     onDuvida={() => setDuvida(q)}
+                    onConferirLei={temLei ? () => setNaLei(q) : undefined}
                     onAdicionarResumo={() =>
                       void adicionarAoResumo({
                         questao: q,
@@ -407,6 +416,15 @@ function Caderno({ topico }: { topico: Topico }) {
           onClose={() => setDuvida(null)}
         />
       )}
+
+      {naLei && (
+        <ConferirNaLeiModal
+          questao={naLei}
+          topicoId={topico.id}
+          numero={numeroDe.get(naLei.id)}
+          onClose={() => setNaLei(null)}
+        />
+      )}
     </>
   );
 }
@@ -418,6 +436,8 @@ interface CardProps {
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
   onExcluir: () => void;
   onDuvida: () => void;
+  /** Ausente quando o assunto não tem nenhum texto de lei salvo. */
+  onConferirLei?: () => void;
   onAdicionarResumo: () => void;
   resumindo: boolean;
 }
@@ -429,6 +449,7 @@ function QuestaoCard({
   onStatus,
   onExcluir,
   onDuvida,
+  onConferirLei,
   onAdicionarResumo,
   resumindo,
 }: CardProps) {
@@ -515,6 +536,11 @@ function QuestaoCard({
           )}
 
           <div className="flex flex-wrap gap-1.5 border-t border-line/30 pt-2.5">
+            {onConferirLei && (
+              <AcaoQuestao icone={<BookOpen className="size-3.5 text-blue" />} onClick={onConferirLei}>
+                Conferir na lei
+              </AcaoQuestao>
+            )}
             <AcaoQuestao
               icone={<MessageCircleQuestion className="size-3.5 text-gold" />}
               onClick={onDuvida}

@@ -105,6 +105,29 @@ export function useAtualizarMateria() {
   });
 }
 
+/**
+ * Grava o espaço "Estudo" da matéria (como estou estudando / o que fazer agora)
+ * e carimba a data. Escreve direto no cache em vez de invalidar: o editor salva
+ * sozinho a cada pausa da digitação, e recarregar o catálogo inteiro a cada
+ * gravação só faria o texto do servidor brigar com o que está sendo digitado.
+ */
+export function useSalvarEstudoMateria() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, estudo }: { id: string; estudo: string }) => {
+      const estudo_em = new Date().toISOString();
+      const { error } = await supabase.from("materias").update({ estudo, estudo_em }).eq("id", id);
+      if (error) throw error;
+      return { id, estudo, estudo_em };
+    },
+    onSuccess: ({ id, estudo, estudo_em }) => {
+      qc.setQueryData<Materia[]>(["materias"], (antigas) =>
+        antigas?.map((m) => (m.id === id ? { ...m, estudo, estudo_em } : m))
+      );
+    },
+  });
+}
+
 /** Atualiza campos do vínculo matéria↔concurso (ex.: a meta de redações). */
 export function useAtualizarConcursoMateria() {
   const qc = useQueryClient();
