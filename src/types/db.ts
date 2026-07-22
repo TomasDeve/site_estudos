@@ -668,6 +668,62 @@ export type Database = {
           },
         ]
       }
+      topico_metas: {
+        Row: {
+          alvo: number | null
+          chave: string
+          concluida: boolean
+          concluida_at: string | null
+          created_at: string
+          dias: number | null
+          id: string
+          janela: number | null
+          ordem: number
+          tipo: string
+          titulo: string
+          topico_id: string
+          user_id: string
+        }
+        Insert: {
+          alvo?: number | null
+          chave: string
+          concluida?: boolean
+          concluida_at?: string | null
+          created_at?: string
+          dias?: number | null
+          id?: string
+          janela?: number | null
+          ordem?: number
+          tipo?: string
+          titulo: string
+          topico_id: string
+          user_id?: string
+        }
+        Update: {
+          alvo?: number | null
+          chave?: string
+          concluida?: boolean
+          concluida_at?: string | null
+          created_at?: string
+          dias?: number | null
+          id?: string
+          janela?: number | null
+          ordem?: number
+          tipo?: string
+          titulo?: string
+          topico_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topico_metas_topico_id_fkey"
+            columns: ["topico_id"]
+            isOneToOne: false
+            referencedRelation: "topicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topico_questoes: {
         Row: {
           comentario: string
@@ -983,6 +1039,7 @@ export type CicloItem = Tables<"ciclo_itens">
 export type TopicoLink = Tables<"topico_links">
 export type TopicoTexto = Tables<"topico_textos">
 export type TopicoQuestao = Tables<"topico_questoes">
+export type TopicoMeta = Tables<"topico_metas">
 export type MetaPeriodo = Tables<"metas_periodo">
 export type BlocoDia = Tables<"blocos_dia">
 export type DiaConcluido = Tables<"dias_concluidos">
@@ -996,4 +1053,5 @@ export type Redacao = Tables<"redacoes">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "reforco" | "arquivada"
+export type TopicoMetaTipo = "manual" | "volume" | "acerto" | "frio"
 export type MateriaTipo = "normal" | "redacao"

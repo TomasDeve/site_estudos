@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles } from "lucide-react";
+import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks } from "lucide-react";
 import { toast } from "sonner";
-import type { QuestaoLog, Topico, TopicoLink, TopicoTexto, TopicoStatus } from "@/types/db";
+import type { QuestaoLog, Topico, TopicoLink, TopicoMeta, TopicoTexto, TopicoStatus } from "@/types/db";
 import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
 import { useAnexarPdf, useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink, removerArquivosPdf } from "@/api/topicoLinks";
 import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
@@ -14,6 +14,8 @@ import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { TextoReaderModal } from "./TextoReaderModal";
+import { MetasAssunto } from "./MetasAssunto";
+import { placarAssunto } from "./metasTopico";
 
 const TIPO_LINK: Record<string, string> = {
   questoes: "✍️",
@@ -23,7 +25,7 @@ const TIPO_LINK: Record<string, string> = {
   outro: "🔗",
 };
 
-type Painel = null | "links" | "questoes" | "textos";
+type Painel = null | "links" | "questoes" | "textos" | "metas";
 
 interface Props {
   topico: Topico;
@@ -31,11 +33,12 @@ interface Props {
   logs: QuestaoLog[];
   textos: TopicoTexto[];
   questoes: QuestaoResumo[];
+  metas: TopicoMeta[];
   /** Último tópico da lista: não mostra linha divisória "solta" no fim. */
   isLast?: boolean;
 }
 
-export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Props) {
+export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast }: Props) {
   const setStatus = useSetTopicoStatus();
   const setSeparador = useSetTopicoSeparador();
   const atualizar = useAtualizarTopico();
@@ -78,6 +81,9 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
       pendentes: emJogo.filter((q) => q.resposta === null).length,
     };
   }, [questoes]);
+
+  // Placar das metas: quantas das metas do assunto já fecharam.
+  const placar = useMemo(() => placarAssunto(metas, logs), [metas, logs]);
 
   function alternar(p: Painel) {
     setPainel((atual) => (atual === p ? null : p));
@@ -244,6 +250,30 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
             </button>
           )}
 
+          {/* metas do assunto: o placar diz o quanto falta para poder concluir */}
+          <button
+            onClick={() => alternar("metas")}
+            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
+              placar.total === 0
+                ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+                : placar.fechado
+                  ? "text-green hover:bg-green/10"
+                  : "text-dim hover:bg-navy-600"
+            } ${painel === "metas" ? "ring-1 ring-line" : ""}`}
+            title={
+              placar.total === 0
+                ? "Metas deste assunto"
+                : `Metas: ${placar.feitas} de ${placar.total} fechadas`
+            }
+          >
+            <ListChecks className="size-3.5" />
+            {placar.total > 0 && (
+              <span className="tabular-nums">
+                {placar.feitas}/{placar.total}
+              </span>
+            )}
+          </button>
+
           {/* desempenho: mostra a taxa de acerto, ou convida a registrar */}
           <button
             onClick={() => alternar("questoes")}
@@ -393,6 +423,13 @@ export function TopicoRow({ topico, links, logs, textos, questoes, isLast }: Pro
               </button>
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Painel: metas que fecham o assunto. */}
+      {painel === "metas" && (
+        <div className="mb-2 ml-7 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+          <MetasAssunto topico={topico} metas={metas} logs={logs} />
         </div>
       )}
 

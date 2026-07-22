@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { DiaPlanner } from "./DiaPlanner";
 import { MetaRangeList } from "./MetaRangeList";
+import { MetasPorAssunto } from "./MetasPorAssunto";
 
 export function MetasPage() {
   const concurso = useConcursoAtual();
@@ -20,6 +21,7 @@ export function MetasPage() {
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           <DiaPlanner concursoIdPadrao={concurso.id} />
+          <MetasPorAssunto />
         </div>
         <div className="space-y-5">
           <MetaRangeList />

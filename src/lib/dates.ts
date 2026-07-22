@@ -31,6 +31,11 @@ export function diasAte(iso: string): number {
   return differenceInCalendarDays(parseISO(iso), new Date());
 }
 
+/** Dias de "a" até "b" (positivo quando b vem depois). */
+export function diasEntre(aISO: string, bISO: string): number {
+  return differenceInCalendarDays(parseISO(bISO), parseISO(aISO));
+}
+
 /** Os 7 dias da semana atual (segunda a domingo) como ISO. */
 export function semanaAtualISO(): string[] {
   const seg = startOfWeek(new Date(), { weekStartsOn: 1 });

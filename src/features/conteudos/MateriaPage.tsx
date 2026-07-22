@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Target, Unlink } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ListChecks, Plus, Target, Unlink } from "lucide-react";
 import { toast } from "sonner";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useDesvincularMateria, useMaterias } from "@/api/materias";
@@ -8,6 +8,7 @@ import { useCriarTopico, useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
 import { useTopicoTextos } from "@/api/topicoTextos";
 import { useQuestoesResumo, type QuestaoResumo } from "@/api/topicoQuestoes";
+import { metasPorTopico, useAplicarPlanoPadrao, useTopicoMetas } from "@/api/topicoMetas";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { useRedacoes } from "@/api/redacoes";
 import { materiasComuns } from "@/lib/progresso";
@@ -43,12 +44,14 @@ export function MateriaPage() {
   const { data: links, isLoading: l4 } = useTopicoLinks();
   const { data: textos } = useTopicoTextos();
   const { data: questoes } = useQuestoesResumo();
+  const { data: metas } = useTopicoMetas();
   const { data: logs } = useQuestaoLogsPorTopico();
   const { data: logsMateria } = useQuestaoLogsPorMateria(materiaId);
   const { data: redacoes } = useRedacoes();
 
   const criarTopico = useCriarTopico();
   const desvincular = useDesvincularMateria();
+  const aplicarPlano = useAplicarPlanoPadrao();
 
   const [novoTopico, setNovoTopico] = useState("");
   const [adicionando, setAdicionando] = useState(false);
@@ -105,6 +108,7 @@ export function MateriaPage() {
     }
     return mapa;
   }, [questoes]);
+  const metasDoTopico = useMemo(() => metasPorTopico(metas), [metas]);
   const logsPorTopico = useMemo(() => {
     const mapa = new Map<string, QuestaoLog[]>();
     for (const l of logs ?? []) {
@@ -155,6 +159,8 @@ export function MateriaPage() {
     );
   }
 
+  // Assuntos que ainda não têm metas: dá para aplicar o plano padrão de uma vez.
+  const semMetas = meusTopicos.filter((t) => (metasDoTopico.get(t.id) ?? []).length === 0);
   const concluidos = meusTopicos.filter((t) => t.status === "concluido").length;
   const pct = meusTopicos.length === 0 ? 0 : Math.round((concluidos / meusTopicos.length) * 100);
   const anterior = idx > 0 ? meusVinculos[idx - 1] : undefined;
@@ -322,13 +328,14 @@ export function MateriaPage() {
                   logs={logsPorTopico.get(t.id) ?? []}
                   textos={textosPorTopico.get(t.id) ?? []}
                   questoes={questoesPorTopico.get(t.id) ?? []}
+                  metas={metasDoTopico.get(t.id) ?? []}
                   isLast={i === meusTopicos.length - 1}
                 />
               ))}
             </ul>
           )}
 
-          <div className="mt-3 border-t border-line/30 pt-3">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-line/30 pt-3">
             {adicionando ? (
               <form onSubmit={onAddTopico} className="flex items-center gap-2">
                 <Input
@@ -351,6 +358,28 @@ export function MateriaPage() {
                 className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-dim transition-colors hover:text-gold"
               >
                 <Plus className="size-3.5" /> Novo tópico
+              </button>
+            )}
+
+            {semMetas.length > 0 && (
+              <button
+                onClick={() =>
+                  aplicarPlano.mutate(
+                    semMetas.map((t) => t.id),
+                    {
+                      onSuccess: (n) =>
+                        toast.success(`Plano padrão aplicado em ${n} ${n === 1 ? "assunto" : "assuntos"}.`),
+                      onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+                    }
+                  )
+                }
+                disabled={aplicarPlano.isPending}
+                className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-dim transition-colors hover:text-gold disabled:opacity-50"
+                title="Cria as 5 metas padrão nos assuntos que ainda não têm"
+              >
+                <ListChecks className="size-3.5" />
+                Aplicar metas em {semMetas.length}{" "}
+                {semMetas.length === 1 ? "assunto" : "assuntos"}
               </button>
             )}
           </div>
