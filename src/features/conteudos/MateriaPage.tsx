@@ -1,6 +1,15 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ArrowLeft, ChevronLeft, ChevronRight, ListChecks, Plus, Target, Unlink } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  ListChecks,
+  Plus,
+  Settings2,
+  Target,
+  Unlink,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useDesvincularMateria, useMaterias } from "@/api/materias";
@@ -22,6 +31,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TopicoRow } from "./TopicoRow";
 import { MateriaEstudo } from "./MateriaEstudo";
+import { MateriaConfigModal } from "./MateriaConfigModal";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
 import { RedacoesPanel } from "./RedacoesPanel";
@@ -58,6 +68,7 @@ export function MateriaPage() {
   const [adicionando, setAdicionando] = useState(false);
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
   const [abrirQuestoes, setAbrirQuestoes] = useState(false);
+  const [configurando, setConfigurando] = useState(false);
 
   const irPara = `/concurso/${concurso.id}/conteudos`;
 
@@ -246,6 +257,15 @@ export function MateriaPage() {
                 )}
               </div>
             </div>
+
+            <button
+              onClick={() => setConfigurando(true)}
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1.5 text-xs text-mut transition-colors hover:border-line hover:text-gold"
+              title="Escolher quais blocos aparecem nesta matéria"
+            >
+              <Settings2 className="size-3.5" />
+              <span className="max-sm:hidden">Configurações da matéria</span>
+            </button>
           </div>
         </CardBody>
       </Card>
@@ -253,8 +273,9 @@ export function MateriaPage() {
       {/* Recado de estudo da matéria: primeira coisa que se lê ao abrir */}
       <MateriaEstudo materia={materia} />
 
-      {/* Redação: notas dos treinos. Demais matérias: questões gerais. */}
-      {ehRedacao ? (
+      {/* Redação: notas dos treinos. Demais matérias: questões gerais.
+          Some junto quando a matéria desliga o bloco nas configurações. */}
+      {!materia.mostrar_questoes_geral ? null : ehRedacao ? (
         <RedacoesPanel
           concursoId={concurso.id}
           materiaId={materia.id}
@@ -295,7 +316,9 @@ export function MateriaPage() {
       )}
 
       {/* Resumos gerais da matéria (não presos a um assunto) */}
-      <MateriaResumos materiaId={materia.id} textos={textosDaMateria} />
+      {materia.mostrar_resumos_geral && (
+        <MateriaResumos materiaId={materia.id} textos={textosDaMateria} />
+      )}
 
       {/* Tópicos da matéria */}
       <Card>
@@ -425,6 +448,12 @@ export function MateriaPage() {
           <Unlink className="size-3.5" /> Remover do concurso
         </button>
       </div>
+
+      <MateriaConfigModal
+        open={configurando}
+        onClose={() => setConfigurando(false)}
+        materia={materia}
+      />
 
       <ConfirmDialog
         open={confirmarRemocao}

@@ -375,6 +375,8 @@ export type Database = {
           estudo_em: string | null
           icone: string
           id: string
+          mostrar_questoes_geral: boolean
+          mostrar_resumos_geral: boolean
           nome: string
           slug: string
           tipo: string
@@ -386,6 +388,8 @@ export type Database = {
           estudo_em?: string | null
           icone?: string
           id?: string
+          mostrar_questoes_geral?: boolean
+          mostrar_resumos_geral?: boolean
           nome: string
           slug: string
           tipo?: string
@@ -397,6 +401,8 @@ export type Database = {
           estudo_em?: string | null
           icone?: string
           id?: string
+          mostrar_questoes_geral?: boolean
+          mostrar_resumos_geral?: boolean
           nome?: string
           slug?: string
           tipo?: string

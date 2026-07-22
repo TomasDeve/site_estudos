@@ -86,22 +86,40 @@ export function useDesvincularMateria() {
   });
 }
 
+interface PatchMateria {
+  id: string;
+  nome?: string;
+  icone?: string;
+  tipo?: string;
+  /** Blocos que a página da matéria mostra (Configurações da matéria). */
+  mostrar_questoes_geral?: boolean;
+  mostrar_resumos_geral?: boolean;
+}
+
+/**
+ * O cache é atualizado antes da ida ao servidor: as configurações são caixas de
+ * marcação controladas pelo próprio cache, e esperar a resposta faria a marca
+ * voltar sozinha por um instante antes de assentar. Dando erro, desfaz.
+ */
 export function useAtualizarMateria() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      id,
-      ...patch
-    }: {
-      id: string;
-      nome?: string;
-      icone?: string;
-      tipo?: string;
-    }) => {
+    mutationFn: async ({ id, ...patch }: PatchMateria) => {
       const { error } = await supabase.from("materias").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["materias"] }),
+    onMutate: async ({ id, ...patch }: PatchMateria) => {
+      await qc.cancelQueries({ queryKey: ["materias"] });
+      const anteriores = qc.getQueryData<Materia[]>(["materias"]);
+      qc.setQueryData<Materia[]>(["materias"], (antigas) =>
+        antigas?.map((m) => (m.id === id ? { ...m, ...patch } : m))
+      );
+      return { anteriores };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.anteriores) qc.setQueryData(["materias"], ctx.anteriores);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["materias"] }),
   });
 }
 
