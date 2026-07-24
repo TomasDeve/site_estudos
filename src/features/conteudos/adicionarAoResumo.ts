@@ -60,8 +60,8 @@ interface Args {
 }
 
 /**
- * "Adicionar ao resumo": a IA condensa o aprendizado da questão em 1–3 linhas
- * (chamada curta, sem streaming) e o trecho é anexado ao resumo rápido do
+ * "Adicionar ao resumo": a IA condensa o aprendizado da questão num esquema
+ * curto (núcleo + reforço + pegadinha) e o bloco é anexado ao resumo rápido do
  * destino — pelo editor aberto na tela, se houver, ou direto no banco.
  */
 export function useAdicionarQuestaoAoResumo() {
