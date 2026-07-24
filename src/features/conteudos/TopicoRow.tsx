@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoMeta, TopicoTexto, TopicoStatus } from "@/types/db";
 import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
@@ -51,6 +53,18 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
   const excluirTexto = useExcluirTopicoTexto();
   const { session } = useAuth();
   const arquivoRef = useRef<HTMLInputElement>(null);
+
+  // arrastar-e-soltar: a linha inteira é o item; o arraste sai só da alça.
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: topico.id });
+  const dragStyle = { transform: CSS.Transform.toString(transform), transition };
 
   const [painel, setPainel] = useState<Painel>(null);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
@@ -191,10 +205,27 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
   const cor = resumo.pct !== null ? corDesempenho(resumo.pct) : null;
 
   return (
-    <li className="group/topico">
+    <li
+      ref={setNodeRef}
+      style={dragStyle}
+      className={`group/topico relative ${
+        isDragging ? "z-10 rounded-lg bg-navy-800 shadow-2xl ring-1 ring-line" : ""
+      }`}
+    >
       <div className="flex flex-col gap-1 rounded-lg px-2 py-2 transition-colors hover:bg-navy-700/40 sm:flex-row sm:items-center sm:gap-2.5">
         {/* bolinha de status + título do assunto */}
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          {/* alça de arrastar: reordena os assuntos */}
+          <button
+            ref={setActivatorNodeRef}
+            {...attributes}
+            {...listeners}
+            className="-ml-1 flex shrink-0 cursor-grab touch-none items-center justify-center rounded-md p-1 text-mut opacity-0 transition-all hover:bg-navy-600 hover:text-dim active:cursor-grabbing group-hover/topico:opacity-100 max-md:opacity-100"
+            aria-label={`Arrastar ${topico.titulo} para reordenar`}
+            title="Arraste para reordenar"
+          >
+            <GripVertical className="size-4" />
+          </button>
           {/* bolinha de status: clique cicla */}
           <button
             onClick={() => setStatus.mutate({ id: topico.id, status: CICLO_STATUS[status] })}
@@ -237,7 +268,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
         </div>
 
         {/* ações do assunto: no celular quebram para uma segunda linha */}
-        <div className="flex shrink-0 items-center gap-0.5 pl-7 sm:gap-1 sm:pl-0">
+        <div className="flex shrink-0 items-center gap-0.5 pl-15 sm:gap-1 sm:pl-0">
           {/* renomear assunto */}
           {!editando && (
             <button
@@ -387,7 +418,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
 
       {/* Chips dos links — sempre visíveis, abrem direto. */}
       {links.length > 0 && (
-        <div className="mb-1.5 ml-7 flex flex-wrap items-center gap-1.5">
+        <div className="mb-1.5 ml-15 flex flex-wrap items-center gap-1.5">
           {links.map((l) => (
             <span
               key={l.id}
@@ -428,21 +459,21 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
 
       {/* Painel: metas que fecham o assunto. */}
       {painel === "metas" && (
-        <div className="mb-2 ml-7 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+        <div className="mb-2 ml-15 rounded-lg border border-line/50 bg-navy-900/60 p-3">
           <MetasAssunto topico={topico} metas={metas} logs={logs} />
         </div>
       )}
 
       {/* Painel: registrar/ver desempenho do assunto. */}
       {painel === "questoes" && (
-        <div className="mb-2 ml-7 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+        <div className="mb-2 ml-15 rounded-lg border border-line/50 bg-navy-900/60 p-3">
           <RegistroQuestoes materiaId={topico.materia_id} topicoId={topico.id} logs={logs} />
         </div>
       )}
 
       {/* Painel: textos e resumos do assunto. */}
       {painel === "textos" && (
-        <div className="mb-2 ml-7 space-y-2 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+        <div className="mb-2 ml-15 space-y-2 rounded-lg border border-line/50 bg-navy-900/60 p-3">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-mut">
             Textos e resumos
           </p>
@@ -500,7 +531,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
 
       {/* Painel: adicionar/editar link (só abre no clique). */}
       {painel === "links" && (
-        <div className="mb-2 ml-7 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+        <div className="mb-2 ml-15 rounded-lg border border-line/50 bg-navy-900/60 p-3">
           {editandoLink && (
             <p className="mb-2 text-xs font-medium text-gold">Editando link</p>
           )}

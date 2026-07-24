@@ -67,6 +67,41 @@ export function useSetTopicoSeparador() {
   });
 }
 
+/**
+ * Reordena os tópicos de uma matéria a partir da lista já na nova ordem
+ * (arrastar-e-soltar). Grava `ordem = índice` apenas nas linhas que mudaram.
+ */
+export function useReordenarTopicos() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (topicosOrdenados: Topico[]) => {
+      const linhas = topicosOrdenados
+        .map((topico, i) => ({ topico, novaOrdem: i }))
+        .filter(({ topico, novaOrdem }) => topico.ordem !== novaOrdem)
+        .map(({ topico, novaOrdem }) => ({ ...topico, ordem: novaOrdem }));
+      if (linhas.length === 0) return;
+      const { error } = await supabase.from("topicos").upsert(linhas);
+      if (error) throw error;
+    },
+    // update otimista: a lista reordena na hora (só mexe nos tópicos da matéria)
+    onMutate: async (topicosOrdenados) => {
+      await qc.cancelQueries({ queryKey: ["topicos"] });
+      const prev = qc.getQueryData<Topico[]>(["topicos"]);
+      const novaOrdemPorId = new Map(topicosOrdenados.map((t, i) => [t.id, i]));
+      qc.setQueryData<Topico[]>(["topicos"], (old) =>
+        old?.map((t) =>
+          novaOrdemPorId.has(t.id) ? { ...t, ordem: novaOrdemPorId.get(t.id)! } : t
+        )
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["topicos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
+  });
+}
+
 export function useCriarTopico() {
   const qc = useQueryClient();
   return useMutation({

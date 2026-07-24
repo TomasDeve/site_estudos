@@ -1,9 +1,26 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  GripVertical,
   ListChecks,
   Plus,
   Settings2,
@@ -13,7 +30,7 @@ import {
 import { toast } from "sonner";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useDesvincularMateria, useMaterias } from "@/api/materias";
-import { useCriarTopico, useTopicos } from "@/api/topicos";
+import { useCriarTopico, useReordenarTopicos, useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
 import { useTopicoTextos } from "@/api/topicoTextos";
 import { useQuestoesResumo, type QuestaoResumo } from "@/api/topicoQuestoes";
@@ -61,8 +78,15 @@ export function MateriaPage() {
   const { data: redacoes } = useRedacoes();
 
   const criarTopico = useCriarTopico();
+  const reordenarTopicos = useReordenarTopicos();
   const desvincular = useDesvincularMateria();
   const aplicarPlano = useAplicarPlanoPadrao();
+
+  const sensors = useSensors(
+    // distância de ativação: um clique curto na alça não conta como arraste
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const [novoTopico, setNovoTopico] = useState("");
   const [adicionando, setAdicionando] = useState(false);
@@ -186,6 +210,15 @@ export function MateriaPage() {
   const redacoesDaMateria = (redacoes ?? []).filter(
     (r) => r.materia_id === materia.id && r.concurso_id === concurso.id
   );
+
+  function onReordenarTopico(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const de = meusTopicos.findIndex((t) => t.id === active.id);
+    const para = meusTopicos.findIndex((t) => t.id === over.id);
+    if (de < 0 || para < 0) return;
+    reordenarTopicos.mutate(arrayMove(meusTopicos, de, para));
+  }
 
   async function onAddTopico(e: FormEvent) {
     e.preventDefault();
@@ -346,20 +379,40 @@ export function MateriaPage() {
               Nenhum tópico ainda. Adicione o primeiro abaixo.
             </p>
           ) : (
-            <ul className="mt-1">
-              {meusTopicos.map((t, i) => (
-                <TopicoRow
-                  key={t.id}
-                  topico={t}
-                  links={linksPorTopico.get(t.id) ?? []}
-                  logs={logsPorTopico.get(t.id) ?? []}
-                  textos={textosPorTopico.get(t.id) ?? []}
-                  questoes={questoesPorTopico.get(t.id) ?? []}
-                  metas={metasDoTopico.get(t.id) ?? []}
-                  isLast={i === meusTopicos.length - 1}
-                />
-              ))}
-            </ul>
+            <>
+              {meusTopicos.length > 1 && (
+                <p className="mb-1.5 flex items-center gap-1 text-[11px] text-mut">
+                  <GripVertical className="size-3" /> Arraste pela alça para organizar os assuntos na
+                  ordem que quiser.
+                </p>
+              )}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                onDragEnd={onReordenarTopico}
+              >
+                <SortableContext
+                  items={meusTopicos.map((t) => t.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className="mt-1">
+                    {meusTopicos.map((t, i) => (
+                      <TopicoRow
+                        key={t.id}
+                        topico={t}
+                        links={linksPorTopico.get(t.id) ?? []}
+                        logs={logsPorTopico.get(t.id) ?? []}
+                        textos={textosPorTopico.get(t.id) ?? []}
+                        questoes={questoesPorTopico.get(t.id) ?? []}
+                        metas={metasDoTopico.get(t.id) ?? []}
+                        isLast={i === meusTopicos.length - 1}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            </>
           )}
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-line/30 pt-3">
