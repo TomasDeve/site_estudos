@@ -1,4 +1,4 @@
-import { Frown, Meh, Smile, type LucideIcon } from "lucide-react";
+import { Frown, Laugh, Meh, Smile, type LucideIcon } from "lucide-react";
 import type { QuestaoDificuldade } from "@/types/db";
 
 /**
@@ -16,12 +16,13 @@ interface Nivel {
   badge: string;
 }
 
-// Fácil = verde, Médio = gold, Difícil = vermelho. Classes escritas por extenso
-// porque o Tailwind não gera nomes montados em runtime.
+// Do mais difícil ao mais fácil: vermelho → âmbar → gold → verde. Classes escritas
+// por extenso porque o Tailwind não gera nomes montados em runtime.
 export const NIVEIS: Nivel[] = [
-  { chave: "facil", label: "Fácil", Icone: Smile, ativo: "border-green/40 bg-green/10 text-green", badge: "bg-green/15 text-green" },
-  { chave: "medio", label: "Médio", Icone: Meh, ativo: "border-gold/40 bg-gold/10 text-gold", badge: "bg-gold/15 text-gold" },
   { chave: "dificil", label: "Difícil", Icone: Frown, ativo: "border-red/40 bg-red/10 text-red", badge: "bg-red/15 text-red" },
+  { chave: "medio_dificil", label: "Médio Difícil", Icone: Meh, ativo: "border-amber/40 bg-amber/10 text-amber", badge: "bg-amber/15 text-amber" },
+  { chave: "medio_facil", label: "Médio Fácil", Icone: Smile, ativo: "border-gold/40 bg-gold/10 text-gold", badge: "bg-gold/15 text-gold" },
+  { chave: "facil", label: "Fácil", Icone: Laugh, ativo: "border-green/40 bg-green/10 text-green", badge: "bg-green/15 text-green" },
 ];
 
 const POR_CHAVE = new Map(NIVEIS.map((n) => [n.chave, n]));

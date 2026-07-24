@@ -1068,6 +1068,6 @@ export type Redacao = Tables<"redacoes">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "arquivada"
-export type QuestaoDificuldade = "facil" | "medio" | "dificil"
+export type QuestaoDificuldade = "facil" | "medio_facil" | "medio_dificil" | "dificil"
 export type TopicoMetaTipo = "manual" | "volume" | "acerto" | "frio"
 export type MateriaTipo = "normal" | "redacao"

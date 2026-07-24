@@ -5,16 +5,50 @@ import { useAnexarResumoQuestoes } from "@/api/topicoTextos";
 import { fetchIA } from "./ChatIA";
 import { anexarAoResumoAberto, chaveDestinoResumo } from "./ResumoRapido";
 
-/** Converte as linhas devolvidas pela IA em blocos HTML do editor de resumos. */
-function paraHtml(texto: string): string {
-  const esc = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return texto
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map((l) => `<div>${esc(l)}</div>`)
-    .join("");
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** Tira qualquer marcador de lista/seta que a IA tenha posto no início da linha. */
+const semMarcador = (l: string) => l.replace(/^(?:—>|->|→|[-–—•*·])\s*/, "");
+
+/**
+ * Monta o bloco esquematizado que entra no resumo a partir do texto da IA:
+ * uma linha divisória (`<hr>`) separando este núcleo do anterior, a linha do
+ * núcleo com seta, o reforço espaçado e a pegadinha com rótulo destacado.
+ * Preserva as linhas em branco da IA como respiro e garante o espaçamento
+ * antes da pegadinha mesmo que ela venha colada.
+ */
+function montarBlocoResumo(texto: string): string {
+  const linhas = texto.split("\n").map((l) => l.trim());
+  const partes: string[] = ["<hr>"];
+  let primeira = true;
+  let espacoPendente = false;
+
+  for (const linha of linhas) {
+    if (!linha) {
+      if (!primeira) espacoPendente = true; // colapsa vazias e ignora as do começo
+      continue;
+    }
+    const peg = /^(pegadinha\b[^:]*:)\s*(.*)$/i.exec(linha);
+    if (peg && !primeira) espacoPendente = true; // pegadinha sempre respira acima
+
+    if (espacoPendente) {
+      partes.push("<div><br></div>");
+      espacoPendente = false;
+    }
+
+    if (peg) {
+      partes.push(`<div><strong>${esc(peg[1])}</strong> ${esc(peg[2])}</div>`);
+    } else if (primeira) {
+      partes.push(`<div>→ ${esc(semMarcador(linha))}</div>`);
+    } else {
+      partes.push(`<div>${esc(semMarcador(linha))}</div>`);
+    }
+    primeira = false;
+  }
+
+  // Só o "<hr>" = a IA não devolveu conteúdo aproveitável; não grava linha solta.
+  return partes.length > 1 ? partes.join("") : "";
 }
 
 interface Args {
@@ -60,7 +94,8 @@ export function useAdicionarQuestaoAoResumo() {
       const texto = (await res.text()).trim();
       if (!texto) throw new Error("A IA não devolveu nada — tente de novo.");
 
-      const html = paraHtml(texto);
+      const html = montarBlocoResumo(texto);
+      if (!html) throw new Error("A IA não devolveu nada — tente de novo.");
       if (!anexarAoResumoAberto(chaveDestinoResumo(destino), html)) {
         await anexarNoBanco.mutateAsync({ ...destino, html });
       }

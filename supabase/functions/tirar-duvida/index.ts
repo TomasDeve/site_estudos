@@ -80,7 +80,7 @@ function systemQuestao(p: Payload): string {
 function systemResumirQuestao(p: Payload): string {
   const q = p.questao!;
   return [
-    `${BASE} O aluno acabou de responder o item abaixo e quer ADICIONAR AO RESUMO dele o núcleo desse aprendizado.`,
+    `${BASE} O aluno acabou de responder o item abaixo e quer ADICIONAR AO RESUMO dele o núcleo desse aprendizado, de forma esquematizada para revisar depois.`,
     "",
     p.materia ? `Matéria: ${p.materia}` : null,
     p.assunto ? `Assunto: ${p.assunto}` : null,
@@ -89,11 +89,14 @@ function systemResumirQuestao(p: Payload): string {
     `Gabarito: ${rotulo(q.gabarito)}`,
     q.comentario ? `Comentário do gabarito: ${q.comentario}` : null,
     "",
-    "Responda SOMENTE com o trecho pronto para colar no resumo — sem preâmbulo, sem conversa, sem repetir o enunciado:",
-    "- 1 a 3 linhas curtas, cada uma começando com \"— \".",
-    "- Cada linha traz o conhecimento que evita errar itens parecidos: o conceito correto, o prazo, a autoridade competente, a exceção ou a pegadinha.",
-    "- Escreva o fato em si, sem citar \"a questão\", \"o item\" ou \"o gabarito\".",
-    "- Sem markdown. Não invente lei ou número de artigo.",
+    "Monte um esquema curto e espaçado para colar no resumo. Responda SOMENTE com o esquema — sem preâmbulo, sem repetir o enunciado, sem citar \"a questão\", \"o item\" ou \"o gabarito\". Escreva o fato em si.",
+    "Estrutura EXATA, com uma LINHA EM BRANCO separando cada parte:",
+    "",
+    "Parte 1 — Núcleo: escreva UMA linha começando com a seta \"→ \" (não escreva a palavra \"núcleo\"). É o que mata o tema: o conceito correto e a regra dele. Havendo base legal segura, cite o artigo entre parênteses. Deixe em CAIXA ALTA as 2 ou 3 palavras-chave que a banca cobra (o termo exato, o prazo, a autoridade).",
+    "Parte 2 — Reforço: 0 a 2 linhas curtas com o que cai junto (a exceção, o que subsiste, um requisito, a comparação com o instituto vizinho). Pule esta parte se não houver nada essencial. Não use rótulo.",
+    "Parte 3 — Pegadinha: UMA linha começando literalmente com \"Pegadinha: \" — a troca de termo, a inversão ou a exceção que a banca usa para tornar o item ERRADO.",
+    "",
+    "Português do Brasil, direto. Sem markdown (nada de asteriscos, cerquilhas ou numeração). Não invente lei, artigo nem jurisprudência — na dúvida, omita o artigo.",
   ]
     .filter((linha) => linha !== null)
     .join("\n");
@@ -172,7 +175,7 @@ Deno.serve(async (req: Request) => {
   // propósito — gasta pouco token por clique.
   const stream = client.messages.stream({
     model: "claude-opus-4-8",
-    max_tokens: resumirQuestao ? 300 : 1600,
+    max_tokens: resumirQuestao ? 450 : 1600,
     output_config: { effort: "low" },
     system,
     messages: mensagens,
