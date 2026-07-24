@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
-import type { QuestaoStatus, TablesInsert, TopicoQuestao } from "@/types/db";
+import type {
+  QuestaoDificuldade,
+  QuestaoStatus,
+  TablesInsert,
+  TopicoQuestao,
+} from "@/types/db";
 
 /** Colunas leves o bastante para carregar as questões de todos os assuntos de uma vez. */
 export type QuestaoResumo = Pick<TopicoQuestao, "id" | "topico_id" | "status" | "resposta">;
@@ -76,6 +81,27 @@ export function useSetQuestaoStatus() {
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: QuestaoStatus }) => {
       const { error } = await supabase.from("topico_questoes").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["topico_questoes"] }),
+  });
+}
+
+/** Grava a dificuldade percebida da questão. `null` remove a marcação. */
+export function useSetQuestaoDificuldade() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      dificuldade,
+    }: {
+      id: string;
+      dificuldade: QuestaoDificuldade | null;
+    }) => {
+      const { error } = await supabase
+        .from("topico_questoes")
+        .update({ dificuldade })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["topico_questoes"] }),

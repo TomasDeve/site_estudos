@@ -4,8 +4,6 @@ import {
   Archive,
   ArchiveRestore,
   ArrowLeft,
-  Bookmark,
-  BookmarkCheck,
   BookOpen,
   Check,
   ChevronRight,
@@ -17,11 +15,12 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { QuestaoStatus, Topico, TopicoQuestao } from "@/types/db";
+import type { QuestaoDificuldade, QuestaoStatus, Topico, TopicoQuestao } from "@/types/db";
 import {
   useCriarQuestoesEmLote,
   useExcluirQuestao,
   useResponderQuestao,
+  useSetQuestaoDificuldade,
   useSetQuestaoStatus,
   useTopicoQuestoes,
 } from "@/api/topicoQuestoes";
@@ -41,24 +40,28 @@ import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
+import { BadgeDificuldade, SeletorDificuldade } from "./dificuldade";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
 // na próxima visita já está guardado em "Resolvidas" — sem rolagem inútil.
-type AbaCaderno = "responder" | "resolvidas" | "reforco" | "arquivada";
+type AbaCaderno = "responder" | "resolvidas" | "dificil" | "arquivada";
 
 const ABAS: { chave: AbaCaderno; label: string }[] = [
   { chave: "responder", label: "Para responder" },
   { chave: "resolvidas", label: "Resolvidas" },
-  { chave: "reforco", label: "Reforço com IA" },
+  { chave: "dificil", label: "Difícil" },
   { chave: "arquivada", label: "Arquivadas" },
 ];
 
 /** Em qual aba a questão aparece agora (as respondidas nesta sessão ainda não "somem"). */
 function abaDe(q: TopicoQuestao, respondidasAgora: ReadonlySet<string>): AbaCaderno {
-  if (q.status === "reforco") return "reforco";
   if (q.status === "arquivada") return "arquivada";
-  return q.resposta === null || respondidasAgora.has(q.id) ? "responder" : "resolvidas";
+  // Respondida nesta sessão segue à mostra em "Para responder" — dá tempo de ler o
+  // comentário e marcar a dificuldade antes de a difícil migrar para a aba "Difícil".
+  if (q.resposta === null || respondidasAgora.has(q.id)) return "responder";
+  if (q.dificuldade === "dificil") return "dificil";
+  return "resolvidas";
 }
 
 const EXEMPLO_JSON = `[
@@ -143,16 +146,17 @@ export function QuestoesPage() {
 
 /**
  * Caderno de questões geradas por IA a partir do material do assunto. O item é
- * no estilo da banca (certo/errado); resolvido, abre o gabarito comentado e as
- * opções de destino: refazer, marcar para reforço com IA, arquivar ou apagar.
- * As marcadas para reforço formam o conjunto usado ao pedir novas questões de
- * reforço. A primeira resposta de cada questão também entra no desempenho do assunto.
+ * no estilo da banca (certo/errado); resolvido, abre o gabarito comentado, o
+ * seletor de dificuldade (fácil/médio/difícil) e as opções: refazer, arquivar
+ * ou apagar. As marcadas como difícil se reúnem na aba "Difícil". A primeira
+ * resposta de cada questão também entra no desempenho do assunto.
  */
 function Caderno({ topico }: { topico: Topico }) {
   const { data: questoes, isLoading } = useTopicoQuestoes(topico.id);
   const { data: materias } = useMaterias();
   const responder = useResponderQuestao();
   const setStatus = useSetQuestaoStatus();
+  const setDificuldade = useSetQuestaoDificuldade();
   const excluir = useExcluirQuestao();
   const criarEmLote = useCriarQuestoesEmLote();
   const clique = useRegistrarClique();
@@ -183,7 +187,7 @@ function Caderno({ topico }: { topico: Topico }) {
   );
 
   const contagem = useMemo(() => {
-    const c: Record<AbaCaderno, number> = { responder: 0, resolvidas: 0, reforco: 0, arquivada: 0 };
+    const c: Record<AbaCaderno, number> = { responder: 0, resolvidas: 0, dificil: 0, arquivada: 0 };
     for (const q of todas) c[abaDe(q, respondidasAgora)]++;
     return c;
   }, [todas, respondidasAgora]);
@@ -234,6 +238,15 @@ function Caderno({ topico }: { topico: Topico }) {
       { id: q.id, status },
       {
         onSuccess: () => toast.success(aviso),
+        onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+      }
+    );
+  }
+
+  function mudarDificuldade(q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) {
+    setDificuldade.mutate(
+      { id: q.id, dificuldade },
+      {
         onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
       }
     );
@@ -308,8 +321,8 @@ function Caderno({ topico }: { topico: Topico }) {
                   ? "Tudo respondido 🎉 As já resolvidas ficam na aba “Resolvidas”."
                   : filtro === "resolvidas"
                     ? "Nenhuma questão resolvida ainda."
-                    : filtro === "reforco"
-                      ? "Nenhuma questão marcada para reforço com IA."
+                    : filtro === "dificil"
+                      ? "Nenhuma questão marcada como difícil ainda."
                       : "Nenhuma questão arquivada."}
             </p>
           ) : (
@@ -323,6 +336,7 @@ function Caderno({ topico }: { topico: Topico }) {
                     numero={numeroDe.get(q.id) ?? 0}
                     onResponder={onResponder}
                     onStatus={mudarStatus}
+                    onDificuldade={mudarDificuldade}
                     onExcluir={() => setAExcluir(q)}
                     onDuvida={() => setDuvida(q)}
                     onConferirLei={temLei ? () => setNaLei(q) : undefined}
@@ -434,6 +448,7 @@ interface CardProps {
   numero: number;
   onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
+  onDificuldade: (q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) => void;
   onExcluir: () => void;
   onDuvida: () => void;
   /** Ausente quando o assunto não tem nenhum texto de lei salvo. */
@@ -447,6 +462,7 @@ function QuestaoCard({
   numero,
   onResponder,
   onStatus,
+  onDificuldade,
   onExcluir,
   onDuvida,
   onConferirLei,
@@ -463,11 +479,7 @@ function QuestaoCard({
         <span className="shrink-0 whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-mut">
           Questão {numero}
         </span>
-        {status === "reforco" && (
-          <span className="shrink-0 whitespace-nowrap rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold">
-            Reforço IA
-          </span>
-        )}
+        <BadgeDificuldade dificuldade={q.dificuldade} />
         {status === "arquivada" && (
           <span className="shrink-0 whitespace-nowrap rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mut">
             Arquivada
@@ -535,7 +547,14 @@ function QuestaoCard({
             </div>
           )}
 
-          <div className="flex flex-wrap gap-1.5 border-t border-line/30 pt-2.5">
+          <div className="border-t border-line/30 pt-2.5">
+            <SeletorDificuldade
+              valor={q.dificuldade}
+              onSelecionar={(nivel) => onDificuldade(q, nivel)}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
             {onConferirLei && (
               <AcaoQuestao icone={<BookOpen className="size-3.5 text-blue" />} onClick={onConferirLei}>
                 Conferir na lei
@@ -561,23 +580,6 @@ function QuestaoCard({
             </AcaoQuestao>
             <AcaoQuestao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
               Refazer
-            </AcaoQuestao>
-            <AcaoQuestao
-              ativo={status === "reforco"}
-              icone={
-                status === "reforco" ? (
-                  <BookmarkCheck className="size-3.5" />
-                ) : (
-                  <Bookmark className="size-3.5" />
-                )
-              }
-              onClick={() =>
-                status === "reforco"
-                  ? onStatus(q, "ativa", "Removida do reforço com IA.")
-                  : onStatus(q, "reforco", "Marcada para reforço com IA 🔖")
-              }
-            >
-              {status === "reforco" ? "No reforço com IA" : "Marcar para reforço com IA"}
             </AcaoQuestao>
             <AcaoQuestao
               icone={

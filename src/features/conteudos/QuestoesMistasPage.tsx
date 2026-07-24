@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import {
   ArrowLeft,
-  Bookmark,
-  BookmarkCheck,
   BookOpen,
   Check,
   MessageCircleQuestion,
@@ -13,10 +11,10 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { Materia, QuestaoStatus, TopicoQuestao } from "@/types/db";
+import type { Materia, QuestaoDificuldade, TopicoQuestao } from "@/types/db";
 import {
   useResponderQuestao,
-  useSetQuestaoStatus,
+  useSetQuestaoDificuldade,
   useTodasQuestoes,
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
@@ -32,6 +30,7 @@ import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
+import { BadgeDificuldade, SeletorDificuldade } from "./dificuldade";
 
 const ABAS = [
   { chave: "responder", label: "Para responder" },
@@ -78,7 +77,7 @@ export function QuestoesMistasPage() {
   const { data: materias, isLoading: carregandoMaterias } = useMaterias();
 
   const responder = useResponderQuestao();
-  const setStatus = useSetQuestaoStatus();
+  const setDificuldade = useSetQuestaoDificuldade();
   const clique = useRegistrarClique();
 
   const [semente, setSemente] = useState(gerarSemente);
@@ -175,11 +174,10 @@ export function QuestoesMistasPage() {
     }
   }
 
-  function mudarStatus(q: TopicoQuestao, status: QuestaoStatus, aviso: string) {
-    setStatus.mutate(
-      { id: q.id, status },
+  function mudarDificuldade(q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) {
+    setDificuldade.mutate(
+      { id: q.id, dificuldade },
       {
-        onSuccess: () => toast.success(aviso),
         onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
       }
     );
@@ -272,7 +270,7 @@ export function QuestoesMistasPage() {
                       questao={q}
                       materia={materiaPorId.get(topicoPorId.get(q.topico_id)?.materia_id ?? "")}
                       onResponder={onResponder}
-                      onStatus={mudarStatus}
+                      onDificuldade={mudarDificuldade}
                       onDuvida={() => setDuvida(q)}
                       onConferirLei={comLei?.has(q.topico_id) ? () => setNaLei(q) : undefined}
                       onAdicionarResumo={() => {
@@ -322,7 +320,7 @@ interface CardProps {
   questao: TopicoQuestao;
   materia: Materia | undefined;
   onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
-  onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
+  onDificuldade: (q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) => void;
   onDuvida: () => void;
   /** Ausente quando o assunto da questão não tem texto de lei salvo. */
   onConferirLei?: () => void;
@@ -335,7 +333,7 @@ function QuestaoMistaCard({
   questao: q,
   materia,
   onResponder,
-  onStatus,
+  onDificuldade,
   onDuvida,
   onConferirLei,
   onAdicionarResumo,
@@ -343,7 +341,6 @@ function QuestaoMistaCard({
 }: CardProps) {
   const resolvida = q.resposta !== null;
   const acertou = q.resposta === q.gabarito;
-  const status = q.status as QuestaoStatus;
 
   return (
     <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
@@ -352,6 +349,7 @@ function QuestaoMistaCard({
           {materia && <span className="text-xs leading-none">{materia.icone}</span>}
           <span className="truncate">{materia?.nome ?? "Matéria"}</span>
         </span>
+        <BadgeDificuldade dificuldade={q.dificuldade} />
       </div>
 
       {q.contexto && (
@@ -401,7 +399,14 @@ function QuestaoMistaCard({
             </div>
           )}
 
-          <div className="flex flex-wrap gap-1.5 border-t border-line/30 pt-2.5">
+          <div className="border-t border-line/30 pt-2.5">
+            <SeletorDificuldade
+              valor={q.dificuldade}
+              onSelecionar={(nivel) => onDificuldade(q, nivel)}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
             {onConferirLei && (
               <Acao icone={<BookOpen className="size-3.5 text-blue" />} onClick={onConferirLei}>
                 Conferir na lei
@@ -424,23 +429,6 @@ function QuestaoMistaCard({
             </Acao>
             <Acao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
               Refazer
-            </Acao>
-            <Acao
-              ativo={status === "reforco"}
-              icone={
-                status === "reforco" ? (
-                  <BookmarkCheck className="size-3.5" />
-                ) : (
-                  <Bookmark className="size-3.5" />
-                )
-              }
-              onClick={() =>
-                status === "reforco"
-                  ? onStatus(q, "ativa", "Removida do reforço com IA.")
-                  : onStatus(q, "reforco", "Marcada para reforço com IA 🔖")
-              }
-            >
-              {status === "reforco" ? "No reforço com IA" : "Marcar para reforço com IA"}
             </Acao>
           </div>
         </div>

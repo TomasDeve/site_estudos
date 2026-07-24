@@ -42,7 +42,7 @@ export function useBloquinhos(lista: TopicoQuestao[], reset: string): Bloquinho 
   }, [reset, ativo]);
 
   const total = Math.ceil(lista.length / TAMANHO);
-  // Questão que sai da aba no meio do caminho (arquivar, marcar reforço) pode
+  // Questão que sai da aba no meio do caminho (arquivar, marcar difícil) pode
   // encurtar a lista: o bloco atual acompanha em vez de ficar numa página vazia.
   const atual = Math.min(indice, Math.max(total - 1, 0));
   const doBloco = ativo ? lista.slice(atual * TAMANHO, atual * TAMANHO + TAMANHO) : lista;

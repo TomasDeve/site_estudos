@@ -741,6 +741,7 @@ export type Database = {
           comentario: string
           contexto: string | null
           created_at: string
+          dificuldade: string | null
           enunciado: string
           fonte: string | null
           gabarito: boolean
@@ -756,6 +757,7 @@ export type Database = {
           comentario?: string
           contexto?: string | null
           created_at?: string
+          dificuldade?: string | null
           enunciado: string
           fonte?: string | null
           gabarito: boolean
@@ -771,6 +773,7 @@ export type Database = {
           comentario?: string
           contexto?: string | null
           created_at?: string
+          dificuldade?: string | null
           enunciado?: string
           fonte?: string | null
           gabarito?: boolean
@@ -1064,6 +1067,7 @@ export type Ferramenta = Tables<"ferramentas">
 export type Redacao = Tables<"redacoes">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
-export type QuestaoStatus = "ativa" | "reforco" | "arquivada"
+export type QuestaoStatus = "ativa" | "arquivada"
+export type QuestaoDificuldade = "facil" | "medio" | "dificil"
 export type TopicoMetaTipo = "manual" | "volume" | "acerto" | "frio"
 export type MateriaTipo = "normal" | "redacao"
