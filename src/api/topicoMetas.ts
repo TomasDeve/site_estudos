@@ -29,7 +29,7 @@ export function metasPorTopico(metas: TopicoMeta[] | undefined): Map<string, Top
 }
 
 /**
- * Cria as 5 metas do plano padrão nos assuntos indicados.
+ * Cria as 4 metas do plano padrão nos assuntos indicados.
  *
  * Reaplicar é inofensivo: a chave única (assunto + chave) faz o banco ignorar o
  * que já existe, então dá para jogar numa matéria inteira sem medo de duplicar.

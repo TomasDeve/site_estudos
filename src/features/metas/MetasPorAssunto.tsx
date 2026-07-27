@@ -83,8 +83,8 @@ export function MetasPorAssunto() {
         {linhas.length === 0 ? (
           <p className="py-2 text-center text-xs leading-relaxed text-mut">
             Nenhum assunto com metas ainda. Abra uma matéria em Conteúdos e use{" "}
-            <span className="text-dim">Aplicar metas</span> para criar o plano padrão — ler a lei,
-            resumir, 20 questões em 2 dias, 85% nas últimas 20 e o teste frio.
+            <span className="text-dim">Aplicar metas</span> para criar o plano padrão — ler os textos,
+            100 questões de IA, o Anki dessas questões e 80% nas últimas 30.
           </p>
         ) : (
           <ul className="max-h-96 space-y-1 overflow-y-auto pr-1">

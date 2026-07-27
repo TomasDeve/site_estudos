@@ -104,9 +104,9 @@ export function MetasAssunto({ topico, metas, logs }: Props) {
           Metas do assunto
         </p>
         <p className="text-xs leading-relaxed text-mut">
-          Sem metas ainda. O plano padrão tem 5: ler a lei, produzir um resumo, 20 questões em 2
-          dias, 85% nas últimas 20 e o teste frio. As três últimas se marcam sozinhas pelo seu
-          histórico de questões.
+          Sem metas ainda. O plano padrão tem 4: ler os textos relacionados, 100 questões de IA,
+          montar o Anki com base nelas e 80% de acerto nas últimas 30. As duas de questões se
+          marcam sozinhas pelo seu histórico.
         </p>
         <Button size="sm" variant="secondary" loading={aplicarPlano.isPending} onClick={onAplicarPlano}>
           <Plus className="size-3.5" /> Aplicar plano padrão

@@ -455,7 +455,7 @@ export function MateriaPage() {
                 }
                 disabled={aplicarPlano.isPending}
                 className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-dim transition-colors hover:text-gold disabled:opacity-50"
-                title="Cria as 5 metas padrão nos assuntos que ainda não têm"
+                title="Cria as 4 metas padrão nos assuntos que ainda não têm"
               >
                 <ListChecks className="size-3.5" />
                 Aplicar metas em {semMetas.length}{" "}

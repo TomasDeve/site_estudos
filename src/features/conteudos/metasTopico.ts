@@ -2,12 +2,12 @@ import type { QuestaoLog, TopicoMeta, TopicoMetaTipo } from "@/types/db";
 import { diasEntre, hojeISO } from "@/lib/dates";
 
 /**
- * O plano padrão de um assunto: 5 metas.
+ * O plano padrão de um assunto: 4 metas.
  *
- * As duas primeiras são marcadas na mão (só você sabe se leu e se resumiu). As
- * três últimas saem sozinhas do histórico de questões, porque medir isso na mão
- * é justamente o que a gente erra: a sensação de domínio infla depois da
- * leitura, e o número não infla.
+ * A leitura e o Anki você marca na mão — só você sabe se leu os textos e se
+ * montou os cards. O volume de questões e a taxa de acerto saem sozinhos do
+ * histórico, porque medir isso na mão é justamente o que a gente erra: a
+ * sensação de domínio infla depois da leitura, e o número não infla.
  */
 export const PLANO_PADRAO: ReadonlyArray<{
   chave: string;
@@ -19,15 +19,7 @@ export const PLANO_PADRAO: ReadonlyArray<{
 }> = [
   {
     chave: "lei",
-    titulo: "Ler a lei seca do assunto",
-    tipo: "manual",
-    alvo: null,
-    janela: null,
-    dias: null,
-  },
-  {
-    chave: "producao",
-    titulo: "Fazer um resumo próprio ou 15 flashcards",
+    titulo: "Leitura dos textos relacionados",
     tipo: "manual",
     alvo: null,
     janela: null,
@@ -35,27 +27,27 @@ export const PLANO_PADRAO: ReadonlyArray<{
   },
   {
     chave: "volume",
-    titulo: "20 questões em 2 dias diferentes",
+    titulo: "100 questões de IA resolvidas",
     tipo: "volume",
-    alvo: 20,
+    alvo: 100,
     janela: null,
-    dias: 2,
-  },
-  {
-    chave: "acerto",
-    titulo: "85% nas últimas 20 questões",
-    tipo: "acerto",
-    alvo: 85,
-    janela: 20,
     dias: null,
   },
   {
-    chave: "frio",
-    titulo: "Teste frio: 80% num bloco de 10, após 7 dias parado",
-    tipo: "frio",
+    chave: "producao",
+    titulo: "Anki feito com base em 100 questões de IA",
+    tipo: "manual",
+    alvo: null,
+    janela: null,
+    dias: null,
+  },
+  {
+    chave: "acerto",
+    titulo: "80% de acerto nas últimas 30 questões de IA",
+    tipo: "acerto",
     alvo: 80,
-    janela: 10,
-    dias: 7,
+    janela: 30,
+    dias: null,
   },
 ];
 
