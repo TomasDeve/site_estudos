@@ -24,6 +24,7 @@ import {
   ListChecks,
   Plus,
   Settings2,
+  Sparkles,
   Target,
   Unlink,
 } from "lucide-react";
@@ -205,6 +206,14 @@ export function MateriaPage() {
   const iconeDe = (mId: string) => (materias ?? []).find((m) => m.id === mId)?.icone ?? "📘";
   const cor = desempenho.pct !== null ? corDesempenho(desempenho.pct) : null;
 
+  // Questões por IA da matéria inteira (todos os assuntos) — alimentam o modo
+  // misturado, do jeito que caem na prova. Só contam as ainda não arquivadas.
+  const idsTopicos = new Set(meusTopicos.map((t) => t.id));
+  const questoesIA = (questoes ?? []).filter(
+    (q) => idsTopicos.has(q.topico_id) && q.status !== "arquivada"
+  );
+  const pendentesIA = questoesIA.filter((q) => q.resposta === null).length;
+
   const ehRedacao = materia.tipo === "redacao";
   const textosDaMateria = (textos ?? []).filter((t) => t.materia_id === materia.id);
   const redacoesDaMateria = (redacoes ?? []).filter(
@@ -335,6 +344,31 @@ export function MateriaPage() {
                 />
               </span>
             </button>
+
+            {/* Responder as questões da IA da matéria toda, misturando os
+                assuntos — como caem na prova. Abre em aba própria. */}
+            {questoesIA.length > 0 && (
+              <a
+                href={`/questoes/materia/${materia.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 flex items-center gap-2 rounded-lg border border-gold/30 bg-gold/5 px-3 py-2.5 text-sm transition-colors hover:border-gold/50 hover:bg-gold/10"
+                title="Abre um caderno com as questões da IA desta matéria, misturando todos os assuntos (nova aba)"
+              >
+                <Sparkles className="size-4 shrink-0 text-gold" />
+                <span className="font-medium text-txt">Responder questões da IA misturadas</span>
+                <span
+                  className={`ml-auto shrink-0 text-xs font-semibold tabular-nums ${
+                    pendentesIA > 0 ? "text-gold" : "text-green"
+                  }`}
+                >
+                  {pendentesIA > 0
+                    ? `${pendentesIA} a resolver`
+                    : `${questoesIA.length} resolvidas`}
+                </span>
+              </a>
+            )}
+
             {abrirQuestoes && (
               <div className="mt-3 border-t border-line/30 pt-3">
                 <p className="mb-3 text-xs text-mut">

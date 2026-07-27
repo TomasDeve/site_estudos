@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   ArrowLeft,
   BookOpen,
@@ -64,14 +64,16 @@ function embaralhar<T>(itens: T[], semente: number): T[] {
 }
 
 /**
- * Modo misturado — todas as questões do site, de todas as matérias, em ordem
- * embaralhada. Abre em aba própria, como o caderno de um assunto, mas cada
- * questão mostra só a matéria no topo (sem assunto nem fonte, para não dar
- * pista). Responder aqui grava na mesma questão do caderno e segue a mesma
- * regra: a 1ª resposta entra no desempenho do assunto.
+ * Modo misturado — questões embaralhadas em ordem aleatória, do jeito que caem
+ * na prova. Sem `:materiaId` na rota, traz todas as questões do site; com ele,
+ * só as da matéria escolhida (misturando os assuntos dela). Abre em aba própria,
+ * como o caderno de um assunto, mas as questões não revelam assunto nem fonte,
+ * para não dar pista. Responder aqui grava na mesma questão do caderno e segue a
+ * mesma regra: a 1ª resposta entra no desempenho do assunto.
  */
 export function QuestoesMistasPage() {
   const navigate = useNavigate();
+  const { materiaId } = useParams();
   const { data: questoes, isLoading: carregandoQuestoes } = useTodasQuestoes();
   const { data: topicos, isLoading: carregandoTopicos } = useTopicos();
   const { data: materias, isLoading: carregandoMaterias } = useMaterias();
@@ -91,13 +93,19 @@ export function QuestoesMistasPage() {
   // tempo de ler o gabarito comentado antes de irem para "Resolvidas".
   const [respondidasAgora, setRespondidasAgora] = useState<ReadonlySet<string>>(new Set());
 
+  // Com `:materiaId`, a página fica restrita a uma matéria; sem ele, é o site todo.
+  const materiaEscopo = materiaId ? (materias ?? []).find((m) => m.id === materiaId) : undefined;
+  const titulo = materiaEscopo
+    ? `Questões · ${materiaEscopo.nome}`
+    : "Questões · Todas as matérias";
+
   useEffect(() => {
     const anterior = document.title;
-    document.title = "Questões · Todas as matérias";
+    document.title = titulo;
     return () => {
       document.title = anterior;
     };
-  }, []);
+  }, [titulo]);
 
   const topicoPorId = useMemo(() => new Map((topicos ?? []).map((t) => [t.id, t])), [topicos]);
   const materiaPorId = useMemo(() => new Map((materias ?? []).map((m) => [m.id, m])), [materias]);
@@ -105,10 +113,15 @@ export function QuestoesMistasPage() {
   // Ordena por id antes de embaralhar: a mesma semente reproduz a mesma ordem
   // mesmo após os refetches disparados pelas respostas.
   const misturadas = useMemo(() => {
-    const vivas = (questoes ?? []).filter((q) => q.status !== "arquivada");
+    const vivas = (questoes ?? []).filter((q) => {
+      if (q.status === "arquivada") return false;
+      // No modo por matéria, só entram as questões dos assuntos dessa matéria.
+      if (materiaId) return topicoPorId.get(q.topico_id)?.materia_id === materiaId;
+      return true;
+    });
     vivas.sort((a, b) => a.id.localeCompare(b.id));
     return embaralhar(vivas, semente);
-  }, [questoes, semente]);
+  }, [questoes, semente, materiaId, topicoPorId]);
 
   // Placar de tudo que já foi respondido, em qualquer aba.
   const placar = useMemo(() => {
@@ -194,10 +207,12 @@ export function QuestoesMistasPage() {
         >
           <ArrowLeft className="size-4" />
         </button>
-        <Shuffle className="size-4 shrink-0 text-gold" />
-        <h1 className="min-w-0 truncate text-base font-semibold text-txt">
-          Questões · Todas as matérias
-        </h1>
+        {materiaEscopo ? (
+          <span className="shrink-0 text-base leading-none">{materiaEscopo.icone}</span>
+        ) : (
+          <Shuffle className="size-4 shrink-0 text-gold" />
+        )}
+        <h1 className="min-w-0 truncate text-base font-semibold text-txt">{titulo}</h1>
         <button
           onClick={reembaralhar}
           className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2.5 py-1.5 text-xs font-medium text-dim transition-colors hover:border-line hover:bg-navy-700/60 hover:text-txt"
@@ -212,8 +227,12 @@ export function QuestoesMistasPage() {
         {misturadas.length === 0 ? (
           <EmptyState
             icon="🎲"
-            title="Nenhuma questão no site ainda"
-            message="Peça questões à IA dentro dos assuntos de cada matéria e elas aparecem aqui, todas misturadas."
+            title={materiaEscopo ? "Nenhuma questão nesta matéria ainda" : "Nenhuma questão no site ainda"}
+            message={
+              materiaEscopo
+                ? "Peça questões à IA dentro dos assuntos desta matéria e elas aparecem aqui, todas misturadas."
+                : "Peça questões à IA dentro dos assuntos de cada matéria e elas aparecem aqui, todas misturadas."
+            }
           />
         ) : (
           <div className="space-y-4">
@@ -269,6 +288,7 @@ export function QuestoesMistasPage() {
                       key={q.id}
                       questao={q}
                       materia={materiaPorId.get(topicoPorId.get(q.topico_id)?.materia_id ?? "")}
+                      mostrarMateria={!materiaId}
                       onResponder={onResponder}
                       onDificuldade={mudarDificuldade}
                       onDuvida={() => setDuvida(q)}
@@ -319,6 +339,8 @@ export function QuestoesMistasPage() {
 interface CardProps {
   questao: TopicoQuestao;
   materia: Materia | undefined;
+  /** No modo por matéria a etiqueta some (é sempre a mesma, já vai no cabeçalho). */
+  mostrarMateria: boolean;
   onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
   onDificuldade: (q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) => void;
   onDuvida: () => void;
@@ -332,6 +354,7 @@ interface CardProps {
 function QuestaoMistaCard({
   questao: q,
   materia,
+  mostrarMateria,
   onResponder,
   onDificuldade,
   onDuvida,
@@ -344,13 +367,17 @@ function QuestaoMistaCard({
 
   return (
     <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-navy-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-dim">
-          {materia && <span className="text-xs leading-none">{materia.icone}</span>}
-          <span className="truncate">{materia?.nome ?? "Matéria"}</span>
-        </span>
-        <BadgeDificuldade dificuldade={q.dificuldade} />
-      </div>
+      {(mostrarMateria || q.dificuldade) && (
+        <div className="mb-2 flex items-center gap-2">
+          {mostrarMateria && (
+            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-navy-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-dim">
+              {materia && <span className="text-xs leading-none">{materia.icone}</span>}
+              <span className="truncate">{materia?.nome ?? "Matéria"}</span>
+            </span>
+          )}
+          <BadgeDificuldade dificuldade={q.dificuldade} />
+        </div>
+      )}
 
       {q.contexto && (
         <p className="mb-2 border-l-2 border-line pl-2.5 text-xs italic leading-relaxed text-mut">

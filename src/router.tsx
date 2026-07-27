@@ -37,6 +37,8 @@ export const router = createBrowserRouter([
       { path: "texto/:textoId", element: pagina(<TextoLeiPage />) },
       // todas as questões do site misturadas (abre em aba própria, sem sidebar)
       { path: "questoes", element: pagina(<QuestoesMistasPage />) },
+      // questões de uma matéria inteira misturadas (aba própria, sem sidebar)
+      { path: "questoes/materia/:materiaId", element: pagina(<QuestoesMistasPage />) },
       // caderno de questões por IA de um assunto (abre em aba própria, sem sidebar)
       { path: "questoes/:topicoId", element: pagina(<QuestoesPage />) },
       // tudo abaixo vive dentro do concurso ativo
