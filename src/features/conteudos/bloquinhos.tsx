@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Layers } from "lucide-react";
-import type { TopicoQuestao } from "@/types/db";
+import { useEffect, useRef, useState } from "react";
+import { Check, ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import type { QuestaoLog, TopicoQuestao } from "@/types/db";
 import { Button } from "@/components/Button";
 import { corDesempenho } from "./desempenho";
+import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 
 /** Série curta: 5 questões por vez, para a resolução ter começo, meio e fim. */
 const TAMANHO = 5;
@@ -127,9 +128,15 @@ export function CabecalhoBloco({ b }: { b: Bloquinho }) {
   );
 }
 
-/** Navegação entre blocos — "Próximo bloco" acende quando as 5 estão respondidas. */
-export function RodapeBloco({ b }: { b: Bloquinho }) {
+/**
+ * Navegação entre blocos. Enquanto o bloco não fecha, um rodapé enxuto (dá para
+ * pular uma questão travada); assim que as 5 são respondidas, vira o painel de
+ * bloco concluído, com o desempenho e o salto rápido para o próximo.
+ */
+export function RodapeBloco({ b, logs }: { b: Bloquinho; logs?: QuestaoLog[] }) {
   if (!b.ativo || b.total === 0) return null;
+  if (b.completo) return <BlocoConcluido b={b} logs={logs} />;
+
   const ultimo = b.indice >= b.total - 1;
   const faltam = b.lista.length - b.respondidas;
 
@@ -146,21 +153,79 @@ export function RodapeBloco({ b }: { b: Bloquinho }) {
       </Button>
 
       {ultimo ? (
-        <span className="text-xs text-mut">
-          {b.completo ? "Último bloco concluído 🎉" : `Último bloco · faltam ${faltam}`}
-        </span>
+        <span className="text-xs text-mut">Último bloco · faltam {faltam}</span>
       ) : (
         // Segue clicável antes de completar: pular uma questão travada é melhor
         // do que ficar preso no bloco.
-        <Button
-          size="sm"
-          variant={b.completo ? "primary" : "secondary"}
-          onClick={() => b.ir(b.indice + 1)}
-        >
-          {b.completo ? "Próximo bloco" : `Pular para o próximo (faltam ${faltam})`}
+        <Button size="sm" variant="secondary" onClick={() => b.ir(b.indice + 1)}>
+          Pular para o próximo (faltam {faltam})
           <ChevronRight className="size-4" />
         </Button>
       )}
+    </div>
+  );
+}
+
+/**
+ * Fim de um bloco de 5: um respiro com o placar do bloco e o desempenho recente,
+ * já com o "Próximo bloco" em foco — dá para emendar o próximo só apertando
+ * Enter, sem tirar a mão do teclado nem procurar o botão.
+ */
+function BlocoConcluido({ b, logs }: { b: Bloquinho; logs?: QuestaoLog[] }) {
+  const ultimo = b.indice >= b.total - 1;
+  const cor = b.pct !== null ? corDesempenho(b.pct) : null;
+  const painelRef = useRef<HTMLDivElement>(null);
+
+  // Foca o "Próximo bloco" sem puxar a rolagem, para não atrapalhar quem ainda
+  // está lendo o comentário da última questão — o Enter emenda quando quiser.
+  useEffect(() => {
+    painelRef.current
+      ?.querySelector<HTMLButtonElement>(".js-proximo-bloco")
+      ?.focus({ preventScroll: true });
+  }, [b.indice]);
+
+  return (
+    <div
+      ref={painelRef}
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-3"
+    >
+      <span className="flex items-center gap-1.5 text-sm font-semibold text-gold">
+        <Check className="size-4" />
+        {ultimo ? "Último bloco concluído" : `Bloco ${b.indice + 1} concluído`}
+      </span>
+
+      {b.pct !== null && cor && (
+        <span className={`text-xs font-semibold tabular-nums ${cor.texto}`}>
+          {b.acertos}/{b.lista.length} · {b.pct}% no bloco
+        </span>
+      )}
+
+      {logs && <DesempenhoRecenteChip logs={logs} />}
+
+      <div className="ml-auto flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={b.indice === 0}
+          onClick={() => b.ir(b.indice - 1)}
+        >
+          <ChevronLeft className="size-4" />
+          <span className="max-sm:hidden">Anterior</span>
+        </Button>
+        {ultimo ? (
+          <span className="text-xs font-semibold text-green">Tudo resolvido 🎉</span>
+        ) : (
+          <Button
+            size="sm"
+            variant="primary"
+            className="js-proximo-bloco"
+            onClick={() => b.ir(b.indice + 1)}
+          >
+            Próximo bloco
+            <ChevronRight className="size-4" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -316,7 +316,7 @@ export function QuestoesMistasPage() {
                     />
                   ))}
                 </ul>
-                <RodapeBloco b={bloco} />
+                <RodapeBloco b={bloco} logs={logsEscopo} />
               </div>
             )}
           </div>

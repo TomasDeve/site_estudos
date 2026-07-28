@@ -361,7 +361,7 @@ function Caderno({ topico }: { topico: Topico }) {
                   />
                 ))}
               </ul>
-              <RodapeBloco b={bloco} />
+              <RodapeBloco b={bloco} logs={logsDoTopico} />
             </div>
           )}
 
