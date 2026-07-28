@@ -7,7 +7,8 @@ import { useCriarQuestaoLog, useExcluirQuestaoLog, useRegistrarClique } from "@/
 import { hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Field";
-import { corDesempenho } from "./desempenho";
+import { corDesempenho, desempenhoGeral } from "./desempenho";
+import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 
 interface Props {
   materiaId: string;
@@ -33,11 +34,7 @@ export function RegistroQuestoes({ materiaId, topicoId, logs }: Props) {
 
   const escopo = topicoId ? "deste assunto" : "desta matéria";
 
-  const resumo = useMemo(() => {
-    const t = logs.reduce((s, l) => s + l.total, 0);
-    const a = logs.reduce((s, l) => s + l.acertos, 0);
-    return { total: t, acertos: a, pct: t > 0 ? Math.round((a / t) * 100) : null };
-  }, [logs]);
+  const resumo = useMemo(() => desempenhoGeral(logs), [logs]);
   const cor = resumo.pct !== null ? corDesempenho(resumo.pct) : null;
 
   function registrarClique(acerto: boolean) {
@@ -74,12 +71,13 @@ export function RegistroQuestoes({ materiaId, topicoId, logs }: Props) {
   return (
     <div className="space-y-3">
       {resumo.pct !== null && cor ? (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className={`text-2xl font-bold tabular-nums ${cor.texto}`}>{resumo.pct}%</span>
           <span className="text-xs text-mut">
             {resumo.acertos}/{resumo.total} questões · {logs.length}{" "}
             {logs.length === 1 ? "registro" : "registros"}
           </span>
+          <DesempenhoRecenteChip logs={logs} className="ml-auto" />
         </div>
       ) : (
         <p className="text-xs text-mut">

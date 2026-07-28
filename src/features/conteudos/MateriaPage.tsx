@@ -54,7 +54,8 @@ import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
 import { RedacoesPanel } from "./RedacoesPanel";
 import { STATUS_INFO } from "./statusInfo";
-import { corDesempenho } from "./desempenho";
+import { corDesempenho, desempenhoGeral } from "./desempenho";
+import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 
 const NOME_AREA: Record<string, string> = {
   P1: "Conhecimentos Básicos",
@@ -159,25 +160,18 @@ export function MateriaPage() {
 
   // Registros avulsos da matéria (sem tópico), somados no dia via +Acerto/+Erro
   // ou registrados em bateria direto na matéria.
-  const geral = useMemo(() => {
-    const t = (logsMateria ?? []).reduce((s, l) => s + l.total, 0);
-    const a = (logsMateria ?? []).reduce((s, l) => s + l.acertos, 0);
-    return { total: t, acertos: a, pct: t > 0 ? Math.round((a / t) * 100) : null };
-  }, [logsMateria]);
+  const geral = useMemo(() => desempenhoGeral(logsMateria ?? []), [logsMateria]);
+
+  // Todos os registros da matéria: avulsos + os dos seus assuntos. Base do
+  // desempenho acumulado e da janela das últimas questões.
+  const logsDaMateria = useMemo(() => {
+    const ids = new Set(meusTopicos.map((t) => t.id));
+    const dosTopicos = (logs ?? []).filter((l) => l.topico_id && ids.has(l.topico_id));
+    return [...(logsMateria ?? []), ...dosTopicos];
+  }, [logs, logsMateria, meusTopicos]);
 
   // Desempenho em questões acumulado da matéria (tópicos + registros avulsos).
-  const desempenho = useMemo(() => {
-    const ids = new Set(meusTopicos.map((t) => t.id));
-    let total = geral.total;
-    let acertos = geral.acertos;
-    for (const l of logs ?? []) {
-      if (l.topico_id && ids.has(l.topico_id)) {
-        total += l.total;
-        acertos += l.acertos;
-      }
-    }
-    return { total, acertos, pct: total > 0 ? Math.round((acertos / total) * 100) : null };
-  }, [logs, meusTopicos, geral]);
+  const desempenho = useMemo(() => desempenhoGeral(logsDaMateria), [logsDaMateria]);
 
   if (l1 || l2 || l3 || l4) return <FullScreenSpinner />;
 
@@ -297,6 +291,7 @@ export function MateriaPage() {
                     </span>
                   </span>
                 )}
+                <DesempenhoRecenteChip logs={logsDaMateria} />
               </div>
             </div>
 
