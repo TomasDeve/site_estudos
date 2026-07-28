@@ -20,11 +20,12 @@ import {
 import { useTopicos } from "@/api/topicos";
 import { useMaterias } from "@/api/materias";
 import { useTopicosComLei } from "@/api/topicoTextos";
-import { useRegistrarClique } from "@/api/questaoLogs";
+import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
 import { FullScreenSpinner, Spinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { corDesempenho } from "./desempenho";
+import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { ResumoRapido } from "./ResumoRapido";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
@@ -81,6 +82,7 @@ export function QuestoesMistasPage() {
   const responder = useResponderQuestao();
   const setDificuldade = useSetQuestaoDificuldade();
   const clique = useRegistrarClique();
+  const { data: todosLogs } = useQuestaoLogsTodos();
 
   const [semente, setSemente] = useState(gerarSemente);
   const [aba, setAba] = useState<Aba>("responder");
@@ -122,6 +124,13 @@ export function QuestoesMistasPage() {
     vivas.sort((a, b) => a.id.localeCompare(b.id));
     return embaralhar(vivas, semente);
   }, [questoes, semente, materiaId, topicoPorId]);
+
+  // Histórico (questao_logs) no escopo da página — a matéria escolhida ou o site
+  // todo — para a janela das últimas 30 questões.
+  const logsEscopo = useMemo(() => {
+    const todos = todosLogs ?? [];
+    return materiaId ? todos.filter((l) => l.materia_id === materiaId) : todos;
+  }, [todosLogs, materiaId]);
 
   // Placar de tudo que já foi respondido, em qualquer aba.
   const placar = useMemo(() => {
@@ -249,6 +258,7 @@ export function QuestoesMistasPage() {
                   {placar.acertos} acertos · {placar.pct}%
                 </span>
               )}
+              <DesempenhoRecenteChip logs={logsEscopo} />
               <span className="text-[11px] text-mut">
                 A 1ª resposta entra no desempenho do assunto
               </span>

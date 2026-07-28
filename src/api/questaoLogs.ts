@@ -22,6 +22,26 @@ export function useQuestaoLogsPorTopico() {
   });
 }
 
+/**
+ * Todos os registros do usuário, do mais recente ao mais antigo. Serve às
+ * páginas de questões em aba própria, onde o escopo do desempenho recente varia
+ * (um assunto, uma matéria ou tudo) e é filtrado no cliente.
+ */
+export function useQuestaoLogsTodos() {
+  return useQuery({
+    queryKey: ["questao_logs", "todos"],
+    queryFn: () =>
+      fetchAll<QuestaoLog>((f, t) =>
+        supabase
+          .from("questao_logs")
+          .select("*")
+          .order("data", { ascending: false })
+          .order("created_at", { ascending: false })
+          .range(f, t)
+      ),
+  });
+}
+
 /** Registros avulsos de uma matéria (sem tópico) — questões "gerais" da matéria. */
 export function useQuestaoLogsPorMateria(materiaId: string | undefined) {
   return useQuery({

@@ -27,13 +27,14 @@ import {
 import { useTopicos } from "@/api/topicos";
 import { useMaterias } from "@/api/materias";
 import { useIndiceTextosDoTopico } from "@/api/topicoTextos";
-import { useRegistrarClique } from "@/api/questaoLogs";
+import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
 import { FullScreenSpinner, Spinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { corDesempenho } from "./desempenho";
+import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { parsearQuestoesJson } from "./questoesJson";
 import { ResumoRapido } from "./ResumoRapido";
 import { DuvidaIAModal } from "./DuvidaIAModal";
@@ -160,6 +161,7 @@ function Caderno({ topico }: { topico: Topico }) {
   const excluir = useExcluirQuestao();
   const criarEmLote = useCriarQuestoesEmLote();
   const clique = useRegistrarClique();
+  const { data: todosLogs } = useQuestaoLogsTodos();
 
   const [filtro, setFiltro] = useState<AbaCaderno>("responder");
   const [importando, setImportando] = useState(false);
@@ -179,6 +181,12 @@ function Caderno({ topico }: { topico: Topico }) {
   const materiaNome = (materias ?? []).find((m) => m.id === topico.materia_id)?.nome;
 
   const todas = useMemo(() => questoes ?? [], [questoes]);
+
+  // Histórico deste assunto (questao_logs) para a janela das últimas 30 questões.
+  const logsDoTopico = useMemo(
+    () => (todosLogs ?? []).filter((l) => l.topico_id === topico.id),
+    [todosLogs, topico.id]
+  );
 
   // Número da questão fixo na ordem do caderno, não muda ao trocar de aba.
   const numeroDe = useMemo(
@@ -288,6 +296,7 @@ function Caderno({ topico }: { topico: Topico }) {
                   {placar.acertos} acertos · {placar.pct}%
                 </span>
               )}
+              <DesempenhoRecenteChip logs={logsDoTopico} />
               <span className="text-[11px] text-mut">
                 A 1ª resposta entra no desempenho do assunto
               </span>
