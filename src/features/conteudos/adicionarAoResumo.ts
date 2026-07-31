@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import type { TopicoQuestao } from "@/types/db";
 import { useAnexarResumoQuestoes } from "@/api/topicoTextos";
 import { fetchIA } from "./ChatIA";
 import { anexarAoResumoAberto, chaveDestinoResumo } from "./ResumoRapido";
+import { envolverBlocoQuestao } from "./resumoBlocos";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -67,6 +68,18 @@ interface Args {
 export function useAdicionarQuestaoAoResumo() {
   const anexarNoBanco = useAnexarResumoQuestoes();
   const [pendenteId, setPendenteId] = useState<string | null>(null);
+  // Questões adicionadas nesta sessão: o botão vira "No resumo" na hora, sem
+  // esperar o resumo ser relido do banco. `esquecer` desfaz ao remover o trecho.
+  const [adicionadas, setAdicionadas] = useState<ReadonlySet<string>>(new Set());
+
+  const esquecer = useCallback((questaoId: string) => {
+    setAdicionadas((s) => {
+      if (!s.has(questaoId)) return s;
+      const n = new Set(s);
+      n.delete(questaoId);
+      return n;
+    });
+  }, []);
 
   async function adicionar({ questao, materiaNome, assunto, destino }: Args) {
     if (pendenteId) return;
@@ -96,9 +109,12 @@ export function useAdicionarQuestaoAoResumo() {
 
       const html = montarBlocoResumo(texto);
       if (!html) throw new Error("A IA não devolveu nada — tente de novo.");
-      if (!anexarAoResumoAberto(chaveDestinoResumo(destino), html)) {
-        await anexarNoBanco.mutateAsync({ ...destino, html });
+      // Marca o trecho com o id da questão para o "No resumo" achar depois.
+      const bloco = envolverBlocoQuestao(html, questao.id);
+      if (!anexarAoResumoAberto(chaveDestinoResumo(destino), bloco)) {
+        await anexarNoBanco.mutateAsync({ ...destino, html: bloco });
       }
+      setAdicionadas((s) => new Set(s).add(questao.id));
       toast.success("Adicionado ao resumo 📝");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
@@ -107,5 +123,5 @@ export function useAdicionarQuestaoAoResumo() {
     }
   }
 
-  return { adicionar, pendenteId };
+  return { adicionar, pendenteId, adicionadas, esquecer };
 }

@@ -43,6 +43,26 @@ export function useResumoQuestoes(destino: { topicoId?: string; materiaId?: stri
 }
 
 /**
+ * Todos os resumos de questões do site (um por assunto ou por matéria), com o
+ * conteúdo. São textos curtos — nada a ver com o peso das leis — então o modo
+ * misturado carrega todos de uma vez para saber quais questões já entraram no
+ * resumo (o botão "No resumo") e mostrar/editar o trecho de cada uma.
+ */
+export function useResumosDeQuestoes() {
+  return useQuery({
+    queryKey: ["topico_textos", "resumos-questoes-todos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topico_textos")
+        .select("id, conteudo, topico_id, materia_id")
+        .eq("titulo", TITULO_RESUMO_QUESTOES);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/**
  * Só o índice (id/título) dos textos de um assunto — sem o `conteudo`, que num
  * texto de lei inteiro passa de 700 KB. Deixa o "Conferir na lei" escolher qual
  * texto abrir antes de baixar qualquer coisa pesada.

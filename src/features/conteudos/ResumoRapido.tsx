@@ -15,15 +15,37 @@ import { ChatIA } from "./ChatIA";
 const MATERIA_KEY = "resumo-rapido-materia-id";
 
 // Editores montados na tela, por destino ("t-<topicoId>" / "m-<materiaId>").
-// O "Adicionar ao resumo" anexa pelo editor quando ele está aberto — assim o
-// texto aparece na hora e não briga com o que você está digitando.
-const editoresAbertos = new Map<string, (html: string) => void>();
+// O "Adicionar ao resumo" e o "No resumo" operam pelo editor quando ele está
+// aberto — assim a mudança aparece na hora e não briga com o que você digita.
+interface ControleResumo {
+  /** Anexa um trecho ao fim do resumo. */
+  anexar: (html: string) => void;
+  /** HTML atual do editor (fonte da verdade enquanto o painel está aberto). */
+  ler: () => string;
+  /** Troca o resumo inteiro (editar/remover um trecho) e agenda o salvamento. */
+  substituir: (html: string) => void;
+}
+const editoresAbertos = new Map<string, ControleResumo>();
 
 /** Anexa HTML ao editor aberto do destino; false se ele não estiver montado. */
 export function anexarAoResumoAberto(chaveDestino: string, html: string): boolean {
-  const anexa = editoresAbertos.get(chaveDestino);
-  if (!anexa) return false;
-  anexa(html);
+  const c = editoresAbertos.get(chaveDestino);
+  if (!c) return false;
+  c.anexar(html);
+  return true;
+}
+
+/** HTML atual do editor aberto do destino; `null` se ele não estiver montado. */
+export function lerResumoAberto(chaveDestino: string): string | null {
+  const c = editoresAbertos.get(chaveDestino);
+  return c ? c.ler() : null;
+}
+
+/** Troca o resumo inteiro no editor aberto do destino; false se não estiver montado. */
+export function substituirResumoAberto(chaveDestino: string, html: string): boolean {
+  const c = editoresAbertos.get(chaveDestino);
+  if (!c) return false;
+  c.substituir(html);
   return true;
 }
 
@@ -292,14 +314,23 @@ function EditorResumo({
     };
   }, [pegarTextoRef]);
 
-  // Entra no registro: o "Adicionar ao resumo" anexa direto aqui quando este
-  // destino está montado, caindo no salvamento automático normal.
+  // Entra no registro: "Adicionar ao resumo" e "No resumo" operam direto aqui
+  // quando este destino está montado, caindo no salvamento automático normal.
   useEffect(() => {
-    editoresAbertos.set(chaveDestino, (html) => {
-      const el = editorRef.current;
-      if (!el) return;
-      el.insertAdjacentHTML("beforeend", html);
-      onInput();
+    editoresAbertos.set(chaveDestino, {
+      anexar: (html) => {
+        const el = editorRef.current;
+        if (!el) return;
+        el.insertAdjacentHTML("beforeend", html);
+        onInput();
+      },
+      ler: () => editorRef.current?.innerHTML ?? "",
+      substituir: (html) => {
+        const el = editorRef.current;
+        if (!el) return;
+        el.innerHTML = html;
+        onInput();
+      },
     });
     return () => {
       editoresAbertos.delete(chaveDestino);

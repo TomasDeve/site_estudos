@@ -26,7 +26,7 @@ import {
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
 import { useMaterias } from "@/api/materias";
-import { useIndiceTextosDoTopico } from "@/api/topicoTextos";
+import { useIndiceTextosDoTopico, useResumoQuestoes } from "@/api/topicoTextos";
 import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
@@ -41,6 +41,8 @@ import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
+import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
+import { idsNoResumo } from "./resumoBlocos";
 import { BadgeDificuldade, SeletorDificuldade } from "./dificuldade";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
@@ -169,10 +171,21 @@ function Caderno({ topico }: { topico: Topico }) {
   const [aExcluir, setAExcluir] = useState<TopicoQuestao | null>(null);
   const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
   const [naLei, setNaLei] = useState<TopicoQuestao | null>(null);
+  const [verResumoDe, setVerResumoDe] = useState<TopicoQuestao | null>(null);
   // Respondidas nesta sessão seguem em "Para responder", para dar tempo de ler
   // o gabarito comentado antes de irem para "Resolvidas".
   const [respondidasAgora, setRespondidasAgora] = useState<ReadonlySet<string>>(new Set());
-  const { adicionar: adicionarAoResumo, pendenteId: resumindoId } = useAdicionarQuestaoAoResumo();
+  const {
+    adicionar: adicionarAoResumo,
+    pendenteId: resumindoId,
+    adicionadas,
+    esquecer,
+  } = useAdicionarQuestaoAoResumo();
+
+  // Resumo das questões deste assunto: diz quais já entraram no resumo (botão
+  // "No resumo") e alimenta a edição do trecho de cada uma. Mesma query do painel.
+  const { data: resumo } = useResumoQuestoes({ topicoId: topico.id });
+  const idsNoBanco = useMemo(() => idsNoResumo(resumo?.conteudo), [resumo?.conteudo]);
   // Índice leve (sem o conteúdo) só para saber se há lei salva neste assunto —
   // sem texto, o "Conferir na lei" nem aparece. Já deixa o modal pronto também.
   const { data: indiceLei } = useIndiceTextosDoTopico(topico.id);
@@ -358,6 +371,8 @@ function Caderno({ topico }: { topico: Topico }) {
                       })
                     }
                     resumindo={resumindoId === q.id}
+                    naResumo={idsNoBanco.has(q.id) || adicionadas.has(q.id)}
+                    onVerResumo={() => setVerResumoDe(q)}
                   />
                 ))}
               </ul>
@@ -448,6 +463,17 @@ function Caderno({ topico }: { topico: Topico }) {
           onClose={() => setNaLei(null)}
         />
       )}
+
+      {verResumoDe && (
+        <EditarTrechoResumoModal
+          questaoId={verResumoDe.id}
+          destino={{ topicoId: topico.id }}
+          resumoTextoId={resumo?.id}
+          conteudoBanco={resumo?.conteudo ?? ""}
+          onRemovido={() => esquecer(verResumoDe.id)}
+          onClose={() => setVerResumoDe(null)}
+        />
+      )}
     </>
   );
 }
@@ -464,6 +490,9 @@ interface CardProps {
   onConferirLei?: () => void;
   onAdicionarResumo: () => void;
   resumindo: boolean;
+  /** A questão já tem um trecho no resumo — o botão vira "No resumo". */
+  naResumo: boolean;
+  onVerResumo: () => void;
 }
 
 function QuestaoCard({
@@ -477,6 +506,8 @@ function QuestaoCard({
   onConferirLei,
   onAdicionarResumo,
   resumindo,
+  naResumo,
+  onVerResumo,
 }: CardProps) {
   const resolvida = q.resposta !== null;
   const acertou = q.resposta === q.gabarito;
@@ -488,7 +519,8 @@ function QuestaoCard({
         <span className="shrink-0 whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-mut">
           Questão {numero}
         </span>
-        <BadgeDificuldade dificuldade={q.dificuldade} />
+        {/* A dificuldade só aparece depois de responder — antes, não dá pista. */}
+        {resolvida && <BadgeDificuldade dificuldade={q.dificuldade} />}
         {status === "arquivada" && (
           <span className="shrink-0 whitespace-nowrap rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mut">
             Arquivada
@@ -575,18 +607,26 @@ function QuestaoCard({
             >
               Tirar dúvida com IA
             </AcaoQuestao>
-            <AcaoQuestao
-              icone={
-                resumindo ? (
-                  <Spinner className="size-3.5" />
-                ) : (
-                  <NotebookPen className="size-3.5 text-gold" />
-                )
-              }
-              onClick={onAdicionarResumo}
-            >
-              {resumindo ? "Adicionando…" : "Adicionar ao resumo"}
-            </AcaoQuestao>
+            {resumindo ? (
+              <AcaoQuestao icone={<Spinner className="size-3.5" />} onClick={() => {}}>
+                Adicionando…
+              </AcaoQuestao>
+            ) : naResumo ? (
+              <AcaoQuestao
+                icone={<Check className="size-3.5 text-green" />}
+                ativo
+                onClick={onVerResumo}
+              >
+                No resumo
+              </AcaoQuestao>
+            ) : (
+              <AcaoQuestao
+                icone={<NotebookPen className="size-3.5 text-gold" />}
+                onClick={onAdicionarResumo}
+              >
+                Adicionar ao resumo
+              </AcaoQuestao>
+            )}
             <AcaoQuestao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
               Refazer
             </AcaoQuestao>

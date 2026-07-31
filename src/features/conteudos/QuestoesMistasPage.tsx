@@ -19,7 +19,7 @@ import {
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
 import { useMaterias } from "@/api/materias";
-import { useTopicosComLei } from "@/api/topicoTextos";
+import { useResumosDeQuestoes, useTopicosComLei } from "@/api/topicoTextos";
 import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
 import { FullScreenSpinner, Spinner } from "@/components/Spinner";
@@ -31,6 +31,8 @@ import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
+import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
+import { idsNoResumo } from "./resumoBlocos";
 import { BadgeDificuldade, SeletorDificuldade } from "./dificuldade";
 
 const ABAS = [
@@ -88,9 +90,28 @@ export function QuestoesMistasPage() {
   const [aba, setAba] = useState<Aba>("responder");
   const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
   const [naLei, setNaLei] = useState<TopicoQuestao | null>(null);
+  const [verResumoDe, setVerResumoDe] = useState<TopicoQuestao | null>(null);
   // Quais assuntos têm lei salva — o "Conferir na lei" só aparece nesses.
   const { data: comLei } = useTopicosComLei();
-  const { adicionar: adicionarAoResumo, pendenteId: resumindoId } = useAdicionarQuestaoAoResumo();
+  const {
+    adicionar: adicionarAoResumo,
+    pendenteId: resumindoId,
+    adicionadas,
+    esquecer,
+  } = useAdicionarQuestaoAoResumo();
+
+  // Resumos de questões de todas as matérias: aqui a nota de cada questão vai
+  // para o resumo geral da matéria dela. Serve ao botão "No resumo" e à edição.
+  const { data: resumos } = useResumosDeQuestoes();
+  const idsNoBanco = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of resumos ?? []) {
+      for (const id of idsNoResumo(r.conteudo)) set.add(id);
+    }
+    return set;
+  }, [resumos]);
+  const resumoDaMateria = (mId: string | null | undefined) =>
+    (resumos ?? []).find((r) => r.materia_id === mId && r.topico_id === null) ?? null;
   // Respondidas nesta sessão seguem à mostra em "Para responder", para dar
   // tempo de ler o gabarito comentado antes de irem para "Resolvidas".
   const [respondidasAgora, setRespondidasAgora] = useState<ReadonlySet<string>>(new Set());
@@ -313,6 +334,8 @@ export function QuestoesMistasPage() {
                         });
                       }}
                       resumindo={resumindoId === q.id}
+                      naResumo={idsNoBanco.has(q.id) || adicionadas.has(q.id)}
+                      onVerResumo={() => setVerResumoDe(q)}
                     />
                   ))}
                 </ul>
@@ -342,6 +365,22 @@ export function QuestoesMistasPage() {
           onClose={() => setNaLei(null)}
         />
       )}
+
+      {verResumoDe &&
+        (() => {
+          const materiaIdDaQuestao = topicoPorId.get(verResumoDe.topico_id)?.materia_id;
+          const resumoTexto = resumoDaMateria(materiaIdDaQuestao);
+          return (
+            <EditarTrechoResumoModal
+              questaoId={verResumoDe.id}
+              destino={{ materiaId: materiaIdDaQuestao ?? undefined }}
+              resumoTextoId={resumoTexto?.id}
+              conteudoBanco={resumoTexto?.conteudo ?? ""}
+              onRemovido={() => esquecer(verResumoDe.id)}
+              onClose={() => setVerResumoDe(null)}
+            />
+          );
+        })()}
     </div>
   );
 }
@@ -358,6 +397,9 @@ interface CardProps {
   onConferirLei?: () => void;
   onAdicionarResumo: () => void;
   resumindo: boolean;
+  /** A questão já tem um trecho no resumo — o botão vira "No resumo". */
+  naResumo: boolean;
+  onVerResumo: () => void;
 }
 
 /** Card do modo misturado: só a matéria no topo — sem assunto, fonte ou número. */
@@ -371,13 +413,16 @@ function QuestaoMistaCard({
   onConferirLei,
   onAdicionarResumo,
   resumindo,
+  naResumo,
+  onVerResumo,
 }: CardProps) {
   const resolvida = q.resposta !== null;
   const acertou = q.resposta === q.gabarito;
 
   return (
     <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
-      {(mostrarMateria || q.dificuldade) && (
+      {/* A dificuldade só aparece depois de responder — antes, não dá pista. */}
+      {(mostrarMateria || (resolvida && q.dificuldade)) && (
         <div className="mb-2 flex items-center gap-2">
           {mostrarMateria && (
             <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-navy-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-dim">
@@ -385,7 +430,7 @@ function QuestaoMistaCard({
               <span className="truncate">{materia?.nome ?? "Matéria"}</span>
             </span>
           )}
-          <BadgeDificuldade dificuldade={q.dificuldade} />
+          {resolvida && <BadgeDificuldade dificuldade={q.dificuldade} />}
         </div>
       )}
 
@@ -452,18 +497,19 @@ function QuestaoMistaCard({
             <Acao icone={<MessageCircleQuestion className="size-3.5 text-gold" />} onClick={onDuvida}>
               Tirar dúvida com IA
             </Acao>
-            <Acao
-              icone={
-                resumindo ? (
-                  <Spinner className="size-3.5" />
-                ) : (
-                  <NotebookPen className="size-3.5 text-gold" />
-                )
-              }
-              onClick={onAdicionarResumo}
-            >
-              {resumindo ? "Adicionando…" : "Adicionar ao resumo"}
-            </Acao>
+            {resumindo ? (
+              <Acao icone={<Spinner className="size-3.5" />} onClick={() => {}}>
+                Adicionando…
+              </Acao>
+            ) : naResumo ? (
+              <Acao icone={<Check className="size-3.5 text-green" />} ativo onClick={onVerResumo}>
+                No resumo
+              </Acao>
+            ) : (
+              <Acao icone={<NotebookPen className="size-3.5 text-gold" />} onClick={onAdicionarResumo}>
+                Adicionar ao resumo
+              </Acao>
+            )}
             <Acao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
               Refazer
             </Acao>
