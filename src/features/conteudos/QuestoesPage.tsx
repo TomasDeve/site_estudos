@@ -30,6 +30,7 @@ import { useIndiceTextosDoTopico, useResumoQuestoes } from "@/api/topicoTextos";
 import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
+import { MenuMais } from "@/components/MenuMais";
 import { FullScreenSpinner, Spinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -627,25 +628,26 @@ function QuestaoCard({
                 Adicionar ao resumo
               </AcaoQuestao>
             )}
-            <AcaoQuestao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
-              Refazer
-            </AcaoQuestao>
-            <AcaoQuestao
-              icone={
-                status === "arquivada" ? (
-                  <ArchiveRestore className="size-3.5" />
-                ) : (
-                  <Archive className="size-3.5" />
-                )
-              }
-              onClick={() =>
+            <MenuMais
+              itens={[
+                {
+                  icone: <RotateCcw className="size-3.5" />,
+                  label: "Refazer",
+                  onClick: () => onResponder(q, null),
+                },
                 status === "arquivada"
-                  ? onStatus(q, "ativa", "Questão desarquivada.")
-                  : onStatus(q, "arquivada", "Questão arquivada.")
-              }
-            >
-              {status === "arquivada" ? "Desarquivar" : "Arquivar"}
-            </AcaoQuestao>
+                  ? {
+                      icone: <ArchiveRestore className="size-3.5" />,
+                      label: "Desarquivar",
+                      onClick: () => onStatus(q, "ativa", "Questão desarquivada."),
+                    }
+                  : {
+                      icone: <Archive className="size-3.5" />,
+                      label: "Arquivar",
+                      onClick: () => onStatus(q, "arquivada", "Questão arquivada."),
+                    },
+              ]}
+            />
           </div>
         </div>
       )}

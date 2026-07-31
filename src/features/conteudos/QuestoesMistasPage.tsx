@@ -23,6 +23,7 @@ import { useResumosDeQuestoes, useTopicosComLei } from "@/api/topicoTextos";
 import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
 import { FullScreenSpinner, Spinner } from "@/components/Spinner";
+import { MenuMais } from "@/components/MenuMais";
 import { EmptyState } from "@/components/EmptyState";
 import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
@@ -510,9 +511,15 @@ function QuestaoMistaCard({
                 Adicionar ao resumo
               </Acao>
             )}
-            <Acao icone={<RotateCcw className="size-3.5" />} onClick={() => onResponder(q, null)}>
-              Refazer
-            </Acao>
+            <MenuMais
+              itens={[
+                {
+                  icone: <RotateCcw className="size-3.5" />,
+                  label: "Refazer",
+                  onClick: () => onResponder(q, null),
+                },
+              ]}
+            />
           </div>
         </div>
       )}
