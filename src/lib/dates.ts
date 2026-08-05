@@ -67,3 +67,10 @@ export function fmtMinutos(min: number): string {
   if (m === 0) return `${h}h`;
   return `${h}h${String(m).padStart(2, "0")}`;
 }
+
+/** Horas decimais → "5h" / "2h30" / "45min" / "0h". */
+export function fmtHoras(horas: number): string {
+  const min = Math.round(horas * 60);
+  if (min === 0) return "0h";
+  return fmtMinutos(min);
+}

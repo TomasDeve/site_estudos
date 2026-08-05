@@ -13,6 +13,7 @@ import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatCard } from "@/components/StatCard";
 import { CompromissosCard } from "./CompromissosCard";
+import { PlanejamentoHoras } from "./PlanejamentoHoras";
 import { WeekStudyChart } from "./WeekStudyChart";
 
 const NOME_AREA: Record<string, string> = {
@@ -86,6 +87,9 @@ export function DashboardPage() {
           )}
         </CardBody>
       </Card>
+
+      {/* Planejamento de horas: orçamento de tempo até a prova */}
+      <PlanejamentoHoras concurso={concurso} />
 
       {/* métricas rápidas de hoje */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

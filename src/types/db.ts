@@ -134,6 +134,7 @@ export type Database = {
           created_at: string
           id: string
           materia_id: string
+          horas_alvo: number
           meta: number | null
           ordem: number
           peso_questoes: number | null
@@ -145,6 +146,7 @@ export type Database = {
           created_at?: string
           id?: string
           materia_id: string
+          horas_alvo?: number
           meta?: number | null
           ordem?: number
           peso_questoes?: number | null
@@ -156,6 +158,7 @@ export type Database = {
           created_at?: string
           id?: string
           materia_id?: string
+          horas_alvo?: number
           meta?: number | null
           ordem?: number
           peso_questoes?: number | null
@@ -186,6 +189,8 @@ export type Database = {
           data_prova: string | null
           duracao_prova: string | null
           estrutura: Json
+          horas_conteudo: number
+          horas_revisao: number
           icone: string
           id: string
           nome: string
@@ -204,6 +209,8 @@ export type Database = {
           data_prova?: string | null
           duracao_prova?: string | null
           estrutura?: Json
+          horas_conteudo?: number
+          horas_revisao?: number
           icone?: string
           id?: string
           nome: string
@@ -222,6 +229,8 @@ export type Database = {
           data_prova?: string | null
           duracao_prova?: string | null
           estrutura?: Json
+          horas_conteudo?: number
+          horas_revisao?: number
           icone?: string
           id?: string
           nome?: string
@@ -858,6 +867,7 @@ export type Database = {
           id: string
           materia_id: string
           ordem: number
+          horas_alvo: number
           separador_apos: boolean
           status: string
           titulo: string
@@ -868,6 +878,7 @@ export type Database = {
           id?: string
           materia_id: string
           ordem?: number
+          horas_alvo?: number
           separador_apos?: boolean
           status?: string
           titulo: string
@@ -878,6 +889,7 @@ export type Database = {
           id?: string
           materia_id?: string
           ordem?: number
+          horas_alvo?: number
           separador_apos?: boolean
           status?: string
           titulo?: string

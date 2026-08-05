@@ -45,6 +45,39 @@ export function useAtualizarConcurso() {
   });
 }
 
+/**
+ * Grava as horas de planejamento do concurso (conteúdo/revisão). Otimista: o
+ * "restante" e o total precisam reagir na hora enquanto se digita.
+ */
+export function useAtualizarHorasConcurso() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...patch
+    }: {
+      id: string;
+      horas_conteudo?: number;
+      horas_revisao?: number;
+    }) => {
+      const { error } = await supabase.from("concursos").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, ...patch }) => {
+      await qc.cancelQueries({ queryKey: ["concursos"] });
+      const prev = qc.getQueryData<Concurso[]>(["concursos"]);
+      qc.setQueryData<Concurso[]>(["concursos"], (old) =>
+        old?.map((c) => (c.id === id ? { ...c, ...patch } : c))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concursos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concursos"] }),
+  });
+}
+
 export function useExcluirConcurso() {
   const qc = useQueryClient();
   return useMutation({

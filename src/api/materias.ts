@@ -158,10 +158,72 @@ export function useAtualizarConcursoMateria() {
       area?: string;
       meta?: number | null;
       peso_questoes?: number | null;
+      horas_alvo?: number;
     }) => {
       const { error } = await supabase.from("concurso_materias").update(patch).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
+  });
+}
+
+/** Grava as horas alocadas para uma matéria do concurso, otimista. */
+export function useAtualizarHorasMateria() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, horas_alvo }: { id: string; horas_alvo: number }) => {
+      const { error } = await supabase
+        .from("concurso_materias")
+        .update({ horas_alvo })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, horas_alvo }) => {
+      await qc.cancelQueries({ queryKey: ["concurso_materias"] });
+      const prev = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]);
+      qc.setQueryData<ConcursoMateria[]>(["concurso_materias"], (old) =>
+        old?.map((v) => (v.id === id ? { ...v, horas_alvo } : v))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concurso_materias"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
+  });
+}
+
+/** Grava as horas de vários vínculos de uma vez (botão Distribuir), otimista. */
+export function useDistribuirHorasMaterias() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (itens: { id: string; horas_alvo: number }[]) => {
+      if (itens.length === 0) return;
+      // upsert em lote pela PK: reaproveita a linha do cache trocando só as horas.
+      const atuais = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]) ?? [];
+      const porId = new Map(atuais.map((v) => [v.id, v]));
+      const linhas = itens
+        .map((it) => {
+          const base = porId.get(it.id);
+          return base ? { ...base, horas_alvo: it.horas_alvo } : null;
+        })
+        .filter((x): x is ConcursoMateria => x !== null);
+      if (linhas.length === 0) return;
+      const { error } = await supabase.from("concurso_materias").upsert(linhas);
+      if (error) throw error;
+    },
+    onMutate: async (itens) => {
+      await qc.cancelQueries({ queryKey: ["concurso_materias"] });
+      const prev = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]);
+      const mapa = new Map(itens.map((it) => [it.id, it.horas_alvo]));
+      qc.setQueryData<ConcursoMateria[]>(["concurso_materias"], (old) =>
+        old?.map((v) => (mapa.has(v.id) ? { ...v, horas_alvo: mapa.get(v.id)! } : v))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concurso_materias"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
   });
 }

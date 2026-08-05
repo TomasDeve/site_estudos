@@ -49,6 +49,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TopicoRow } from "./TopicoRow";
 import { MateriaEstudo } from "./MateriaEstudo";
+import { DistribuicaoHorasMateria } from "./DistribuicaoHorasMateria";
 import { MateriaConfigModal } from "./MateriaConfigModal";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
@@ -309,6 +310,11 @@ export function MateriaPage() {
 
       {/* Recado de estudo da matéria: primeira coisa que se lê ao abrir */}
       <MateriaEstudo materia={materia} />
+
+      {/* Orçamento de horas: distribuir o tempo da matéria entre os assuntos */}
+      {!ehRedacao && (
+        <DistribuicaoHorasMateria vinculo={vinculo} topicos={meusTopicos} cor={concurso.cor} />
+      )}
 
       {/* Redação: notas dos treinos. Demais matérias: questões gerais.
           Some junto quando a matéria desliga o bloco nas configurações. */}
