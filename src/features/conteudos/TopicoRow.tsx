@@ -4,13 +4,14 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoMeta, TopicoTexto, TopicoStatus } from "@/types/db";
-import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
+import { CICLO_STATUS, useAtualizarHorasTopico, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
 import { useAnexarPdf, useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink, removerArquivosPdf } from "@/api/topicoLinks";
 import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
 import type { QuestaoResumo } from "@/api/topicoQuestoes";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
+import { HoraInput } from "@/components/HoraInput";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
@@ -43,6 +44,7 @@ interface Props {
 export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast }: Props) {
   const setStatus = useSetTopicoStatus();
   const setSeparador = useSetTopicoSeparador();
+  const setHoras = useAtualizarHorasTopico();
   const atualizar = useAtualizarTopico();
   const excluirTopico = useExcluirTopico();
   const criarLink = useCriarTopicoLink();
@@ -265,6 +267,12 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
               {topico.titulo}
             </span>
           )}
+          <HoraInput
+            value={topico.horas_alvo}
+            onCommit={(h) => setHoras.mutate({ id: topico.id, horas_alvo: h })}
+            ariaLabel={`Horas de ${topico.titulo}`}
+            className="!h-8 shrink-0"
+          />
         </div>
 
         {/* ações do assunto: no celular quebram para uma segunda linha */}

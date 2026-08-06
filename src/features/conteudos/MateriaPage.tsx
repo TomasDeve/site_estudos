@@ -311,11 +311,6 @@ export function MateriaPage() {
       {/* Recado de estudo da matéria: primeira coisa que se lê ao abrir */}
       <MateriaEstudo materia={materia} />
 
-      {/* Orçamento de horas: distribuir o tempo da matéria entre os assuntos */}
-      {!ehRedacao && (
-        <DistribuicaoHorasMateria vinculo={vinculo} topicos={meusTopicos} cor={concurso.cor} />
-      )}
-
       {/* Redação: notas dos treinos. Demais matérias: questões gerais.
           Some junto quando a matéria desliga o bloco nas configurações. */}
       {!materia.mostrar_questoes_geral ? null : ehRedacao ? (
@@ -408,6 +403,9 @@ export function MateriaPage() {
               ))}
             </div>
           </div>
+
+          {/* Barra de horas da matéria — orçamento junto dos assuntos */}
+          {!ehRedacao && <DistribuicaoHorasMateria vinculo={vinculo} topicos={meusTopicos} />}
 
           {meusTopicos.length === 0 ? (
             <p className="py-4 text-center text-sm text-mut">
