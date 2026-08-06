@@ -278,7 +278,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
         </div>
 
         {/* ações do assunto: no celular quebram para uma segunda linha */}
-        <div className="flex shrink-0 items-center gap-0.5 pl-15 sm:gap-1 sm:pl-0">
+        <div className="flex shrink-0 items-center gap-0.5 pl-15 sm:min-w-[340px] sm:gap-1 sm:pl-0">
           {/* renomear assunto */}
           {!editando && (
             <button
