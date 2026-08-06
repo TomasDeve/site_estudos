@@ -868,6 +868,7 @@ export type Database = {
           materia_id: string
           ordem: number
           horas_alvo: number
+          observacao: string
           separador_apos: boolean
           status: string
           titulo: string
@@ -879,6 +880,7 @@ export type Database = {
           materia_id: string
           ordem?: number
           horas_alvo?: number
+          observacao?: string
           separador_apos?: boolean
           status?: string
           titulo: string
@@ -890,6 +892,7 @@ export type Database = {
           materia_id?: string
           ordem?: number
           horas_alvo?: number
+          observacao?: string
           separador_apos?: boolean
           status?: string
           titulo?: string

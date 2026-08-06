@@ -18,6 +18,7 @@ import { corDesempenho } from "./desempenho";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { TextoReaderModal } from "./TextoReaderModal";
 import { MetasAssunto } from "./MetasAssunto";
+import { ObservacaoAssunto } from "./ObservacaoAssunto";
 import { placarAssunto } from "./metasTopico";
 
 const TIPO_LINK: Record<string, string> = {
@@ -81,6 +82,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
 
   const status = topico.status as TopicoStatus;
   const info = STATUS_INFO[status];
+  const temObs = (topico.observacao ?? "").trim().length > 0;
 
   // Desempenho acumulado do assunto (todos os registros).
   const resumo = useMemo(() => {
@@ -368,14 +370,18 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
           <button
             onClick={() => alternar("textos")}
             className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
-              textos.length > 0
+              textos.length > 0 || temObs
                 ? "text-gold hover:bg-gold/10"
                 : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
             } ${painel === "textos" ? "ring-1 ring-line" : ""}`}
-            title="Textos e resumos deste assunto"
+            title="Textos, resumos e observação deste assunto"
           >
             <BookOpen className="size-3.5" />
-            {textos.length > 0 && <span className="font-semibold">{textos.length}</span>}
+            {textos.length > 0 ? (
+              <span className="font-semibold">{textos.length}</span>
+            ) : (
+              temObs && <span className="size-1.5 rounded-full bg-gold" aria-hidden />
+            )}
           </button>
 
           {/* adicionar/gerenciar links */}
@@ -481,8 +487,9 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
 
       {/* Painel: textos e resumos do assunto. */}
       {painel === "textos" && (
-        <div className="mb-2 ml-15 space-y-2 rounded-lg border border-line/50 bg-navy-900/60 p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-mut">
+        <div className="mb-2 ml-15 space-y-3 rounded-lg border border-line/50 bg-navy-900/60 p-3">
+          <ObservacaoAssunto topicoId={topico.id} observacao={topico.observacao ?? ""} />
+          <p className="border-t border-line/30 pt-3 text-[11px] font-semibold uppercase tracking-wide text-mut">
             Textos e resumos
           </p>
           {textos.length === 0 ? (

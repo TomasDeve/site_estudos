@@ -138,6 +138,29 @@ export function useExcluirTopico() {
   });
 }
 
+/** Grava a observação/recado curto do assunto (ex.: "estudar só o básico"), otimista. */
+export function useSalvarObservacaoTopico() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, observacao }: { id: string; observacao: string }) => {
+      const { error } = await supabase.from("topicos").update({ observacao }).eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, observacao }) => {
+      await qc.cancelQueries({ queryKey: ["topicos"] });
+      const prev = qc.getQueryData<Topico[]>(["topicos"]);
+      qc.setQueryData<Topico[]>(["topicos"], (old) =>
+        old?.map((t) => (t.id === id ? { ...t, observacao } : t))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["topicos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
+  });
+}
+
 /** Grava as horas alocadas para um assunto, otimista. */
 export function useAtualizarHorasTopico() {
   const qc = useQueryClient();
