@@ -82,4 +82,27 @@ describe("parsearQuestoesJson", () => {
       /Questão 1.*gabarito/
     );
   });
+
+  it("usa 'ia' como categoria padrão quando nada é informado", () => {
+    const linhas = parsearQuestoesJson('[{"enunciado":"x","gabarito":"C"}]', TOPICO, 0);
+    expect(linhas[0].categoria).toBe("ia");
+  });
+
+  it("carimba a categoria do lote e aceita o override por questão (com sinônimos)", () => {
+    const linhas = parsearQuestoesJson(
+      JSON.stringify([
+        { enunciado: "a", gabarito: "C" },
+        { enunciado: "b", gabarito: "E", tipo: "Doutrina/Jurisprudência" },
+        { enunciado: "c", gabarito: "C", categoria: "baseada em questões" },
+      ]),
+      TOPICO,
+      0,
+      "doutrina_jurisprudencia"
+    );
+    expect(linhas.map((l) => l.categoria)).toEqual([
+      "doutrina_jurisprudencia",
+      "doutrina_jurisprudencia",
+      "baseada_questoes",
+    ]);
+  });
 });

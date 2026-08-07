@@ -15,7 +15,13 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { QuestaoDificuldade, QuestaoStatus, Topico, TopicoQuestao } from "@/types/db";
+import type {
+  QuestaoCategoria,
+  QuestaoDificuldade,
+  QuestaoStatus,
+  Topico,
+  TopicoQuestao,
+} from "@/types/db";
 import {
   useCriarQuestoesEmLote,
   useExcluirQuestao,
@@ -37,6 +43,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { parsearQuestoesJson } from "./questoesJson";
+import { CATEGORIAS, CATEGORIA_PADRAO } from "./categorias";
 import { ResumoRapido } from "./ResumoRapido";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
@@ -57,6 +64,9 @@ const ABAS: { chave: AbaCaderno; label: string }[] = [
   { chave: "dificil", label: "Difícil" },
   { chave: "arquivada", label: "Arquivadas" },
 ];
+
+// Filtro por origem da questão. "todas" é o "sem filtro" — junta as categorias.
+type FiltroCategoria = QuestaoCategoria | "todas";
 
 /** Em qual aba a questão aparece agora (as respondidas nesta sessão ainda não "somem"). */
 function abaDe(q: TopicoQuestao, respondidasAgora: ReadonlySet<string>): AbaCaderno {
@@ -167,6 +177,9 @@ function Caderno({ topico }: { topico: Topico }) {
   const { data: todosLogs } = useQuestaoLogsTodos();
 
   const [filtro, setFiltro] = useState<AbaCaderno>("responder");
+  // Categoria em foco (o "sub-caderno" da vez) e a categoria de destino ao importar.
+  const [categoria, setCategoria] = useState<FiltroCategoria>("todas");
+  const [catImport, setCatImport] = useState<QuestaoCategoria>(CATEGORIA_PADRAO);
   const [importando, setImportando] = useState(false);
   const [json, setJson] = useState("");
   const [aExcluir, setAExcluir] = useState<TopicoQuestao | null>(null);
@@ -196,39 +209,60 @@ function Caderno({ topico }: { topico: Topico }) {
 
   const todas = useMemo(() => questoes ?? [], [questoes]);
 
+  // Recorte por origem: cada categoria é um caderno à parte (placar, abas e
+  // numeração escopados). "todas" junta tudo. `escopo` alimenta todo o resto.
+  const escopo = useMemo(
+    () => (categoria === "todas" ? todas : todas.filter((q) => q.categoria === categoria)),
+    [todas, categoria]
+  );
+
+  // Quantas questões há em cada categoria — número mostrado nas pílulas de filtro.
+  const contagemCategoria = useMemo(() => {
+    const c = { doutrina_jurisprudencia: 0, baseada_questoes: 0, ia: 0 } as Record<
+      QuestaoCategoria,
+      number
+    >;
+    for (const q of todas) {
+      const k = q.categoria as QuestaoCategoria;
+      if (k in c) c[k]++;
+    }
+    return c;
+  }, [todas]);
+
   // Histórico deste assunto (questao_logs) para a janela das últimas 30 questões.
   const logsDoTopico = useMemo(
     () => (todosLogs ?? []).filter((l) => l.topico_id === topico.id),
     [todosLogs, topico.id]
   );
 
-  // Número da questão fixo na ordem do caderno, não muda ao trocar de aba.
+  // Número da questão fixo na ordem do caderno (da categoria em foco), não muda ao trocar de aba.
   const numeroDe = useMemo(
-    () => new Map(todas.map((q, i) => [q.id, i + 1])),
-    [todas]
+    () => new Map(escopo.map((q, i) => [q.id, i + 1])),
+    [escopo]
   );
 
   const contagem = useMemo(() => {
     const c: Record<AbaCaderno, number> = { responder: 0, resolvidas: 0, dificil: 0, arquivada: 0 };
-    for (const q of todas) c[abaDe(q, respondidasAgora)]++;
+    for (const q of escopo) c[abaDe(q, respondidasAgora)]++;
     return c;
-  }, [todas, respondidasAgora]);
+  }, [escopo, respondidasAgora]);
 
-  // Placar considera tudo que já foi respondido, em qualquer aba.
+  // Placar considera tudo que já foi respondido na categoria em foco, em qualquer aba.
   const placar = useMemo(() => {
-    const respondidas = todas.filter((q) => q.resposta !== null);
+    const respondidas = escopo.filter((q) => q.resposta !== null);
     const acertos = respondidas.filter((q) => q.resposta === q.gabarito).length;
     return {
       respondidas: respondidas.length,
       acertos,
       pct: respondidas.length ? Math.round((acertos / respondidas.length) * 100) : null,
     };
-  }, [todas]);
+  }, [escopo]);
 
-  const lista = todas.filter((q) => abaDe(q, respondidasAgora) === filtro);
+  const lista = escopo.filter((q) => abaDe(q, respondidasAgora) === filtro);
   const cor = placar.pct !== null ? corDesempenho(placar.pct) : null;
+  const catLabel = CATEGORIAS.find((c) => c.chave === categoria)?.label ?? "";
   // Modo bloquinhos: resolve de 5 em 5, com placar próprio do bloco.
-  const bloco = useBloquinhos(lista, filtro);
+  const bloco = useBloquinhos(lista, `${categoria}:${filtro}`);
 
   /** `resposta: null` é o "refazer": limpa o gabarito e devolve a questão ao início. */
   async function onResponder(q: TopicoQuestao, resposta: boolean | null) {
@@ -276,12 +310,15 @@ function Caderno({ topico }: { topico: Topico }) {
 
   async function onImportar() {
     try {
+      // A ordem segue a lista inteira do assunto (todas as categorias), para não colidir.
       const ordemInicial = todas.reduce((m, q) => Math.max(m, q.ordem), -1) + 1;
-      const linhas = parsearQuestoesJson(json, topico.id, ordemInicial);
+      const linhas = parsearQuestoesJson(json, topico.id, ordemInicial, catImport);
       const n = await criarEmLote.mutateAsync(linhas);
       toast.success(`${n} ${n === 1 ? "questão importada" : "questões importadas"} 🎯`);
       setJson("");
       setImportando(false);
+      // Leva o foco para a categoria recém-importada, senão as novas ficariam escondidas.
+      setCategoria(catImport);
       setFiltro("responder");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
@@ -318,6 +355,32 @@ function Caderno({ topico }: { topico: Topico }) {
             </div>
           )}
 
+          {/* Filtro por origem — pílulas, distintas das abas de status (sublinhado).
+              Cada categoria vira um caderno próprio; "Todas" junta tudo. */}
+          {todas.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-0.5 text-[11px] font-semibold uppercase tracking-wide text-mut">
+                Tipo
+              </span>
+              <PillCategoria
+                ativo={categoria === "todas"}
+                onClick={() => setCategoria("todas")}
+                label="Todas"
+                contagem={todas.length}
+              />
+              {CATEGORIAS.map((c) => (
+                <PillCategoria
+                  key={c.chave}
+                  ativo={categoria === c.chave}
+                  onClick={() => setCategoria(c.chave)}
+                  label={c.curto}
+                  title={c.label}
+                  contagem={contagemCategoria[c.chave]}
+                />
+              ))}
+            </div>
+          )}
+
           {/* Abas por destino da questão — rolam na horizontal em telas estreitas */}
           <div className="flex gap-1 overflow-x-auto border-b border-line/40 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {ABAS.map((a) => (
@@ -340,13 +403,15 @@ function Caderno({ topico }: { topico: Topico }) {
             <p className="py-8 text-center text-sm text-mut">
               {todas.length === 0
                 ? "Nenhuma questão ainda. Peça as questões à IA a partir do PDF ou do conteúdo deste assunto e importe o JSON abaixo."
-                : filtro === "responder"
-                  ? "Tudo respondido 🎉 As já resolvidas ficam na aba “Resolvidas”."
-                  : filtro === "resolvidas"
-                    ? "Nenhuma questão resolvida ainda."
-                    : filtro === "dificil"
-                      ? "Nenhuma questão marcada como difícil ainda."
-                      : "Nenhuma questão arquivada."}
+                : escopo.length === 0
+                  ? `Nenhuma questão em “${catLabel}” ainda. Peça questões desse tipo à IA e importe abaixo — elas entram nesta categoria.`
+                  : filtro === "responder"
+                    ? "Tudo respondido 🎉 As já resolvidas ficam na aba “Resolvidas”."
+                    : filtro === "resolvidas"
+                      ? "Nenhuma questão resolvida ainda."
+                      : filtro === "dificil"
+                        ? "Nenhuma questão marcada como difícil ainda."
+                        : "Nenhuma questão arquivada."}
             </p>
           ) : (
             <div className="space-y-3">
@@ -384,7 +449,11 @@ function Caderno({ topico }: { topico: Topico }) {
           {/* Entrada das questões geradas pela IA */}
           <div className="rounded-xl border border-line/50 bg-navy-900/60">
             <button
-              onClick={() => setImportando((v) => !v)}
+              onClick={() => {
+                // Ao abrir, sugere a categoria em foco como destino da leva.
+                if (!importando && categoria !== "todas") setCatImport(categoria);
+                setImportando((v) => !v);
+              }}
               className="flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2.5 text-left"
             >
               <span className="flex items-center gap-2 text-xs font-semibold text-dim">
@@ -403,8 +472,22 @@ function Caderno({ topico }: { topico: Topico }) {
                   <code className="text-dim">gabarito</code> (&quot;C&quot; ou &quot;E&quot;) e,
                   opcionalmente, <code className="text-dim">contexto</code>,{" "}
                   <code className="text-dim">comentario</code> e{" "}
-                  <code className="text-dim">fonte</code>.
+                  <code className="text-dim">fonte</code>. A categoria abaixo vale para toda a
+                  leva (cada questão pode sobrescrever com um campo{" "}
+                  <code className="text-dim">tipo</code>).
                 </p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-mut">Categoria destas questões:</span>
+                  {CATEGORIAS.map((c) => (
+                    <PillCategoria
+                      key={c.chave}
+                      ativo={catImport === c.chave}
+                      onClick={() => setCatImport(c.chave)}
+                      label={c.curto}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
                 <textarea
                   value={json}
                   onChange={(e) => setJson(e.target.value)}
@@ -677,6 +760,38 @@ function AcaoQuestao({
     >
       {icone}
       {children}
+    </button>
+  );
+}
+
+/** Pílula de filtro por categoria — usada no topo do caderno e no seletor de importação. */
+function PillCategoria({
+  ativo,
+  onClick,
+  label,
+  title,
+  contagem,
+}: {
+  ativo: boolean;
+  onClick: () => void;
+  label: string;
+  title?: string;
+  contagem?: number;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-pressed={ativo}
+      className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+        ativo
+          ? "border-gold/40 bg-gold/15 text-gold"
+          : "border-line/60 text-mut hover:border-line hover:bg-navy-700/60 hover:text-dim"
+      }`}
+    >
+      {label}
+      {contagem !== undefined && <span className="tabular-nums opacity-70">{contagem}</span>}
     </button>
   );
 }

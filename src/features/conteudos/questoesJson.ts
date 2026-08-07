@@ -1,4 +1,5 @@
-import type { TablesInsert } from "@/types/db";
+import type { QuestaoCategoria, TablesInsert } from "@/types/db";
+import { CATEGORIA_PADRAO, normalizarCategoria } from "./categorias";
 
 /** Uma questão como a IA entrega: gabarito aceita booleano ou "C"/"E". */
 export interface QuestaoJson {
@@ -7,6 +8,9 @@ export interface QuestaoJson {
   gabarito: boolean | string;
   comentario?: string | null;
   fonte?: string | null;
+  /** Origem da questão; aceita sinônimos. Ausente = a categoria escolhida na importação. */
+  categoria?: string | null;
+  tipo?: string | null;
 }
 
 const CERTO = new Set(["c", "certo", "true", "v", "verdadeiro"]);
@@ -35,7 +39,8 @@ function lerTexto(valor: unknown): string | null {
 export function parsearQuestoesJson(
   texto: string,
   topicoId: string,
-  ordemInicial: number
+  ordemInicial: number,
+  categoriaPadrao: QuestaoCategoria = CATEGORIA_PADRAO
 ): TablesInsert<"topico_questoes">[] {
   let bruto: unknown;
   try {
@@ -57,6 +62,7 @@ export function parsearQuestoesJson(
 
     return {
       topico_id: topicoId,
+      categoria: normalizarCategoria(q.categoria ?? q.tipo, categoriaPadrao),
       contexto: lerTexto(q.contexto),
       enunciado,
       gabarito: lerGabarito(q.gabarito, i + 1),
