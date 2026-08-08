@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
 import type {
-  QuestaoDificuldade,
   QuestaoStatus,
   TablesInsert,
   TopicoQuestao,
@@ -87,20 +86,18 @@ export function useSetQuestaoStatus() {
   });
 }
 
-/** Grava a dificuldade percebida da questão. `null` remove a marcação. */
-export function useSetQuestaoDificuldade() {
+/**
+ * Marca/desmarca a questão para ser reformulada futuramente pela IA. Marcar não
+ * muda nada visível pro aluno agora: entra numa fila que a IA reformula depois,
+ * gerando uma questão nova a partir do núcleo desta.
+ */
+export function useMarcarRefazer() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      id,
-      dificuldade,
-    }: {
-      id: string;
-      dificuldade: QuestaoDificuldade | null;
-    }) => {
+    mutationFn: async ({ id, refazer }: { id: string; refazer: boolean }) => {
       const { error } = await supabase
         .from("topico_questoes")
-        .update({ dificuldade })
+        .update({ refazer })
         .eq("id", id);
       if (error) throw error;
     },

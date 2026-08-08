@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner";
 import type {
   QuestaoCategoria,
-  QuestaoDificuldade,
   QuestaoStatus,
   Topico,
   TopicoQuestao,
@@ -25,8 +24,8 @@ import type {
 import {
   useCriarQuestoesEmLote,
   useExcluirQuestao,
+  useMarcarRefazer,
   useResponderQuestao,
-  useSetQuestaoDificuldade,
   useSetQuestaoStatus,
   useTopicoQuestoes,
 } from "@/api/topicoQuestoes";
@@ -51,17 +50,16 @@ import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./b
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
-import { BadgeDificuldade, SeletorDificuldade } from "./dificuldade";
+import { BotaoRefazer, OrigemReformulada } from "./refazer";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
 // na próxima visita já está guardado em "Resolvidas" — sem rolagem inútil.
-type AbaCaderno = "responder" | "resolvidas" | "dificil" | "arquivada";
+type AbaCaderno = "responder" | "resolvidas" | "arquivada";
 
 const ABAS: { chave: AbaCaderno; label: string }[] = [
   { chave: "responder", label: "Para responder" },
   { chave: "resolvidas", label: "Resolvidas" },
-  { chave: "dificil", label: "Difícil" },
   { chave: "arquivada", label: "Arquivadas" },
 ];
 
@@ -72,9 +70,8 @@ type FiltroCategoria = QuestaoCategoria | "todas";
 function abaDe(q: TopicoQuestao, respondidasAgora: ReadonlySet<string>): AbaCaderno {
   if (q.status === "arquivada") return "arquivada";
   // Respondida nesta sessão segue à mostra em "Para responder" — dá tempo de ler o
-  // comentário e marcar a dificuldade antes de a difícil migrar para a aba "Difícil".
+  // comentário e (se quiser) marcar para refazer antes de migrar para "Resolvidas".
   if (q.resposta === null || respondidasAgora.has(q.id)) return "responder";
-  if (q.dificuldade === "dificil") return "dificil";
   return "resolvidas";
 }
 
@@ -161,16 +158,16 @@ export function QuestoesPage() {
 /**
  * Caderno de questões geradas por IA a partir do material do assunto. O item é
  * no estilo da banca (certo/errado); resolvido, abre o gabarito comentado, o
- * seletor de dificuldade (fácil/médio/difícil) e as opções: refazer, arquivar
- * ou apagar. As marcadas como difícil se reúnem na aba "Difícil". A primeira
- * resposta de cada questão também entra no desempenho do assunto.
+ * botão "Refazer questão futuramente" (marca para a IA reformular depois) e as
+ * opções: responder de novo, arquivar ou apagar. A primeira resposta de cada
+ * questão também entra no desempenho do assunto.
  */
 function Caderno({ topico }: { topico: Topico }) {
   const { data: questoes, isLoading } = useTopicoQuestoes(topico.id);
   const { data: materias } = useMaterias();
   const responder = useResponderQuestao();
   const setStatus = useSetQuestaoStatus();
-  const setDificuldade = useSetQuestaoDificuldade();
+  const marcarRefazer = useMarcarRefazer();
   const excluir = useExcluirQuestao();
   const criarEmLote = useCriarQuestoesEmLote();
   const clique = useRegistrarClique();
@@ -208,6 +205,8 @@ function Caderno({ topico }: { topico: Topico }) {
   const materiaNome = (materias ?? []).find((m) => m.id === topico.materia_id)?.nome;
 
   const todas = useMemo(() => questoes ?? [], [questoes]);
+  // Índice por id — acha a questão original de uma reformulada (revelado só após responder).
+  const porId = useMemo(() => new Map(todas.map((x) => [x.id, x])), [todas]);
 
   // Recorte por origem: cada categoria é um caderno à parte (placar, abas e
   // numeração escopados). "todas" junta tudo. `escopo` alimenta todo o resto.
@@ -242,7 +241,7 @@ function Caderno({ topico }: { topico: Topico }) {
   );
 
   const contagem = useMemo(() => {
-    const c: Record<AbaCaderno, number> = { responder: 0, resolvidas: 0, dificil: 0, arquivada: 0 };
+    const c: Record<AbaCaderno, number> = { responder: 0, resolvidas: 0, arquivada: 0 };
     for (const q of escopo) c[abaDe(q, respondidasAgora)]++;
     return c;
   }, [escopo, respondidasAgora]);
@@ -299,9 +298,9 @@ function Caderno({ topico }: { topico: Topico }) {
     );
   }
 
-  function mudarDificuldade(q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) {
-    setDificuldade.mutate(
-      { id: q.id, dificuldade },
+  function mudarRefazer(q: TopicoQuestao, marcar: boolean) {
+    marcarRefazer.mutate(
+      { id: q.id, refazer: marcar },
       {
         onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
       }
@@ -409,9 +408,7 @@ function Caderno({ topico }: { topico: Topico }) {
                     ? "Tudo respondido 🎉 As já resolvidas ficam na aba “Resolvidas”."
                     : filtro === "resolvidas"
                       ? "Nenhuma questão resolvida ainda."
-                      : filtro === "dificil"
-                        ? "Nenhuma questão marcada como difícil ainda."
-                        : "Nenhuma questão arquivada."}
+                      : "Nenhuma questão arquivada."}
             </p>
           ) : (
             <div className="space-y-3">
@@ -424,7 +421,8 @@ function Caderno({ topico }: { topico: Topico }) {
                     numero={numeroDe.get(q.id) ?? 0}
                     onResponder={onResponder}
                     onStatus={mudarStatus}
-                    onDificuldade={mudarDificuldade}
+                    onRefazer={mudarRefazer}
+                    origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
                     onExcluir={() => setAExcluir(q)}
                     onDuvida={() => setDuvida(q)}
                     onConferirLei={temLei ? () => setNaLei(q) : undefined}
@@ -567,7 +565,9 @@ interface CardProps {
   numero: number;
   onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
-  onDificuldade: (q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) => void;
+  onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
+  /** A questão original, quando esta é uma reformulação (revelada só após responder). */
+  origem?: TopicoQuestao;
   onExcluir: () => void;
   onDuvida: () => void;
   /** Ausente quando o assunto não tem nenhum texto de lei salvo. */
@@ -584,7 +584,8 @@ function QuestaoCard({
   numero,
   onResponder,
   onStatus,
-  onDificuldade,
+  onRefazer,
+  origem,
   onExcluir,
   onDuvida,
   onConferirLei,
@@ -603,8 +604,6 @@ function QuestaoCard({
         <span className="shrink-0 whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-mut">
           Questão {numero}
         </span>
-        {/* A dificuldade só aparece depois de responder — antes, não dá pista. */}
-        {resolvida && <BadgeDificuldade dificuldade={q.dificuldade} />}
         {status === "arquivada" && (
           <span className="shrink-0 whitespace-nowrap rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mut">
             Arquivada
@@ -672,11 +671,10 @@ function QuestaoCard({
             </div>
           )}
 
+          {origem && <OrigemReformulada original={origem} />}
+
           <div className="border-t border-line/30 pt-2.5">
-            <SeletorDificuldade
-              valor={q.dificuldade}
-              onSelecionar={(nivel) => onDificuldade(q, nivel)}
-            />
+            <BotaoRefazer marcada={q.refazer} onToggle={(marcar) => onRefazer(q, marcar)} />
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -715,7 +713,7 @@ function QuestaoCard({
               itens={[
                 {
                   icone: <RotateCcw className="size-3.5" />,
-                  label: "Refazer",
+                  label: "Responder de novo",
                   onClick: () => onResponder(q, null),
                 },
                 status === "arquivada"

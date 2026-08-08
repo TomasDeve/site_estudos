@@ -105,11 +105,41 @@ export function useReordenarTopicos() {
 export function useCriarTopico() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { materia_id: string; titulo: string; ordem: number }) => {
+    mutationFn: async (input: {
+      materia_id: string;
+      titulo: string;
+      ordem: number;
+      // No Concurso Indefinido, o assunto novo já nasce no núcleo comum (senão sumiria da tela).
+      nucleo_comum?: boolean;
+    }) => {
       const { error } = await supabase.from("topicos").insert(input);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
+  });
+}
+
+/** Marca/desmarca o assunto como núcleo comum (o que aparece no Concurso Indefinido). */
+export function useSetTopicoNucleo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, nucleo_comum }: { id: string; nucleo_comum: boolean }) => {
+      const { error } = await supabase.from("topicos").update({ nucleo_comum }).eq("id", id);
+      if (error) throw error;
+    },
+    // update otimista: a marca acende/apaga na hora
+    onMutate: async ({ id, nucleo_comum }) => {
+      await qc.cancelQueries({ queryKey: ["topicos"] });
+      const prev = qc.getQueryData<Topico[]>(["topicos"]);
+      qc.setQueryData<Topico[]>(["topicos"], (old) =>
+        old?.map((t) => (t.id === id ? { ...t, nucleo_comum } : t))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["topicos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
   });
 }
 

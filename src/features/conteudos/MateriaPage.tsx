@@ -38,7 +38,7 @@ import { useQuestoesResumo, type QuestaoResumo } from "@/api/topicoQuestoes";
 import { metasPorTopico, useAplicarPlanoPadrao, useTopicoMetas } from "@/api/topicoMetas";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { useRedacoes } from "@/api/redacoes";
-import { materiasComuns } from "@/lib/progresso";
+import { materiasComuns, topicosDoConcurso } from "@/lib/progresso";
 import type { QuestaoLog, TopicoLink, TopicoTexto } from "@/types/db";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -114,10 +114,10 @@ export function MateriaPage() {
 
   const meusTopicos = useMemo(
     () =>
-      (topicos ?? [])
+      topicosDoConcurso(topicos ?? [], concurso)
         .filter((t) => t.materia_id === materiaId)
         .sort((a, b) => a.ordem - b.ordem || a.created_at.localeCompare(b.created_at)),
-    [topicos, materiaId]
+    [topicos, materiaId, concurso]
   );
   const linksPorTopico = useMemo(() => {
     const mapa = new Map<string, TopicoLink[]>();
@@ -230,7 +230,12 @@ export function MateriaPage() {
     if (!titulo) return;
     try {
       const maiorOrdem = meusTopicos.reduce((m, t) => Math.max(m, t.ordem), -1);
-      await criarTopico.mutateAsync({ materia_id: materia!.id, titulo, ordem: maiorOrdem + 1 });
+      await criarTopico.mutateAsync({
+        materia_id: materia!.id,
+        titulo,
+        ordem: maiorOrdem + 1,
+        nucleo_comum: concurso.somente_nucleo,
+      });
       setNovoTopico("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
@@ -440,6 +445,7 @@ export function MateriaPage() {
                         questoes={questoesPorTopico.get(t.id) ?? []}
                         metas={metasDoTopico.get(t.id) ?? []}
                         isLast={i === meusTopicos.length - 1}
+                        mostrarNucleo
                       />
                     ))}
                   </ul>

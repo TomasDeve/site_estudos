@@ -53,6 +53,22 @@ body {
   background: var(--color-line);
 }
 
+/* Toque no celular: troca o flash cinza padrão por um brilho dourado sutil e
+   remove o atraso/zoom de duplo-toque nos controles — deixa o app com cara de app. */
+* {
+  -webkit-tap-highlight-color: rgb(224 168 62 / 0.12);
+}
+a,
+button,
+label,
+summary,
+input,
+select,
+textarea,
+[role="button"] {
+  touch-action: manipulation;
+}
+
 /* Barra de progresso com brilho animado */
 @keyframes shimmer {
   0% { background-position: -200% 0; }

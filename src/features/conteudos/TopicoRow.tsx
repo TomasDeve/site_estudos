@@ -1,10 +1,10 @@
 import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks } from "lucide-react";
+import { GripVertical, Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks, Compass } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoMeta, TopicoTexto, TopicoStatus } from "@/types/db";
-import { CICLO_STATUS, useAtualizarHorasTopico, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
+import { CICLO_STATUS, useAtualizarHorasTopico, useAtualizarTopico, useExcluirTopico, useSetTopicoNucleo, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
 import { useAnexarPdf, useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink, removerArquivosPdf } from "@/api/topicoLinks";
 import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
 import type { QuestaoResumo } from "@/api/topicoQuestoes";
@@ -40,11 +40,14 @@ interface Props {
   metas: TopicoMeta[];
   /** Último tópico da lista: não mostra linha divisória "solta" no fim. */
   isLast?: boolean;
+  /** Mostra o botão de marcar/desmarcar o assunto como núcleo comum (Concurso Indefinido). */
+  mostrarNucleo?: boolean;
 }
 
-export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast }: Props) {
+export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast, mostrarNucleo }: Props) {
   const setStatus = useSetTopicoStatus();
   const setSeparador = useSetTopicoSeparador();
+  const setNucleo = useSetTopicoNucleo();
   const setHoras = useAtualizarHorasTopico();
   const atualizar = useAtualizarTopico();
   const excluirTopico = useExcluirTopico();
@@ -277,8 +280,9 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
           />
         </div>
 
-        {/* ações do assunto: no celular quebram para uma segunda linha */}
-        <div className="flex shrink-0 items-center gap-0.5 pl-15 sm:min-w-[340px] sm:gap-1 sm:pl-0">
+        {/* ações do assunto: no celular quebram em linhas (sem estourar pro lado);
+            no desktop ficam numa faixa só à direita */}
+        <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 pl-8 sm:flex-nowrap sm:shrink-0 sm:min-w-[340px] sm:gap-1 sm:pl-0">
           {/* renomear assunto */}
           {!editando && (
             <button
@@ -397,6 +401,30 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
             <Link2 className="size-3.5" />
             {links.length > 0 && <span className="font-semibold">{links.length}</span>}
           </button>
+
+          {/* núcleo comum: se o assunto entra no Concurso Indefinido (cai nos dois editais) */}
+          {mostrarNucleo && (
+            <button
+              onClick={() =>
+                setNucleo.mutate({ id: topico.id, nucleo_comum: !topico.nucleo_comum })
+              }
+              className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors ${
+                topico.nucleo_comum
+                  ? "text-gold hover:bg-gold/10"
+                  : "text-mut opacity-0 hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
+              }`}
+              title={
+                topico.nucleo_comum
+                  ? "No núcleo comum — aparece no Concurso Indefinido (clique para tirar)"
+                  : "Fora do núcleo comum — clique para incluir no Concurso Indefinido"
+              }
+              aria-label={
+                topico.nucleo_comum ? "Remover do núcleo comum" : "Adicionar ao núcleo comum"
+              }
+            >
+              <Compass className="size-3.5" />
+            </button>
+          )}
 
           {/* linha divisória após o assunto: agrupa assuntos estudados juntos */}
           <button

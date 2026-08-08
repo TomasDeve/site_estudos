@@ -7,7 +7,7 @@ import { useTopicos } from "@/api/topicos";
 import { useQuestaoLogsJanela } from "@/api/questaoLogs";
 import { useSessoesJanela } from "@/api/sessoes";
 import { calcStreak, useDiasConcluidos } from "@/api/diasConcluidos";
-import { progressoConcurso } from "@/lib/progresso";
+import { progressoConcurso, topicosDoConcurso } from "@/lib/progresso";
 import { fmtMinutos, hojeISO } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -33,8 +33,8 @@ export function DashboardPage() {
   const { data: dias } = useDiasConcluidos();
 
   const progresso = useMemo(
-    () => progressoConcurso(concurso.id, vinculos ?? [], topicos ?? []),
-    [concurso.id, vinculos, topicos]
+    () => progressoConcurso(concurso.id, vinculos ?? [], topicosDoConcurso(topicos ?? [], concurso)),
+    [concurso, vinculos, topicos]
   );
 
   const questoesHoje = (logsHoje ?? []).reduce((s, l) => s + l.total, 0);

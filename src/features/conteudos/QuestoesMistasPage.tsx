@@ -11,10 +11,10 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { Materia, QuestaoDificuldade, TopicoQuestao } from "@/types/db";
+import type { Materia, TopicoQuestao } from "@/types/db";
 import {
+  useMarcarRefazer,
   useResponderQuestao,
-  useSetQuestaoDificuldade,
   useTodasQuestoes,
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
@@ -34,7 +34,7 @@ import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./b
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
-import { BadgeDificuldade, SeletorDificuldade } from "./dificuldade";
+import { BotaoRefazer, OrigemReformulada } from "./refazer";
 
 const ABAS = [
   { chave: "responder", label: "Para responder" },
@@ -83,7 +83,7 @@ export function QuestoesMistasPage() {
   const { data: materias, isLoading: carregandoMaterias } = useMaterias();
 
   const responder = useResponderQuestao();
-  const setDificuldade = useSetQuestaoDificuldade();
+  const marcarRefazer = useMarcarRefazer();
   const clique = useRegistrarClique();
   const { data: todosLogs } = useQuestaoLogsTodos();
 
@@ -133,6 +133,8 @@ export function QuestoesMistasPage() {
 
   const topicoPorId = useMemo(() => new Map((topicos ?? []).map((t) => [t.id, t])), [topicos]);
   const materiaPorId = useMemo(() => new Map((materias ?? []).map((m) => [m.id, m])), [materias]);
+  // Índice por id — acha a questão original de uma reformulada (revelado só após responder).
+  const porId = useMemo(() => new Map((questoes ?? []).map((x) => [x.id, x])), [questoes]);
 
   // Ordena por id antes de embaralhar: a mesma semente reproduz a mesma ordem
   // mesmo após os refetches disparados pelas respostas.
@@ -218,9 +220,9 @@ export function QuestoesMistasPage() {
     }
   }
 
-  function mudarDificuldade(q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) {
-    setDificuldade.mutate(
-      { id: q.id, dificuldade },
+  function mudarRefazer(q: TopicoQuestao, marcar: boolean) {
+    marcarRefazer.mutate(
+      { id: q.id, refazer: marcar },
       {
         onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
       }
@@ -308,7 +310,7 @@ export function QuestoesMistasPage() {
             {lista.length === 0 ? (
               <p className="py-8 text-center text-sm text-mut">
                 {aba === "responder"
-                  ? "Tudo resolvido 🎉 Use “Refazer” nas resolvidas para revisar."
+                  ? "Tudo resolvido 🎉 Use “Responder de novo” nas resolvidas para revisar."
                   : "Nenhuma questão resolvida ainda."}
               </p>
             ) : (
@@ -322,7 +324,8 @@ export function QuestoesMistasPage() {
                       materia={materiaPorId.get(topicoPorId.get(q.topico_id)?.materia_id ?? "")}
                       mostrarMateria={!materiaId}
                       onResponder={onResponder}
-                      onDificuldade={mudarDificuldade}
+                      onRefazer={mudarRefazer}
+                      origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
                       onDuvida={() => setDuvida(q)}
                       onConferirLei={comLei?.has(q.topico_id) ? () => setNaLei(q) : undefined}
                       onAdicionarResumo={() => {
@@ -392,7 +395,9 @@ interface CardProps {
   /** No modo por matéria a etiqueta some (é sempre a mesma, já vai no cabeçalho). */
   mostrarMateria: boolean;
   onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
-  onDificuldade: (q: TopicoQuestao, dificuldade: QuestaoDificuldade | null) => void;
+  onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
+  /** A questão original, quando esta é uma reformulação (revelada só após responder). */
+  origem?: TopicoQuestao;
   onDuvida: () => void;
   /** Ausente quando o assunto da questão não tem texto de lei salvo. */
   onConferirLei?: () => void;
@@ -409,7 +414,8 @@ function QuestaoMistaCard({
   materia,
   mostrarMateria,
   onResponder,
-  onDificuldade,
+  onRefazer,
+  origem,
   onDuvida,
   onConferirLei,
   onAdicionarResumo,
@@ -422,16 +428,12 @@ function QuestaoMistaCard({
 
   return (
     <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
-      {/* A dificuldade só aparece depois de responder — antes, não dá pista. */}
-      {(mostrarMateria || (resolvida && q.dificuldade)) && (
+      {mostrarMateria && (
         <div className="mb-2 flex items-center gap-2">
-          {mostrarMateria && (
-            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-navy-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-dim">
-              {materia && <span className="text-xs leading-none">{materia.icone}</span>}
-              <span className="truncate">{materia?.nome ?? "Matéria"}</span>
-            </span>
-          )}
-          {resolvida && <BadgeDificuldade dificuldade={q.dificuldade} />}
+          <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-navy-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-dim">
+            {materia && <span className="text-xs leading-none">{materia.icone}</span>}
+            <span className="truncate">{materia?.nome ?? "Matéria"}</span>
+          </span>
         </div>
       )}
 
@@ -482,11 +484,10 @@ function QuestaoMistaCard({
             </div>
           )}
 
+          {origem && <OrigemReformulada original={origem} />}
+
           <div className="border-t border-line/30 pt-2.5">
-            <SeletorDificuldade
-              valor={q.dificuldade}
-              onSelecionar={(nivel) => onDificuldade(q, nivel)}
-            />
+            <BotaoRefazer marcada={q.refazer} onToggle={(marcar) => onRefazer(q, marcar)} />
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -515,7 +516,7 @@ function QuestaoMistaCard({
               itens={[
                 {
                   icone: <RotateCcw className="size-3.5" />,
-                  label: "Refazer",
+                  label: "Responder de novo",
                   onClick: () => onResponder(q, null),
                 },
               ]}

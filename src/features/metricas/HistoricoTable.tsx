@@ -57,7 +57,8 @@ export function HistoricoTable() {
         {isLoading ? null : (data?.rows.length ?? 0) === 0 ? (
           <EmptyState icon="🗒️" title="Nenhum registro" message="Use o registro rápido ou importe do Qconcursos." />
         ) : (
-          <table className="w-full text-sm">
+          <div className="-mx-2 overflow-x-auto sm:mx-0">
+          <table className="w-full min-w-[22rem] text-sm">
             <thead>
               <tr className="text-left text-[11px] uppercase tracking-wider text-mut">
                 <th className="px-2 py-2 font-semibold">Data</th>
@@ -96,7 +97,7 @@ export function HistoricoTable() {
                     <td className="px-2 py-2 text-right">
                       <button
                         onClick={() => excluir.mutate(l.id)}
-                        className="cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:text-red group-hover:opacity-100"
+                        className="cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:text-red group-hover:opacity-100 max-md:opacity-100"
                         aria-label="Excluir registro"
                       >
                         <Trash2 className="size-3.5" />
@@ -107,6 +108,7 @@ export function HistoricoTable() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </CardBody>
     </Card>

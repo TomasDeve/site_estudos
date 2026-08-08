@@ -19,6 +19,7 @@ const MetasPage = lazy(() => import("@/features/metas/MetasPage").then((m) => ({
 const MetricasPage = lazy(() => import("@/features/metricas/MetricasPage").then((m) => ({ default: m.MetricasPage })));
 const ImportarPage = lazy(() => import("@/features/importar/ImportarPage").then((m) => ({ default: m.ImportarPage })));
 const ApoioPage = lazy(() => import("@/features/apoio/ApoioPage").then((m) => ({ default: m.ApoioPage })));
+const BancoQuestoesPage = lazy(() => import("@/features/banco/BancoQuestoesPage").then((m) => ({ default: m.BancoQuestoesPage })));
 
 function pagina(node: ReactNode) {
   return <Suspense fallback={<FullScreenSpinner />}>{node}</Suspense>;
@@ -41,6 +42,8 @@ export const router = createBrowserRouter([
       { path: "questoes/materia/:materiaId", element: pagina(<QuestoesMistasPage />) },
       // caderno de questões por IA de um assunto (abre em aba própria, sem sidebar)
       { path: "questoes/:topicoId", element: pagina(<QuestoesPage />) },
+      // banco de questões reais: capturar do QConcursos, tratar e mapear ao edital
+      { path: "banco", element: pagina(<BancoQuestoesPage />) },
       // tudo abaixo vive dentro do concurso ativo
       {
         path: "concurso/:concursoId",

@@ -23,7 +23,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { setConcursoAtual } from "@/lib/currentConcurso";
 import { diasAte, fmtData } from "@/lib/dates";
-import { progressoMateria } from "@/lib/progresso";
+import { progressoMateria, topicosDoConcurso } from "@/lib/progresso";
 import { ProgressBar } from "@/components/ProgressBar";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
@@ -65,16 +65,18 @@ export function ConcursoLayout() {
 
   // Matérias do concurso ativo, na ordem do edital, com progresso para o submenu.
   const materiasDoConcurso = useMemo(() => {
+    // No Concurso Indefinido, o submenu conta só os assuntos do núcleo comum.
+    const tops = concurso ? topicosDoConcurso(topicos ?? [], concurso) : [];
     return (vinculos ?? [])
       .filter((v) => v.concurso_id === concurso?.id)
       .sort((a, b) => a.ordem - b.ordem)
       .map((v) => {
         const materia = (materias ?? []).find((m) => m.id === v.materia_id);
         if (!materia) return null;
-        return { vinculoId: v.id, materia, progresso: progressoMateria(materia.id, topicos ?? []) };
+        return { vinculoId: v.id, materia, progresso: progressoMateria(materia.id, tops) };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
-  }, [vinculos, materias, topicos, concurso?.id]);
+  }, [vinculos, materias, topicos, concurso]);
 
   useEffect(() => {
     if (concursoId) setConcursoAtual(concursoId);
@@ -357,7 +359,7 @@ export function ConcursoLayout() {
       </aside>
 
       {/* ===== Topo mobile ===== */}
-      <header className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-line/50 bg-navy-900/95 px-4 py-2.5 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-line/50 bg-navy-900/95 px-4 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] backdrop-blur md:hidden">
         <Link to="/concursos" className="flex min-w-0 items-center gap-2">
           <span
             className="flex size-8 shrink-0 items-center justify-center rounded-lg text-base"
@@ -388,14 +390,14 @@ export function ConcursoLayout() {
       </header>
 
       {/* ===== Conteúdo ===== */}
-      <main className="min-w-0 flex-1 pb-20 md:ml-60 md:pb-8">
+      <main className="min-w-0 flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:ml-60 md:pb-8">
         <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 md:py-8">
           <Outlet context={{ concurso } satisfies Ctx} />
         </div>
       </main>
 
       {/* ===== Tab bar mobile ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-line/50 bg-navy-900/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-line/50 bg-navy-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {navLink(true)}
       </nav>
     </div>

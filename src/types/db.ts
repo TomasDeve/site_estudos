@@ -199,6 +199,7 @@ export type Database = {
           ordem: number
           orgao: string | null
           slug: string
+          somente_nucleo: boolean
           status: string
           user_id: string
         }
@@ -219,6 +220,7 @@ export type Database = {
           ordem?: number
           orgao?: string | null
           slug: string
+          somente_nucleo?: boolean
           status?: string
           user_id?: string
         }
@@ -239,6 +241,7 @@ export type Database = {
           ordem?: number
           orgao?: string | null
           slug?: string
+          somente_nucleo?: boolean
           status?: string
           user_id?: string
         }
@@ -533,6 +536,98 @@ export type Database = {
           },
         ]
       }
+      questoes_importadas: {
+        Row: {
+          alternativas: Json
+          ano: number | null
+          assunto: string | null
+          banca: string | null
+          cargo: string | null
+          comentario: string
+          contexto: string | null
+          created_at: string
+          dificuldade: string | null
+          disciplina: string | null
+          enunciado: string
+          fonte_id: string | null
+          fonte_url: string | null
+          gabarito_bool: boolean | null
+          gabarito_letra: string | null
+          id: string
+          nivel: string | null
+          observacao: string
+          orgao: string | null
+          prova: string | null
+          status: string
+          tags: Json
+          tipo: string
+          topico_id: string | null
+          user_id: string
+        }
+        Insert: {
+          alternativas?: Json
+          ano?: number | null
+          assunto?: string | null
+          banca?: string | null
+          cargo?: string | null
+          comentario?: string
+          contexto?: string | null
+          created_at?: string
+          dificuldade?: string | null
+          disciplina?: string | null
+          enunciado: string
+          fonte_id?: string | null
+          fonte_url?: string | null
+          gabarito_bool?: boolean | null
+          gabarito_letra?: string | null
+          id?: string
+          nivel?: string | null
+          observacao?: string
+          orgao?: string | null
+          prova?: string | null
+          status?: string
+          tags?: Json
+          tipo?: string
+          topico_id?: string | null
+          user_id?: string
+        }
+        Update: {
+          alternativas?: Json
+          ano?: number | null
+          assunto?: string | null
+          banca?: string | null
+          cargo?: string | null
+          comentario?: string
+          contexto?: string | null
+          created_at?: string
+          dificuldade?: string | null
+          disciplina?: string | null
+          enunciado?: string
+          fonte_id?: string | null
+          fonte_url?: string | null
+          gabarito_bool?: boolean | null
+          gabarito_letra?: string | null
+          id?: string
+          nivel?: string | null
+          observacao?: string
+          orgao?: string | null
+          prova?: string | null
+          status?: string
+          tags?: Json
+          tipo?: string
+          topico_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questoes_importadas_topico_id_fkey"
+            columns: ["topico_id"]
+            isOneToOne: false
+            referencedRelation: "topicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       redacoes: {
         Row: {
           concurso_id: string
@@ -757,6 +852,8 @@ export type Database = {
           gabarito: boolean
           id: string
           ordem: number
+          refazer: boolean
+          reformulada_de: string | null
           respondida_em: string | null
           resposta: boolean | null
           status: string
@@ -774,6 +871,8 @@ export type Database = {
           gabarito: boolean
           id?: string
           ordem?: number
+          refazer?: boolean
+          reformulada_de?: string | null
           respondida_em?: string | null
           resposta?: boolean | null
           status?: string
@@ -791,6 +890,8 @@ export type Database = {
           gabarito?: boolean
           id?: string
           ordem?: number
+          refazer?: boolean
+          reformulada_de?: string | null
           respondida_em?: string | null
           resposta?: boolean | null
           status?: string
@@ -869,6 +970,7 @@ export type Database = {
           created_at: string
           id: string
           materia_id: string
+          nucleo_comum: boolean
           ordem: number
           horas_alvo: number
           observacao: string
@@ -881,6 +983,7 @@ export type Database = {
           created_at?: string
           id?: string
           materia_id: string
+          nucleo_comum?: boolean
           ordem?: number
           horas_alvo?: number
           observacao?: string
@@ -893,6 +996,7 @@ export type Database = {
           created_at?: string
           id?: string
           materia_id?: string
+          nucleo_comum?: boolean
           ordem?: number
           horas_alvo?: number
           observacao?: string
@@ -1083,10 +1187,21 @@ export type Evento = Tables<"eventos">
 export type Nota = Tables<"notas">
 export type Ferramenta = Tables<"ferramentas">
 export type Redacao = Tables<"redacoes">
+export type QuestaoImportada = Tables<"questoes_importadas">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "arquivada"
 export type QuestaoDificuldade = "facil" | "medio_facil" | "medio_dificil" | "dificil"
-export type QuestaoCategoria = "doutrina_jurisprudencia" | "baseada_questoes" | "ia"
+export type QuestaoCategoria = "doutrina_jurisprudencia" | "baseada_questoes" | "ia" | "real"
 export type TopicoMetaTipo = "manual" | "volume" | "acerto" | "frio"
 export type MateriaTipo = "normal" | "redacao"
+
+// Banco de questões importadas (curadoria das questões reais coladas do QConcursos)
+export type QuestaoImportadaStatus = "nova" | "aprovada" | "descartada" | "usada"
+export type QuestaoTipo = "multipla" | "ce"
+export type NivelEscolaridade = "fundamental" | "medio" | "superior"
+/** Alternativa de múltipla escolha guardada em `questoes_importadas.alternativas` (jsonb). */
+export interface AlternativaQC {
+  letra: string
+  texto: string
+}

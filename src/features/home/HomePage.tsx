@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { ArrowLeft, LogOut, Plus } from "lucide-react";
+import { ArrowLeft, Library, LogOut, Plus } from "lucide-react";
 import type { Concurso } from "@/types/db";
 import { useConcursos } from "@/api/concursos";
 import { useConcursoMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
-import { progressoConcurso } from "@/lib/progresso";
+import { progressoConcurso, topicosDoConcurso } from "@/lib/progresso";
 import { getConcursoAtual } from "@/lib/currentConcurso";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/PageHeader";
@@ -27,7 +27,10 @@ export function HomePage() {
   const pcts = useMemo(() => {
     const mapa = new Map<string, number>();
     for (const c of concursos ?? []) {
-      mapa.set(c.id, progressoConcurso(c.id, vinculos ?? [], topicos ?? []).pct);
+      mapa.set(
+        c.id,
+        progressoConcurso(c.id, vinculos ?? [], topicosDoConcurso(topicos ?? [], c)).pct
+      );
     }
     return mapa;
   }, [concursos, vinculos, topicos]);
@@ -81,14 +84,21 @@ export function HomePage() {
           title="Meus concursos"
           subtitle="Escolha um concurso para mergulhar no estudo dele"
           action={
-            <Button
-              onClick={() => {
-                setEditando(null);
-                setModalAberto(true);
-              }}
-            >
-              <Plus className="size-4" /> Novo concurso
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/banco">
+                <Button variant="secondary">
+                  <Library className="size-4" /> Banco de questões
+                </Button>
+              </Link>
+              <Button
+                onClick={() => {
+                  setEditando(null);
+                  setModalAberto(true);
+                }}
+              >
+                <Plus className="size-4" /> Novo concurso
+              </Button>
+            </div>
           }
         />
 

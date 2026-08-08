@@ -4,7 +4,12 @@ import { ChevronRight, Plus } from "lucide-react";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
-import { materiasComuns, progressoConcurso, progressoMateria } from "@/lib/progresso";
+import {
+  materiasComuns,
+  progressoConcurso,
+  progressoMateria,
+  topicosDoConcurso,
+} from "@/lib/progresso";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/Button";
@@ -35,9 +40,11 @@ export function ConteudosPage() {
     [vinculos, concurso.id]
   );
   const comuns = useMemo(() => materiasComuns(vinculos ?? []), [vinculos]);
+  // No Concurso Indefinido (somente_nucleo), conta/mostra só os assuntos do núcleo comum.
+  const tops = useMemo(() => topicosDoConcurso(topicos ?? [], concurso), [topicos, concurso]);
   const progresso = useMemo(
-    () => progressoConcurso(concurso.id, vinculos ?? [], topicos ?? []),
-    [concurso.id, vinculos, topicos]
+    () => progressoConcurso(concurso.id, vinculos ?? [], tops),
+    [concurso.id, vinculos, tops]
   );
 
   if (l1 || l2 || l3) return <FullScreenSpinner />;
@@ -118,12 +125,12 @@ export function ConteudosPage() {
                 .map((v) => {
                   const materia = (materias ?? []).find((m) => m.id === v.materia_id);
                   if (!materia) return null;
-                  const p = progressoMateria(materia.id, topicos ?? []);
+                  const p = progressoMateria(materia.id, tops);
                   return (
                     <Link
                       key={v.id}
                       to={`/concurso/${concurso.id}/conteudos/${materia.id}`}
-                      className="group flex items-center gap-3.5 rounded-card border border-line/60 bg-navy-800/80 px-4 py-3.5 transition-colors hover:border-line hover:bg-navy-700/50"
+                      className="group flex items-center gap-3.5 rounded-card border border-line/60 bg-navy-800/80 px-4 py-3.5 transition-colors hover:border-line hover:bg-navy-700/50 active:border-line active:bg-navy-700/70"
                     >
                       <span
                         className="flex size-11 shrink-0 items-center justify-center rounded-xl text-2xl"

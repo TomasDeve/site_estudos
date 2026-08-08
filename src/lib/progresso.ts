@@ -72,3 +72,16 @@ export function materiasComuns(vinculos: ConcursoMateria[]): Set<string> {
 export function nomeMateria(materiaId: string, materias: Materia[]): string {
   return materias.find((m) => m.id === materiaId)?.nome ?? "—";
 }
+
+/**
+ * Tópicos visíveis dentro de um concurso. Num concurso em modo "núcleo comum"
+ * (Concurso Indefinido), só entram os assuntos marcados como `nucleo_comum` —
+ * as mesmas matérias/questões dos outros concursos, filtradas ao que cai em
+ * ambos. Nos demais concursos, devolve a lista inteira.
+ */
+export function topicosDoConcurso<T extends { nucleo_comum: boolean }>(
+  topicos: T[],
+  concurso: { somente_nucleo: boolean }
+): T[] {
+  return concurso.somente_nucleo ? topicos.filter((t) => t.nucleo_comum) : topicos;
+}
