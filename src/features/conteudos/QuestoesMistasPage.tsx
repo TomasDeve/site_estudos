@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { Materia, TopicoQuestao } from "@/types/db";
+import type { Materia, QuestaoCategoria, TopicoQuestao } from "@/types/db";
 import {
   useMarcarRefazer,
   useResponderQuestao,
@@ -35,12 +35,17 @@ import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
+import { CATEGORIAS } from "./categorias";
+import { PillCategoria } from "./QuestoesPage";
 
 const ABAS = [
   { chave: "responder", label: "Para responder" },
   { chave: "resolvidas", label: "Resolvidas" },
 ] as const;
 type Aba = (typeof ABAS)[number]["chave"];
+
+// Filtro por origem da questão. "todas" é o "sem filtro" — junta as categorias.
+type FiltroCategoria = QuestaoCategoria | "todas";
 
 function gerarSemente() {
   return Math.floor(Math.random() * 2 ** 31);
@@ -89,6 +94,8 @@ export function QuestoesMistasPage() {
 
   const [semente, setSemente] = useState(gerarSemente);
   const [aba, setAba] = useState<Aba>("responder");
+  // Filtro por origem (mesmas pílulas do caderno do assunto). "todas" = sem filtro.
+  const [categoria, setCategoria] = useState<FiltroCategoria>("todas");
   const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
   const [naLei, setNaLei] = useState<TopicoQuestao | null>(null);
   const [verResumoDe, setVerResumoDe] = useState<TopicoQuestao | null>(null);
@@ -136,18 +143,40 @@ export function QuestoesMistasPage() {
   // Índice por id — acha a questão original de uma reformulada (revelado só após responder).
   const porId = useMemo(() => new Map((questoes ?? []).map((x) => [x.id, x])), [questoes]);
 
+  // Questões vivas no escopo da página (a matéria ou o site todo), antes do
+  // filtro por origem — alimenta as contagens das pílulas e o total de "Todas".
+  const base = useMemo(
+    () =>
+      (questoes ?? []).filter((q) => {
+        if (q.status === "arquivada") return false;
+        // No modo por matéria, só entram as questões dos assuntos dessa matéria.
+        if (materiaId) return topicoPorId.get(q.topico_id)?.materia_id === materiaId;
+        return true;
+      }),
+    [questoes, materiaId, topicoPorId]
+  );
+
+  // Quantas questões há em cada origem — número mostrado nas pílulas de filtro.
+  const contagemCategoria = useMemo(() => {
+    const c = { doutrina_jurisprudencia: 0, baseada_questoes: 0, ia: 0 } as Record<
+      QuestaoCategoria,
+      number
+    >;
+    for (const q of base) {
+      const k = q.categoria as QuestaoCategoria;
+      if (k in c) c[k]++;
+    }
+    return c;
+  }, [base]);
+
   // Ordena por id antes de embaralhar: a mesma semente reproduz a mesma ordem
-  // mesmo após os refetches disparados pelas respostas.
+  // mesmo após os refetches disparados pelas respostas. O filtro por origem
+  // recorta antes do embaralho ("todas" = sem recorte).
   const misturadas = useMemo(() => {
-    const vivas = (questoes ?? []).filter((q) => {
-      if (q.status === "arquivada") return false;
-      // No modo por matéria, só entram as questões dos assuntos dessa matéria.
-      if (materiaId) return topicoPorId.get(q.topico_id)?.materia_id === materiaId;
-      return true;
-    });
-    vivas.sort((a, b) => a.id.localeCompare(b.id));
-    return embaralhar(vivas, semente);
-  }, [questoes, semente, materiaId, topicoPorId]);
+    const vivas = categoria === "todas" ? base : base.filter((q) => q.categoria === categoria);
+    const arr = [...vivas].sort((a, b) => a.id.localeCompare(b.id));
+    return embaralhar(arr, semente);
+  }, [base, categoria, semente]);
 
   // Histórico (questao_logs) no escopo da página — a matéria escolhida ou o site
   // todo — para a janela das últimas 30 questões.
@@ -179,8 +208,9 @@ export function QuestoesMistasPage() {
     resolvidas: resolvidas.length,
   };
   const cor = placar.pct !== null ? corDesempenho(placar.pct) : null;
-  // Modo bloquinhos: resolve de 5 em 5. Embaralhar recomeça do primeiro bloco.
-  const bloco = useBloquinhos(lista, `${aba}-${semente}`);
+  const catLabel = CATEGORIAS.find((c) => c.chave === categoria)?.label ?? "";
+  // Modo bloquinhos: resolve de 5 em 5. Trocar de origem, aba ou embaralhar recomeça do 1º bloco.
+  const bloco = useBloquinhos(lista, `${categoria}-${aba}-${semente}`);
 
   if (carregandoQuestoes || carregandoTopicos || carregandoMaterias) {
     return <FullScreenSpinner />;
@@ -257,7 +287,7 @@ export function QuestoesMistasPage() {
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-3 py-4 sm:px-6 sm:py-6">
-        {misturadas.length === 0 ? (
+        {base.length === 0 ? (
           <EmptyState
             icon="🎲"
             title={materiaEscopo ? "Nenhuma questão nesta matéria ainda" : "Nenhuma questão no site ainda"}
@@ -289,6 +319,30 @@ export function QuestoesMistasPage() {
               <BotaoBloquinhos b={bloco} className="ml-auto" />
             </div>
 
+            {/* Filtro por origem — as mesmas pílulas do caderno do assunto.
+                Cada categoria vira um "sub-caderno"; "Todas" junta tudo. */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-0.5 text-[11px] font-semibold uppercase tracking-wide text-mut">
+                Tipo
+              </span>
+              <PillCategoria
+                ativo={categoria === "todas"}
+                onClick={() => setCategoria("todas")}
+                label="Todas"
+                contagem={base.length}
+              />
+              {CATEGORIAS.map((c) => (
+                <PillCategoria
+                  key={c.chave}
+                  ativo={categoria === c.chave}
+                  onClick={() => setCategoria(c.chave)}
+                  label={c.curto}
+                  title={c.label}
+                  contagem={contagemCategoria[c.chave]}
+                />
+              ))}
+            </div>
+
             {/* Abas — rolam na horizontal em telas estreitas */}
             <div className="flex gap-1 overflow-x-auto border-b border-line/40 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {ABAS.map((a) => (
@@ -309,9 +363,11 @@ export function QuestoesMistasPage() {
 
             {lista.length === 0 ? (
               <p className="py-8 text-center text-sm text-mut">
-                {aba === "responder"
-                  ? "Tudo resolvido 🎉 Use “Responder de novo” nas resolvidas para revisar."
-                  : "Nenhuma questão resolvida ainda."}
+                {misturadas.length === 0
+                  ? `Nenhuma questão em “${catLabel}” ainda.`
+                  : aba === "responder"
+                    ? "Tudo resolvido 🎉 Use “Responder de novo” nas resolvidas para revisar."
+                    : "Nenhuma questão resolvida ainda."}
               </p>
             ) : (
               <div className="space-y-3">
