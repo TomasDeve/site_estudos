@@ -23,11 +23,29 @@
 
   --radius-card: 14px;
 
+  /* Sombras coesas para cards e elementos flutuantes (menus, popovers) */
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.16), 0 6px 20px rgb(0 0 0 / 0.18);
+  --shadow-pop: 0 12px 34px rgb(0 0 0 / 0.5);
+
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
 html {
   color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+/* Foco por teclado consistente e visível em todo o app (acessibilidade).
+   Fica só no :focus-visible, então o mouse não dispara o anel. Inputs têm o
+   próprio ring dourado, então ficam de fora daqui. */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
 body {
@@ -50,6 +68,24 @@ body {
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-line);
+}
+
+/* Scrollbar discreta para áreas internas (nav da sidebar, listas longas) —
+   some quando não precisa e não rouba a atenção do conteúdo. */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-navy-600) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-navy-600);
+  border-radius: 8px;
+}
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
   background: var(--color-line);
 }
 
@@ -82,6 +118,33 @@ textarea,
 }
 .streak-glow {
   animation: glow-pulse 2.2s ease-in-out infinite;
+}
+
+/* Abertura suave de submenus e popovers (matérias na sidebar, menus flutuantes) */
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animar-surgir {
+  animation: surgir 0.16s ease-out;
+}
+
+/* Respeita quem prefere menos movimento: corta animações e transições longas. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Leitor/editor de textos e resumos */

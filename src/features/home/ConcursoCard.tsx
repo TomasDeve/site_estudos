@@ -23,7 +23,7 @@ export function ConcursoCard({ concurso: c, pct, onEdit }: Props) {
   return (
     <Link
       to={`/concurso/${c.id}`}
-      className="group relative block overflow-hidden rounded-card border border-line/60 bg-navy-800/80 transition-all hover:-translate-y-0.5 hover:border-line hover:shadow-[0_8px_24px_rgb(0_0_0/0.35)]"
+      className="group relative block overflow-hidden rounded-card border border-line/60 bg-navy-800/80 shadow-card transition-all hover:-translate-y-0.5 hover:border-line hover:shadow-[0_8px_24px_rgb(0_0_0/0.35)]"
       style={{ borderTopWidth: 3, borderTopColor: c.cor }}
     >
       <div className="p-5">

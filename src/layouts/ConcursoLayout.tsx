@@ -110,7 +110,7 @@ export function ConcursoLayout() {
       isActive ? "" : "text-dim hover:bg-navy-700/70 hover:text-txt"
     }`;
   const estiloAtivo = (isActive: boolean) =>
-    isActive ? { background: `${cor}1f`, color: cor } : undefined;
+    isActive ? { background: `${cor}1f`, color: cor, boxShadow: `inset 2px 0 0 ${cor}` } : undefined;
 
   const navLink = (mobile: boolean) =>
     NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
@@ -123,7 +123,7 @@ export function ConcursoLayout() {
             rel="noreferrer"
             className={
               mobile
-                ? "flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-dim transition-colors"
+                ? "flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[10px] font-medium leading-none text-dim transition-colors"
                 : "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-dim transition-colors hover:bg-navy-700/70 hover:text-txt"
             }
           >
@@ -140,7 +140,7 @@ export function ConcursoLayout() {
           onClick={() => setSwitcherAberto(false)}
           className={({ isActive }) =>
             mobile
-              ? `flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors ${
+              ? `flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[10px] font-medium leading-none transition-colors ${
                   isActive ? "" : "text-dim"
                 }`
               : `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -150,7 +150,7 @@ export function ConcursoLayout() {
           style={({ isActive }) =>
             isActive
               ? mobile
-                ? { color: cor }
+                ? { color: cor, boxShadow: `inset 0 2px 0 ${cor}` }
                 : { background: `${cor}1f`, color: cor }
               : undefined
           }
@@ -246,7 +246,7 @@ export function ConcursoLayout() {
           </div>
         </div>
 
-        <nav className="mt-3 flex-1 space-y-1 overflow-y-auto px-3">
+        <nav className="scrollbar-thin mt-3 flex-1 space-y-1 overflow-y-auto px-3">
           {NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
             if (novaAba) {
               return (
@@ -309,7 +309,7 @@ export function ConcursoLayout() {
                 </div>
 
                 {conteudosAberto && materiasDoConcurso.length > 0 && (
-                  <ul className="mb-1 ml-5 mt-1 space-y-0.5 border-l border-line/40 pl-2">
+                  <ul className="animar-surgir mb-1 ml-5 mt-1 space-y-0.5 border-l border-line/40 pl-2">
                     {materiasDoConcurso.map(({ vinculoId, materia, progresso }) => {
                       const ativa = materiaAtiva === materia.id;
                       return (
@@ -320,6 +320,7 @@ export function ConcursoLayout() {
                             className={`group flex flex-col gap-1 rounded-lg px-2.5 py-1.5 transition-colors ${
                               ativa ? "bg-navy-700/60" : "hover:bg-navy-700/50"
                             }`}
+                            style={ativa ? { boxShadow: `inset 2px 0 0 ${cor}` } : undefined}
                             title={`${materia.nome} — ${progresso.concluidos}/${progresso.total} tópicos`}
                           >
                             <span className="flex items-center gap-1.5">
@@ -331,7 +332,12 @@ export function ConcursoLayout() {
                               >
                                 {materia.nome}
                               </span>
-                              <span className="shrink-0 text-[10px] font-semibold tabular-nums text-mut">
+                              <span
+                                className={`shrink-0 text-[10px] font-semibold tabular-nums ${
+                                  ativa ? "" : "text-mut"
+                                }`}
+                                style={ativa ? { color: cor } : undefined}
+                              >
                                 {progresso.total === 0 ? "—" : `${progresso.pct}%`}
                               </span>
                             </span>
