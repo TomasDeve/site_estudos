@@ -7,6 +7,7 @@ import {
   BookOpen,
   Check,
   ChevronRight,
+  ExternalLink,
   MessageCircleQuestion,
   NotebookPen,
   RotateCcw,
@@ -579,6 +580,35 @@ interface CardProps {
   onVerResumo: () => void;
 }
 
+/**
+ * Linha de origem da questão. Em questões do QConcursos (`fonte` tipo
+ * "QConcursos — Q123 (BANCA) · Cargo · C/E A") mostra banca e cargo e torna o
+ * "Q123" um link clicável para abrir a questão original no QConcursos.
+ */
+function FonteQuestao({ fonte }: { fonte: string }) {
+  const m = fonte.match(/Q(\d+)/);
+  if (!m) {
+    return <p className="mt-1 text-[10px] leading-relaxed text-mut">{fonte}</p>;
+  }
+  const idx = fonte.indexOf(m[0]);
+  return (
+    <p className="mt-1 text-[10px] leading-relaxed text-mut">
+      {fonte.slice(0, idx)}
+      <a
+        href={`https://www.qconcursos.com/questoes/${m[1]}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold text-cyan hover:underline"
+        title="Abrir esta questão no QConcursos"
+      >
+        {m[0]}
+        <ExternalLink className="ml-0.5 inline size-2.5 align-[-1px]" />
+      </a>
+      {fonte.slice(idx + m[0].length)}
+    </p>
+  );
+}
+
 function QuestaoCard({
   questao: q,
   numero,
@@ -600,28 +630,26 @@ function QuestaoCard({
 
   return (
     <li className="group/q rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="shrink-0 whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-mut">
-          Questão {numero}
-        </span>
-        {status === "arquivada" && (
-          <span className="shrink-0 whitespace-nowrap rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mut">
-            Arquivada
+      <div className="mb-2">
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-mut">
+            Questão {numero}
           </span>
-        )}
-        {q.fonte && (
-          <span className="min-w-0 truncate text-[10px] text-mut" title={q.fonte}>
-            {q.fonte}
-          </span>
-        )}
-        <button
-          onClick={onExcluir}
-          className="ml-auto shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/q:opacity-100 max-md:opacity-100"
-          title="Apagar questão"
-          aria-label={`Apagar questão ${numero}`}
-        >
-          <Trash2 className="size-3.5" />
-        </button>
+          {status === "arquivada" && (
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mut">
+              Arquivada
+            </span>
+          )}
+          <button
+            onClick={onExcluir}
+            className="ml-auto shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/q:opacity-100 max-md:opacity-100"
+            title="Apagar questão"
+            aria-label={`Apagar questão ${numero}`}
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
+        {q.fonte && <FonteQuestao fonte={q.fonte} />}
       </div>
 
       {q.contexto && (
@@ -763,7 +791,7 @@ function AcaoQuestao({
 }
 
 /** Pílula de filtro por categoria — usada no topo do caderno e no seletor de importação. */
-function PillCategoria({
+export function PillCategoria({
   ativo,
   onClick,
   label,
