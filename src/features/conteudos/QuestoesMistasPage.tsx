@@ -35,7 +35,7 @@ import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
-import { CATEGORIAS } from "./categorias";
+import { CATEGORIAS_FILTRO } from "./categorias";
 import { PillCategoria } from "./QuestoesPage";
 
 const ABAS = [
@@ -43,9 +43,6 @@ const ABAS = [
   { chave: "resolvidas", label: "Resolvidas" },
 ] as const;
 type Aba = (typeof ABAS)[number]["chave"];
-
-// Filtro por origem da questão. "todas" é o "sem filtro" — junta as categorias.
-type FiltroCategoria = QuestaoCategoria | "todas";
 
 function gerarSemente() {
   return Math.floor(Math.random() * 2 ** 31);
@@ -94,8 +91,19 @@ export function QuestoesMistasPage() {
 
   const [semente, setSemente] = useState(gerarSemente);
   const [aba, setAba] = useState<Aba>("responder");
-  // Filtro por origem (mesmas pílulas do caderno do assunto). "todas" = sem filtro.
-  const [categoria, setCategoria] = useState<FiltroCategoria>("todas");
+  // Filtro por origem (mesmas pílulas do caderno do assunto), com multi-seleção.
+  // Conjunto vazio = "Todas" (sem filtro); o escopo vira a união das marcadas.
+  const [cats, setCats] = useState<ReadonlySet<QuestaoCategoria>>(new Set());
+
+  /** Liga/desliga uma origem no filtro — várias podem ficar ativas ao mesmo tempo. */
+  function alternarCategoria(chave: QuestaoCategoria) {
+    setCats((prev) => {
+      const proximo = new Set(prev);
+      if (proximo.has(chave)) proximo.delete(chave);
+      else proximo.add(chave);
+      return proximo;
+    });
+  }
   const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
   const [naLei, setNaLei] = useState<TopicoQuestao | null>(null);
   const [verResumoDe, setVerResumoDe] = useState<TopicoQuestao | null>(null);
@@ -158,7 +166,7 @@ export function QuestoesMistasPage() {
 
   // Quantas questões há em cada origem — número mostrado nas pílulas de filtro.
   const contagemCategoria = useMemo(() => {
-    const c = { doutrina_jurisprudencia: 0, baseada_questoes: 0, ia: 0 } as Record<
+    const c = { doutrina_jurisprudencia: 0, baseada_questoes: 0, ia: 0, real: 0 } as Record<
       QuestaoCategoria,
       number
     >;
@@ -173,10 +181,11 @@ export function QuestoesMistasPage() {
   // mesmo após os refetches disparados pelas respostas. O filtro por origem
   // recorta antes do embaralho ("todas" = sem recorte).
   const misturadas = useMemo(() => {
-    const vivas = categoria === "todas" ? base : base.filter((q) => q.categoria === categoria);
+    const vivas =
+      cats.size === 0 ? base : base.filter((q) => cats.has(q.categoria as QuestaoCategoria));
     const arr = [...vivas].sort((a, b) => a.id.localeCompare(b.id));
     return embaralhar(arr, semente);
-  }, [base, categoria, semente]);
+  }, [base, cats, semente]);
 
   // Histórico (questao_logs) no escopo da página — a matéria escolhida ou o site
   // todo — para a janela das últimas 30 questões.
@@ -208,9 +217,14 @@ export function QuestoesMistasPage() {
     resolvidas: resolvidas.length,
   };
   const cor = placar.pct !== null ? corDesempenho(placar.pct) : null;
-  const catLabel = CATEGORIAS.find((c) => c.chave === categoria)?.label ?? "";
-  // Modo bloquinhos: resolve de 5 em 5. Trocar de origem, aba ou embaralhar recomeça do 1º bloco.
-  const bloco = useBloquinhos(lista, `${categoria}-${aba}-${semente}`);
+  // Rótulo das origens marcadas (na ordem das pílulas), para o texto de "vazio".
+  const catsLabel = CATEGORIAS_FILTRO.filter((c) => cats.has(c.chave))
+    .map((c) => c.curto)
+    .join(", ");
+  // Chave estável do conjunto (ordenada). Modo bloquinhos: resolve de 5 em 5;
+  // trocar de origem, aba ou embaralhar recomeça do 1º bloco.
+  const catsKey = [...cats].sort().join(",");
+  const bloco = useBloquinhos(lista, `${catsKey}-${aba}-${semente}`);
 
   if (carregandoQuestoes || carregandoTopicos || carregandoMaterias) {
     return <FullScreenSpinner />;
@@ -319,23 +333,23 @@ export function QuestoesMistasPage() {
               <BotaoBloquinhos b={bloco} className="ml-auto" />
             </div>
 
-            {/* Filtro por origem — as mesmas pílulas do caderno do assunto.
-                Cada categoria vira um "sub-caderno"; "Todas" junta tudo. */}
+            {/* Filtro por origem — as mesmas pílulas do caderno do assunto. Dá para
+                marcar várias (o escopo vira a união); "Todas" limpa e junta tudo. */}
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="mr-0.5 text-[11px] font-semibold uppercase tracking-wide text-mut">
                 Tipo
               </span>
               <PillCategoria
-                ativo={categoria === "todas"}
-                onClick={() => setCategoria("todas")}
+                ativo={cats.size === 0}
+                onClick={() => setCats(new Set())}
                 label="Todas"
                 contagem={base.length}
               />
-              {CATEGORIAS.map((c) => (
+              {CATEGORIAS_FILTRO.map((c) => (
                 <PillCategoria
                   key={c.chave}
-                  ativo={categoria === c.chave}
-                  onClick={() => setCategoria(c.chave)}
+                  ativo={cats.has(c.chave)}
+                  onClick={() => alternarCategoria(c.chave)}
                   label={c.curto}
                   title={c.label}
                   contagem={contagemCategoria[c.chave]}
@@ -364,7 +378,7 @@ export function QuestoesMistasPage() {
             {lista.length === 0 ? (
               <p className="py-8 text-center text-sm text-mut">
                 {misturadas.length === 0
-                  ? `Nenhuma questão em “${catLabel}” ainda.`
+                  ? `Nenhuma questão em “${catsLabel}” ainda.`
                   : aba === "responder"
                     ? "Tudo resolvido 🎉 Use “Responder de novo” nas resolvidas para revisar."
                     : "Nenhuma questão resolvida ainda."}

@@ -1,14 +1,17 @@
 import type { QuestaoCategoria } from "@/types/db";
 
+export type Categoria = { chave: QuestaoCategoria; label: string; curto: string };
+
 /**
- * As categorias (origem) das questões geradas por IA. A ordem aqui é a ordem em
- * que as pílulas de filtro aparecem no caderno. "Todas" não mora aqui — é o
- * estado "sem filtro" da tela, não um valor guardado no banco.
+ * As categorias (origem) das questões que a IA desta sessão produz. Esta lista é
+ * a que aparece no seletor de destino ao importar um JSON da IA — por isso NÃO
+ * inclui "real": questões reais entram pelo extrator do QConcursos, não coladas
+ * à mão aqui. Para as pílulas de filtro do caderno, use `CATEGORIAS_FILTRO`.
  *
  * - `label`: nome completo (tooltip e textos).
  * - `curto`: rótulo enxuto da pílula, para caber em telas estreitas.
  */
-export const CATEGORIAS: { chave: QuestaoCategoria; label: string; curto: string }[] = [
+export const CATEGORIAS: Categoria[] = [
   {
     chave: "doutrina_jurisprudencia",
     label: "Doutrina / Jurisprudência",
@@ -21,6 +24,20 @@ export const CATEGORIAS: { chave: QuestaoCategoria; label: string; curto: string
   },
   { chave: "ia", label: "Questões criadas pela IA", curto: "Criadas pela IA" },
 ];
+
+/** Questões reais de prova (importadas do QConcursos). Não é produzida à mão. */
+export const CATEGORIA_REAL: Categoria = {
+  chave: "real",
+  label: "Questões Reais",
+  curto: "Reais",
+};
+
+/**
+ * Ordem das pílulas de filtro por origem no caderno. As reais vêm primeiro — são
+ * as mais valiosas para concurso. "Todas" continua sendo o estado "sem filtro",
+ * fora desta lista. Diferente de `CATEGORIAS`, aqui entra a categoria "real".
+ */
+export const CATEGORIAS_FILTRO: Categoria[] = [CATEGORIA_REAL, ...CATEGORIAS];
 
 /** Categoria default de quem não declara uma — o balde genérico "criada pela IA". */
 export const CATEGORIA_PADRAO: QuestaoCategoria = "ia";
