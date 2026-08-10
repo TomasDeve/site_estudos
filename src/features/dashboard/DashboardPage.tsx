@@ -4,7 +4,6 @@ import { ArrowRight } from "lucide-react";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
-import { useQuestaoLogsJanela } from "@/api/questaoLogs";
 import { useSessoesJanela } from "@/api/sessoes";
 import { calcStreak, useDiasConcluidos } from "@/api/diasConcluidos";
 import { progressoConcurso, topicosDoConcurso } from "@/lib/progresso";
@@ -13,6 +12,7 @@ import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatCard } from "@/components/StatCard";
 import { CompromissosCard } from "./CompromissosCard";
+import { DesempenhoQuestoes } from "./DesempenhoQuestoes";
 import { PlanejamentoHoras } from "./PlanejamentoHoras";
 import { WeekStudyChart } from "./WeekStudyChart";
 
@@ -28,7 +28,6 @@ export function DashboardPage() {
 
   const { data: vinculos } = useConcursoMaterias();
   const { data: topicos } = useTopicos();
-  const { data: logsHoje } = useQuestaoLogsJanela(hoje, hoje);
   const { data: sessoesHoje } = useSessoesJanela(hoje, hoje);
   const { data: dias } = useDiasConcluidos();
 
@@ -37,13 +36,14 @@ export function DashboardPage() {
     [concurso, vinculos, topicos]
   );
 
-  const questoesHoje = (logsHoje ?? []).reduce((s, l) => s + l.total, 0);
-  const acertosHoje = (logsHoje ?? []).reduce((s, l) => s + l.acertos, 0);
   const minutosHoje = (sessoesHoje ?? []).reduce((s, x) => s + x.minutos, 0);
   const streak = calcStreak(dias, hoje);
 
   return (
     <div className="space-y-5">
+      {/* Desempenho em questões: primeira informação do painel (estilo QConcursos) */}
+      <DesempenhoQuestoes />
+
       {/* Status do edital */}
       <Card>
         <CardBody>
@@ -92,17 +92,7 @@ export function DashboardPage() {
       <PlanejamentoHoras concurso={concurso} />
 
       {/* métricas rápidas de hoje */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard
-          icon="✍️"
-          label="Questões hoje"
-          value={questoesHoje}
-          sub={
-            questoesHoje > 0
-              ? `${Math.round((acertosHoje / questoesHoje) * 100)}% de acerto`
-              : undefined
-          }
-        />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard icon="⏱️" label="Estudo hoje" value={fmtMinutos(minutosHoje) || "0min"} />
         <StatCard icon="🔥" label="Sequência" value={`${streak} ${streak === 1 ? "dia" : "dias"}`} />
         <Link to="metas" className="block">
