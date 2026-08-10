@@ -601,30 +601,60 @@ interface CardProps {
 }
 
 /**
- * Linha de origem da questão. Em questões do QConcursos (`fonte` tipo
- * "QConcursos — Q123 (BANCA) · Cargo · C/E A") mostra banca e cargo e torna o
- * "Q123" um link clicável para abrir a questão original no QConcursos.
+ * Quebra a fonte de uma questão do QConcursos nas suas partes. Formato canônico:
+ * "QConcursos — Q{id} (BANCA) · {ano} · {cargo}" — mas é tolerante às variações antigas
+ * ("Q{id} (BANCA)" e "Q{id} (BANCA) · {cargo} · C/E {X}"): extrai o que houver.
+ */
+function parseFonteQC(fonte: string) {
+  const codM = fonte.match(/Q(\d+)/);
+  const codigo = codM ? codM[0] : null; // "Q4023266" (só a parte numérica; ignora sufixo "-a")
+  const id = codM ? codM[1] : null;
+  const bancaM = fonte.match(/\(([^)]+)\)/); // primeiro parêntese = banca
+  const banca = bancaM ? bancaM[1].trim() : null;
+  // ano: primeiro "19xx/20xx" fora do código Q (assim o ID numérico não vira "ano")
+  const anoM = (codigo ? fonte.replace(codigo, "") : fonte).match(/\b(?:19|20)\d{2}\b/);
+  const ano = anoM ? anoM[0] : null;
+  // cargo: o que vem depois do parêntese da banca, sem ano, sem marcador C/E e sem separadores
+  let cargo: string | null = null;
+  if (bancaM) {
+    let depois = fonte.slice((bancaM.index ?? 0) + bancaM[0].length);
+    depois = depois.replace(/\s*·?\s*(?:C\/E|item)\b.*$/i, ""); // tira "· C/E A" / "· item I"
+    if (ano) depois = depois.replace(ano, "");
+    cargo =
+      depois.replace(/^[\s·\-–—]+/, "").replace(/[\s·\-–—]+$/, "").replace(/\s{2,}/g, " ").trim() ||
+      null;
+  }
+  return { codigo, id, banca, ano, cargo };
+}
+
+/**
+ * Linha de origem da questão. Em questões do QConcursos mostra "ano (BANCA) - cargo" e torna o
+ * "Q{id}" um link que PESQUISA a questão no Google: a URL direta do QConcursos usa um slug
+ * interno (ex.: /questoes/776a040b-43) que não dá pra montar a partir do ID numérico, então a
+ * busca pelo "Q{id}" cai na página certa.
  */
 function FonteQuestao({ fonte }: { fonte: string }) {
-  const m = fonte.match(/Q(\d+)/);
-  if (!m) {
+  const { codigo, id, banca, ano, cargo } = parseFonteQC(fonte);
+  if (!id || !codigo) {
     return <p className="mt-1 text-[10px] leading-relaxed text-mut">{fonte}</p>;
   }
-  const idx = fonte.indexOf(m[0]);
+  const prefixo = fonte.slice(0, fonte.indexOf(codigo)); // "QConcursos — "
+  const cabecalho = [ano, banca ? `(${banca})` : null].filter(Boolean).join(" "); // "2026 (BANCA)"
+  const meta = [cabecalho || null, cargo].filter(Boolean).join(" - "); // "2026 (BANCA) - Cargo"
   return (
     <p className="mt-1 text-[10px] leading-relaxed text-mut">
-      {fonte.slice(0, idx)}
+      {prefixo}
       <a
-        href={`https://www.qconcursos.com/questoes/${m[1]}`}
+        href={`https://www.google.com/search?q=${encodeURIComponent(codigo)}`}
         target="_blank"
         rel="noopener noreferrer"
         className="font-semibold text-cyan hover:underline"
-        title="Abrir esta questão no QConcursos"
+        title="Pesquisar esta questão no Google (a busca leva à página do QConcursos)"
       >
-        {m[0]}
+        {codigo}
         <ExternalLink className="ml-0.5 inline size-2.5 align-[-1px]" />
       </a>
-      {fonte.slice(idx + m[0].length)}
+      {meta && ` · ${meta}`}
     </p>
   );
 }
