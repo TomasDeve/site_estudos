@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type MouseEvent, useMemo, useRef, useState } from "react";
 import { useQuestaoLogsTodos } from "@/api/questaoLogs";
 import { desempenhoGeral } from "@/features/conteudos/desempenho";
 import { diasAtrasISO, hojeISO } from "@/lib/dates";
@@ -99,52 +99,114 @@ export function DesempenhoQuestoes() {
   );
 }
 
-/** Anel de rendimento: fatia verde (acertos) + fatia vermelha (erros), com o % de acerto no centro. */
+/**
+ * Anel de rendimento (acertos × erros) com destaque no hover, no estilo do
+ * QConcursos: a fatia sob o mouse "salta" pra fora, a outra escurece e um balão
+ * segue o cursor mostrando "Acertos/Erros: xx.xx% | N". O % de acerto fica no
+ * centro. Sem questões no período, mostra só o trilho neutro com "—".
+ */
 function Anel({ acertos, erros }: { acertos: number; erros: number }) {
   const total = acertos + erros;
-  const r = 50;
+  const r = 54;
   const C = 2 * Math.PI * r;
   const fAcerto = total > 0 ? acertos / total : 0;
   const pct = total > 0 ? Math.round(fAcerto * 100) : null;
   const lenAcerto = C * fAcerto;
   const lenErro = C * (total > 0 ? erros / total : 0);
 
+  const [hover, setHover] = useState<"acerto" | "erro" | null>(null);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const ref = useRef<HTMLDivElement>(null);
+
+  const mover = (e: MouseEvent) => {
+    const box = ref.current?.getBoundingClientRect();
+    if (box) setPos({ x: e.clientX - box.left, y: e.clientY - box.top });
+  };
+  // "explode": desloca a fatia na direção da sua bissetriz (fração medida do
+  // topo, no sentido horário) — 0 = topo, 0.25 = 3h, 0.5 = base...
+  const explode = (fracCentro: number) => {
+    const a = 2 * Math.PI * fracCentro;
+    return `translate(${Math.sin(a) * 7}px, ${-Math.cos(a) * 7}px)`;
+  };
+
+  const fatias = {
+    acerto: { nome: "Acertos", valor: acertos, cor: VERDE },
+    erro: { nome: "Erros", valor: erros, cor: VERMELHO },
+  } as const;
+  const balao = hover ? fatias[hover] : null;
+
   return (
-    <div className="relative shrink-0" style={{ width: 132, height: 132 }}>
-      <svg viewBox="0 0 120 120" className="size-full">
+    <div
+      ref={ref}
+      className="relative shrink-0"
+      style={{ width: 150, height: 150 }}
+      onMouseLeave={() => setHover(null)}
+    >
+      <svg viewBox="0 0 150 150" width={150} height={150} style={{ overflow: "visible" }}>
         {/* trilho neutro (aparece quando não há questões no período) */}
-        <circle cx="60" cy="60" r={r} fill="none" stroke="#1d3454" strokeWidth="13" />
+        <circle cx="75" cy="75" r={r} fill="none" stroke="#1d3454" strokeWidth="14" />
         {total > 0 && (
           <>
-            <circle
-              cx="60"
-              cy="60"
-              r={r}
-              fill="none"
-              stroke={VERDE}
-              strokeWidth="13"
-              strokeDasharray={`${lenAcerto} ${C}`}
-              transform="rotate(-90 60 60)"
-            />
-            <circle
-              cx="60"
-              cy="60"
-              r={r}
-              fill="none"
-              stroke={VERMELHO}
-              strokeWidth="13"
-              strokeDasharray={`${lenErro} ${C}`}
-              transform={`rotate(${-90 + 360 * fAcerto} 60 60)`}
-            />
+            <g
+              style={{
+                transform: hover === "acerto" ? explode(fAcerto / 2) : "translate(0,0)",
+                transition: "transform .15s ease",
+              }}
+            >
+              <circle
+                cx="75"
+                cy="75"
+                r={r}
+                fill="none"
+                stroke={VERDE}
+                strokeWidth="14"
+                strokeDasharray={`${lenAcerto} ${C}`}
+                transform="rotate(-90 75 75)"
+                style={{ opacity: hover === "erro" ? 0.4 : 1, transition: "opacity .15s ease" }}
+                onMouseEnter={() => setHover("acerto")}
+                onMouseMove={mover}
+              />
+            </g>
+            <g
+              style={{
+                transform: hover === "erro" ? explode((1 + fAcerto) / 2) : "translate(0,0)",
+                transition: "transform .15s ease",
+              }}
+            >
+              <circle
+                cx="75"
+                cy="75"
+                r={r}
+                fill="none"
+                stroke={VERMELHO}
+                strokeWidth="14"
+                strokeDasharray={`${lenErro} ${C}`}
+                transform={`rotate(${-90 + 360 * fAcerto} 75 75)`}
+                style={{ opacity: hover === "acerto" ? 0.4 : 1, transition: "opacity .15s ease" }}
+                onMouseEnter={() => setHover("erro")}
+                onMouseMove={mover}
+              />
+            </g>
           </>
         )}
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-black tabular-nums text-txt">
           {pct === null ? "—" : `${pct}%`}
         </span>
         <span className="text-[10px] font-medium uppercase tracking-wider text-mut">acerto</span>
       </div>
+
+      {balao && (
+        <div
+          className="pointer-events-none absolute z-20 flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-navy-700 px-2.5 py-1.5 text-xs font-semibold text-txt shadow-pop"
+          style={{ left: pos.x, top: pos.y, transform: "translate(-50%, calc(-100% - 12px))" }}
+        >
+          <span className="size-2 shrink-0 rounded-full" style={{ background: balao.cor }} />
+          {balao.nome}: {((balao.valor / total) * 100).toFixed(2)}% | {balao.valor}
+        </div>
+      )}
     </div>
   );
 }
