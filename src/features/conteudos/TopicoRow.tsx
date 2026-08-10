@@ -8,6 +8,7 @@ import { CICLO_STATUS, useAtualizarHorasTopico, useAtualizarTopico, useExcluirTo
 import { useAnexarPdf, useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink, removerArquivosPdf } from "@/api/topicoLinks";
 import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
 import type { QuestaoResumo } from "@/api/topicoQuestoes";
+import { estaResolvida } from "./questaoModelo";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
@@ -99,7 +100,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
     const emJogo = questoes.filter((q) => q.status !== "arquivada");
     return {
       total: emJogo.length,
-      pendentes: emJogo.filter((q) => q.resposta === null).length,
+      pendentes: emJogo.filter((q) => !estaResolvida(q)).length,
     };
   }, [questoes]);
 

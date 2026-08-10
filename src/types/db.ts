@@ -842,6 +842,7 @@ export type Database = {
       }
       topico_questoes: {
         Row: {
+          alternativas: Json
           categoria: string
           comentario: string
           contexto: string | null
@@ -849,18 +850,22 @@ export type Database = {
           dificuldade: string | null
           enunciado: string
           fonte: string | null
-          gabarito: boolean
+          gabarito: boolean | null
+          gabarito_letra: string | null
           id: string
           ordem: number
           refazer: boolean
           reformulada_de: string | null
           respondida_em: string | null
           resposta: boolean | null
+          resposta_letra: string | null
           status: string
+          tipo: string
           topico_id: string
           user_id: string
         }
         Insert: {
+          alternativas?: Json
           categoria?: string
           comentario?: string
           contexto?: string | null
@@ -868,18 +873,22 @@ export type Database = {
           dificuldade?: string | null
           enunciado: string
           fonte?: string | null
-          gabarito: boolean
+          gabarito?: boolean | null
+          gabarito_letra?: string | null
           id?: string
           ordem?: number
           refazer?: boolean
           reformulada_de?: string | null
           respondida_em?: string | null
           resposta?: boolean | null
+          resposta_letra?: string | null
           status?: string
+          tipo?: string
           topico_id: string
           user_id?: string
         }
         Update: {
+          alternativas?: Json
           categoria?: string
           comentario?: string
           contexto?: string | null
@@ -887,14 +896,17 @@ export type Database = {
           dificuldade?: string | null
           enunciado?: string
           fonte?: string | null
-          gabarito?: boolean
+          gabarito?: boolean | null
+          gabarito_letra?: string | null
           id?: string
           ordem?: number
           refazer?: boolean
           reformulada_de?: string | null
           respondida_em?: string | null
           resposta?: boolean | null
+          resposta_letra?: string | null
           status?: string
+          tipo?: string
           topico_id?: string
           user_id?: string
         }

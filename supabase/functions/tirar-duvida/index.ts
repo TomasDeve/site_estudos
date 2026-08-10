@@ -18,11 +18,16 @@ interface Payload {
   materia?: string | null;
   assunto?: string | null;
   questao?: {
+    /** "ce" (Certo/Errado) ou "multipla". Ausente/legado = "ce". */
+    tipo?: string | null;
     contexto?: string | null;
     enunciado: string;
-    gabarito: boolean;
+    gabarito?: boolean | null;
+    gabarito_letra?: string | null;
+    alternativas?: { letra: string; texto: string }[] | null;
     comentario?: string | null;
     resposta?: boolean | null;
+    resposta_letra?: string | null;
   };
   resumo?: { conteudo: string };
   mensagens: { role: "user" | "assistant"; content: string }[];
@@ -39,6 +44,46 @@ function rotulo(v: boolean): string {
   return v ? "CERTO" : "ERRADO";
 }
 
+type QuestaoPayload = NonNullable<Payload["questao"]>;
+
+function ehMultipla(q: QuestaoPayload): boolean {
+  return q.tipo === "multipla";
+}
+
+/** Bloco "Alternativas:" para múltipla escolha; null em C/E. */
+function alternativasTexto(q: QuestaoPayload): string | null {
+  if (!ehMultipla(q) || !Array.isArray(q.alternativas)) return null;
+  return q.alternativas.map((a) => `${a.letra}) ${a.texto}`).join("\n");
+}
+
+/** Descrição do gabarito para ambos os tipos. */
+function gabaritoTexto(q: QuestaoPayload): string {
+  if (ehMultipla(q)) {
+    const alt = Array.isArray(q.alternativas)
+      ? q.alternativas.find((a) => a.letra === q.gabarito_letra)
+      : null;
+    return alt
+      ? `Alternativa ${q.gabarito_letra} — ${alt.texto}`
+      : `Alternativa ${q.gabarito_letra ?? "?"}`;
+  }
+  return rotulo(!!q.gabarito);
+}
+
+/** O que o aluno respondeu e se acertou, para ambos os tipos. */
+function situacaoTexto(q: QuestaoPayload): string {
+  if (ehMultipla(q)) {
+    if (!q.resposta_letra) return "O aluno ainda não respondeu este item.";
+    const acertou = q.resposta_letra === q.gabarito_letra;
+    return `O aluno marcou a alternativa ${q.resposta_letra} e ${acertou ? "ACERTOU" : "ERROU"}.`;
+  }
+  if (q.resposta === null || q.resposta === undefined) {
+    return "O aluno ainda não respondeu este item.";
+  }
+  return `O aluno respondeu ${rotulo(q.resposta)} e ${
+    q.resposta === q.gabarito ? "ACERTOU" : "ERROU"
+  }.`;
+}
+
 const BASE =
   "Você é um professor particular preparando um candidato para o concurso de Soldado da PMAL 2026 (banca CEBRASPE, itens de Certo/Errado).";
 
@@ -50,20 +95,16 @@ const REGRAS_COMUNS = [
 
 function systemQuestao(p: Payload): string {
   const q = p.questao!;
-  const situacao = q.resposta === null || q.resposta === undefined
-    ? "O aluno ainda não respondeu este item."
-    : `O aluno respondeu ${rotulo(q.resposta)} e ${
-      q.resposta === q.gabarito ? "ACERTOU" : "ERROU"
-    }.`;
   return [
     `${BASE} O aluno está resolvendo questões e abriu um chat para tirar dúvida sobre O ITEM ABAIXO.`,
     "",
     p.materia ? `Matéria: ${p.materia}` : null,
     p.assunto ? `Assunto: ${p.assunto}` : null,
     q.contexto ? `Comando da questão: ${q.contexto}` : null,
-    `Item: ${q.enunciado}`,
-    `Gabarito: ${rotulo(q.gabarito)}`,
-    situacao,
+    `${ehMultipla(q) ? "Enunciado" : "Item"}: ${q.enunciado}`,
+    alternativasTexto(q) ? `Alternativas:\n${alternativasTexto(q)}` : null,
+    `Gabarito: ${gabaritoTexto(q)}`,
+    situacaoTexto(q),
     q.comentario ? `Comentário do gabarito: ${q.comentario}` : null,
     "",
     "Regras da resposta:",
@@ -85,18 +126,18 @@ function systemResumirQuestao(p: Payload): string {
     p.materia ? `Matéria: ${p.materia}` : null,
     p.assunto ? `Assunto: ${p.assunto}` : null,
     q.contexto ? `Comando da questão: ${q.contexto}` : null,
-    `Item: ${q.enunciado}`,
-    `Gabarito: ${rotulo(q.gabarito)}`,
+    `${ehMultipla(q) ? "Enunciado" : "Item"}: ${q.enunciado}`,
+    alternativasTexto(q) ? `Alternativas:\n${alternativasTexto(q)}` : null,
+    `Gabarito: ${gabaritoTexto(q)}`,
     q.comentario ? `Comentário do gabarito: ${q.comentario}` : null,
     "",
-    "Monte um esquema curto e espaçado para colar no resumo. Responda SOMENTE com o esquema — sem preâmbulo, sem repetir o enunciado, sem citar \"a questão\", \"o item\" ou \"o gabarito\". Escreva o fato em si.",
-    "Estrutura EXATA, com uma LINHA EM BRANCO separando cada parte:",
+    "Monte um esquema curto, direto e objetivo para colar no resumo. Responda SOMENTE com o esquema — sem preâmbulo, sem repetir o enunciado, sem citar \"a questão\", \"o item\" ou \"o gabarito\", sem comentar o acerto ou o erro do aluno. Escreva o CONTEÚDO em si, não a pegadinha da banca.",
+    "Estrutura EXATA, com uma LINHA EM BRANCO separando as duas partes:",
     "",
-    "Parte 1 — Núcleo: escreva UMA linha começando com a seta \"→ \" (não escreva a palavra \"núcleo\"). É o que mata o tema: o conceito correto e a regra dele. Havendo base legal segura, cite o artigo entre parênteses. Deixe em CAIXA ALTA as 2 ou 3 palavras-chave que a banca cobra (o termo exato, o prazo, a autoridade).",
-    "Parte 2 — Reforço: 0 a 2 linhas curtas com o que cai junto (a exceção, o que subsiste, um requisito, a comparação com o instituto vizinho). Pule esta parte se não houver nada essencial. Não use rótulo.",
-    "Parte 3 — Pegadinha: UMA linha começando literalmente com \"Pegadinha: \" — a troca de termo, a inversão ou a exceção que a banca usa para tornar o item ERRADO.",
+    "Parte 1 — Núcleo: UMA linha começando com a seta \"→ \" (não escreva a palavra \"núcleo\"). É o conceito correto e a regra que definem o tema. Havendo base legal segura, cite o artigo entre parênteses. Deixe em CAIXA ALTA as 2 ou 3 palavras-chave que a banca cobra (o termo exato, o prazo, a autoridade).",
+    "Parte 2 — Em volta do núcleo: as informações que orbitam o tema e ajudam a MATAR OUTRAS QUESTÕES sobre ele — o rol COMPLETO de requisitos/hipóteses, as exceções, os prazos, as autoridades competentes, a comparação com o instituto vizinho. Uma informação por linha, cada linha começando com travessão \"— \". Se for uma lista (requisitos, hipóteses, competências, vedações), liste TODOS os itens. Inclua só o que for essencial e correto; se o núcleo já se basta sozinho, OMITA esta parte inteira. Não use rótulo.",
     "",
-    "Português do Brasil, direto. Sem markdown (nada de asteriscos, cerquilhas ou numeração). Não invente lei, artigo nem jurisprudência — na dúvida, omita o artigo.",
+    "Objetividade acima de tudo: nada de \"pegadinha\", rodeios ou enrolação. Português do Brasil, direto. Sem markdown (nada de asteriscos, cerquilhas ou numeração). Não invente lei, artigo nem jurisprudência — na dúvida, omita o artigo.",
   ]
     .filter((linha) => linha !== null)
     .join("\n");
@@ -175,7 +216,7 @@ Deno.serve(async (req: Request) => {
   // propósito — gasta pouco token por clique.
   const stream = client.messages.stream({
     model: "claude-opus-4-8",
-    max_tokens: resumirQuestao ? 450 : 1600,
+    max_tokens: resumirQuestao ? 600 : 1600,
     output_config: { effort: "low" },
     system,
     messages: mensagens,

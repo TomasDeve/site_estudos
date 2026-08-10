@@ -8,12 +8,13 @@ import {
   Check,
   ChevronRight,
   ExternalLink,
+  ListOrdered,
   MessageCircleQuestion,
   NotebookPen,
   RotateCcw,
+  Shuffle,
   Sparkles,
   Trash2,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -52,6 +53,9 @@ import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
+import { embaralhar, gerarSemente } from "./embaralhar";
+import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
+import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
@@ -69,7 +73,7 @@ function abaDe(q: TopicoQuestao, respondidasAgora: ReadonlySet<string>): AbaCade
   if (q.status === "arquivada") return "arquivada";
   // Respondida nesta sessão segue à mostra em "Para responder" — dá tempo de ler o
   // comentário e (se quiser) marcar para refazer antes de migrar para "Resolvidas".
-  if (q.resposta === null || respondidasAgora.has(q.id)) return "responder";
+  if (!estaResolvida(q) || respondidasAgora.has(q.id)) return "responder";
   return "resolvidas";
 }
 
@@ -186,6 +190,20 @@ function Caderno({ topico }: { topico: Topico }) {
       return proximo;
     });
   }
+
+  // Ordem de exibição das questões: `null` = ordem do caderno; uma semente =
+  // embaralhada. Misturar quebra sequências em que uma questão entrega a
+  // resposta da seguinte; "Ordem original" volta ao natural.
+  const [semente, setSemente] = useState<number | null>(null);
+  function misturar() {
+    setSemente(gerarSemente());
+    window.scrollTo({ top: 0 });
+  }
+  function ordemOriginal() {
+    setSemente(null);
+    window.scrollTo({ top: 0 });
+  }
+
   const [importando, setImportando] = useState(false);
   const [json, setJson] = useState("");
   const [aExcluir, setAExcluir] = useState<TopicoQuestao | null>(null);
@@ -217,15 +235,23 @@ function Caderno({ topico }: { topico: Topico }) {
   // Índice por id — acha a questão original de uma reformulada (revelado só após responder).
   const porId = useMemo(() => new Map(todas.map((x) => [x.id, x])), [todas]);
 
-  // Recorte por origem: o escopo é a união das categorias marcadas (placar, abas
-  // e numeração escopados). Conjunto vazio = "Todas" (junta tudo). Alimenta o resto.
-  const escopo = useMemo(
+  // Recorte por origem: a base é a união das categorias marcadas (placar, abas e
+  // numeração escopados). Conjunto vazio = "Todas" (junta tudo).
+  const escopoBase = useMemo(
     () =>
       cats.size === 0
         ? todas
         : todas.filter((q) => cats.has(q.categoria as QuestaoCategoria)),
     [todas, cats]
   );
+
+  // Ordem de exibição: a do caderno (natural) ou embaralhada por uma semente.
+  // Com semente, ordena por id antes de embaralhar para a mesma semente reproduzir
+  // a mesma ordem mesmo após os refetches disparados ao responder. Alimenta o resto.
+  const escopo = useMemo(() => {
+    if (semente === null) return escopoBase;
+    return embaralhar([...escopoBase].sort((a, b) => a.id.localeCompare(b.id)), semente);
+  }, [escopoBase, semente]);
 
   // Quantas questões há em cada categoria — número mostrado nas pílulas de filtro.
   const contagemCategoria = useMemo(() => {
@@ -246,7 +272,8 @@ function Caderno({ topico }: { topico: Topico }) {
     [todosLogs, topico.id]
   );
 
-  // Número da questão fixo na ordem do caderno (da categoria em foco), não muda ao trocar de aba.
+  // Número da questão na ordem de exibição atual (do caderno ou embaralhada) da
+  // categoria em foco; não muda ao trocar de aba, mas se renumera ao misturar.
   const numeroDe = useMemo(
     () => new Map(escopo.map((q, i) => [q.id, i + 1])),
     [escopo]
@@ -260,8 +287,8 @@ function Caderno({ topico }: { topico: Topico }) {
 
   // Placar considera tudo que já foi respondido na categoria em foco, em qualquer aba.
   const placar = useMemo(() => {
-    const respondidas = escopo.filter((q) => q.resposta !== null);
-    const acertos = respondidas.filter((q) => q.resposta === q.gabarito).length;
+    const respondidas = escopo.filter((q) => estaResolvida(q));
+    const acertos = respondidas.filter((q) => questaoAcertou(q)).length;
     return {
       respondidas: respondidas.length,
       acertos,
@@ -277,26 +304,33 @@ function Caderno({ topico }: { topico: Topico }) {
     .join(", ");
   // Chave estável do conjunto (ordenada) para o modo bloquinhos: resolve de 5 em 5.
   const catsKey = [...cats].sort().join(",");
-  const bloco = useBloquinhos(lista, `${catsKey}:${filtro}`);
+  const bloco = useBloquinhos(lista, `${catsKey}:${filtro}:${semente ?? "orig"}`);
 
-  /** `resposta: null` é o "refazer": limpa o gabarito e devolve a questão ao início. */
-  async function onResponder(q: TopicoQuestao, resposta: boolean | null) {
-    const estreia = resposta !== null && q.resposta === null;
+  /**
+   * `valor: null` é o "refazer": limpa a resposta e devolve a questão ao início.
+   * boolean = Certo/Errado; string = letra marcada na múltipla escolha.
+   */
+  async function onResponder(q: TopicoQuestao, valor: boolean | string | null) {
+    const estreia = valor !== null && !estaResolvida(q);
     try {
-      await responder.mutateAsync({ id: q.id, resposta });
+      await responder.mutateAsync({
+        id: q.id,
+        resposta: typeof valor === "boolean" ? valor : null,
+        respostaLetra: typeof valor === "string" ? valor : null,
+      });
       setRespondidasAgora((s) => {
         const n = new Set(s);
-        if (resposta === null) n.delete(q.id);
+        if (valor === null) n.delete(q.id);
         else n.add(q.id);
         return n;
       });
       // Só a estreia conta no desempenho — refazer a questão não infla a estatística.
-      if (estreia) {
+      if (estreia && valor !== null) {
         clique.mutate({
           data: hojeISO(),
           materiaId: topico.materia_id,
           topicoId: topico.id,
-          acerto: resposta === q.gabarito,
+          acerto: valorAcerta(q, valor),
         });
       }
     } catch (err) {
@@ -366,7 +400,36 @@ function Caderno({ topico }: { topico: Topico }) {
               <span className="text-[11px] text-mut">
                 A 1ª resposta entra no desempenho do assunto
               </span>
-              <BotaoBloquinhos b={bloco} className="ml-auto" />
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+                {semente !== null && (
+                  <button
+                    onClick={ordemOriginal}
+                    title="Voltar à ordem original do caderno"
+                    className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2.5 py-1.5 text-[11px] font-semibold text-dim transition-colors hover:border-line hover:bg-navy-700/60 hover:text-txt"
+                  >
+                    <ListOrdered className="size-3.5" />
+                    <span className="max-sm:hidden">Ordem original</span>
+                  </button>
+                )}
+                <button
+                  onClick={misturar}
+                  aria-pressed={semente !== null}
+                  title={
+                    semente !== null
+                      ? "Embaralhar as questões de novo"
+                      : "Misturar a ordem das questões (quebra sequências que entregam a resposta)"
+                  }
+                  className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+                    semente !== null
+                      ? "border-gold/40 bg-gold/10 text-gold"
+                      : "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
+                  }`}
+                >
+                  <Shuffle className="size-3.5" />
+                  Misturar
+                </button>
+                <BotaoBloquinhos b={bloco} />
+              </div>
             </div>
           )}
 
@@ -584,7 +647,7 @@ function Caderno({ topico }: { topico: Topico }) {
 interface CardProps {
   questao: TopicoQuestao;
   numero: number;
-  onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
+  onResponder: (q: TopicoQuestao, valor: boolean | string | null) => void;
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
@@ -674,8 +737,7 @@ function QuestaoCard({
   naResumo,
   onVerResumo,
 }: CardProps) {
-  const resolvida = q.resposta !== null;
-  const acertou = q.resposta === q.gabarito;
+  const resolvida = estaResolvida(q);
   const status = q.status as QuestaoStatus;
 
   return (
@@ -711,34 +773,10 @@ function QuestaoCard({
       <p className="text-sm leading-relaxed text-txt">{q.enunciado}</p>
 
       {!resolvida ? (
-        <div className="mt-3 flex gap-2">
-          <button
-            onClick={() => onResponder(q, true)}
-            className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-green/30 bg-green/15 text-sm font-semibold text-green transition-all hover:bg-green/25 active:scale-[0.97]"
-          >
-            <Check className="size-4" /> Certo
-          </button>
-          <button
-            onClick={() => onResponder(q, false)}
-            className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red/30 bg-red/15 text-sm font-semibold text-red transition-all hover:bg-red/25 active:scale-[0.97]"
-          >
-            <X className="size-4" /> Errado
-          </button>
-        </div>
+        <BotoesResposta questao={q} onResponder={(v) => onResponder(q, v)} />
       ) : (
         <div className="mt-3 space-y-2.5">
-          <div
-            className={`flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg px-2.5 py-2 text-xs font-semibold ${
-              acertou ? "bg-green/10 text-green" : "bg-red/10 text-red"
-            }`}
-          >
-            {acertou ? <Check className="size-4" /> : <X className="size-4" />}
-            {acertou ? "Você acertou" : "Você errou"}
-            <span className="font-normal text-dim">
-              Sua resposta: {q.resposta ? "Certo" : "Errado"} · Gabarito:{" "}
-              <strong className="text-txt">{q.gabarito ? "CERTO" : "ERRADO"}</strong>
-            </span>
-          </div>
+          <ResultadoResposta questao={q} />
 
           {q.comentario && (
             <div className="border-l-2 border-gold/60 pl-2.5">

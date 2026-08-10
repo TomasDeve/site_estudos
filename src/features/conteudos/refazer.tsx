@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, RefreshCw } from "lucide-react";
 import type { TopicoQuestao } from "@/types/db";
+import { gabaritoLabel } from "./questaoModelo";
 
 /**
  * Botão "Refazer questão futuramente" — substitui o antigo seletor de dificuldade.
@@ -55,8 +56,7 @@ export function OrigemReformulada({ original }: { original?: TopicoQuestao }) {
           {original.fonte && <p className="mb-0.5 text-[10px] text-mut">{original.fonte}</p>}
           <p className="whitespace-pre-wrap text-xs leading-relaxed text-dim">{original.enunciado}</p>
           <p className="mt-1 text-[11px] text-mut">
-            Gabarito da original:{" "}
-            <strong className="text-dim">{original.gabarito ? "CERTO" : "ERRADO"}</strong>
+            Gabarito da original: <strong className="text-dim">{gabaritoLabel(original)}</strong>
           </p>
         </div>
       )}

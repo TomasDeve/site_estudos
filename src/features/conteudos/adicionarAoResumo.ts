@@ -15,9 +15,8 @@ const semMarcador = (l: string) => l.replace(/^(?:—>|->|→|[-–—•*·])\s
 /**
  * Monta o bloco esquematizado que entra no resumo a partir do texto da IA:
  * uma linha divisória (`<hr>`) separando este núcleo do anterior, a linha do
- * núcleo com seta, o reforço espaçado e a pegadinha com rótulo destacado.
- * Preserva as linhas em branco da IA como respiro e garante o espaçamento
- * antes da pegadinha mesmo que ela venha colada.
+ * núcleo com seta e, abaixo, as informações "em volta" como itens com travessão.
+ * Preserva a linha em branco da IA como respiro entre o núcleo e a lista.
  */
 function montarBlocoResumo(texto: string): string {
   const linhas = texto.split("\n").map((l) => l.trim());
@@ -30,21 +29,16 @@ function montarBlocoResumo(texto: string): string {
       if (!primeira) espacoPendente = true; // colapsa vazias e ignora as do começo
       continue;
     }
-    const peg = /^(pegadinha\b[^:]*:)\s*(.*)$/i.exec(linha);
-    if (peg && !primeira) espacoPendente = true; // pegadinha sempre respira acima
 
     if (espacoPendente) {
       partes.push("<div><br></div>");
       espacoPendente = false;
     }
 
-    if (peg) {
-      partes.push(`<div><strong>${esc(peg[1])}</strong> ${esc(peg[2])}</div>`);
-    } else if (primeira) {
-      partes.push(`<div>→ ${esc(semMarcador(linha))}</div>`);
-    } else {
-      partes.push(`<div>${esc(semMarcador(linha))}</div>`);
-    }
+    // Núcleo sempre com seta; as demais linhas viram itens com travessão. Em
+    // ambos os casos normalizamos o marcador que a IA tenha posto no começo.
+    const prefixo = primeira ? "→ " : "— ";
+    partes.push(`<div>${prefixo}${esc(semMarcador(linha))}</div>`);
     primeira = false;
   }
 
@@ -62,8 +56,8 @@ interface Args {
 
 /**
  * "Adicionar ao resumo": a IA condensa o aprendizado da questão num esquema
- * curto (núcleo + reforço + pegadinha) e o bloco é anexado ao resumo rápido do
- * destino — pelo editor aberto na tela, se houver, ou direto no banco.
+ * curto e objetivo (núcleo + informações em volta) e o bloco é anexado ao resumo
+ * rápido do destino — pelo editor aberto na tela, se houver, ou direto no banco.
  */
 export function useAdicionarQuestaoAoResumo() {
   const anexarNoBanco = useAnexarResumoQuestoes();
@@ -94,11 +88,15 @@ export function useAdicionarQuestaoAoResumo() {
         materia: materiaNome ?? null,
         assunto: assunto ?? null,
         questao: {
+          tipo: questao.tipo,
           contexto: questao.contexto,
           enunciado: questao.enunciado,
           gabarito: questao.gabarito,
+          gabarito_letra: questao.gabarito_letra,
+          alternativas: questao.alternativas,
           comentario: questao.comentario,
           resposta: questao.resposta,
+          resposta_letra: questao.resposta_letra,
         },
         mensagens: [
           { role: "user", content: "Gere o trecho para eu adicionar ao meu resumo." },

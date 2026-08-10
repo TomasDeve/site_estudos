@@ -8,7 +8,10 @@ import type {
 } from "@/types/db";
 
 /** Colunas leves o bastante para carregar as questões de todos os assuntos de uma vez. */
-export type QuestaoResumo = Pick<TopicoQuestao, "id" | "topico_id" | "status" | "resposta">;
+export type QuestaoResumo = Pick<
+  TopicoQuestao,
+  "id" | "topico_id" | "status" | "resposta" | "resposta_letra" | "tipo"
+>;
 
 /** Contadores por assunto na lista do edital — sem trazer enunciado nem comentário. */
 export function useQuestoesResumo() {
@@ -18,7 +21,7 @@ export function useQuestoesResumo() {
       fetchAll<QuestaoResumo>((f, t) =>
         supabase
           .from("topico_questoes")
-          .select("id,topico_id,status,resposta")
+          .select("id,topico_id,status,resposta,resposta_letra,tipo")
           .order("topico_id")
           .range(f, t)
       ),
@@ -55,18 +58,29 @@ export function useTopicoQuestoes(topicoId: string | null) {
 }
 
 /**
- * Grava a resposta do aluno. `resposta: null` devolve a questão ao estado
- * "não resolvida" (refazer), escondendo gabarito e comentário de novo.
+ * Grava a resposta do aluno. C/E usa `resposta` (boolean); múltipla usa
+ * `respostaLetra` (a letra marcada). Ambos nulos = "refazer": devolve a questão
+ * ao estado não resolvido, escondendo gabarito e comentário de novo.
  */
 export function useResponderQuestao() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, resposta }: { id: string; resposta: boolean | null }) => {
+    mutationFn: async ({
+      id,
+      resposta = null,
+      respostaLetra = null,
+    }: {
+      id: string;
+      resposta?: boolean | null;
+      respostaLetra?: string | null;
+    }) => {
+      const resolvida = resposta !== null || respostaLetra !== null;
       const { error } = await supabase
         .from("topico_questoes")
         .update({
           resposta,
-          respondida_em: resposta === null ? null : new Date().toISOString(),
+          resposta_letra: respostaLetra,
+          respondida_em: resolvida ? new Date().toISOString() : null,
         })
         .eq("id", id);
       if (error) throw error;

@@ -4,6 +4,7 @@ import type { QuestaoLog, TopicoQuestao } from "@/types/db";
 import { Button } from "@/components/Button";
 import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
+import { acertou, estaResolvida } from "./questaoModelo";
 
 /** Série curta: 5 questões por vez, para a resolução ter começo, meio e fim. */
 const TAMANHO = 5;
@@ -48,8 +49,8 @@ export function useBloquinhos(lista: TopicoQuestao[], reset: string): Bloquinho 
   const atual = Math.min(indice, Math.max(total - 1, 0));
   const doBloco = ativo ? lista.slice(atual * TAMANHO, atual * TAMANHO + TAMANHO) : lista;
 
-  const respondidas = doBloco.filter((q) => q.resposta !== null);
-  const acertos = respondidas.filter((q) => q.resposta === q.gabarito).length;
+  const respondidas = doBloco.filter((q) => estaResolvida(q));
+  const acertos = respondidas.filter((q) => acertou(q)).length;
 
   return {
     lista: doBloco,
@@ -109,7 +110,7 @@ export function CabecalhoBloco({ b }: { b: Bloquinho }) {
           <span
             key={q.id}
             className={`size-2 rounded-full ${
-              q.resposta === null ? "bg-navy-600" : q.resposta === q.gabarito ? "bg-green" : "bg-red"
+              !estaResolvida(q) ? "bg-navy-600" : acertou(q) ? "bg-green" : "bg-red"
             }`}
           />
         ))}

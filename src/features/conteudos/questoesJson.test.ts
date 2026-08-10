@@ -105,4 +105,55 @@ describe("parsearQuestoesJson", () => {
       "baseada_questoes",
     ]);
   });
+
+  it("reconhece múltipla escolha pelas alternativas e monta a linha", () => {
+    const linhas = parsearQuestoesJson(
+      JSON.stringify([
+        {
+          enunciado: "Assinale a correta.",
+          alternativas: [
+            { letra: "a", texto: "primeira" },
+            { letra: "B", texto: "segunda" },
+            { letra: "C", texto: "terceira" },
+          ],
+          gabarito_letra: "b",
+          comentario: "B é a correta.",
+        },
+      ]),
+      TOPICO,
+      0
+    );
+    expect(linhas[0]).toMatchObject({
+      tipo: "multipla",
+      gabarito_letra: "B",
+      gabarito: null,
+    });
+    expect(linhas[0].alternativas).toEqual([
+      { letra: "A", texto: "primeira" },
+      { letra: "B", texto: "segunda" },
+      { letra: "C", texto: "terceira" },
+    ]);
+  });
+
+  it("exige gabarito_letra válido na múltipla escolha", () => {
+    const alt = [
+      { letra: "A", texto: "um" },
+      { letra: "B", texto: "dois" },
+    ];
+    expect(() =>
+      parsearQuestoesJson(JSON.stringify([{ enunciado: "x", alternativas: alt }]), TOPICO, 0)
+    ).toThrow(/gabarito_letra/);
+    expect(() =>
+      parsearQuestoesJson(
+        JSON.stringify([{ enunciado: "x", alternativas: alt, gabarito_letra: "D" }]),
+        TOPICO,
+        0
+      )
+    ).toThrow(/não corresponde/);
+  });
+
+  it("marca as questões C/E com tipo 'ce'", () => {
+    const linhas = parsearQuestoesJson('[{"enunciado":"x","gabarito":"C"}]', TOPICO, 0);
+    expect(linhas[0]).toMatchObject({ tipo: "ce", gabarito: true });
+  });
 });

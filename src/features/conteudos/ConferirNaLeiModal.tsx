@@ -7,6 +7,7 @@ import { Spinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { TextoReader } from "./TextoReader";
 import { apenasLeis, artigoDaFonte, escolherTexto } from "./leiDaQuestao";
+import { ehMultipla, gabaritoLabel } from "./questaoModelo";
 
 interface Props {
   questao: TopicoQuestao;
@@ -56,8 +57,12 @@ export function ConferirNaLeiModal({ questao, topicoId, numero, onClose }: Props
           {numero != null && <span className="font-bold uppercase text-mut">Questão {numero}</span>}
           <span className="text-dim">
             Gabarito:{" "}
-            <strong className={questao.gabarito ? "text-green" : "text-red"}>
-              {questao.gabarito ? "CERTO" : "ERRADO"}
+            <strong
+              className={
+                ehMultipla(questao) ? "text-gold" : questao.gabarito ? "text-green" : "text-red"
+              }
+            >
+              {gabaritoLabel(questao)}
             </strong>
           </span>
           {questao.fonte && <span className="text-mut">{questao.fonte}</span>}

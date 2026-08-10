@@ -1,6 +1,7 @@
 import { Sparkles } from "lucide-react";
 import type { TopicoQuestao } from "@/types/db";
 import { ChatIA } from "./ChatIA";
+import { acertou, ehMultipla, estaResolvida, gabaritoLabel } from "./questaoModelo";
 
 interface Props {
   questao: TopicoQuestao;
@@ -16,7 +17,7 @@ interface Props {
  * fechar/recarregar a aba do navegador.
  */
 export function DuvidaIAModal({ questao, materiaNome, assunto, onClose }: Props) {
-  const errou = questao.resposta !== null && questao.resposta !== questao.gabarito;
+  const errou = estaResolvida(questao) && !acertou(questao);
 
   const sugestoes = [
     ...(errou ? ["Onde meu raciocínio falhou?"] : []),
@@ -37,11 +38,15 @@ export function DuvidaIAModal({ questao, materiaNome, assunto, onClose }: Props)
         materia: materiaNome ?? null,
         assunto: assunto ?? null,
         questao: {
+          tipo: questao.tipo,
           contexto: questao.contexto,
           enunciado: questao.enunciado,
           gabarito: questao.gabarito,
+          gabarito_letra: questao.gabarito_letra,
+          alternativas: questao.alternativas,
           comentario: questao.comentario,
           resposta: questao.resposta,
+          resposta_letra: questao.resposta_letra,
         },
       })}
       sugestoes={sugestoes}
@@ -55,10 +60,14 @@ export function DuvidaIAModal({ questao, materiaNome, assunto, onClose }: Props)
             )}
             <span
               className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                questao.gabarito ? "bg-green/15 text-green" : "bg-red/15 text-red"
+                ehMultipla(questao)
+                  ? "bg-gold/15 text-gold"
+                  : questao.gabarito
+                    ? "bg-green/15 text-green"
+                    : "bg-red/15 text-red"
               }`}
             >
-              Gabarito: {questao.gabarito ? "Certo" : "Errado"}
+              Gabarito: {gabaritoLabel(questao)}
             </span>
           </div>
           <p className="line-clamp-3 text-xs leading-relaxed text-dim">{questao.enunciado}</p>

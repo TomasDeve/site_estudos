@@ -8,7 +8,6 @@ import {
   NotebookPen,
   RotateCcw,
   Shuffle,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Materia, QuestaoCategoria, TopicoQuestao } from "@/types/db";
@@ -37,37 +36,15 @@ import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
 import { CATEGORIAS_FILTRO } from "./categorias";
 import { PillCategoria } from "./QuestoesPage";
+import { embaralhar, gerarSemente } from "./embaralhar";
+import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
+import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
 
 const ABAS = [
   { chave: "responder", label: "Para responder" },
   { chave: "resolvidas", label: "Resolvidas" },
 ] as const;
 type Aba = (typeof ABAS)[number]["chave"];
-
-function gerarSemente() {
-  return Math.floor(Math.random() * 2 ** 31);
-}
-
-/** RNG determinístico (mulberry32): mesma semente → mesma sequência. */
-function mulberry32(seed: number) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function embaralhar<T>(itens: T[], semente: number): T[] {
-  const arr = [...itens];
-  const rnd = mulberry32(semente);
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
 
 /**
  * Modo misturado — questões embaralhadas em ordem aleatória, do jeito que caem
@@ -196,8 +173,8 @@ export function QuestoesMistasPage() {
 
   // Placar de tudo que já foi respondido, em qualquer aba.
   const placar = useMemo(() => {
-    const respondidas = misturadas.filter((q) => q.resposta !== null);
-    const acertos = respondidas.filter((q) => q.resposta === q.gabarito).length;
+    const respondidas = misturadas.filter((q) => estaResolvida(q));
+    const acertos = respondidas.filter((q) => questaoAcertou(q)).length;
     return {
       respondidas: respondidas.length,
       acertos,
@@ -206,10 +183,10 @@ export function QuestoesMistasPage() {
   }, [misturadas]);
 
   const paraResponder = misturadas.filter(
-    (q) => q.resposta === null || respondidasAgora.has(q.id)
+    (q) => !estaResolvida(q) || respondidasAgora.has(q.id)
   );
   const resolvidas = misturadas.filter(
-    (q) => q.resposta !== null && !respondidasAgora.has(q.id)
+    (q) => estaResolvida(q) && !respondidasAgora.has(q.id)
   );
   const lista = aba === "responder" ? paraResponder : resolvidas;
   const contagem: Record<Aba, number> = {
@@ -242,21 +219,28 @@ export function QuestoesMistasPage() {
     window.scrollTo({ top: 0 });
   }
 
-  /** `resposta: null` é o "refazer": limpa o gabarito e devolve a questão ao início. */
-  async function onResponder(q: TopicoQuestao, resposta: boolean | null) {
-    const estreia = resposta !== null && q.resposta === null;
+  /**
+   * `valor: null` é o "refazer": limpa a resposta e devolve a questão ao início.
+   * boolean = Certo/Errado; string = letra marcada na múltipla escolha.
+   */
+  async function onResponder(q: TopicoQuestao, valor: boolean | string | null) {
+    const estreia = valor !== null && !estaResolvida(q);
     try {
-      await responder.mutateAsync({ id: q.id, resposta });
-      if (resposta !== null) {
+      await responder.mutateAsync({
+        id: q.id,
+        resposta: typeof valor === "boolean" ? valor : null,
+        respostaLetra: typeof valor === "string" ? valor : null,
+      });
+      if (valor !== null) {
         setRespondidasAgora((s) => new Set(s).add(q.id));
       }
       // Mesma regra do caderno: só a estreia conta no desempenho do assunto.
-      if (estreia) {
+      if (estreia && valor !== null) {
         clique.mutate({
           data: hojeISO(),
           materiaId: topicoPorId.get(q.topico_id)?.materia_id ?? null,
           topicoId: q.topico_id,
-          acerto: resposta === q.gabarito,
+          acerto: valorAcerta(q, valor),
         });
       }
     } catch (err) {
@@ -464,7 +448,7 @@ interface CardProps {
   materia: Materia | undefined;
   /** No modo por matéria a etiqueta some (é sempre a mesma, já vai no cabeçalho). */
   mostrarMateria: boolean;
-  onResponder: (q: TopicoQuestao, resposta: boolean | null) => void;
+  onResponder: (q: TopicoQuestao, valor: boolean | string | null) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
   origem?: TopicoQuestao;
@@ -493,8 +477,7 @@ function QuestaoMistaCard({
   naResumo,
   onVerResumo,
 }: CardProps) {
-  const resolvida = q.resposta !== null;
-  const acertou = q.resposta === q.gabarito;
+  const resolvida = estaResolvida(q);
 
   return (
     <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
@@ -516,34 +499,10 @@ function QuestaoMistaCard({
       <p className="text-sm leading-relaxed text-txt">{q.enunciado}</p>
 
       {!resolvida ? (
-        <div className="mt-3 flex gap-2">
-          <button
-            onClick={() => onResponder(q, true)}
-            className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-green/30 bg-green/15 text-sm font-semibold text-green transition-all hover:bg-green/25 active:scale-[0.97]"
-          >
-            <Check className="size-4" /> Certo
-          </button>
-          <button
-            onClick={() => onResponder(q, false)}
-            className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red/30 bg-red/15 text-sm font-semibold text-red transition-all hover:bg-red/25 active:scale-[0.97]"
-          >
-            <X className="size-4" /> Errado
-          </button>
-        </div>
+        <BotoesResposta questao={q} onResponder={(v) => onResponder(q, v)} />
       ) : (
         <div className="mt-3 space-y-2.5">
-          <div
-            className={`flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg px-2.5 py-2 text-xs font-semibold ${
-              acertou ? "bg-green/10 text-green" : "bg-red/10 text-red"
-            }`}
-          >
-            {acertou ? <Check className="size-4" /> : <X className="size-4" />}
-            {acertou ? "Você acertou" : "Você errou"}
-            <span className="font-normal text-dim">
-              Sua resposta: {q.resposta ? "Certo" : "Errado"} · Gabarito:{" "}
-              <strong className="text-txt">{q.gabarito ? "CERTO" : "ERRADO"}</strong>
-            </span>
-          </div>
+          <ResultadoResposta questao={q} />
 
           {q.comentario && (
             <div className="border-l-2 border-gold/60 pl-2.5">

@@ -35,6 +35,7 @@ import { useCriarTopico, useReordenarTopicos, useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
 import { useTopicoTextos } from "@/api/topicoTextos";
 import { useQuestoesResumo, type QuestaoResumo } from "@/api/topicoQuestoes";
+import { estaResolvida } from "./questaoModelo";
 import { metasPorTopico, useAplicarPlanoPadrao, useTopicoMetas } from "@/api/topicoMetas";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { useRedacoes } from "@/api/redacoes";
@@ -207,7 +208,7 @@ export function MateriaPage() {
   const questoesIA = (questoes ?? []).filter(
     (q) => idsTopicos.has(q.topico_id) && q.status !== "arquivada"
   );
-  const pendentesIA = questoesIA.filter((q) => q.resposta === null).length;
+  const pendentesIA = questoesIA.filter((q) => !estaResolvida(q)).length;
 
   const ehRedacao = materia.tipo === "redacao";
   const textosDaMateria = (textos ?? []).filter((t) => t.materia_id === materia.id);

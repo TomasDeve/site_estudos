@@ -1,16 +1,22 @@
-import type { QuestaoCategoria, TablesInsert } from "@/types/db";
+import type { AlternativaQC, Json, QuestaoCategoria, TablesInsert } from "@/types/db";
 import { CATEGORIA_PADRAO, normalizarCategoria } from "./categorias";
 
-/** Uma questão como a IA entrega: gabarito aceita booleano ou "C"/"E". */
+/**
+ * Uma questão como a IA entrega. Certo/Errado usa `gabarito` ("C"/"E"/bool);
+ * múltipla escolha traz `alternativas` [{letra,texto}] + `gabarito_letra`.
+ */
 export interface QuestaoJson {
   contexto?: string | null;
   enunciado: string;
-  gabarito: boolean | string;
+  gabarito?: boolean | string;
   comentario?: string | null;
   fonte?: string | null;
   /** Origem da questão; aceita sinônimos. Ausente = a categoria escolhida na importação. */
   categoria?: string | null;
   tipo?: string | null;
+  /** Presença de alternativas marca a questão como múltipla escolha. */
+  alternativas?: unknown;
+  gabarito_letra?: string | null;
 }
 
 const CERTO = new Set(["c", "certo", "true", "v", "verdadeiro"]);
@@ -32,9 +38,23 @@ function lerTexto(valor: unknown): string | null {
   return t || null;
 }
 
+/** Lê o array [{letra,texto}], limpando entradas malformadas. Vazio = não é múltipla. */
+function lerAlternativas(valor: unknown): AlternativaQC[] {
+  if (!Array.isArray(valor)) return [];
+  const out: AlternativaQC[] = [];
+  for (const x of valor) {
+    if (!x || typeof x !== "object") continue;
+    const letra = lerTexto((x as Record<string, unknown>).letra);
+    const texto = lerTexto((x as Record<string, unknown>).texto);
+    if (letra && texto) out.push({ letra: letra.toUpperCase(), texto });
+  }
+  return out;
+}
+
 /**
  * Converte o JSON gerado pela IA em linhas prontas para o insert.
- * `ordem` continua de onde a lista atual do assunto parou.
+ * `ordem` continua de onde a lista atual do assunto parou. Cada questão vira
+ * uma linha C/E (`tipo:"ce"`) ou, se trouxer `alternativas`, uma múltipla escolha.
  */
 export function parsearQuestoesJson(
   texto: string,
@@ -60,15 +80,42 @@ export function parsearQuestoesJson(
     const enunciado = lerTexto(q.enunciado);
     if (!enunciado) throw new Error(`Questão ${i + 1}: "enunciado" é obrigatório.`);
 
-    return {
+    const base = {
       topico_id: topicoId,
       categoria: normalizarCategoria(q.categoria ?? q.tipo, categoriaPadrao),
       contexto: lerTexto(q.contexto),
       enunciado,
-      gabarito: lerGabarito(q.gabarito, i + 1),
       comentario: lerTexto(q.comentario) ?? "",
       fonte: lerTexto(q.fonte),
       ordem: ordemInicial + i,
+    };
+
+    // Múltipla escolha: tem alternativas e a letra do gabarito.
+    const alternativas = lerAlternativas(q.alternativas);
+    if (alternativas.length > 0) {
+      const letra = lerTexto(q.gabarito_letra)?.toUpperCase() ?? null;
+      if (!letra) {
+        throw new Error(`Questão ${i + 1}: múltipla escolha exige "gabarito_letra" (ex.: "C").`);
+      }
+      if (!alternativas.some((a) => a.letra === letra)) {
+        throw new Error(
+          `Questão ${i + 1}: "gabarito_letra" (${letra}) não corresponde a nenhuma alternativa.`
+        );
+      }
+      return {
+        ...base,
+        tipo: "multipla",
+        alternativas: alternativas as unknown as Json,
+        gabarito_letra: letra,
+        gabarito: null,
+      };
+    }
+
+    // Certo/Errado (padrão).
+    return {
+      ...base,
+      tipo: "ce",
+      gabarito: lerGabarito(q.gabarito, i + 1),
     };
   });
 }
