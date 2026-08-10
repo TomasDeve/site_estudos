@@ -1,4 +1,5 @@
-import { Check, X } from "lucide-react";
+import { useState } from "react";
+import { Check, Scissors, X } from "lucide-react";
 import type { TopicoQuestao } from "@/types/db";
 import { acertou, alternativasDe, ehMultipla } from "./questaoModelo";
 
@@ -15,22 +16,7 @@ export function BotoesResposta({
   onResponder: (valor: boolean | string) => void;
 }) {
   if (ehMultipla(q)) {
-    return (
-      <div className="mt-3 space-y-2">
-        {alternativasDe(q).map((a) => (
-          <button
-            key={a.letra}
-            onClick={() => onResponder(a.letra)}
-            className="flex w-full cursor-pointer items-start gap-2.5 rounded-lg border border-line/60 bg-navy-900/40 px-3 py-2.5 text-left transition-all hover:border-gold/50 hover:bg-navy-700/50 active:scale-[0.99]"
-          >
-            <span className="mt-px flex size-5 shrink-0 items-center justify-center rounded-md border border-line/70 text-[11px] font-bold text-dim">
-              {a.letra}
-            </span>
-            <span className="text-sm leading-relaxed text-txt">{a.texto}</span>
-          </button>
-        ))}
-      </div>
-    );
+    return <AlternativasResposta questao={q} onResponder={onResponder} />;
   }
   return (
     <div className="mt-3 flex gap-2">
@@ -46,6 +32,84 @@ export function BotoesResposta({
       >
         <X className="size-4" /> Errado
       </button>
+    </div>
+  );
+}
+
+/**
+ * Alternativas de múltipla escolha com "tesoura" ao lado, no estilo do
+ * QConcursos: clicar na tesoura risca (elimina) a alternativa que o aluno já
+ * descartou — um apoio para resolver por eliminação. Uma alternativa riscada
+ * fica travada para marcação até ser restaurada. O estado é local: vale só
+ * enquanto a questão não foi respondida.
+ */
+function AlternativasResposta({
+  questao: q,
+  onResponder,
+}: {
+  questao: TopicoQuestao;
+  onResponder: (valor: boolean | string) => void;
+}) {
+  const [riscadas, setRiscadas] = useState<Set<string>>(() => new Set());
+
+  const alternarRisco = (letra: string) =>
+    setRiscadas((prev) => {
+      const proximo = new Set(prev);
+      if (proximo.has(letra)) proximo.delete(letra);
+      else proximo.add(letra);
+      return proximo;
+    });
+
+  return (
+    <div className="mt-3 space-y-2">
+      {alternativasDe(q).map((a) => {
+        const riscada = riscadas.has(a.letra);
+        return (
+          <div key={a.letra} className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => alternarRisco(a.letra)}
+              aria-pressed={riscada}
+              title={riscada ? "Restaurar alternativa" : "Riscar (eliminar) alternativa"}
+              className={`flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors ${
+                riscada
+                  ? "text-red hover:text-red/80"
+                  : "text-dim/45 hover:bg-navy-700/50 hover:text-gold"
+              }`}
+            >
+              <Scissors className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onResponder(a.letra)}
+              disabled={riscada}
+              aria-disabled={riscada}
+              className={`flex flex-1 items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-all ${
+                riscada
+                  ? "cursor-default border-line/30 bg-transparent"
+                  : "cursor-pointer border-line/60 bg-navy-900/40 hover:border-gold/50 hover:bg-navy-700/50 active:scale-[0.99]"
+              }`}
+            >
+              <span
+                className={`mt-px flex size-5 shrink-0 items-center justify-center rounded-md border text-[11px] font-bold ${
+                  riscada ? "border-line/40 text-dim/50" : "border-line/70 text-dim"
+                }`}
+              >
+                {a.letra}
+              </span>
+              <span
+                className={`text-sm leading-relaxed ${
+                  riscada
+                    ? "text-dim/50 line-through decoration-red/60 decoration-2"
+                    : "text-txt"
+                }`}
+              >
+                {a.texto}
+              </span>
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
