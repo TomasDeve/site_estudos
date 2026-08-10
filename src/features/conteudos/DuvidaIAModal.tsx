@@ -1,7 +1,7 @@
 import { Sparkles } from "lucide-react";
 import type { TopicoQuestao } from "@/types/db";
 import { ChatIA } from "./ChatIA";
-import { acertou, ehMultipla, estaResolvida, gabaritoLabel } from "./questaoModelo";
+import { ehMultipla, gabaritoLabel } from "./questaoModelo";
 
 interface Props {
   questao: TopicoQuestao;
@@ -17,13 +17,10 @@ interface Props {
  * fechar/recarregar a aba do navegador.
  */
 export function DuvidaIAModal({ questao, materiaNome, assunto, onClose }: Props) {
-  const errou = estaResolvida(questao) && !acertou(questao);
-
   const sugestoes = [
-    ...(errou ? ["Onde meu raciocínio falhou?"] : []),
-    "Por que o gabarito é esse?",
-    "Me dá um macete para não errar mais",
-    "Como a banca costuma cobrar isso?",
+    "Me explique isso de forma simples",
+    "Aponte em que parte isto está escrito",
+    "Como isso pode cair?",
   ];
 
   return (
