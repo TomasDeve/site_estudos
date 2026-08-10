@@ -690,13 +690,18 @@ function parseFonteQC(fonte: string) {
   return { codigo, id, banca, ano, cargo };
 }
 
+/** Diz se a fonte é de uma questão real do QConcursos (tem "Q{id}"); as demais são texto livre. */
+export function ehFonteQC(fonte: string) {
+  return /Q\d+/.test(fonte);
+}
+
 /**
  * Linha de origem da questão. Em questões do QConcursos mostra "ano (BANCA) - cargo" e torna o
  * "Q{id}" um link que PESQUISA a questão no Google: a URL direta do QConcursos usa um slug
  * interno (ex.: /questoes/776a040b-43) que não dá pra montar a partir do ID numérico, então a
  * busca pelo "Q{id}" cai na página certa.
  */
-function FonteQuestao({ fonte }: { fonte: string }) {
+export function FonteQuestao({ fonte }: { fonte: string }) {
   const { codigo, id, banca, ano, cargo } = parseFonteQC(fonte);
   if (!id || !codigo) {
     return <p className="mt-1 text-[10px] leading-relaxed text-mut">{fonte}</p>;

@@ -35,7 +35,7 @@ import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
 import { CATEGORIAS_FILTRO } from "./categorias";
-import { PillCategoria } from "./QuestoesPage";
+import { ehFonteQC, FonteQuestao, PillCategoria } from "./QuestoesPage";
 import { embaralhar, gerarSemente } from "./embaralhar";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
@@ -50,9 +50,10 @@ type Aba = (typeof ABAS)[number]["chave"];
  * Modo misturado — questões embaralhadas em ordem aleatória, do jeito que caem
  * na prova. Sem `:materiaId` na rota, traz todas as questões do site; com ele,
  * só as da matéria escolhida (misturando os assuntos dela). Abre em aba própria,
- * como o caderno de um assunto, mas as questões não revelam assunto nem fonte,
- * para não dar pista. Responder aqui grava na mesma questão do caderno e segue a
- * mesma regra: a 1ª resposta entra no desempenho do assunto.
+ * como o caderno de um assunto. Não revela o assunto (nem o número da questão),
+ * para não dar pista; a fonte da questão real (cargo, banca e ano) aparece, pois
+ * não entrega a resposta. Responder aqui grava na mesma questão do caderno e segue
+ * a mesma regra: a 1ª resposta entra no desempenho do assunto.
  */
 export function QuestoesMistasPage() {
   const navigate = useNavigate();
@@ -462,7 +463,8 @@ interface CardProps {
   onVerResumo: () => void;
 }
 
-/** Card do modo misturado: só a matéria no topo — sem assunto, fonte ou número. */
+/** Card do modo misturado: matéria e a fonte real (cargo/banca/ano) no topo —
+ *  sem revelar o assunto nem o número da questão. */
 function QuestaoMistaCard({
   questao: q,
   materia,
@@ -478,15 +480,24 @@ function QuestaoMistaCard({
   onVerResumo,
 }: CardProps) {
   const resolvida = estaResolvida(q);
+  // Cargo, banca e ano da questão real (QConcursos) — não revelam o assunto, então
+  // aparecem aqui no misturado igual ao caderno. Fonte de texto livre fica de fora
+  // para não entregar o assunto.
+  const fonteQC = q.fonte && ehFonteQC(q.fonte) ? q.fonte : null;
 
   return (
     <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
-      {mostrarMateria && (
-        <div className="mb-2 flex items-center gap-2">
-          <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-navy-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-dim">
-            {materia && <span className="text-xs leading-none">{materia.icone}</span>}
-            <span className="truncate">{materia?.nome ?? "Matéria"}</span>
-          </span>
+      {(mostrarMateria || fonteQC) && (
+        <div className="mb-2">
+          {mostrarMateria && (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-navy-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-dim">
+                {materia && <span className="text-xs leading-none">{materia.icone}</span>}
+                <span className="truncate">{materia?.nome ?? "Matéria"}</span>
+              </span>
+            </div>
+          )}
+          {fonteQC && <FonteQuestao fonte={fonteQC} />}
         </div>
       )}
 
