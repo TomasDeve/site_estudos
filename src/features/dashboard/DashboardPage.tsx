@@ -88,7 +88,7 @@ export function DashboardPage() {
 
       {/* Estudo hoje ao lado do gráfico dos últimos 7 dias (deixa o gráfico menos largo) */}
       <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
-        <Card className="flex flex-col justify-center gap-2.5 px-5 py-5 lg:w-60 lg:shrink-0">
+        <Card className="flex flex-col justify-center gap-2.5 px-5 py-5 lg:order-2 lg:w-60 lg:shrink-0">
           <span className="flex items-center gap-2 text-mut">
             <span className="flex size-9 items-center justify-center rounded-xl bg-navy-700 text-lg">
               ⏱️
@@ -100,7 +100,7 @@ export function DashboardPage() {
           </span>
           <span className="text-[11px] text-mut">tempo registrado hoje</span>
         </Card>
-        <div className="min-w-0 lg:flex-1">
+        <div className="min-w-0 lg:order-1 lg:flex-1">
           <WeekStudyChart />
         </div>
       </div>
