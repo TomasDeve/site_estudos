@@ -88,7 +88,6 @@ export function useExcluirConcurso() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["concursos"] });
       qc.invalidateQueries({ queryKey: ["concurso_materias"] });
-      qc.invalidateQueries({ queryKey: ["eventos"] });
     },
   });
 }

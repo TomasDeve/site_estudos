@@ -60,6 +60,8 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
   const setHorasMateria = useAtualizarHorasMateria();
   const distribuir = useDistribuirHorasMaterias();
 
+  // Card inteiro começa minimizado por padrão — só o cabeçalho e o resumo aparecem.
+  const [expandido, setExpandido] = useState(false);
   const [aberto, setAberto] = useState(true);
 
   const meusVinculos = useMemo(
@@ -86,8 +88,15 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
   return (
     <Card>
       <CardBody>
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setExpandido((v) => !v)}
+          className="flex w-full cursor-pointer flex-wrap items-center justify-between gap-2 text-left"
+        >
           <h2 className="flex items-center gap-2 text-sm font-semibold text-txt">
+            <ChevronRight
+              className={`size-4 text-gold transition-transform ${expandido ? "rotate-90" : ""}`}
+            />
             <Clock3 className="size-4 text-gold" /> Planejamento de horas
           </h2>
           {total > 0 && (
@@ -101,8 +110,10 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
               )}
             </p>
           )}
-        </div>
+        </button>
 
+        {expandido && (
+          <>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <BaldeHoras
             titulo="Conteúdo"
@@ -207,6 +218,8 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
             </div>
           )}
         </div>
+          </>
+        )}
       </CardBody>
     </Card>
   );

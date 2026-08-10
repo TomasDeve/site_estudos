@@ -54,6 +54,11 @@ export function semanaAtualISO(): string[] {
   return Array.from({ length: 7 }, (_, i) => format(addDays(seg, i), "yyyy-MM-dd"));
 }
 
+/** Os últimos 7 dias terminando hoje (janela móvel), do mais antigo ao atual, como ISO. */
+export function ultimos7DiasISO(): string[] {
+  return Array.from({ length: 7 }, (_, i) => format(addDays(new Date(), i - 6), "yyyy-MM-dd"));
+}
+
 /** ISO de N dias atrás. */
 export function diasAtrasISO(n: number): string {
   return format(addDays(new Date(), -n), "yyyy-MM-dd");

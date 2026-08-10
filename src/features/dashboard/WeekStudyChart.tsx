@@ -3,31 +3,32 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { minutosPorDia, useSessoesJanela } from "@/api/sessoes";
-import { hojeISO, semanaAtualISO, fmtMinutos } from "@/lib/dates";
+import { hojeISO, ultimos7DiasISO, fmtMinutos } from "@/lib/dates";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 
 export function WeekStudyChart() {
-  const semana = semanaAtualISO();
-  const { data: sessoes } = useSessoesJanela(semana[0], semana[6]);
+  const dias = ultimos7DiasISO();
+  const { data: sessoes } = useSessoesJanela(dias[0], dias[6]);
   const hoje = hojeISO();
 
   const dados = useMemo(() => {
     const mapa = minutosPorDia(sessoes);
-    return semana.map((iso) => ({
+    return dias.map((iso) => ({
       dia: format(parseISO(iso), "EEEEEE", { locale: ptBR }),
+      data: format(parseISO(iso), "EEEEEE, dd/MM", { locale: ptBR }),
       minutos: mapa.get(iso) ?? 0,
       ehHoje: iso === hoje,
     }));
-  }, [sessoes, semana, hoje]);
+  }, [sessoes, dias, hoje]);
 
-  const totalSemana = dados.reduce((s, d) => s + d.minutos, 0);
+  const totalPeriodo = dados.reduce((s, d) => s + d.minutos, 0);
 
   return (
     <Card>
       <CardHeader
-        title="Tempo de estudo — semana"
+        title="Tempo de estudo — últimos 7 dias"
         subtitle={
-          totalSemana > 0 ? `${fmtMinutos(totalSemana)} acumulados` : "Conclua blocos nas Metas para alimentar este gráfico"
+          totalPeriodo > 0 ? `${fmtMinutos(totalPeriodo)} acumulados` : "Conclua blocos nas Metas para alimentar este gráfico"
         }
       />
       <CardBody>
@@ -57,6 +58,7 @@ export function WeekStudyChart() {
               }}
               labelStyle={{ color: "#9db0c7", fontWeight: 600, marginBottom: 2 }}
               itemStyle={{ color: "#e8eef6" }}
+              labelFormatter={(label, payload) => payload?.[0]?.payload?.data ?? label}
               formatter={(v) => [fmtMinutos(Number(v)), "estudado"]}
             />
             <Bar dataKey="minutos" radius={[6, 6, 0, 0]}>

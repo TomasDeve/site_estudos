@@ -5,13 +5,11 @@ import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { useSessoesJanela } from "@/api/sessoes";
-import { calcStreak, useDiasConcluidos } from "@/api/diasConcluidos";
 import { progressoConcurso, topicosDoConcurso } from "@/lib/progresso";
 import { fmtMinutos, hojeISO } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatCard } from "@/components/StatCard";
-import { CompromissosCard } from "./CompromissosCard";
 import { DesempenhoQuestoes } from "./DesempenhoQuestoes";
 import { PlanejamentoHoras } from "./PlanejamentoHoras";
 import { WeekStudyChart } from "./WeekStudyChart";
@@ -29,7 +27,6 @@ export function DashboardPage() {
   const { data: vinculos } = useConcursoMaterias();
   const { data: topicos } = useTopicos();
   const { data: sessoesHoje } = useSessoesJanela(hoje, hoje);
-  const { data: dias } = useDiasConcluidos();
 
   const progresso = useMemo(
     () => progressoConcurso(concurso.id, vinculos ?? [], topicosDoConcurso(topicos ?? [], concurso)),
@@ -37,7 +34,6 @@ export function DashboardPage() {
   );
 
   const minutosHoje = (sessoesHoje ?? []).reduce((s, x) => s + x.minutos, 0);
-  const streak = calcStreak(dias, hoje);
 
   return (
     <div className="space-y-5">
@@ -91,19 +87,13 @@ export function DashboardPage() {
       {/* Planejamento de horas: orçamento de tempo até a prova */}
       <PlanejamentoHoras concurso={concurso} />
 
-      {/* métricas rápidas de hoje */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {/* tempo estudado hoje */}
+      <div className="sm:max-w-xs">
         <StatCard icon="⏱️" label="Estudo hoje" value={fmtMinutos(minutosHoje) || "0min"} />
-        <StatCard icon="🔥" label="Sequência" value={`${streak} ${streak === 1 ? "dia" : "dias"}`} />
-        <Link to="metas" className="block">
-          <StatCard icon="🗓️" label="Planejar" value="Metas do dia" sub="abrir planner →" />
-        </Link>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <WeekStudyChart />
-        <CompromissosCard concursoId={concurso.id} />
-      </div>
+      {/* tempo de estudo — janela móvel dos últimos 7 dias */}
+      <WeekStudyChart />
     </div>
   );
 }
