@@ -4,7 +4,9 @@ import { ArrowRight } from "lucide-react";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
+import { useSessoesJanela } from "@/api/sessoes";
 import { progressoConcurso, topicosDoConcurso } from "@/lib/progresso";
+import { fmtMinutos, hojeISO } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { DesempenhoQuestoes } from "./DesempenhoQuestoes";
@@ -19,14 +21,18 @@ const NOME_AREA: Record<string, string> = {
 
 export function DashboardPage() {
   const concurso = useConcursoAtual();
+  const hoje = hojeISO();
 
   const { data: vinculos } = useConcursoMaterias();
   const { data: topicos } = useTopicos();
+  const { data: sessoesHoje } = useSessoesJanela(hoje, hoje);
 
   const progresso = useMemo(
     () => progressoConcurso(concurso.id, vinculos ?? [], topicosDoConcurso(topicos ?? [], concurso)),
     [concurso, vinculos, topicos]
   );
+
+  const minutosHoje = (sessoesHoje ?? []).reduce((s, x) => s + x.minutos, 0);
 
   return (
     <div className="space-y-5">
@@ -80,8 +86,24 @@ export function DashboardPage() {
       {/* Planejamento de horas: orçamento de tempo até a prova */}
       <PlanejamentoHoras concurso={concurso} />
 
-      {/* tempo de estudo — janela móvel dos últimos 7 dias */}
-      <WeekStudyChart />
+      {/* Estudo hoje ao lado do gráfico dos últimos 7 dias (deixa o gráfico menos largo) */}
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
+        <Card className="flex flex-col justify-center gap-2.5 px-5 py-5 lg:w-60 lg:shrink-0">
+          <span className="flex items-center gap-2 text-mut">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-navy-700 text-lg">
+              ⏱️
+            </span>
+            <span className="text-[11px] font-medium uppercase tracking-wider">Estudo hoje</span>
+          </span>
+          <span className="text-3xl font-black leading-none text-txt">
+            {fmtMinutos(minutosHoje) || "0min"}
+          </span>
+          <span className="text-[11px] text-mut">tempo registrado hoje</span>
+        </Card>
+        <div className="min-w-0 lg:flex-1">
+          <WeekStudyChart />
+        </div>
+      </div>
     </div>
   );
 }

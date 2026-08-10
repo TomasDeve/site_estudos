@@ -28,7 +28,6 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { StreakBadge } from "@/features/metas/StreakBadge";
-import { HojeBadge } from "@/features/metas/HojeBadge";
 
 interface Ctx {
   concurso: Concurso;
@@ -242,9 +241,8 @@ export function ConcursoLayout() {
               <span className="text-mut"> · {fmtData(concurso.data_prova)}</span>
             </p>
           )}
-          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          <div className="mt-2.5">
             <StreakBadge />
-            <HojeBadge />
           </div>
         </div>
 
