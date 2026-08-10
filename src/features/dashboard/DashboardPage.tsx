@@ -4,12 +4,9 @@ import { ArrowRight } from "lucide-react";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
-import { useSessoesJanela } from "@/api/sessoes";
 import { progressoConcurso, topicosDoConcurso } from "@/lib/progresso";
-import { fmtMinutos, hojeISO } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
-import { StatCard } from "@/components/StatCard";
 import { DesempenhoQuestoes } from "./DesempenhoQuestoes";
 import { PlanejamentoHoras } from "./PlanejamentoHoras";
 import { WeekStudyChart } from "./WeekStudyChart";
@@ -22,18 +19,14 @@ const NOME_AREA: Record<string, string> = {
 
 export function DashboardPage() {
   const concurso = useConcursoAtual();
-  const hoje = hojeISO();
 
   const { data: vinculos } = useConcursoMaterias();
   const { data: topicos } = useTopicos();
-  const { data: sessoesHoje } = useSessoesJanela(hoje, hoje);
 
   const progresso = useMemo(
     () => progressoConcurso(concurso.id, vinculos ?? [], topicosDoConcurso(topicos ?? [], concurso)),
     [concurso, vinculos, topicos]
   );
-
-  const minutosHoje = (sessoesHoje ?? []).reduce((s, x) => s + x.minutos, 0);
 
   return (
     <div className="space-y-5">
@@ -86,11 +79,6 @@ export function DashboardPage() {
 
       {/* Planejamento de horas: orçamento de tempo até a prova */}
       <PlanejamentoHoras concurso={concurso} />
-
-      {/* tempo estudado hoje */}
-      <div className="sm:max-w-xs">
-        <StatCard icon="⏱️" label="Estudo hoje" value={fmtMinutos(minutosHoje) || "0min"} />
-      </div>
 
       {/* tempo de estudo — janela móvel dos últimos 7 dias */}
       <WeekStudyChart />
