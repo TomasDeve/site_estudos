@@ -502,12 +502,12 @@ function QuestaoMistaCard({
       )}
 
       {q.contexto && (
-        <p className="mb-2 border-l-2 border-line pl-2.5 text-xs italic leading-relaxed text-mut">
+        <p className="mb-2 whitespace-pre-wrap border-l-2 border-line pl-2.5 text-xs italic leading-relaxed text-mut">
           {q.contexto}
         </p>
       )}
 
-      <p className="text-sm leading-relaxed text-txt">{q.enunciado}</p>
+      <p className="whitespace-pre-wrap text-sm leading-relaxed text-txt">{q.enunciado}</p>
 
       {!resolvida ? (
         <BotoesResposta questao={q} onResponder={(v) => onResponder(q, v)} />
