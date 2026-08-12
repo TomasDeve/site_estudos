@@ -74,14 +74,56 @@ export function nomeMateria(materiaId: string, materias: Materia[]): string {
 }
 
 /**
- * Tópicos visíveis dentro de um concurso. Num concurso em modo "núcleo comum"
- * (Concurso Indefinido), só entram os assuntos marcados como `nucleo_comum` —
- * as mesmas matérias/questões dos outros concursos, filtradas ao que cai em
- * ambos. Nos demais concursos, devolve a lista inteira.
+ * Tópicos visíveis dentro de um concurso.
+ *
+ * A matéria é única e compartilhada; cada concurso cobra um recorte do edital.
+ * Quando o vínculo concurso↔matéria tem `topicos_incluidos`, só esses tópicos
+ * entram naquele concurso (o progresso/as questões continuam compartilhados,
+ * porque é a MESMA linha de tópico usada nos outros concursos). Sem recorte:
+ * no Concurso Indefinido (`somente_nucleo`) entram só os `nucleo_comum`; nos
+ * demais, a matéria inteira.
+ *
+ * `vinculos` é a lista de concurso_materias (pode ser a global — filtra pelo
+ * id do concurso internamente). Se omitida, mantém o comportamento antigo.
  */
-export function topicosDoConcurso<T extends { nucleo_comum: boolean }>(
-  topicos: T[],
-  concurso: { somente_nucleo: boolean }
-): T[] {
-  return concurso.somente_nucleo ? topicos.filter((t) => t.nucleo_comum) : topicos;
+export function topicosDoConcurso(
+  topicos: Topico[],
+  concurso: { id: string; somente_nucleo: boolean },
+  vinculos?: ConcursoMateria[]
+): Topico[] {
+  if (!vinculos) {
+    return concurso.somente_nucleo ? topicos.filter((t) => t.nucleo_comum) : topicos;
+  }
+  // Matéria -> conjunto de tópicos incluídos (null = matéria inteira) neste concurso.
+  const inclusaoPorMateria = new Map<string, Set<string> | null>();
+  for (const v of vinculos) {
+    if (v.concurso_id !== concurso.id) continue;
+    inclusaoPorMateria.set(v.materia_id, v.topicos_incluidos ? new Set(v.topicos_incluidos) : null);
+  }
+  return topicos.filter((t) => {
+    if (!inclusaoPorMateria.has(t.materia_id)) return false; // matéria não é deste concurso
+    const incluidos = inclusaoPorMateria.get(t.materia_id);
+    if (incluidos) return incluidos.has(t.id); // recorte explícito do edital
+    return concurso.somente_nucleo ? t.nucleo_comum : true;
+  });
+}
+
+/**
+ * Ordena os tópicos de uma matéria conforme o recorte do concurso: se o vínculo
+ * tem `topicos_incluidos`, segue exatamente a ordem desse array (ordem do
+ * edital daquele concurso); senão, cai na ordem natural (campo `ordem`).
+ */
+export function ordenarTopicosDoVinculo(
+  topicos: Topico[],
+  incluidos: string[] | null | undefined
+): Topico[] {
+  if (incluidos && incluidos.length > 0) {
+    const posicao = new Map(incluidos.map((id, i) => [id, i]));
+    return [...topicos].sort(
+      (a, b) => (posicao.get(a.id) ?? 1e9) - (posicao.get(b.id) ?? 1e9)
+    );
+  }
+  return [...topicos].sort(
+    (a, b) => a.ordem - b.ordem || a.created_at.localeCompare(b.created_at)
+  );
 }

@@ -138,6 +138,7 @@ export type Database = {
           meta: number | null
           ordem: number
           peso_questoes: number | null
+          topicos_incluidos: string[] | null
           user_id: string
         }
         Insert: {
@@ -150,6 +151,7 @@ export type Database = {
           meta?: number | null
           ordem?: number
           peso_questoes?: number | null
+          topicos_incluidos?: string[] | null
           user_id?: string
         }
         Update: {
@@ -162,6 +164,7 @@ export type Database = {
           meta?: number | null
           ordem?: number
           peso_questoes?: number | null
+          topicos_incluidos?: string[] | null
           user_id?: string
         }
         Relationships: [

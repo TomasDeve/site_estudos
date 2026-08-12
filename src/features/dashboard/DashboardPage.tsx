@@ -28,7 +28,12 @@ export function DashboardPage() {
   const { data: sessoesHoje } = useSessoesJanela(hoje, hoje);
 
   const progresso = useMemo(
-    () => progressoConcurso(concurso.id, vinculos ?? [], topicosDoConcurso(topicos ?? [], concurso)),
+    () =>
+      progressoConcurso(
+        concurso.id,
+        vinculos ?? [],
+        topicosDoConcurso(topicos ?? [], concurso, vinculos ?? [])
+      ),
     [concurso, vinculos, topicos]
   );
 

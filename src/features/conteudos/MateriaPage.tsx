@@ -24,6 +24,7 @@ import {
   ListChecks,
   Plus,
   Settings2,
+  SlidersHorizontal,
   Sparkles,
   Target,
   TimerReset,
@@ -31,7 +32,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
-import { useConcursoMaterias, useDesvincularMateria, useMaterias } from "@/api/materias";
+import {
+  useConcursoMaterias,
+  useDesvincularMateria,
+  useMaterias,
+  useSetTopicosIncluidos,
+} from "@/api/materias";
 import { useCriarTopico, useReordenarTopicos, useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
 import { useTopicoTextos } from "@/api/topicoTextos";
@@ -40,7 +46,7 @@ import { estaResolvida } from "./questaoModelo";
 import { metasPorTopico, useAplicarPlanoPadrao, useTopicoMetas } from "@/api/topicoMetas";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { useRedacoes } from "@/api/redacoes";
-import { materiasComuns, topicosDoConcurso } from "@/lib/progresso";
+import { materiasComuns, ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
 import type { QuestaoLog, TopicoLink, TopicoTexto } from "@/types/db";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -54,6 +60,7 @@ import { MateriaEstudo } from "./MateriaEstudo";
 import { DistribuicaoHorasMateria } from "./DistribuicaoHorasMateria";
 import { RegistrarEstudoModal } from "@/features/horas/RegistrarEstudoModal";
 import { MateriaConfigModal } from "./MateriaConfigModal";
+import { AssuntosDoConcursoModal } from "./AssuntosDoConcursoModal";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
 import { RedacoesPanel } from "./RedacoesPanel";
@@ -85,6 +92,7 @@ export function MateriaPage() {
 
   const criarTopico = useCriarTopico();
   const reordenarTopicos = useReordenarTopicos();
+  const setTopicosIncluidos = useSetTopicosIncluidos();
   const desvincular = useDesvincularMateria();
   const aplicarPlano = useAplicarPlanoPadrao();
 
@@ -100,6 +108,7 @@ export function MateriaPage() {
   const [abrirQuestoes, setAbrirQuestoes] = useState(false);
   const [configurando, setConfigurando] = useState(false);
   const [modalEstudo, setModalEstudo] = useState(false);
+  const [modalAssuntos, setModalAssuntos] = useState(false);
 
   const irPara = `/concurso/${concurso.id}/conteudos`;
 
@@ -116,13 +125,14 @@ export function MateriaPage() {
   const materia = (materias ?? []).find((m) => m.id === materiaId);
   const comum = useMemo(() => materiasComuns(vinculos ?? []).has(materiaId ?? ""), [vinculos, materiaId]);
 
-  const meusTopicos = useMemo(
-    () =>
-      topicosDoConcurso(topicos ?? [], concurso)
-        .filter((t) => t.materia_id === materiaId)
-        .sort((a, b) => a.ordem - b.ordem || a.created_at.localeCompare(b.created_at)),
-    [topicos, materiaId, concurso]
-  );
+  // Assuntos deste concurso (recorte do edital), na ordem do recorte.
+  const meusTopicos = useMemo(() => {
+    const doConcurso = topicosDoConcurso(topicos ?? [], concurso, vinculos ?? []).filter(
+      (t) => t.materia_id === materiaId
+    );
+    return ordenarTopicosDoVinculo(doConcurso, vinculo?.topicos_incluidos);
+  }, [topicos, materiaId, concurso, vinculos, vinculo?.topicos_incluidos]);
+  const temRecorte = !!vinculo?.topicos_incluidos;
   const linksPorTopico = useMemo(() => {
     const mapa = new Map<string, TopicoLink[]>();
     for (const l of links ?? []) {
@@ -225,7 +235,13 @@ export function MateriaPage() {
     const de = meusTopicos.findIndex((t) => t.id === active.id);
     const para = meusTopicos.findIndex((t) => t.id === over.id);
     if (de < 0 || para < 0) return;
-    reordenarTopicos.mutate(arrayMove(meusTopicos, de, para));
+    const novaOrdem = arrayMove(meusTopicos, de, para);
+    if (temRecorte && vinculo) {
+      // Concurso com recorte: reordena só a ordem deste concurso (não mexe nos outros).
+      setTopicosIncluidos.mutate({ id: vinculo.id, topicos_incluidos: novaOrdem.map((t) => t.id) });
+    } else {
+      reordenarTopicos.mutate(novaOrdem);
+    }
   }
 
   async function onAddTopico(e: FormEvent) {
@@ -233,13 +249,21 @@ export function MateriaPage() {
     const titulo = novoTopico.trim();
     if (!titulo) return;
     try {
-      const maiorOrdem = meusTopicos.reduce((m, t) => Math.max(m, t.ordem), -1);
-      await criarTopico.mutateAsync({
+      const todosDaMateria = (topicos ?? []).filter((t) => t.materia_id === materia!.id);
+      const maiorOrdem = todosDaMateria.reduce((m, t) => Math.max(m, t.ordem), -1);
+      const novo = await criarTopico.mutateAsync({
         materia_id: materia!.id,
         titulo,
         ordem: maiorOrdem + 1,
         nucleo_comum: concurso.somente_nucleo,
       });
+      // Concurso com recorte: o assunto novo já entra neste concurso (senão sumiria da tela).
+      if (temRecorte && vinculo && novo) {
+        await setTopicosIncluidos.mutateAsync({
+          id: vinculo.id,
+          topicos_incluidos: [...(vinculo.topicos_incluidos ?? []), novo.id],
+        });
+      }
       setNovoTopico("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
@@ -403,7 +427,22 @@ export function MateriaPage() {
       <Card>
         <CardBody>
           <div className="mb-1 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-txt">Tópicos do edital</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-txt">Tópicos do edital</h2>
+              <button
+                onClick={() => setModalAssuntos(true)}
+                className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1 text-[11px] text-mut transition-colors hover:border-line hover:text-gold"
+                title="Escolher quais assuntos desta matéria caem no edital deste concurso (a matéria e o progresso continuam compartilhados)"
+              >
+                <SlidersHorizontal className="size-3.5" />
+                <span className="max-sm:hidden">Assuntos deste concurso</span>
+                {temRecorte && (
+                  <span className="rounded-full bg-gold/15 px-1.5 font-semibold tabular-nums text-gold">
+                    {meusTopicos.length}
+                  </span>
+                )}
+              </button>
+            </div>
             <div className="flex items-center gap-2.5 text-[11px] text-mut">
               {Object.entries(STATUS_INFO).map(([k, v]) => (
                 <span key={k} className="flex items-center gap-1.5">
@@ -559,6 +598,15 @@ export function MateriaPage() {
         open={configurando}
         onClose={() => setConfigurando(false)}
         materia={materia}
+      />
+
+      <AssuntosDoConcursoModal
+        open={modalAssuntos}
+        onClose={() => setModalAssuntos(false)}
+        concursoNome={concurso.nome_curto || concurso.nome}
+        materiaNome={materia.nome}
+        topicos={(topicos ?? []).filter((t) => t.materia_id === materia.id)}
+        vinculo={vinculo}
       />
 
       {concurso.sistema_horas && (

@@ -29,7 +29,8 @@ export function HomePage() {
     for (const c of concursos ?? []) {
       mapa.set(
         c.id,
-        progressoConcurso(c.id, vinculos ?? [], topicosDoConcurso(topicos ?? [], c)).pct
+        progressoConcurso(c.id, vinculos ?? [], topicosDoConcurso(topicos ?? [], c, vinculos ?? []))
+          .pct
       );
     }
     return mapa;

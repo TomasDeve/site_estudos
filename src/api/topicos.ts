@@ -112,8 +112,9 @@ export function useCriarTopico() {
       // No Concurso Indefinido, o assunto novo já nasce no núcleo comum (senão sumiria da tela).
       nucleo_comum?: boolean;
     }) => {
-      const { error } = await supabase.from("topicos").insert(input);
+      const { data, error } = await supabase.from("topicos").insert(input).select().single();
       if (error) throw error;
+      return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
   });

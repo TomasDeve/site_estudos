@@ -146,6 +146,43 @@ export function useSalvarEstudoMateria() {
   });
 }
 
+/**
+ * Grava QUAIS tópicos da matéria entram neste concurso (recorte do edital), na
+ * ordem de exibição. `null` = a matéria inteira. Otimista: a lista de assuntos
+ * reage na hora (marcar/desmarcar, arrastar). Serve tanto para o modal de
+ * seleção quanto para reordenar dentro do concurso.
+ */
+export function useSetTopicosIncluidos() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      topicos_incluidos,
+    }: {
+      id: string;
+      topicos_incluidos: string[] | null;
+    }) => {
+      const { error } = await supabase
+        .from("concurso_materias")
+        .update({ topicos_incluidos })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, topicos_incluidos }) => {
+      await qc.cancelQueries({ queryKey: ["concurso_materias"] });
+      const prev = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]);
+      qc.setQueryData<ConcursoMateria[]>(["concurso_materias"], (old) =>
+        old?.map((v) => (v.id === id ? { ...v, topicos_incluidos } : v))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concurso_materias"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
+  });
+}
+
 /** Atualiza campos do vínculo matéria↔concurso (ex.: a meta de redações). */
 export function useAtualizarConcursoMateria() {
   const qc = useQueryClient();

@@ -65,8 +65,8 @@ export function ConcursoLayout() {
 
   // Matérias do concurso ativo, na ordem do edital, com progresso para o submenu.
   const materiasDoConcurso = useMemo(() => {
-    // No Concurso Indefinido, o submenu conta só os assuntos do núcleo comum.
-    const tops = concurso ? topicosDoConcurso(topicos ?? [], concurso) : [];
+    // Cada concurso conta só o recorte de assuntos do seu edital (topicos_incluidos).
+    const tops = concurso ? topicosDoConcurso(topicos ?? [], concurso, vinculos ?? []) : [];
     return (vinculos ?? [])
       .filter((v) => v.concurso_id === concurso?.id)
       .sort((a, b) => a.ordem - b.ordem)

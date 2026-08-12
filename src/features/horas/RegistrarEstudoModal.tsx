@@ -7,7 +7,7 @@ import { useTopicos } from "@/api/topicos";
 import { useRegistrarEstudo } from "@/api/estudoHoras";
 import { distribuirInteiro } from "@/lib/horas";
 import { fmtHoras, fmtMinutos, hojeISO } from "@/lib/dates";
-import { topicosDoConcurso } from "@/lib/progresso";
+import { ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/Button";
 import { Field, Input, Select } from "@/components/Field";
@@ -52,10 +52,14 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
   // Assuntos da matéria escolhida, respeitando o núcleo comum do edital.
   const assuntos = useMemo(() => {
     if (!materiaId) return [] as Topico[];
-    return topicosDoConcurso(topicos ?? [], concurso)
-      .filter((t) => t.materia_id === materiaId)
-      .sort((a, b) => a.ordem - b.ordem || a.created_at.localeCompare(b.created_at));
-  }, [topicos, materiaId, concurso]);
+    const doConcurso = topicosDoConcurso(topicos ?? [], concurso, vinculos ?? []).filter(
+      (t) => t.materia_id === materiaId
+    );
+    const vinculo = (vinculos ?? []).find(
+      (v) => v.concurso_id === concurso.id && v.materia_id === materiaId
+    );
+    return ordenarTopicosDoVinculo(doConcurso, vinculo?.topicos_incluidos);
+  }, [topicos, materiaId, concurso, vinculos]);
 
   // Ao abrir: escolhe a matéria padrão (ou a primeira) e zera o tempo/data.
   useEffect(() => {

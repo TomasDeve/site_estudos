@@ -40,8 +40,11 @@ export function ConteudosPage() {
     [vinculos, concurso.id]
   );
   const comuns = useMemo(() => materiasComuns(vinculos ?? []), [vinculos]);
-  // No Concurso Indefinido (somente_nucleo), conta/mostra só os assuntos do núcleo comum.
-  const tops = useMemo(() => topicosDoConcurso(topicos ?? [], concurso), [topicos, concurso]);
+  // Cada concurso conta/mostra só o recorte de assuntos do seu edital.
+  const tops = useMemo(
+    () => topicosDoConcurso(topicos ?? [], concurso, vinculos ?? []),
+    [topicos, concurso, vinculos]
+  );
   const progresso = useMemo(
     () => progressoConcurso(concurso.id, vinculos ?? [], tops),
     [concurso.id, vinculos, tops]
