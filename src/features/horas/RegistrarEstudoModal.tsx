@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import type { Concurso, Topico } from "@/types/db";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
-import { useRegistrarEstudo } from "@/api/estudoHoras";
+import { useRegistrarEstudo, useRegistrarRevisao } from "@/api/estudoHoras";
 import { distribuirInteiro } from "@/lib/horas";
 import { fmtHoras, fmtMinutos, hojeISO } from "@/lib/dates";
 import { ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
@@ -13,6 +13,9 @@ import { Button } from "@/components/Button";
 import { Field, Input, Select } from "@/components/Field";
 
 const PRESETS = [15, 25, 30, 45, 60, 90, 120];
+
+/** Valor sentinela do Select de matéria na revisão: sem matéria (Anki geral). */
+const GERAL = "__geral__";
 
 interface Props {
   open: boolean;
@@ -24,16 +27,21 @@ interface Props {
 }
 
 /**
- * Registra tempo de estudo e abate das horas dos assuntos. Escolhe a matéria,
- * o tempo e quais assuntos recebem — "Todos" reparte igualmente entre os
- * assuntos daquele edital (ex.: 30 min em 3 assuntos tira 10 min de cada).
+ * Registra tempo de estudo em duas trilhas (abas):
+ *  • Conteúdo — abate das horas dos assuntos. Escolhe a matéria, o tempo e quais
+ *    assuntos recebem; "Todos" reparte igualmente (30 min em 3 assuntos = 10 em
+ *    cada) e faz o balde de Conteúdo descer.
+ *  • Revisão — abate do orçamento de revisão (Anki). Só tempo e data (matéria
+ *    opcional, sem assuntos); faz o balde de Revisão descer.
  */
 export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao, onSalvo }: Props) {
   const { data: materias } = useMaterias();
   const { data: vinculos } = useConcursoMaterias();
   const { data: topicos } = useTopicos();
   const registrar = useRegistrarEstudo();
+  const registrarRevisao = useRegistrarRevisao();
 
+  const [modo, setModo] = useState<"conteudo" | "revisao">("conteudo");
   const [materiaId, setMateriaId] = useState("");
   const [minutos, setMinutos] = useState(30);
   const [data, setData] = useState(hojeISO());
@@ -70,8 +78,18 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
     setMateriaId(inicial);
     setMinutos(30);
     setData(hojeISO());
+    setModo("conteudo");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Alterna a aba. Ao voltar para Conteúdo, garante uma matéria válida (a de
+  // revisão aceita "Geral", que não serve para o registro de conteúdo).
+  function trocarModo(novo: "conteudo" | "revisao") {
+    setModo(novo);
+    if (novo === "conteudo" && (!materiaId || materiaId === GERAL)) {
+      setMateriaId(materiasConcurso[0]?.id ?? "");
+    }
+  }
 
   // Trocou de matéria: começa com "Todos" os assuntos marcados.
   useEffect(() => {
@@ -107,8 +125,27 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!materiaId) return toast.error("Escolha a matéria.");
     if (!Number.isFinite(minutos) || minutos <= 0) return toast.error("Informe um tempo válido.");
+
+    // Revisão: abate do orçamento de revisão (Anki), sem assuntos.
+    if (modo === "revisao") {
+      try {
+        await registrarRevisao.mutateAsync({
+          concursoId: concurso.id,
+          materiaId: materiaId && materiaId !== GERAL ? materiaId : null,
+          data,
+          minutos,
+        });
+        toast.success(`Revisão registrada: ${fmtMinutos(minutos)} 🔁`);
+        await onSalvo?.();
+        onClose();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : String(err));
+      }
+      return;
+    }
+
+    if (!materiaId) return toast.error("Escolha a matéria.");
     if (assuntos.length > 0 && selecionados.length === 0)
       return toast.error("Selecione ao menos um assunto (ou Todos).");
     try {
@@ -147,16 +184,51 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
           <Button variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" form="form-estudo" loading={registrar.isPending}>
+          <Button
+            type="submit"
+            form="form-estudo"
+            loading={registrar.isPending || registrarRevisao.isPending}
+          >
             <Check className="size-4" /> Registrar
           </Button>
         </>
       }
     >
       <form id="form-estudo" onSubmit={onSubmit} className="space-y-4">
-        <Field label="Matéria">
+        {/* Abas: Conteúdo (abate dos assuntos) × Revisão (abate do Anki) */}
+        <div className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-navy-900 p-1">
+          {(
+            [
+              { id: "conteudo", label: "Conteúdo", emoji: "📚" },
+              { id: "revisao", label: "Revisão", emoji: "🔁" },
+            ] as const
+          ).map((aba) => (
+            <button
+              key={aba.id}
+              type="button"
+              onClick={() => trocarModo(aba.id)}
+              className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                modo === aba.id ? "bg-gold/15 text-gold" : "text-mut hover:text-dim"
+              }`}
+            >
+              <span>{aba.emoji}</span> {aba.label}
+            </button>
+          ))}
+        </div>
+
+        {modo === "revisao" && (
+          <p className="rounded-lg border border-dashed border-line/60 bg-navy-900/40 px-3 py-2 text-[11px] leading-relaxed text-mut">
+            O tempo abate do orçamento de <strong className="text-dim">Revisão · Anki</strong>. A
+            matéria é opcional — escolha só se quiser marcar de qual foi.
+          </p>
+        )}
+
+        <Field label={modo === "revisao" ? "Matéria (opcional)" : "Matéria"}>
           <Select value={materiaId} onChange={(e) => setMateriaId(e.target.value)}>
-            {materiasConcurso.length === 0 && <option value="">— sem matérias —</option>}
+            {modo === "revisao" && <option value={GERAL}>🔁 Geral (sem matéria)</option>}
+            {materiasConcurso.length === 0 && modo === "conteudo" && (
+              <option value="">— sem matérias —</option>
+            )}
             {materiasConcurso.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.icone} {m.nome}
@@ -165,7 +237,7 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
           </Select>
         </Field>
 
-        <Field label="Tempo estudado">
+        <Field label={modo === "revisao" ? "Tempo revisado" : "Tempo estudado"}>
           <div className="flex flex-wrap items-center gap-1.5">
             {PRESETS.map((d) => (
               <button
@@ -196,6 +268,7 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
           </div>
         </Field>
 
+        {modo === "conteudo" && (
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-dim">
@@ -262,6 +335,7 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
             </div>
           )}
         </div>
+        )}
 
         <Field label="Data">
           <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />

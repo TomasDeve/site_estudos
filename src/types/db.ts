@@ -194,6 +194,7 @@ export type Database = {
           estrutura: Json
           horas_conteudo: number
           horas_revisao: number
+          horas_revisao_feita: number
           icone: string
           id: string
           nome: string
@@ -216,6 +217,7 @@ export type Database = {
           estrutura?: Json
           horas_conteudo?: number
           horas_revisao?: number
+          horas_revisao_feita?: number
           icone?: string
           id?: string
           nome: string
@@ -238,6 +240,7 @@ export type Database = {
           estrutura?: Json
           horas_conteudo?: number
           horas_revisao?: number
+          horas_revisao_feita?: number
           icone?: string
           id?: string
           nome?: string

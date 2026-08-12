@@ -11,6 +11,7 @@ import {
 } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { distribuirIgual, distribuirPorPeso, somaHoras } from "@/lib/horas";
+import { topicosDoConcurso } from "@/lib/progresso";
 import { diasAte, fmtHoras } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
 import { Button } from "@/components/Button";
@@ -49,33 +50,63 @@ function Switch({
   );
 }
 
-/** Balde de horas do concurso (Conteúdo / Revisão) — número grande + campo. */
+/**
+ * Balde de horas do concurso (Conteúdo / Revisão). O número grande é o que
+ * RESTA — desce a cada estudo/revisão registrado — com o orçamento ao lado e
+ * uma barrinha do quanto já foi feito. O campo edita o orçamento (plano).
+ */
 function BaldeHoras({
   titulo,
   emoji,
   cor,
-  value,
+  plano,
+  feito,
   onCommit,
 }: {
   titulo: string;
   emoji: string;
   cor: string;
-  value: number;
+  /** Orçamento planejado (o alvo). */
+  plano: number;
+  /** Horas já cumpridas (abatidas do plano). */
+  feito: number;
   onCommit: (h: number) => void;
 }) {
+  const resta = Math.max(0, Math.round((plano - feito) * 100) / 100);
+  const pct = plano > 0 ? Math.min(100, Math.round((feito / plano) * 100)) : 0;
+  const zerado = plano > 0 && feito >= plano - 0.001;
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-line/50 bg-navy-900/40 px-3 py-2.5">
-      <span
-        className="flex size-9 shrink-0 items-center justify-center rounded-lg text-lg"
-        style={{ background: `${cor}1a` }}
-      >
-        {emoji}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-mut">{titulo}</p>
-        <p className="text-sm font-semibold tabular-nums text-txt">{fmtHoras(value)}</p>
+    <div className="rounded-xl border border-line/50 bg-navy-900/40 px-3 py-2.5">
+      <div className="flex items-center gap-3">
+        <span
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg text-lg"
+          style={{ background: `${cor}1a` }}
+        >
+          {emoji}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-mut">{titulo}</p>
+          <p className="text-sm font-semibold tabular-nums">
+            {zerado ? (
+              <span className="text-green">✓ {fmtHoras(plano)} feitas</span>
+            ) : (
+              <>
+                <span className="text-txt">{fmtHoras(resta)}</span>
+                {feito > 0 && <span className="text-mut"> / {fmtHoras(plano)}</span>}
+              </>
+            )}
+          </p>
+        </div>
+        <HoraInput value={plano} onCommit={onCommit} ariaLabel={`Horas de ${titulo}`} />
       </div>
-      <HoraInput value={value} onCommit={onCommit} ariaLabel={`Horas de ${titulo}`} />
+      {feito > 0 && (
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-navy-700">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{ width: `${pct}%`, background: zerado ? "#43b581" : cor }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -120,11 +151,25 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
     return mapa;
   }, [topicos]);
 
+  // Conteúdo já estudado neste concurso (respeita o recorte do edital): soma o
+  // tempo dos assuntos que entram aqui — é o que faz o balde de Conteúdo descer.
+  const conteudoFeito = useMemo(
+    () =>
+      somaHoras(
+        topicosDoConcurso(topicos ?? [], concurso, vinculos ?? []).map((t) => t.horas_estudadas)
+      ),
+    [topicos, concurso, vinculos]
+  );
+
   const conteudo = concurso.horas_conteudo || 0;
   const revisao = concurso.horas_revisao || 0;
+  const revisaoFeita = concurso.horas_revisao_feita || 0;
   const total = conteudo + revisao;
+  const feitoTotal = conteudoFeito + revisaoFeita;
+  const restaTotal = Math.max(0, Math.round((total - feitoTotal) * 100) / 100);
   const dias = concurso.data_prova ? diasAte(concurso.data_prova) : null;
-  const hDia = dias && dias > 0 ? total / dias : null;
+  // Ritmo necessário para o que AINDA falta (o total já desconta o que foi feito).
+  const hDia = dias && dias > 0 ? restaTotal / dias : null;
   const distribuido = somaHoras(meusVinculos.map((v) => v.horas_alvo));
   const materiaDe = (id: string) => (materias ?? []).find((m) => m.id === id);
   const podeDistribuir = meusVinculos.length > 0 && conteudo > 0;
@@ -177,7 +222,16 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
             </h2>
             {total > 0 && (
               <p className="text-xs text-mut">
-                <strong className="tabular-nums text-txt">{fmtHoras(total)}</strong> no total
+                {feitoTotal > 0 ? (
+                  <>
+                    <strong className="tabular-nums text-txt">{fmtHoras(restaTotal)}</strong> restam de{" "}
+                    {fmtHoras(total)}
+                  </>
+                ) : (
+                  <>
+                    <strong className="tabular-nums text-txt">{fmtHoras(total)}</strong> no total
+                  </>
+                )}
                 {hDia !== null && (
                   <>
                     {" "}
@@ -206,14 +260,16 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
                 titulo="Conteúdo"
                 emoji="📚"
                 cor={concurso.cor}
-                value={conteudo}
+                plano={conteudo}
+                feito={conteudoFeito}
                 onCommit={(h) => setHorasConcurso.mutate({ id: concurso.id, horas_conteudo: h })}
               />
               <BaldeHoras
                 titulo="Revisão · Anki"
                 emoji="🔁"
                 cor="#8b7bd8"
-                value={revisao}
+                plano={revisao}
+                feito={revisaoFeita}
                 onCommit={(h) => setHorasConcurso.mutate({ id: concurso.id, horas_revisao: h })}
               />
             </div>

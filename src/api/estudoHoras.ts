@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { distribuirInteiro } from "@/lib/horas";
-import type { Topico } from "@/types/db";
+import type { Concurso, Topico } from "@/types/db";
 
 /** Uma parte da distribuição: quanto foi lançado em cada assunto. */
 export interface ParteEstudo {
@@ -103,6 +103,83 @@ export function useRegistrarEstudo() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["topicos"] });
+      qc.invalidateQueries({ queryKey: ["sessoes"] });
+    },
+  });
+}
+
+export interface RegistrarRevisaoInput {
+  concursoId: string;
+  /** Matéria da revisão (opcional — null = revisão geral/Anki sem matéria). */
+  materiaId: string | null;
+  /** Data ISO (YYYY-MM-DD) da revisão. */
+  data: string;
+  /** Tempo revisado, em minutos. */
+  minutos: number;
+}
+
+/**
+ * Registra tempo de revisão (Anki) e abate do orçamento de revisão do concurso
+ * (`horas_revisao_feita` sobe → o balde "Revisão · Anki" desce). Também grava a
+ * sessão do dia (origem `revisao`), que soma no "Estudo hoje" e no gráfico da
+ * semana — é tempo de estudo de verdade, só que na trilha de revisão.
+ */
+export function useRegistrarRevisao() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: RegistrarRevisaoInput) => {
+      const horas = input.minutos / 60;
+
+      // Base do banco, não do cache: o update otimista já somou no cache antes
+      // daqui, então ler dali contaria o tempo duas vezes.
+      const { data: base, error: e0 } = await supabase
+        .from("concursos")
+        .select("horas_revisao_feita")
+        .eq("id", input.concursoId)
+        .single();
+      if (e0) throw e0;
+      const atual = base?.horas_revisao_feita ?? 0;
+      const novo = Math.round((atual + horas) * 10000) / 10000;
+      const { error: e1 } = await supabase
+        .from("concursos")
+        .update({ horas_revisao_feita: novo })
+        .eq("id", input.concursoId);
+      if (e1) throw e1;
+
+      // Sessão do dia: revisão não aponta para assunto (topico_id nulo).
+      const { error: e2 } = await supabase.from("sessoes_estudo").insert({
+        data: input.data,
+        minutos: input.minutos,
+        materia_id: input.materiaId,
+        concurso_id: input.concursoId,
+        topico_id: null,
+        origem: "revisao",
+      });
+      if (e2) throw e2;
+    },
+    // otimista: o balde de revisão desce na hora
+    onMutate: async (input) => {
+      await qc.cancelQueries({ queryKey: ["concursos"] });
+      const prev = qc.getQueryData<Concurso[]>(["concursos"]);
+      const horas = input.minutos / 60;
+      qc.setQueryData<Concurso[]>(["concursos"], (old) =>
+        old?.map((c) =>
+          c.id === input.concursoId
+            ? {
+                ...c,
+                horas_revisao_feita:
+                  Math.round(((c.horas_revisao_feita ?? 0) + horas) * 10000) / 10000,
+              }
+            : c
+        )
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concursos"], ctx.prev);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["concursos"] });
       qc.invalidateQueries({ queryKey: ["sessoes"] });
     },
   });
