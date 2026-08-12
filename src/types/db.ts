@@ -198,6 +198,7 @@ export type Database = {
           nota_data: string | null
           ordem: number
           orgao: string | null
+          sistema_horas: boolean
           slug: string
           somente_nucleo: boolean
           status: string
@@ -219,6 +220,7 @@ export type Database = {
           nota_data?: string | null
           ordem?: number
           orgao?: string | null
+          sistema_horas?: boolean
           slug: string
           somente_nucleo?: boolean
           status?: string
@@ -240,6 +242,7 @@ export type Database = {
           nota_data?: string | null
           ordem?: number
           orgao?: string | null
+          sistema_horas?: boolean
           slug?: string
           somente_nucleo?: boolean
           status?: string
@@ -695,6 +698,7 @@ export type Database = {
           materia_id: string | null
           minutos: number
           origem: string
+          topico_id: string | null
           user_id: string
         }
         Insert: {
@@ -706,6 +710,7 @@ export type Database = {
           materia_id?: string | null
           minutos: number
           origem?: string
+          topico_id?: string | null
           user_id?: string
         }
         Update: {
@@ -717,6 +722,7 @@ export type Database = {
           materia_id?: string | null
           minutos?: number
           origem?: string
+          topico_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -739,6 +745,13 @@ export type Database = {
             columns: ["materia_id"]
             isOneToOne: false
             referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessoes_estudo_topico_id_fkey"
+            columns: ["topico_id"]
+            isOneToOne: false
+            referencedRelation: "topicos"
             referencedColumns: ["id"]
           },
         ]
@@ -985,6 +998,7 @@ export type Database = {
           nucleo_comum: boolean
           ordem: number
           horas_alvo: number
+          horas_estudadas: number
           observacao: string
           separador_apos: boolean
           status: string
@@ -998,6 +1012,7 @@ export type Database = {
           nucleo_comum?: boolean
           ordem?: number
           horas_alvo?: number
+          horas_estudadas?: number
           observacao?: string
           separador_apos?: boolean
           status?: string
@@ -1011,6 +1026,7 @@ export type Database = {
           nucleo_comum?: boolean
           ordem?: number
           horas_alvo?: number
+          horas_estudadas?: number
           observacao?: string
           separador_apos?: boolean
           status?: string

@@ -26,6 +26,7 @@ import {
   Settings2,
   Sparkles,
   Target,
+  TimerReset,
   Unlink,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -51,6 +52,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TopicoRow } from "./TopicoRow";
 import { MateriaEstudo } from "./MateriaEstudo";
 import { DistribuicaoHorasMateria } from "./DistribuicaoHorasMateria";
+import { RegistrarEstudoModal } from "@/features/horas/RegistrarEstudoModal";
 import { MateriaConfigModal } from "./MateriaConfigModal";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
@@ -97,6 +99,7 @@ export function MateriaPage() {
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
   const [abrirQuestoes, setAbrirQuestoes] = useState(false);
   const [configurando, setConfigurando] = useState(false);
+  const [modalEstudo, setModalEstudo] = useState(false);
 
   const irPara = `/concurso/${concurso.id}/conteudos`;
 
@@ -302,14 +305,21 @@ export function MateriaPage() {
               </div>
             </div>
 
-            <button
-              onClick={() => setConfigurando(true)}
-              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1.5 text-xs text-mut transition-colors hover:border-line hover:text-gold"
-              title="Escolher quais blocos aparecem nesta matéria"
-            >
-              <Settings2 className="size-3.5" />
-              <span className="max-sm:hidden">Configurações da matéria</span>
-            </button>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              {concurso.sistema_horas && !ehRedacao && (
+                <Button size="sm" onClick={() => setModalEstudo(true)} title="Registrar tempo estudado e abater das horas dos assuntos">
+                  <TimerReset className="size-3.5" /> Registrar estudo
+                </Button>
+              )}
+              <button
+                onClick={() => setConfigurando(true)}
+                className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1.5 text-xs text-mut transition-colors hover:border-line hover:text-gold"
+                title="Escolher quais blocos aparecem nesta matéria"
+              >
+                <Settings2 className="size-3.5" />
+                <span className="max-sm:hidden">Configurações da matéria</span>
+              </button>
+            </div>
           </div>
         </CardBody>
       </Card>
@@ -411,7 +421,9 @@ export function MateriaPage() {
           </div>
 
           {/* Barra de horas da matéria — orçamento junto dos assuntos */}
-          {!ehRedacao && <DistribuicaoHorasMateria vinculo={vinculo} topicos={meusTopicos} />}
+          {!ehRedacao && concurso.sistema_horas && (
+            <DistribuicaoHorasMateria vinculo={vinculo} topicos={meusTopicos} cor={concurso.cor} />
+          )}
 
           {meusTopicos.length === 0 ? (
             <p className="py-4 text-center text-sm text-mut">
@@ -447,6 +459,7 @@ export function MateriaPage() {
                         metas={metasDoTopico.get(t.id) ?? []}
                         isLast={i === meusTopicos.length - 1}
                         mostrarNucleo
+                        sistemaHoras={concurso.sistema_horas}
                       />
                     ))}
                   </ul>
@@ -547,6 +560,15 @@ export function MateriaPage() {
         onClose={() => setConfigurando(false)}
         materia={materia}
       />
+
+      {concurso.sistema_horas && (
+        <RegistrarEstudoModal
+          open={modalEstudo}
+          onClose={() => setModalEstudo(false)}
+          concurso={concurso}
+          materiaIdPadrao={materia.id}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmarRemocao}

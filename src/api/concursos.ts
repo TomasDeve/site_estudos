@@ -78,6 +78,32 @@ export function useAtualizarHorasConcurso() {
   });
 }
 
+/** Liga/desliga a camada de horas do concurso (o "sistema de horas"), otimista. */
+export function useToggleSistemaHoras() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, sistema_horas }: { id: string; sistema_horas: boolean }) => {
+      const { error } = await supabase
+        .from("concursos")
+        .update({ sistema_horas })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, sistema_horas }) => {
+      await qc.cancelQueries({ queryKey: ["concursos"] });
+      const prev = qc.getQueryData<Concurso[]>(["concursos"]);
+      qc.setQueryData<Concurso[]>(["concursos"], (old) =>
+        old?.map((c) => (c.id === id ? { ...c, sistema_horas } : c))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concursos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concursos"] }),
+  });
+}
+
 export function useExcluirConcurso() {
   const qc = useQueryClient();
   return useMutation({

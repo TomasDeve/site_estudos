@@ -27,6 +27,7 @@ import {
   RotateCcw,
   SkipForward,
   Sparkles,
+  TimerReset,
   Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -56,6 +57,8 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { StatCard } from "@/components/StatCard";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
+import { BarraHoras } from "@/features/horas/BarraHoras";
+import { RegistrarEstudoModal } from "@/features/horas/RegistrarEstudoModal";
 import { AdicionarMateriaModal } from "./AdicionarMateriaModal";
 import { CicloItemRow } from "./CicloItemRow";
 
@@ -84,6 +87,7 @@ export function CicloPage() {
 
   const [modalAdd, setModalAdd] = useState(false);
   const [modalConcluir, setModalConcluir] = useState(false);
+  const [modalEstudo, setModalEstudo] = useState(false);
 
   const materiaById = useMemo(
     () => new Map((materias ?? []).map((m) => [m.id, m])),
@@ -381,6 +385,28 @@ export function CicloPage() {
                     ) : null;
                   })()}
 
+                  {/* Horas da matéria da vez: registrar estudo abate o tempo dos assuntos */}
+                  {concurso.sistema_horas && (() => {
+                    const v = vinculosConcurso.find((x) => x.materia_id === atual.materia_id);
+                    const alvoMat = v?.horas_alvo ?? 0;
+                    const estudadoMat = (topicos ?? [])
+                      .filter((t) => t.materia_id === atual.materia_id)
+                      .reduce((s, t) => s + (t.horas_estudadas || 0), 0);
+                    return (
+                      <div className="space-y-2 rounded-xl border border-line/40 bg-navy-900/40 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-mut">
+                            Horas da matéria
+                          </span>
+                          <Button size="sm" variant="secondary" onClick={() => setModalEstudo(true)}>
+                            <TimerReset className="size-3.5" /> Registrar estudo
+                          </Button>
+                        </div>
+                        <BarraHoras alvo={alvoMat} estudado={estudadoMat} cor={cor} />
+                      </div>
+                    );
+                  })()}
+
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <Link
                       to={`../conteudos/${atual.materia_id}`}
@@ -508,6 +534,15 @@ export function CicloPage() {
         jaNoCiclo={jaNoCiclo}
         proximaOrdem={meusItens.reduce((m, i) => Math.max(m, i.ordem), -1) + 1}
       />
+
+      {atual && concurso.sistema_horas && (
+        <RegistrarEstudoModal
+          open={modalEstudo}
+          onClose={() => setModalEstudo(false)}
+          concurso={concurso}
+          materiaIdPadrao={atual.materia_id}
+        />
+      )}
 
       {/* Ao concluir a matéria do ciclo: registra o estudo do dia em Metas e avança. */}
       {atual && (

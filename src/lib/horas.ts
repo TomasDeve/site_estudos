@@ -18,6 +18,20 @@ export function statusRestante(r: number): "zerado" | "sobra" | "estouro" {
   return r > 0 ? "sobra" : "estouro";
 }
 
+/**
+ * Reparte um total INTEIRO (ex.: minutos) em `n` partes ~iguais, pelo método do
+ * maior resto: as primeiras partes ganham 1 a mais até fechar a soma exata.
+ * Usado ao lançar o tempo estudado igualmente entre os assuntos selecionados
+ * (ex.: 30 min em 3 assuntos → [10, 10, 10]; 25 em 3 → [9, 8, 8]).
+ */
+export function distribuirInteiro(total: number, n: number): number[] {
+  if (n <= 0) return [];
+  const t = Math.max(0, Math.round(total));
+  const base = Math.floor(t / n);
+  const resto = t - base * n;
+  return Array.from({ length: n }, (_, i) => base + (i < resto ? 1 : 0));
+}
+
 /** `total` horas repartidas em `n` partes ~iguais, em passos de 0,5h. */
 export function distribuirIgual(total: number, n: number): number[] {
   if (n <= 0) return [];

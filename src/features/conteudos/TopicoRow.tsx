@@ -13,6 +13,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
 import { HoraInput } from "@/components/HoraInput";
+import { BarraHoras } from "@/features/horas/BarraHoras";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
@@ -43,9 +44,11 @@ interface Props {
   isLast?: boolean;
   /** Mostra o botão de marcar/desmarcar o assunto como núcleo comum (Concurso Indefinido). */
   mostrarNucleo?: boolean;
+  /** Sistema de horas ligado: mostra o campo de horas e o saldo estudado do assunto. */
+  sistemaHoras?: boolean;
 }
 
-export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast, mostrarNucleo }: Props) {
+export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast, mostrarNucleo, sistemaHoras }: Props) {
   const setStatus = useSetTopicoStatus();
   const setSeparador = useSetTopicoSeparador();
   const setNucleo = useSetTopicoNucleo();
@@ -273,12 +276,14 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
               {topico.titulo}
             </span>
           )}
-          <HoraInput
-            value={topico.horas_alvo}
-            onCommit={(h) => setHoras.mutate({ id: topico.id, horas_alvo: h })}
-            ariaLabel={`Horas de ${topico.titulo}`}
-            className="!h-8 shrink-0"
-          />
+          {sistemaHoras && (
+            <HoraInput
+              value={topico.horas_alvo}
+              onCommit={(h) => setHoras.mutate({ id: topico.id, horas_alvo: h })}
+              ariaLabel={`Horas de ${topico.titulo}`}
+              className="!h-8 shrink-0"
+            />
+          )}
         </div>
 
         {/* ações do assunto: no celular quebram em linhas (sem estourar pro lado);
@@ -458,6 +463,13 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
           </button>
         </div>
       </div>
+
+      {/* Saldo de horas do assunto: o "resta" desce a cada estudo registrado. */}
+      {sistemaHoras && (topico.horas_alvo > 0 || topico.horas_estudadas > 0) && (
+        <div className="mb-1.5 ml-15 max-w-xs">
+          <BarraHoras alvo={topico.horas_alvo} estudado={topico.horas_estudadas} size="sm" />
+        </div>
+      )}
 
       {/* Chips dos links — sempre visíveis, abrem direto. */}
       {links.length > 0 && (

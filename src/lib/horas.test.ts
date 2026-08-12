@@ -1,5 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { distribuirIgual, distribuirPorPeso, somaHoras } from "./horas";
+import { distribuirIgual, distribuirInteiro, distribuirPorPeso, somaHoras } from "./horas";
+
+describe("distribuirInteiro", () => {
+  it("reparte minutos igualmente quando divide certo", () => {
+    expect(distribuirInteiro(30, 3)).toEqual([10, 10, 10]);
+  });
+
+  it("dá o resto às primeiras partes e mantém a soma exata", () => {
+    const r = distribuirInteiro(25, 3);
+    expect(r).toEqual([9, 8, 8]);
+    expect(r.reduce((a, b) => a + b, 0)).toBe(25);
+  });
+
+  it("tudo para um único assunto", () => {
+    expect(distribuirInteiro(30, 1)).toEqual([30]);
+  });
+
+  it("total zero zera todas as partes", () => {
+    expect(distribuirInteiro(0, 3)).toEqual([0, 0, 0]);
+  });
+
+  it("sem partes devolve lista vazia", () => {
+    expect(distribuirInteiro(30, 0)).toEqual([]);
+  });
+});
 
 describe("distribuirIgual", () => {
   it("reparte em partes iguais quando divide certo", () => {
