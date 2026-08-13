@@ -13,6 +13,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/Button";
 import { Input, Select } from "@/components/Field";
 import { HoraInput } from "@/components/HoraInput";
+import { horasRestantes } from "@/lib/horas";
 import { BarraHoras } from "@/features/horas/BarraHoras";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { STATUS_INFO } from "./statusInfo";
@@ -286,10 +287,12 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
             </span>
           )}
           {sistemaHoras && (
+            // Contador regressivo: mostra as horas que FALTAM (plano − estudado) e
+            // desce a cada estudo. Editar redefine o plano como estudado + digitado.
             <HoraInput
-              value={topico.horas_alvo}
-              onCommit={(h) => setHoras.mutate({ id: topico.id, horas_alvo: h })}
-              ariaLabel={`Horas de ${topico.titulo}`}
+              value={horasRestantes(topico.horas_alvo, topico.horas_estudadas)}
+              onCommit={(h) => setHoras.mutate({ id: topico.id, horas_alvo: topico.horas_estudadas + h })}
+              ariaLabel={`Horas restantes de ${topico.titulo}`}
               className="!h-8 shrink-0"
             />
           )}

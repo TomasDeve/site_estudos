@@ -3,16 +3,18 @@ import type { ConcursoMateria, Topico } from "@/types/db";
 import { useAtualizarHorasMateria } from "@/api/materias";
 import { useDistribuirHorasTopicos } from "@/api/topicos";
 import { useZerarEstudoAssuntos } from "@/api/estudoHoras";
-import { distribuirIgual, somaHoras } from "@/lib/horas";
+import { distribuirIgual, horasRestantes, somaHoras } from "@/lib/horas";
 import { Button } from "@/components/Button";
 import { HoraInput } from "@/components/HoraInput";
 import { RestanteBadge } from "@/components/RestanteBadge";
 import { BarraHoras } from "@/features/horas/BarraHoras";
 
 /**
- * Barra de horas da matéria, exibida no topo do card de tópicos: define o total,
- * o botão Distribuir reparte igualmente entre os assuntos e o "restante" reage
- * ao vivo. O ajuste fino por assunto fica no campo de horas de cada linha
+ * Barra de horas da matéria, exibida no topo do card de tópicos. O campo é um
+ * contador regressivo: mostra as horas que FALTAM (plano − estudado) e desce a
+ * cada estudo registrado; editá-lo redefine o plano. O botão Distribuir reparte
+ * o plano igualmente entre os assuntos e o "restante" da distribuição reage ao
+ * vivo. O ajuste fino por assunto fica no campo de horas de cada linha
  * (TopicoRow) — tudo num lugar só, junto dos tópicos do edital.
  */
 export function DistribuicaoHorasMateria({
@@ -51,10 +53,13 @@ export function DistribuicaoHorasMateria({
         <span className="flex items-center gap-1.5 text-xs font-semibold text-dim">
           <Clock3 className="size-3.5 text-gold" /> Horas da matéria
         </span>
+        {/* Contador regressivo: mostra as horas que FALTAM na matéria (plano −
+            estudado) e desce a cada estudo. Editar redefine o plano como
+            estudado + digitado. */}
         <HoraInput
-          value={alvo}
-          onCommit={(h) => setHorasMateria.mutate({ id: vinculo.id, horas_alvo: h })}
-          ariaLabel="Horas da matéria"
+          value={horasRestantes(alvo, estudado)}
+          onCommit={(h) => setHorasMateria.mutate({ id: vinculo.id, horas_alvo: estudado + h })}
+          ariaLabel="Horas restantes da matéria"
           className="!h-8"
         />
         <Button

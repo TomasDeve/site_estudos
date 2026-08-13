@@ -12,6 +12,16 @@ export function restante(total: number, distribuido: number): number {
   return Math.round((total - distribuido) * 2) / 2;
 }
 
+/**
+ * Horas que ainda faltam ESTUDAR de um assunto/matéria (plano − estudado), em
+ * passos de meia-hora e nunca negativo. É o número que o campo de horas mostra
+ * descendo a cada estudo registrado. Arredonda a 0,5h para casar com o passo do
+ * HoraInput — assim focar e sair do campo (sem digitar) não regrava o plano.
+ */
+export function horasRestantes(alvo: number, estudado: number): number {
+  return Math.max(0, Math.round(((Number(alvo) || 0) - (Number(estudado) || 0)) * 2) / 2);
+}
+
 /** Classifica o restante para colorir o placar (verde / âmbar / vermelho). */
 export function statusRestante(r: number): "zerado" | "sobra" | "estouro" {
   if (Math.abs(r) < 0.25) return "zerado";
