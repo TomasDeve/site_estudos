@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -37,7 +38,10 @@ export function Modal({
 
   if (!open) return null;
 
-  return (
+  // Renderiza no body (portal): fora de qualquer Card com backdrop-blur/transform,
+  // que criaria um containing block e prenderia o `fixed inset-0` ao card em vez
+  // da janela — deixando o overlay confinado e o modal fora do centro.
+  return createPortal(
     <div
       className={`fixed inset-0 z-50 flex justify-center bg-navy-950/80 backdrop-blur-sm ${
         fullscreen ? "items-stretch p-0" : "items-end p-0 sm:items-center sm:p-4"
@@ -68,6 +72,7 @@ export function Modal({
           <div className="flex justify-end gap-2 border-t border-line/40 px-4 py-3 sm:px-5">{footer}</div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
