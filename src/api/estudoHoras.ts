@@ -1,7 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { distribuirInteiro } from "@/lib/horas";
-import type { Concurso, Topico } from "@/types/db";
+import type { Concurso, TablesInsert, Topico } from "@/types/db";
+
+/** Próxima ordem de bloco num dia — anexa o registro ao fim da lista de Metas. */
+async function proximaOrdemDoDia(data: string): Promise<number> {
+  const { data: rows } = await supabase
+    .from("blocos_dia")
+    .select("ordem")
+    .eq("data", data)
+    .order("ordem", { ascending: false })
+    .limit(1);
+  return (rows?.[0]?.ordem ?? -1) + 1;
+}
 
 /** Uma parte da distribuição: quanto foi lançado em cada assunto. */
 export interface ParteEstudo {
@@ -18,13 +29,16 @@ export interface RegistrarEstudoInput {
   minutos: number;
   /** Assuntos que recebem o tempo. "Todos" = todos os assuntos da matéria no edital. */
   topicoIds: string[];
+  /** Título do bloco de Metas criado (ex.: o assunto ou "Estudo de conteúdo"). */
+  titulo: string;
 }
 
 /**
  * Reparte o tempo estudado igualmente entre os assuntos escolhidos (em minutos),
- * abate cada fatia do saldo do assunto (`horas_estudadas`) e grava a sessão de
- * estudo — que alimenta o "Estudo hoje" e o gráfico da semana. A sessão aponta
- * para o assunto quando é um só; com vários ("Todos"), fica no nível da matéria.
+ * abate cada fatia do saldo do assunto (`horas_estudadas`) e cria um BLOCO DE
+ * METAS já concluído para o dia, com uma sessão por assunto ligada a ele
+ * (`bloco_id`). Assim o estudo entra nas Metas como feito (conta na meta do dia
+ * e no gráfico da semana) e, ao apagar o bloco, as horas voltam para o assunto.
  */
 export function useRegistrarEstudo() {
   const qc = useQueryClient();
@@ -61,15 +75,49 @@ export function useRegistrarEstudo() {
         }
       }
 
-      // Sessão do dia: aponta para o assunto só quando o tempo foi para um único.
-      const { error: e2 } = await supabase.from("sessoes_estudo").insert({
-        data: input.data,
-        minutos: input.minutos,
-        materia_id: input.materiaId,
-        concurso_id: input.concursoId,
-        topico_id: ids.length === 1 ? ids[0] : null,
-        origem: "manual",
-      });
+      // Bloco de Metas já concluído (conta na meta do dia).
+      const { data: bloco, error: eB } = await supabase
+        .from("blocos_dia")
+        .insert({
+          data: input.data,
+          titulo: input.titulo,
+          duracao_min: input.minutos,
+          materia_id: input.materiaId,
+          concurso_id: input.concursoId,
+          ordem: await proximaOrdemDoDia(input.data),
+          concluido: true,
+          concluido_at: new Date().toISOString(),
+          origem: "estudo",
+        })
+        .select()
+        .single();
+      if (eB) throw eB;
+
+      // Uma sessão por assunto (guarda o abatimento p/ devolver ao apagar). Sem
+      // assuntos, cai numa sessão no nível da matéria (topico_id nulo).
+      const linhasSessao: TablesInsert<"sessoes_estudo">[] =
+        partes.length > 0
+          ? partes.map((p) => ({
+              data: input.data,
+              minutos: p.minutos,
+              materia_id: input.materiaId,
+              concurso_id: input.concursoId,
+              topico_id: p.topicoId,
+              origem: "manual",
+              bloco_id: bloco.id,
+            }))
+          : [
+              {
+                data: input.data,
+                minutos: input.minutos,
+                materia_id: input.materiaId,
+                concurso_id: input.concursoId,
+                topico_id: null,
+                origem: "manual",
+                bloco_id: bloco.id,
+              },
+            ];
+      const { error: e2 } = await supabase.from("sessoes_estudo").insert(linhasSessao);
       if (e2) throw e2;
 
       return partes;
@@ -104,6 +152,7 @@ export function useRegistrarEstudo() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["topicos"] });
       qc.invalidateQueries({ queryKey: ["sessoes"] });
+      qc.invalidateQueries({ queryKey: ["blocos"] });
     },
   });
 }
@@ -116,13 +165,16 @@ export interface RegistrarRevisaoInput {
   data: string;
   /** Tempo revisado, em minutos. */
   minutos: number;
+  /** Título do bloco de Metas criado (ex.: "Revisão · Anki"). */
+  titulo: string;
 }
 
 /**
  * Registra tempo de revisão (Anki) e abate do orçamento de revisão do concurso
  * (`horas_revisao_feita` sobe → o balde "Revisão · Anki" desce). Também grava a
  * sessão do dia (origem `revisao`), que soma no "Estudo hoje" e no gráfico da
- * semana — é tempo de estudo de verdade, só que na trilha de revisão.
+ * semana — é tempo de estudo de verdade, só que na trilha de revisão. Cria
+ * também um bloco de Metas concluído; apagá-lo devolve a revisão ao balde.
  */
 export function useRegistrarRevisao() {
   const qc = useQueryClient();
@@ -146,7 +198,26 @@ export function useRegistrarRevisao() {
         .eq("id", input.concursoId);
       if (e1) throw e1;
 
-      // Sessão do dia: revisão não aponta para assunto (topico_id nulo).
+      // Bloco de Metas concluído + sessão ligada (origem 'revisao'). Apagar o
+      // bloco devolve a horas_revisao_feita ao balde. Revisão não aponta para
+      // assunto (topico_id nulo).
+      const { data: bloco, error: eB } = await supabase
+        .from("blocos_dia")
+        .insert({
+          data: input.data,
+          titulo: input.titulo,
+          duracao_min: input.minutos,
+          materia_id: input.materiaId,
+          concurso_id: input.concursoId,
+          ordem: await proximaOrdemDoDia(input.data),
+          concluido: true,
+          concluido_at: new Date().toISOString(),
+          origem: "revisao",
+        })
+        .select()
+        .single();
+      if (eB) throw eB;
+
       const { error: e2 } = await supabase.from("sessoes_estudo").insert({
         data: input.data,
         minutos: input.minutos,
@@ -154,6 +225,7 @@ export function useRegistrarRevisao() {
         concurso_id: input.concursoId,
         topico_id: null,
         origem: "revisao",
+        bloco_id: bloco.id,
       });
       if (e2) throw e2;
     },
@@ -181,6 +253,7 @@ export function useRegistrarRevisao() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["concursos"] });
       qc.invalidateQueries({ queryKey: ["sessoes"] });
+      qc.invalidateQueries({ queryKey: ["blocos"] });
     },
   });
 }

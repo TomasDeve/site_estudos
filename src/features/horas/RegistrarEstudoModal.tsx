@@ -135,6 +135,7 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
           materiaId: materiaId && materiaId !== GERAL ? materiaId : null,
           data,
           minutos,
+          titulo: "Revisão · Anki",
         });
         toast.success(`Revisão registrada: ${fmtMinutos(minutos)} 🔁`);
         await onSalvo?.();
@@ -148,6 +149,12 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
     if (!materiaId) return toast.error("Escolha a matéria.");
     if (assuntos.length > 0 && selecionados.length === 0)
       return toast.error("Selecione ao menos um assunto (ou Todos).");
+    const titulo =
+      selecionados.length === 1
+        ? selecionados[0].titulo
+        : selecionados.length > 1
+          ? `Estudo · ${selecionados.length} assuntos`
+          : "Estudo de conteúdo";
     try {
       const partes = await registrar.mutateAsync({
         concursoId: concurso.id,
@@ -155,6 +162,7 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
         data,
         minutos,
         topicoIds: selecionados.map((t) => t.id),
+        titulo,
       });
       const resumo =
         partes.length > 1

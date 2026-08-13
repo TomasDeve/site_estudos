@@ -181,6 +181,9 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
           <ul className="space-y-1.5">
             {(blocos ?? []).map((b) => {
               const mat = nomeMat(b.materia_id);
+              // Registro automático (estudo/revisão): concluído e travado — desfaz
+              // pela lixeira, que devolve as horas. Bloco planejado ('plano') não.
+              const ehRegistro = b.origem !== "plano";
               return (
                 <li
                   key={b.id}
@@ -192,48 +195,76 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
                 >
                   <button
                     onClick={() => toggle.mutate(b)}
-                    disabled={concluido}
+                    disabled={concluido || ehRegistro}
+                    title={
+                      ehRegistro
+                        ? "Registro de estudo — use a lixeira para desfazer e devolver as horas"
+                        : undefined
+                    }
                     className={`flex size-5.5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all disabled:cursor-not-allowed ${
                       b.concluido
                         ? "border-green bg-green text-navy-950"
                         : "border-mut hover:border-gold hover:scale-110"
                     }`}
-                    aria-label={b.concluido ? "Desmarcar bloco" : "Concluir bloco"}
+                    aria-label={
+                      ehRegistro
+                        ? "Registro de estudo (concluído)"
+                        : b.concluido
+                          ? "Desmarcar bloco"
+                          : "Concluir bloco"
+                    }
                   >
                     {b.concluido && <CheckCircle2 className="size-4" />}
                   </button>
                   <div className="min-w-0 flex-1">
                     <p
                       className={`text-sm leading-snug ${
-                        b.concluido ? "text-mut line-through" : "text-txt"
+                        ehRegistro ? "text-txt" : b.concluido ? "text-mut line-through" : "text-txt"
                       }`}
                     >
                       {b.titulo}
                     </p>
-                    {mat && (
-                      <p className="mt-0.5 text-[11px] text-mut">
-                        {mat.icone} {mat.nome}
-                      </p>
+                    {(ehRegistro || mat) && (
+                      <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-mut">
+                        {ehRegistro && (
+                          <span
+                            className={`rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                              b.origem === "revisao"
+                                ? "bg-[#8b7bd8]/20 text-[#b3a7e6]"
+                                : "bg-gold/15 text-gold"
+                            }`}
+                          >
+                            {b.origem === "revisao" ? "🔁 revisão" : "⏱️ registro"}
+                          </span>
+                        )}
+                        {mat && (
+                          <span>
+                            {mat.icone} {mat.nome}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                   <DuracaoBadge
                     minutos={b.duracao_min}
-                    bloqueado={concluido}
+                    bloqueado={concluido || ehRegistro}
                     onSalvar={(minutos) => atualizarDuracao.mutate({ bloco: b, minutos })}
                   />
                   {!concluido && (
                     <span className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 max-md:opacity-100">
-                      <button
-                        onClick={() => { setEditandoBloco(b); setModalBloco(true); }}
-                        className="cursor-pointer rounded-md p-1 text-mut hover:bg-navy-600 hover:text-txt"
-                        aria-label="Editar bloco"
-                      >
-                        <Pencil className="size-3.5" />
-                      </button>
+                      {!ehRegistro && (
+                        <button
+                          onClick={() => { setEditandoBloco(b); setModalBloco(true); }}
+                          className="cursor-pointer rounded-md p-1 text-mut hover:bg-navy-600 hover:text-txt"
+                          aria-label="Editar bloco"
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => excluir.mutate(b)}
                         className="cursor-pointer rounded-md p-1 text-mut hover:bg-red/10 hover:text-red"
-                        aria-label="Excluir bloco"
+                        aria-label={ehRegistro ? "Apagar registro e devolver as horas" : "Excluir bloco"}
                       >
                         <Trash2 className="size-3.5" />
                       </button>

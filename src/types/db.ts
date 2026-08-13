@@ -27,6 +27,7 @@ export type Database = {
           id: string
           materia_id: string | null
           ordem: number
+          origem: string
           titulo: string
           user_id: string
         }
@@ -40,6 +41,7 @@ export type Database = {
           id?: string
           materia_id?: string | null
           ordem?: number
+          origem?: string
           titulo: string
           user_id?: string
         }
@@ -53,6 +55,7 @@ export type Database = {
           id?: string
           materia_id?: string | null
           ordem?: number
+          origem?: string
           titulo?: string
           user_id?: string
         }

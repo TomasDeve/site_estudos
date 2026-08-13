@@ -113,11 +113,75 @@ export function useAtualizarDuracaoBloco() {
   });
 }
 
+/**
+ * Apaga um bloco e DEVOLVE o que ele havia abatido. As sessões ligadas pelo
+ * bloco_id guardam o detalhe: as com `topico_id` devolvem horas ao assunto
+ * (conteúdo); as de `origem 'revisao'` devolvem ao balde de revisão do concurso.
+ * Blocos planejados/ciclo têm sessão sem topico_id e origem 'bloco' → nada a
+ * devolver, comportamento igual ao de antes.
+ */
 export function useExcluirBloco() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (bloco: BlocoDia) => {
-      // limpa a sessão gerada, se houver
+      const { data: sess, error: eSel } = await supabase
+        .from("sessoes_estudo")
+        .select("*")
+        .eq("bloco_id", bloco.id);
+      if (eSel) throw eSel;
+
+      const porTopico = new Map<string, number>(); // topico_id -> minutos a devolver
+      const porConcursoRevisao = new Map<string, number>(); // concurso_id -> minutos
+      for (const s of sess ?? []) {
+        if (s.topico_id) {
+          porTopico.set(s.topico_id, (porTopico.get(s.topico_id) ?? 0) + s.minutos);
+        } else if (s.origem === "revisao" && s.concurso_id) {
+          porConcursoRevisao.set(
+            s.concurso_id,
+            (porConcursoRevisao.get(s.concurso_id) ?? 0) + s.minutos
+          );
+        }
+      }
+
+      // Conteúdo: subtrai de volta as horas_estudadas dos assuntos.
+      if (porTopico.size > 0) {
+        const { data: base, error: e0 } = await supabase
+          .from("topicos")
+          .select("*")
+          .in("id", [...porTopico.keys()]);
+        if (e0) throw e0;
+        const linhas = (base ?? []).map((t) => {
+          const devolver = (porTopico.get(t.id) ?? 0) / 60;
+          return {
+            ...t,
+            horas_estudadas: Math.max(0, Math.round((t.horas_estudadas - devolver) * 10000) / 10000),
+          };
+        });
+        if (linhas.length > 0) {
+          const { error } = await supabase.from("topicos").upsert(linhas);
+          if (error) throw error;
+        }
+      }
+
+      // Revisão: subtrai de volta a horas_revisao_feita do concurso.
+      for (const [concursoId, minutos] of porConcursoRevisao) {
+        const { data: c, error: e1 } = await supabase
+          .from("concursos")
+          .select("horas_revisao_feita")
+          .eq("id", concursoId)
+          .single();
+        if (e1) throw e1;
+        const novo = Math.max(
+          0,
+          Math.round(((c?.horas_revisao_feita ?? 0) - minutos / 60) * 10000) / 10000
+        );
+        const { error: e2 } = await supabase
+          .from("concursos")
+          .update({ horas_revisao_feita: novo })
+          .eq("id", concursoId);
+        if (e2) throw e2;
+      }
+
       await supabase.from("sessoes_estudo").delete().eq("bloco_id", bloco.id);
       const { error } = await supabase.from("blocos_dia").delete().eq("id", bloco.id);
       if (error) throw error;
@@ -125,6 +189,8 @@ export function useExcluirBloco() {
     onSuccess: (_d, bloco) => {
       qc.invalidateQueries({ queryKey: ["blocos", bloco.data] });
       qc.invalidateQueries({ queryKey: ["sessoes"] });
+      qc.invalidateQueries({ queryKey: ["topicos"] });
+      qc.invalidateQueries({ queryKey: ["concursos"] });
     },
   });
 }
