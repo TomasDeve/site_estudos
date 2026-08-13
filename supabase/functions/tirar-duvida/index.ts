@@ -131,13 +131,13 @@ function systemResumirQuestao(p: Payload): string {
     `Gabarito: ${gabaritoTexto(q)}`,
     q.comentario ? `Comentário do gabarito: ${q.comentario}` : null,
     "",
-    "Monte um esquema curto, direto e objetivo para colar no resumo. Responda SOMENTE com o esquema — sem preâmbulo, sem repetir o enunciado, sem citar \"a questão\", \"o item\" ou \"o gabarito\", sem comentar o acerto ou o erro do aluno. Escreva o CONTEÚDO em si, não a pegadinha da banca.",
-    "Estrutura EXATA, com uma LINHA EM BRANCO separando as duas partes:",
+    "Monte um esquema ORGANIZADO e objetivo para colar no resumo: o NÚCLEO da questão em destaque e, à volta, os pontos vizinhos que caem junto com esse tema — sempre AGRUPADOS por assunto, nunca uma lista solta de fatos avulsos. Responda SOMENTE com o esquema — sem preâmbulo, sem repetir o enunciado, sem citar \"a questão\", \"o item\" ou \"o gabarito\", sem comentar o acerto ou o erro do aluno. Escreva o CONTEÚDO em si, não a pegadinha da banca.",
+    "Estrutura, com uma LINHA EM BRANCO entre o núcleo e cada grupo:",
     "",
-    "Parte 1 — Núcleo: UMA linha começando com a seta \"→ \" (não escreva a palavra \"núcleo\"). É o conceito correto e a regra que definem o tema. Havendo base legal segura, cite o artigo entre parênteses. Deixe em CAIXA ALTA as 2 ou 3 palavras-chave que a banca cobra (o termo exato, o prazo, a autoridade).",
-    "Parte 2 — Em volta do núcleo: as informações que orbitam o tema e ajudam a MATAR OUTRAS QUESTÕES sobre ele — o rol COMPLETO de requisitos/hipóteses, as exceções, os prazos, as autoridades competentes, a comparação com o instituto vizinho. Uma informação por linha, cada linha começando com travessão \"— \". Se for uma lista (requisitos, hipóteses, competências, vedações), liste TODOS os itens. Inclua só o que for essencial e correto; se o núcleo já se basta sozinho, OMITA esta parte inteira. Não use rótulo.",
+    "Parte 1 — Núcleo: a PRIMEIRA linha, começando com a seta \"→ \" (não escreva a palavra \"núcleo\"). É a regra/conceito EXATO que este item cobrou. Havendo base legal segura, cite o artigo entre parênteses. Deixe em CAIXA ALTA as 2 ou 3 palavras-chave decisivas (o termo exato, o prazo, a autoridade).",
+    "Parte 2 — Em volta (o que cai junto): traga os pontos vizinhos que o aluno precisa fixar com este tema — a classificação a que o núcleo pertence, o ROL de casos/hipóteses/requisitos do instituto, o instituto irmão que a banca costuma comparar. AGRUPE por assunto: cada grupo começa com um RÓTULO curto terminando em dois-pontos, numa linha só (ex.: \"Extraterritorialidade incondicionada (art. 7º, I):\"), e logo abaixo cada item numa linha começando com travessão \"— \". Quando o grupo for uma lista fechada (os casos, as hipóteses, os requisitos), traga TODOS os itens dela. Use no MÁXIMO 2 rótulos e só o que é DIRETAMENTE vizinho ao núcleo — nada de desviar para temas que não se conectam. Se não há nada estruturado em volta, encerre no núcleo.",
     "",
-    "Objetividade acima de tudo: nada de \"pegadinha\", rodeios ou enrolação. Português do Brasil, direto. Sem markdown (nada de asteriscos, cerquilhas ou numeração). Não invente lei, artigo nem jurisprudência — na dúvida, omita o artigo.",
+    "Só esquema, sem frases de ligação nem enrolação. Português do Brasil. Sem markdown (nada de asteriscos, cerquilhas ou numeração — o rótulo é texto normal terminando em dois-pontos). Não invente lei, artigo, caso nem jurisprudência: se não souber o rol completo com segurança, traga só os itens que tem certeza ou omita o grupo.",
   ]
     .filter((linha) => linha !== null)
     .join("\n");
@@ -212,11 +212,11 @@ Deno.serve(async (req: Request) => {
   const client = new Anthropic({ apiKey });
 
   // Opus 4.8 sem thinking (padrão ao omitir) + streaming: primeira palavra
-  // chega rápido e o aluno não perde o ritmo. O trecho de resumo é curto de
-  // propósito — gasta pouco token por clique.
+  // chega rápido e o aluno não perde o ritmo. O trecho de resumo é enxuto de
+  // propósito — 800 tokens dão folga para o núcleo + os grupos sem truncar.
   const stream = client.messages.stream({
     model: "claude-opus-4-8",
-    max_tokens: resumirQuestao ? 600 : 1600,
+    max_tokens: resumirQuestao ? 800 : 1600,
     output_config: { effort: "low" },
     system,
     messages: mensagens,

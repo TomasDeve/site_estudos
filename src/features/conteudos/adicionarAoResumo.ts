@@ -12,14 +12,19 @@ const esc = (s: string) =>
 /** Tira qualquer marcador de lista/seta que a IA tenha posto no início da linha. */
 const semMarcador = (l: string) => l.replace(/^(?:—>|->|→|[-–—•*·])\s*/, "");
 
+/** Rótulo de um sub-bloco: uma linha que termina em ":" (ex.: "Casos (art. 7º):"). */
+const ehRotulo = (l: string) => /:$/.test(l);
+
 /**
  * Monta o bloco esquematizado que entra no resumo a partir do texto da IA:
  * uma linha divisória (`<hr>`) separando este núcleo do anterior, a linha do
- * núcleo com seta e, abaixo, as informações "em volta" como itens com travessão.
- * Preserva a linha em branco da IA como respiro entre o núcleo e a lista.
+ * núcleo com seta (→) e, à volta, os pontos vizinhos agrupados. Cada grupo abre
+ * com um rótulo em negrito (a linha "Alguma coisa:") e traz seus itens logo
+ * abaixo, um por linha com travessão (—). Um respiro (linha em branco) separa o
+ * núcleo e cada grupo.
  */
 function montarBlocoResumo(texto: string): string {
-  const linhas = texto.split("\n").map((l) => l.trim());
+  const linhas = texto.split("\n").map((l) => semMarcador(l.trim()));
   const partes: string[] = ["<hr>"];
   let primeira = true;
   let espacoPendente = false;
@@ -30,15 +35,23 @@ function montarBlocoResumo(texto: string): string {
       continue;
     }
 
+    // Rótulo de grupo (linha "…:") sempre ganha um respiro antes, para descolar
+    // do núcleo ou do grupo anterior.
+    const rotulo = !primeira && ehRotulo(linha);
+    if (rotulo) espacoPendente = true;
+
     if (espacoPendente) {
       partes.push("<div><br></div>");
       espacoPendente = false;
     }
 
-    // Núcleo sempre com seta; as demais linhas viram itens com travessão. Em
-    // ambos os casos normalizamos o marcador que a IA tenha posto no começo.
-    const prefixo = primeira ? "→ " : "— ";
-    partes.push(`<div>${prefixo}${esc(semMarcador(linha))}</div>`);
+    if (primeira) {
+      partes.push(`<div>→ ${esc(linha)}</div>`); // núcleo
+    } else if (rotulo) {
+      partes.push(`<div><strong>${esc(linha)}</strong></div>`); // rótulo do grupo
+    } else {
+      partes.push(`<div>— ${esc(linha)}</div>`); // item
+    }
     primeira = false;
   }
 
