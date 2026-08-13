@@ -94,8 +94,9 @@ export function QuestoesMistasPage() {
     esquecer,
   } = useAdicionarQuestaoAoResumo();
 
-  // Resumos de questões de todas as matérias: aqui a nota de cada questão vai
-  // para o resumo geral da matéria dela. Serve ao botão "No resumo" e à edição.
+  // Todos os resumos de questões do site (por assunto e por matéria): a nota de
+  // cada questão vai para o resumo do assunto dela. Serve ao botão "No resumo"
+  // (que varre todos) e à edição do trecho.
   const { data: resumos } = useResumosDeQuestoes();
   const idsNoBanco = useMemo(() => {
     const set = new Set<string>();
@@ -104,8 +105,8 @@ export function QuestoesMistasPage() {
     }
     return set;
   }, [resumos]);
-  const resumoDaMateria = (mId: string | null | undefined) =>
-    (resumos ?? []).find((r) => r.materia_id === mId && r.topico_id === null) ?? null;
+  const resumoDoTopico = (tId: string | null | undefined) =>
+    (resumos ?? []).find((r) => r.topico_id === tId) ?? null;
   // Respondidas nesta sessão seguem à mostra em "Para responder", para dar
   // tempo de ler o gabarito comentado antes de irem para "Resolvidas".
   const [respondidasAgora, setRespondidasAgora] = useState<ReadonlySet<string>>(new Set());
@@ -389,7 +390,9 @@ export function QuestoesMistasPage() {
                           questao: q,
                           materiaNome: materiaPorId.get(topicoDaQuestao?.materia_id ?? "")?.nome,
                           assunto: topicoDaQuestao?.titulo,
-                          destino: { materiaId: topicoDaQuestao?.materia_id },
+                          // A nota vai para o resumo do assunto da questão (não o geral
+                          // da matéria) — assim cada trecho fica junto do seu tema.
+                          destino: { topicoId: q.topico_id },
                         });
                       }}
                       resumindo={resumindoId === q.id}
@@ -427,12 +430,11 @@ export function QuestoesMistasPage() {
 
       {verResumoDe &&
         (() => {
-          const materiaIdDaQuestao = topicoPorId.get(verResumoDe.topico_id)?.materia_id;
-          const resumoTexto = resumoDaMateria(materiaIdDaQuestao);
+          const resumoTexto = resumoDoTopico(verResumoDe.topico_id);
           return (
             <EditarTrechoResumoModal
               questaoId={verResumoDe.id}
-              destino={{ materiaId: materiaIdDaQuestao ?? undefined }}
+              destino={{ topicoId: verResumoDe.topico_id }}
               resumoTextoId={resumoTexto?.id}
               conteudoBanco={resumoTexto?.conteudo ?? ""}
               onRemovido={() => esquecer(verResumoDe.id)}
