@@ -41,10 +41,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      {/* Desempenho em questões: primeira informação do painel (estilo QConcursos) */}
-      <DesempenhoQuestoes />
-
-      {/* Status do edital */}
+      {/* Status do edital: primeira seção (visão geral do quanto do edital já andou) */}
       <Card>
         <CardBody>
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -88,10 +85,10 @@ export function DashboardPage() {
         </CardBody>
       </Card>
 
-      {/* Planejamento de horas: orçamento de tempo até a prova */}
-      <PlanejamentoHoras concurso={concurso} />
+      {/* Desempenho em questões (estilo QConcursos) */}
+      <DesempenhoQuestoes />
 
-      {/* Estudo hoje ao lado do gráfico dos últimos 7 dias (deixa o gráfico menos largo) */}
+      {/* Tempo de estudo: gráfico dos últimos 7 dias, com o estudo de hoje ao lado */}
       <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
         <Card className="flex flex-col justify-center gap-2.5 px-5 py-5 lg:order-2 lg:w-60 lg:shrink-0">
           <span className="flex items-center gap-2 text-mut">
@@ -109,6 +106,9 @@ export function DashboardPage() {
           <WeekStudyChart />
         </div>
       </div>
+
+      {/* Planejamento de horas: orçamento de tempo até a prova */}
+      <PlanejamentoHoras concurso={concurso} />
     </div>
   );
 }
