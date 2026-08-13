@@ -252,15 +252,13 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
                   />
                   {!concluido && (
                     <span className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 max-md:opacity-100">
-                      {!ehRegistro && (
-                        <button
-                          onClick={() => { setEditandoBloco(b); setModalBloco(true); }}
-                          className="cursor-pointer rounded-md p-1 text-mut hover:bg-navy-600 hover:text-txt"
-                          aria-label="Editar bloco"
-                        >
-                          <Pencil className="size-3.5" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => { setEditandoBloco(b); setModalBloco(true); }}
+                        className="cursor-pointer rounded-md p-1 text-mut hover:bg-navy-600 hover:text-txt"
+                        aria-label={ehRegistro ? "Editar registro (título e dia)" : "Editar bloco"}
+                      >
+                        <Pencil className="size-3.5" />
+                      </button>
                       <button
                         onClick={() => excluir.mutate(b)}
                         className="cursor-pointer rounded-md p-1 text-mut hover:bg-red/10 hover:text-red"

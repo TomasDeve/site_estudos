@@ -62,14 +62,29 @@ export function useRegistrarBlocoConcluido() {
   });
 }
 
+/**
+ * Edita um bloco. Se o dia (`data`) mudar, move junto as sessões ligadas pelo
+ * bloco_id — assim o "Estudo hoje" e o gráfico seguem o bloco para o novo dia
+ * (útil para quem estuda virando a madrugada e joga o tempo para o dia seguinte).
+ */
 export function useAtualizarBloco() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...patch }: { id: string } & TablesUpdate<"blocos_dia">) => {
       const { error } = await supabase.from("blocos_dia").update(patch).eq("id", id);
       if (error) throw error;
+      if (patch.data) {
+        const { error: e2 } = await supabase
+          .from("sessoes_estudo")
+          .update({ data: patch.data })
+          .eq("bloco_id", id);
+        if (e2) throw e2;
+      }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["blocos"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["blocos"] });
+      qc.invalidateQueries({ queryKey: ["sessoes"] });
+    },
   });
 }
 

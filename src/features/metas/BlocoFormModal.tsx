@@ -4,6 +4,7 @@ import type { BlocoDia } from "@/types/db";
 import { useAtualizarBloco, useCriarBloco, useRegistrarBlocoConcluido } from "@/api/blocos";
 import { useMaterias } from "@/api/materias";
 import { useConcursos } from "@/api/concursos";
+import { fmtDataCurta } from "@/lib/dates";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/Button";
 import { Field, Input, Select } from "@/components/Field";
@@ -61,7 +62,12 @@ export function BlocoFormModal({
   const [duracao, setDuracao] = useState("30");
   const [materiaId, setMateriaId] = useState("");
   const [concursoId, setConcursoId] = useState("");
+  const [dia, setDia] = useState(dataISO);
   const [pulando, setPulando] = useState(false);
+
+  // Registro automático (estudo/revisão): trava tempo/matéria — mudá-los mexeria
+  // no abatimento das horas. Deixa ajustar só o título e o dia.
+  const ehRegistro = !!bloco && bloco.origem !== "plano";
 
   useEffect(() => {
     if (!open) return;
@@ -69,7 +75,8 @@ export function BlocoFormModal({
     setDuracao(String(bloco?.duracao_min ?? 30));
     setMateriaId(bloco?.materia_id ?? materiaIdPadrao ?? "");
     setConcursoId(bloco?.concurso_id ?? concursoIdPadrao ?? "");
-  }, [open, bloco, concursoIdPadrao, tituloPadrao, materiaIdPadrao]);
+    setDia(bloco?.data ?? dataISO);
+  }, [open, bloco, concursoIdPadrao, tituloPadrao, materiaIdPadrao, dataISO]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -86,11 +93,12 @@ export function BlocoFormModal({
         concurso_id: concursoId || null,
       };
       if (bloco) {
-        await atualizar.mutateAsync({ id: bloco.id, ...campos });
+        await atualizar.mutateAsync({ id: bloco.id, ...campos, data: dia });
+        if (dia !== bloco.data) toast.success(`Movido para ${fmtDataCurta(dia)}`);
       } else if (concluirAoSalvar) {
-        await registrarConcluido.mutateAsync({ ...campos, data: dataISO, ordem: proximaOrdem });
+        await registrarConcluido.mutateAsync({ ...campos, data: dia, ordem: proximaOrdem });
       } else {
-        await criar.mutateAsync({ ...campos, data: dataISO, ordem: proximaOrdem });
+        await criar.mutateAsync({ ...campos, data: dia, ordem: proximaOrdem });
       }
       await onSalvo?.();
       onClose();
@@ -116,7 +124,10 @@ export function BlocoFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={tituloModal ?? (bloco ? "Editar bloco" : "Novo bloco de estudo")}
+      title={
+        tituloModal ??
+        (bloco ? (ehRegistro ? "Editar registro" : "Editar bloco") : "Novo bloco de estudo")
+      }
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
@@ -138,6 +149,13 @@ export function BlocoFormModal({
       }
     >
       <form id="form-bloco" onSubmit={onSubmit} className="space-y-4">
+        {ehRegistro && (
+          <p className="rounded-lg border border-dashed border-line/60 bg-navy-900/40 px-3 py-2 text-[11px] leading-relaxed text-mut">
+            Registro de estudo: dá para ajustar o <strong className="text-dim">título</strong> e o{" "}
+            <strong className="text-dim">dia</strong> (ex.: jogar o estudo para o dia seguinte). Para
+            mudar o tempo ou a matéria, apague o registro e lance de novo.
+          </p>
+        )}
         <Field label="O que vai estudar?">
           <Input
             required
@@ -147,14 +165,18 @@ export function BlocoFormModal({
             onChange={(e) => setTitulo(e.target.value)}
           />
         </Field>
+        <Field label="Dia">
+          <Input type="date" value={dia} onChange={(e) => setDia(e.target.value)} />
+        </Field>
         <Field label="Duração">
           <div className="flex flex-wrap items-center gap-1.5">
             {DURACOES.map((d) => (
               <button
                 key={d}
                 type="button"
+                disabled={ehRegistro}
                 onClick={() => setDuracao(String(d))}
-                className={`cursor-pointer rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                className={`cursor-pointer rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   duracao === String(d)
                     ? "border-gold/60 bg-gold/15 text-gold"
                     : "border-line bg-navy-900 text-dim hover:border-gold/40"
@@ -167,6 +189,7 @@ export function BlocoFormModal({
               type="number"
               min="5"
               max="600"
+              disabled={ehRegistro}
               value={duracao}
               onChange={(e) => setDuracao(e.target.value)}
               className="!h-8 w-20 !text-xs"
@@ -175,7 +198,11 @@ export function BlocoFormModal({
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Matéria (opcional)">
-            <Select value={materiaId} onChange={(e) => setMateriaId(e.target.value)}>
+            <Select
+              value={materiaId}
+              disabled={ehRegistro}
+              onChange={(e) => setMateriaId(e.target.value)}
+            >
               <option value="">—</option>
               {(materias ?? []).map((m) => (
                 <option key={m.id} value={m.id}>
@@ -185,7 +212,11 @@ export function BlocoFormModal({
             </Select>
           </Field>
           <Field label="Concurso (opcional)">
-            <Select value={concursoId} onChange={(e) => setConcursoId(e.target.value)}>
+            <Select
+              value={concursoId}
+              disabled={ehRegistro}
+              onChange={(e) => setConcursoId(e.target.value)}
+            >
               <option value="">—</option>
               {(concursos ?? []).map((c) => (
                 <option key={c.id} value={c.id}>
