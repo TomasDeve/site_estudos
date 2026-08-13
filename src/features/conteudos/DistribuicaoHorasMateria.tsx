@@ -38,8 +38,11 @@ export function DistribuicaoHorasMateria({
   }
 
   function distribuirIgualmente() {
-    const horas = distribuirIgual(alvo, topicos.length);
-    distribuir.mutate(topicos.map((t, i) => ({ id: t.id, horas_alvo: horas[i] ?? 0 })));
+    // Assuntos riscados ficam fora do rateio — o tempo não vai para eles.
+    const riscados = new Set(vinculo.topicos_riscados ?? []);
+    const ativos = topicos.filter((t) => !riscados.has(t.id));
+    const horas = distribuirIgual(alvo, ativos.length);
+    distribuir.mutate(ativos.map((t, i) => ({ id: t.id, horas_alvo: horas[i] ?? 0 })));
   }
 
   return (

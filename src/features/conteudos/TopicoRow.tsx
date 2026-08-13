@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks, Compass } from "lucide-react";
+import { GripVertical, Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks, Compass, Ban } from "lucide-react";
 import { toast } from "sonner";
 import type { QuestaoLog, Topico, TopicoLink, TopicoMeta, TopicoTexto, TopicoStatus } from "@/types/db";
 import { CICLO_STATUS, useAtualizarHorasTopico, useAtualizarTopico, useExcluirTopico, useSetTopicoNucleo, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
@@ -46,9 +46,13 @@ interface Props {
   mostrarNucleo?: boolean;
   /** Sistema de horas ligado: mostra o campo de horas e o saldo estudado do assunto. */
   sistemaHoras?: boolean;
+  /** Assunto riscado neste concurso: aparece riscado e não conta no edital. */
+  riscado?: boolean;
+  /** Alterna o risco do assunto. Sem o callback, o botão de riscar não aparece. */
+  onToggleRiscar?: () => void;
 }
 
-export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast, mostrarNucleo, sistemaHoras }: Props) {
+export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast, mostrarNucleo, sistemaHoras, riscado, onToggleRiscar }: Props) {
   const setStatus = useSetTopicoStatus();
   const setSeparador = useSetTopicoSeparador();
   const setNucleo = useSetTopicoNucleo();
@@ -270,8 +274,13 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
             <span
               onDoubleClick={abrirEdicao}
               className={`min-w-0 flex-1 text-sm leading-snug ${
-                status === "concluido" ? "text-mut" : "text-txt"
+                riscado
+                  ? "text-mut line-through decoration-red/60"
+                  : status === "concluido"
+                    ? "text-mut"
+                    : "text-txt"
               }`}
+              title={riscado ? "Riscado — fora do edital deste concurso" : undefined}
             >
               {topico.titulo}
             </span>
@@ -453,6 +462,26 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
           >
             <SeparatorHorizontal className="size-3.5" />
           </button>
+
+          {/* riscar: "não vou estudar" — o assunto some do edital sem ser apagado */}
+          {onToggleRiscar && (
+            <button
+              onClick={onToggleRiscar}
+              className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors ${
+                riscado
+                  ? "text-red hover:bg-red/10"
+                  : "text-mut opacity-0 hover:bg-navy-600 hover:text-red group-hover/topico:opacity-100 max-md:opacity-100"
+              }`}
+              title={
+                riscado
+                  ? "Assunto riscado — não conta no edital (clique para voltar)"
+                  : "Riscar assunto: não vou estudar (sai do edital, mas não apaga)"
+              }
+              aria-label={riscado ? `Tirar o risco de ${topico.titulo}` : `Riscar ${topico.titulo}`}
+            >
+              <Ban className="size-3.5" />
+            </button>
+          )}
 
           <button
             onClick={() => setConfirmarExclusao(true)}

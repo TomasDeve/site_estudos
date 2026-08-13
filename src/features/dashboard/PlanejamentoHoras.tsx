@@ -170,12 +170,16 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
   const dias = concurso.data_prova ? diasAte(concurso.data_prova) : null;
   // Ritmo necessário para o que AINDA falta (o total já desconta o que foi feito).
   const hDia = dias && dias > 0 ? restaTotal / dias : null;
-  const distribuido = somaHoras(meusVinculos.map((v) => v.horas_alvo));
+  // Matérias que entram no rateio: as riscadas ("não vou estudar") ficam de fora —
+  // o "Distribuir" não manda tempo para elas, e o restante só conta as ativas.
+  const vinculosAtivos = useMemo(() => meusVinculos.filter((v) => !v.riscada), [meusVinculos]);
+  const distribuido = somaHoras(vinculosAtivos.map((v) => v.horas_alvo));
   const materiaDe = (id: string) => (materias ?? []).find((m) => m.id === id);
-  const podeDistribuir = meusVinculos.length > 0 && conteudo > 0;
+  const podeDistribuir = vinculosAtivos.length > 0 && conteudo > 0;
 
+  // Reparte as horas SÓ entre as matérias ativas (não riscadas), na ordem delas.
   function aplicar(horas: number[]) {
-    distribuir.mutate(meusVinculos.map((v, i) => ({ id: v.id, horas_alvo: horas[i] ?? 0 })));
+    distribuir.mutate(vinculosAtivos.map((v, i) => ({ id: v.id, horas_alvo: horas[i] ?? 0 })));
   }
 
   // ===== Desligado: só o interruptor e o convite =====
@@ -299,9 +303,9 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
                     <Button
                       size="sm"
                       variant="secondary"
-                      onClick={() => aplicar(distribuirIgual(conteudo, meusVinculos.length))}
+                      onClick={() => aplicar(distribuirIgual(conteudo, vinculosAtivos.length))}
                       disabled={!podeDistribuir}
-                      title="Reparte as horas de conteúdo igualmente entre as matérias"
+                      title="Reparte as horas de conteúdo igualmente entre as matérias (pula as riscadas)"
                     >
                       <SplitSquareHorizontal className="size-3.5" /> Distribuir igual
                     </Button>
@@ -312,12 +316,12 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
                         aplicar(
                           distribuirPorPeso(
                             conteudo,
-                            meusVinculos.map((v) => v.peso_questoes ?? 0)
+                            vinculosAtivos.map((v) => v.peso_questoes ?? 0)
                           )
                         )
                       }
                       disabled={!podeDistribuir}
-                      title="Reparte proporcional ao peso de questões de cada matéria (prioriza quem cai mais)"
+                      title="Reparte proporcional ao peso de questões de cada matéria (prioriza quem cai mais; pula as riscadas)"
                     >
                       <Scale className="size-3.5" /> Por peso das questões
                     </Button>
@@ -337,11 +341,19 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
                             key={v.id}
                             className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors hover:bg-navy-700/40"
                           >
-                            <span className="shrink-0 text-base">{m?.icone ?? "📘"}</span>
+                            <span className={`shrink-0 text-base ${v.riscada ? "opacity-50" : ""}`}>
+                              {m?.icone ?? "📘"}
+                            </span>
                             <Link
                               to={`/concurso/${concurso.id}/conteudos/${v.materia_id}`}
-                              className="min-w-0 flex-1 truncate text-sm text-dim transition-colors hover:text-gold"
-                              title={`Abrir ${m?.nome ?? "matéria"} e distribuir por assunto`}
+                              className={`min-w-0 flex-1 truncate text-sm transition-colors hover:text-gold ${
+                                v.riscada ? "text-mut line-through decoration-red/50" : "text-dim"
+                              }`}
+                              title={
+                                v.riscada
+                                  ? `${m?.nome ?? "matéria"} — riscada (fora do rateio de horas)`
+                                  : `Abrir ${m?.nome ?? "matéria"} e distribuir por assunto`
+                              }
                             >
                               {m?.nome ?? "matéria"}
                             </Link>

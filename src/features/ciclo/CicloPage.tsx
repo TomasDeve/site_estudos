@@ -110,17 +110,32 @@ export function CicloPage() {
     [vinculosConcurso]
   );
 
+  // Matérias riscadas do concurso: continuam na lista do ciclo, mas ficam fora da
+  // rotação — nunca viram "Estude agora" nem travam o fechamento da volta.
+  const riscadasSet = useMemo(
+    () => new Set(vinculosConcurso.filter((v) => v.riscada).map((v) => v.materia_id)),
+    [vinculosConcurso]
+  );
+  const itensAtivos = useMemo(
+    () => meusItens.filter((i) => !riscadasSet.has(i.materia_id)),
+    [meusItens, riscadasSet]
+  );
+
   if (l1 || l2 || l3 || l4) return <FullScreenSpinner />;
 
-  const progresso = (materiaId: string) => progressoMateria(materiaId, topicos ?? []);
+  const progresso = (materiaId: string) => {
+    const v = vinculosConcurso.find((x) => x.materia_id === materiaId);
+    return progressoMateria(materiaId, topicos ?? [], new Set(v?.topicos_riscados ?? []));
+  };
   const nome = (i: CicloItem) => materiaById.get(i.materia_id)?.nome ?? "Matéria";
   const icone = (i: CicloItem) => materiaById.get(i.materia_id)?.icone ?? "📚";
 
-  const total = meusItens.length;
-  const concluidosNaVolta = meusItens.filter((i) => i.concluido).length;
+  // Estado e progresso da volta contam só as matérias ativas (não riscadas).
+  const total = itensAtivos.length;
+  const concluidosNaVolta = itensAtivos.filter((i) => i.concluido).length;
   const pctVolta = total === 0 ? 0 : Math.round((concluidosNaVolta / total) * 100);
-  const { atual, proxima, adiadas, ativos, ultimaConcluida } = estadoCiclo(meusItens);
-  const indexAtual = atual ? meusItens.indexOf(atual) : -1;
+  const { atual, proxima, adiadas, ativos, ultimaConcluida } = estadoCiclo(itensAtivos);
+  const indexAtual = atual ? itensAtivos.indexOf(atual) : -1;
   const adiadaIds = new Set(adiadas.map((i) => i.id));
   const atualEhReserva = !!atual && adiadaIds.has(atual.id);
   // só dá para pular se a atual não é reserva e há outra matéria para onde ir.
@@ -128,7 +143,7 @@ export function CicloPage() {
   const proximaEhReserva = !!proxima && adiadaIds.has(proxima.id);
   const voltaCompleta = total > 0 && concluidosNaVolta === total;
   // voltas concluídas = quantas vezes o ciclo inteiro já foi percorrido.
-  const voltasCompletas = total === 0 ? 0 : Math.min(...meusItens.map((i) => i.voltas));
+  const voltasCompletas = total === 0 ? 0 : Math.min(...itensAtivos.map((i) => i.voltas));
   // número exibido como "volta atual": a que está sendo estudada (ou a recém-fechada).
   const voltaLabel = voltaCompleta ? voltasCompletas : voltasCompletas + 1;
   const proximaVolta = voltasCompletas + 1;
@@ -494,6 +509,7 @@ export function CicloPage() {
                         index={i}
                         ehAtual={item.id === atual?.id}
                         adiada={adiadaIds.has(item.id)}
+                        riscada={riscadasSet.has(item.materia_id)}
                         cor={cor}
                         nome={nome(item)}
                         icone={icone(item)}

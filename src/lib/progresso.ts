@@ -8,9 +8,17 @@ export interface ProgressoMateria {
   pct: number;
 }
 
-/** Progresso de uma matéria a partir da lista global de tópicos. */
-export function progressoMateria(materiaId: string, topicos: Topico[]): ProgressoMateria {
-  const meus = topicos.filter((t) => t.materia_id === materiaId);
+/**
+ * Progresso de uma matéria a partir da lista global de tópicos. `riscados` (os
+ * assuntos riscados naquele concurso) saem da conta — como se não estivessem no
+ * edital: não entram no total nem nos concluídos.
+ */
+export function progressoMateria(
+  materiaId: string,
+  topicos: Topico[],
+  riscados?: Set<string>
+): ProgressoMateria {
+  const meus = topicos.filter((t) => t.materia_id === materiaId && !riscados?.has(t.id));
   const concluidos = meus.filter((t) => t.status === "concluido").length;
   const emAndamento = meus.filter(
     (t) => t.status === "estudando" || t.status === "revisar"
@@ -31,18 +39,22 @@ export interface ProgressoConcurso {
   porArea: Record<string, { total: number; concluidos: number; pct: number }>;
 }
 
-/** Progresso do edital de um concurso (tópicos das matérias vinculadas). */
+/**
+ * Progresso do edital de um concurso (tópicos das matérias vinculadas). Matérias
+ * riscadas ficam de fora inteiras, e os assuntos riscados de cada matéria também
+ * — o Status do edital passa a refletir só o que se pretende estudar.
+ */
 export function progressoConcurso(
   concursoId: string,
   vinculos: ConcursoMateria[],
   topicos: Topico[]
 ): ProgressoConcurso {
-  const meusVinculos = vinculos.filter((v) => v.concurso_id === concursoId);
+  const meusVinculos = vinculos.filter((v) => v.concurso_id === concursoId && !v.riscada);
   const porArea: ProgressoConcurso["porArea"] = {};
   let total = 0;
   let concluidos = 0;
   for (const v of meusVinculos) {
-    const p = progressoMateria(v.materia_id, topicos);
+    const p = progressoMateria(v.materia_id, topicos, new Set(v.topicos_riscados ?? []));
     total += p.total;
     concluidos += p.concluidos;
     const area = (porArea[v.area] ??= { total: 0, concluidos: 0, pct: 0 });
@@ -57,6 +69,24 @@ export function progressoConcurso(
     concluidos,
     pct: total === 0 ? 0 : Math.round((concluidos / total) * 100),
     porArea,
+  };
+}
+
+/**
+ * Estado de "riscado" de uma matéria num concurso: se a matéria inteira está
+ * riscada e o conjunto de assuntos riscados. Lê do vínculo concurso↔matéria
+ * (por isso vale só naquele concurso). Base para riscar no progresso, nas horas
+ * e no ciclo.
+ */
+export function riscadosDaMateria(
+  materiaId: string,
+  concursoId: string,
+  vinculos: ConcursoMateria[]
+): { materiaRiscada: boolean; topicosRiscados: Set<string> } {
+  const v = vinculos.find((x) => x.concurso_id === concursoId && x.materia_id === materiaId);
+  return {
+    materiaRiscada: !!v?.riscada,
+    topicosRiscados: new Set(v?.topicos_riscados ?? []),
   };
 }
 

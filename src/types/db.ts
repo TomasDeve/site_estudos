@@ -141,7 +141,9 @@ export type Database = {
           meta: number | null
           ordem: number
           peso_questoes: number | null
+          riscada: boolean
           topicos_incluidos: string[] | null
+          topicos_riscados: string[]
           user_id: string
         }
         Insert: {
@@ -154,7 +156,9 @@ export type Database = {
           meta?: number | null
           ordem?: number
           peso_questoes?: number | null
+          riscada?: boolean
           topicos_incluidos?: string[] | null
+          topicos_riscados?: string[]
           user_id?: string
         }
         Update: {
@@ -167,7 +171,9 @@ export type Database = {
           meta?: number | null
           ordem?: number
           peso_questoes?: number | null
+          riscada?: boolean
           topicos_incluidos?: string[] | null
+          topicos_riscados?: string[]
           user_id?: string
         }
         Relationships: [

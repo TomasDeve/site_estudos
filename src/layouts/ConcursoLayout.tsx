@@ -73,7 +73,12 @@ export function ConcursoLayout() {
       .map((v) => {
         const materia = (materias ?? []).find((m) => m.id === v.materia_id);
         if (!materia) return null;
-        return { vinculoId: v.id, materia, progresso: progressoMateria(materia.id, tops) };
+        return {
+          vinculoId: v.id,
+          materia,
+          riscada: v.riscada,
+          progresso: progressoMateria(materia.id, tops, new Set(v.topicos_riscados ?? [])),
+        };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
   }, [vinculos, materias, topicos, concurso]);
@@ -310,7 +315,7 @@ export function ConcursoLayout() {
 
                 {conteudosAberto && materiasDoConcurso.length > 0 && (
                   <ul className="animar-surgir mb-1 ml-5 mt-1 space-y-0.5 border-l border-line/40 pl-2">
-                    {materiasDoConcurso.map(({ vinculoId, materia, progresso }) => {
+                    {materiasDoConcurso.map(({ vinculoId, materia, progresso, riscada }) => {
                       const ativa = materiaAtiva === materia.id;
                       return (
                         <li key={vinculoId}>
@@ -321,27 +326,39 @@ export function ConcursoLayout() {
                               ativa ? "bg-navy-700/60" : "hover:bg-navy-700/50"
                             }`}
                             style={ativa ? { boxShadow: `inset 2px 0 0 ${cor}` } : undefined}
-                            title={`${materia.nome} — ${progresso.concluidos}/${progresso.total} tópicos`}
+                            title={
+                              riscada
+                                ? `${materia.nome} — riscada (fora do edital)`
+                                : `${materia.nome} — ${progresso.concluidos}/${progresso.total} tópicos`
+                            }
                           >
                             <span className="flex items-center gap-1.5">
-                              <span className="shrink-0 text-sm">{materia.icone}</span>
+                              <span className={`shrink-0 text-sm ${riscada ? "opacity-50" : ""}`}>
+                                {materia.icone}
+                              </span>
                               <span
                                 className={`min-w-0 flex-1 truncate text-xs ${
-                                  ativa ? "text-txt" : "text-dim group-hover:text-txt"
+                                  riscada
+                                    ? "text-mut line-through decoration-red/50"
+                                    : ativa
+                                      ? "text-txt"
+                                      : "text-dim group-hover:text-txt"
                                 }`}
                               >
                                 {materia.nome}
                               </span>
-                              <span
-                                className={`shrink-0 text-[10px] font-semibold tabular-nums ${
-                                  ativa ? "" : "text-mut"
-                                }`}
-                                style={ativa ? { color: cor } : undefined}
-                              >
-                                {progresso.total === 0 ? "—" : `${progresso.pct}%`}
-                              </span>
+                              {!riscada && (
+                                <span
+                                  className={`shrink-0 text-[10px] font-semibold tabular-nums ${
+                                    ativa ? "" : "text-mut"
+                                  }`}
+                                  style={ativa ? { color: cor } : undefined}
+                                >
+                                  {progresso.total === 0 ? "—" : `${progresso.pct}%`}
+                                </span>
+                              )}
                             </span>
-                            <ProgressBar value={progresso.pct} color={cor} size="sm" />
+                            {!riscada && <ProgressBar value={progresso.pct} color={cor} size="sm" />}
                           </Link>
                         </li>
                       );

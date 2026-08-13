@@ -183,6 +183,86 @@ export function useSetTopicosIncluidos() {
   });
 }
 
+/**
+ * Risca / desrisca a MATÉRIA inteira neste concurso (estratégia: "não vou
+ * estudar isso"). Fica visível riscada, mas sai do progresso, do rateio de horas
+ * e é pulada no ciclo. É por vínculo (concurso↔matéria), então não afeta os
+ * outros concursos que usam a mesma matéria. Otimista.
+ */
+export function useRiscarMateria() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, riscada }: { id: string; riscada: boolean }) => {
+      const { error } = await supabase.from("concurso_materias").update({ riscada }).eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, riscada }) => {
+      await qc.cancelQueries({ queryKey: ["concurso_materias"] });
+      const prev = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]);
+      qc.setQueryData<ConcursoMateria[]>(["concurso_materias"], (old) =>
+        old?.map((v) => (v.id === id ? { ...v, riscada } : v))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concurso_materias"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
+  });
+}
+
+/**
+ * Risca / desrisca um ASSUNTO (tópico) da matéria neste concurso. Guarda o id no
+ * array `topicos_riscados` do vínculo; o próprio hook lê a lista atual do cache e
+ * só liga/desliga o id pedido. Por concurso e otimista, como o riscar da matéria.
+ */
+export function useRiscarTopico() {
+  const qc = useQueryClient();
+  const novoArray = (v: ConcursoMateria | undefined, topicoId: string, riscar: boolean) => {
+    const base = new Set(v?.topicos_riscados ?? []);
+    if (riscar) base.add(topicoId);
+    else base.delete(topicoId);
+    return [...base];
+  };
+  return useMutation({
+    mutationFn: async ({
+      vinculoId,
+      topicoId,
+      riscar,
+    }: {
+      vinculoId: string;
+      topicoId: string;
+      riscar: boolean;
+    }) => {
+      const atuais = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]) ?? [];
+      const topicos_riscados = novoArray(
+        atuais.find((v) => v.id === vinculoId),
+        topicoId,
+        riscar
+      );
+      const { error } = await supabase
+        .from("concurso_materias")
+        .update({ topicos_riscados })
+        .eq("id", vinculoId);
+      if (error) throw error;
+    },
+    onMutate: async ({ vinculoId, topicoId, riscar }) => {
+      await qc.cancelQueries({ queryKey: ["concurso_materias"] });
+      const prev = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]);
+      qc.setQueryData<ConcursoMateria[]>(["concurso_materias"], (old) =>
+        old?.map((v) =>
+          v.id === vinculoId ? { ...v, topicos_riscados: novoArray(v, topicoId, riscar) } : v
+        )
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concurso_materias"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
+  });
+}
+
 /** Atualiza campos do vínculo matéria↔concurso (ex.: a meta de redações). */
 export function useAtualizarConcursoMateria() {
   const qc = useQueryClient();

@@ -15,6 +15,8 @@ interface Props {
   icone: string;
   pct: number;
   temTopicos: boolean;
+  /** Matéria riscada no concurso: continua na lista, mas fica fora da rotação. */
+  riscada?: boolean;
   /** Rota da página da matéria (clique no nome). */
   to: string;
   onToggle: () => void;
@@ -33,6 +35,7 @@ export function CicloItemRow({
   icone,
   pct,
   temTopicos,
+  riscada,
   to,
   onToggle,
   onAdiar,
@@ -61,14 +64,16 @@ export function CicloItemRow({
       style={style}
       className={`group relative flex items-center gap-2 rounded-xl border py-2.5 pl-1.5 pr-3 transition-colors ${
         isDragging ? "z-10 shadow-2xl ring-1 ring-line" : ""
-      } ${
-        item.concluido
-          ? "border-green/25 bg-green/8"
-          : adiada
-            ? "border-gold/40 bg-gold/[0.06]"
-            : ehAtual
-              ? "border-line bg-navy-800"
-              : "border-line/50 bg-navy-900/50 hover:border-line"
+      } ${riscada ? "opacity-70" : ""} ${
+        riscada
+          ? "border-red/20 bg-red/[0.04]"
+          : item.concluido
+            ? "border-green/25 bg-green/8"
+            : adiada
+              ? "border-gold/40 bg-gold/[0.06]"
+              : ehAtual
+                ? "border-line bg-navy-800"
+                : "border-line/50 bg-navy-900/50 hover:border-line"
       }`}
     >
       {/* alça de arrastar */}
@@ -108,14 +113,23 @@ export function CicloItemRow({
         <div className="min-w-0 flex-1">
           <p
             className={`flex items-center gap-1.5 truncate text-sm transition-colors ${
-              item.concluido ? "text-mut line-through" : "text-txt group-hover/mat:text-gold"
+              riscada || item.concluido
+                ? "text-mut line-through"
+                : "text-txt group-hover/mat:text-gold"
             }`}
           >
             <span className="truncate">{nome}</span>
-            {adiada && !item.concluido && (
-              <span className="shrink-0 rounded-full bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold">
-                Reserva
+            {riscada ? (
+              <span className="shrink-0 rounded-full bg-red/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-red">
+                Riscada
               </span>
+            ) : (
+              adiada &&
+              !item.concluido && (
+                <span className="shrink-0 rounded-full bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold">
+                  Reserva
+                </span>
+              )
             )}
           </p>
           {temTopicos && (

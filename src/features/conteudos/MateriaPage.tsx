@@ -18,6 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import {
   ArrowLeft,
+  Ban,
   ChevronLeft,
   ChevronRight,
   GripVertical,
@@ -36,6 +37,8 @@ import {
   useConcursoMaterias,
   useDesvincularMateria,
   useMaterias,
+  useRiscarMateria,
+  useRiscarTopico,
   useSetTopicosIncluidos,
 } from "@/api/materias";
 import { useCriarTopico, useReordenarTopicos, useTopicos } from "@/api/topicos";
@@ -95,6 +98,8 @@ export function MateriaPage() {
   const setTopicosIncluidos = useSetTopicosIncluidos();
   const desvincular = useDesvincularMateria();
   const aplicarPlano = useAplicarPlanoPadrao();
+  const riscarMateria = useRiscarMateria();
+  const riscarTopico = useRiscarTopico();
 
   const sensors = useSensors(
     // distância de ativação: um clique curto na alça não conta como arraste
@@ -205,10 +210,15 @@ export function MateriaPage() {
     );
   }
 
+  // Assuntos riscados neste concurso: seguem visíveis (riscados), mas ficam fora
+  // da conta de progresso — como se não estivessem no edital.
+  const topicosRiscados = new Set(vinculo.topicos_riscados ?? []);
+  const contaveis = meusTopicos.filter((t) => !topicosRiscados.has(t.id));
+
   // Assuntos que ainda não têm metas: dá para aplicar o plano padrão de uma vez.
   const semMetas = meusTopicos.filter((t) => (metasDoTopico.get(t.id) ?? []).length === 0);
-  const concluidos = meusTopicos.filter((t) => t.status === "concluido").length;
-  const pct = meusTopicos.length === 0 ? 0 : Math.round((concluidos / meusTopicos.length) * 100);
+  const concluidos = contaveis.filter((t) => t.status === "concluido").length;
+  const pct = contaveis.length === 0 ? 0 : Math.round((concluidos / contaveis.length) * 100);
   const anterior = idx > 0 ? meusVinculos[idx - 1] : undefined;
   const proximo = idx < meusVinculos.length - 1 ? meusVinculos[idx + 1] : undefined;
   const nomeDe = (mId: string) => (materias ?? []).find((m) => m.id === mId)?.nome ?? "matéria";
@@ -291,9 +301,18 @@ export function MateriaPage() {
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-txt sm:text-2xl">
+                <h1
+                  className={`text-xl font-bold tracking-tight sm:text-2xl ${
+                    vinculo.riscada ? "text-mut line-through decoration-red/50" : "text-txt"
+                  }`}
+                >
                   {materia.nome}
                 </h1>
+                {vinculo.riscada && (
+                  <span className="rounded-full bg-red/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red">
+                    Riscada
+                  </span>
+                )}
                 <span className="rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-dim">
                   {NOME_AREA[vinculo.area] ?? vinculo.area}
                 </span>
@@ -311,7 +330,7 @@ export function MateriaPage() {
                 <div className="flex min-w-52 flex-1 items-center gap-2.5">
                   <ProgressBar value={pct} color={concurso.cor} size="md" className="flex-1" />
                   <span className="shrink-0 text-xs font-semibold tabular-nums text-dim">
-                    {concluidos}/{meusTopicos.length} · {pct}%
+                    {concluidos}/{contaveis.length} · {pct}%
                   </span>
                 </div>
                 {desempenho.pct !== null && cor && (
@@ -342,6 +361,22 @@ export function MateriaPage() {
               >
                 <Settings2 className="size-3.5" />
                 <span className="max-sm:hidden">Configurações da matéria</span>
+              </button>
+              <button
+                onClick={() => riscarMateria.mutate({ id: vinculo.id, riscada: !vinculo.riscada })}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs transition-colors ${
+                  vinculo.riscada
+                    ? "border-red/40 bg-red/10 text-red hover:bg-red/15"
+                    : "border-line/60 text-mut hover:border-red/40 hover:text-red"
+                }`}
+                title={
+                  vinculo.riscada
+                    ? "Matéria riscada — fora do progresso, das horas e pulada no ciclo (clique para voltar)"
+                    : "Riscar matéria: não vou estudar. Sai do progresso e das horas, e é pulada no ciclo (não apaga nada)"
+                }
+              >
+                <Ban className="size-3.5" />
+                <span className="max-sm:hidden">{vinculo.riscada ? "Riscada" : "Riscar matéria"}</span>
               </button>
             </div>
           </div>
@@ -499,6 +534,14 @@ export function MateriaPage() {
                         isLast={i === meusTopicos.length - 1}
                         mostrarNucleo
                         sistemaHoras={concurso.sistema_horas}
+                        riscado={topicosRiscados.has(t.id)}
+                        onToggleRiscar={() =>
+                          riscarTopico.mutate({
+                            vinculoId: vinculo.id,
+                            topicoId: t.id,
+                            riscar: !topicosRiscados.has(t.id),
+                          })
+                        }
                       />
                     ))}
                   </ul>
