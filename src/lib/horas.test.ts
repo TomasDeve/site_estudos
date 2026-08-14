@@ -1,5 +1,55 @@
 import { describe, expect, it } from "vitest";
-import { distribuirIgual, distribuirInteiro, distribuirPorPeso, somaHoras } from "./horas";
+import {
+  distribuirIgual,
+  distribuirInteiro,
+  distribuirPorPeso,
+  hmParaHoras,
+  horasParaHM,
+  somaHoras,
+} from "./horas";
+
+describe("horasParaHM", () => {
+  it("mostra o relógio em vez do número quebrado", () => {
+    expect(horasParaHM(1.5)).toBe("1:30");
+    expect(horasParaHM(2)).toBe("2:00");
+    expect(horasParaHM(0.5)).toBe("0:30");
+    expect(horasParaHM(0)).toBe("0:00");
+  });
+
+  it("sempre tem dois dígitos nos minutos e não fica negativo", () => {
+    expect(horasParaHM(-3)).toBe("0:00");
+    expect(horasParaHM(10)).toBe("10:00");
+  });
+});
+
+describe("hmParaHoras", () => {
+  it("lê o formato de relógio", () => {
+    expect(hmParaHoras("1:30")).toBe(1.5);
+    expect(hmParaHoras("0:30")).toBe(0.5);
+    expect(hmParaHoras("2:00")).toBe(2);
+    expect(hmParaHoras("1h30")).toBe(1.5);
+    expect(hmParaHoras("1h")).toBe(1);
+  });
+
+  it("ainda aceita o decimal antigo e o número puro", () => {
+    expect(hmParaHoras("1,5")).toBe(1.5);
+    expect(hmParaHoras("1.5")).toBe(1.5);
+    expect(hmParaHoras("2")).toBe(2);
+  });
+
+  it("devolve null para vazio ou ilegível", () => {
+    expect(hmParaHoras("")).toBeNull();
+    expect(hmParaHoras("  ")).toBeNull();
+    expect(hmParaHoras("abc")).toBeNull();
+    expect(hmParaHoras("1:90")).toBeNull(); // minutos inválidos
+  });
+
+  it("é o inverso de horasParaHM nos passos de meia-hora", () => {
+    for (const h of [0, 0.5, 1, 1.5, 2, 3.5]) {
+      expect(hmParaHoras(horasParaHM(h))).toBe(h);
+    }
+  });
+});
 
 describe("distribuirInteiro", () => {
   it("reparte minutos igualmente quando divide certo", () => {

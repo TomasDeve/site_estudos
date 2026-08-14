@@ -3,6 +3,7 @@ import { Pencil, Plus } from "lucide-react";
 import type { MetaPeriodo } from "@/types/db";
 import { useMetas } from "@/api/metas";
 import { hojeISO, fmtData } from "@/lib/dates";
+import { horasParaHM } from "@/lib/horas";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { MetaFormModal } from "./MetaFormModal";
@@ -52,8 +53,9 @@ export function MetaRangeList() {
                 >
                   <span
                     className={`text-lg font-black tabular-nums ${vigente ? "text-gold" : "text-txt"}`}
+                    title={`${horasParaHM(m.horas_dia)} por dia`}
                   >
-                    {String(m.horas_dia).replace(".", ",").replace(",0", "")}h
+                    {horasParaHM(m.horas_dia)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-dim">

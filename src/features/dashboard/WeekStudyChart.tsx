@@ -3,7 +3,7 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { minutosPorDia, useSessoesJanela } from "@/api/sessoes";
-import { hojeISO, ultimos7DiasISO, fmtMinutos } from "@/lib/dates";
+import { hojeISO, ultimos7DiasISO, fmtMinutos, fmtHoras } from "@/lib/dates";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 
 export function WeekStudyChart() {
@@ -45,7 +45,7 @@ export function WeekStudyChart() {
               tick={{ fill: "#6f849e", fontSize: 11 }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v: number) => `${Math.round(v / 60 * 10) / 10}h`}
+              tickFormatter={(v: number) => fmtHoras(v / 60)}
             />
             <Tooltip
               cursor={{ fill: "rgba(224,168,62,0.06)" }}

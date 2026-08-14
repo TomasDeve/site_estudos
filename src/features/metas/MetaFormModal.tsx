@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { Field, Input } from "@/components/Field";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { hojeISO } from "@/lib/dates";
+import { hmParaHoras, horasParaHM } from "@/lib/horas";
 
 interface Props {
   open: boolean;
@@ -22,7 +23,7 @@ export function MetaFormModal({ open, onClose, meta }: Props) {
 
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
-  const [horas, setHoras] = useState("2");
+  const [horas, setHoras] = useState("2:00");
   const [descricao, setDescricao] = useState("");
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
@@ -30,16 +31,17 @@ export function MetaFormModal({ open, onClose, meta }: Props) {
     if (!open) return;
     setInicio(meta?.data_inicio ?? hojeISO());
     setFim(meta?.data_fim ?? "");
-    setHoras(meta ? String(meta.horas_dia) : "2");
+    setHoras(horasParaHM(meta ? meta.horas_dia : 2));
     setDescricao(meta?.descricao ?? "");
     setConfirmarExclusao(false);
   }, [open, meta]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const h = Number(horas.replace(",", "."));
+    const lido = hmParaHoras(horas);
+    const h = lido == null ? NaN : Math.round(lido * 2) / 2; // passos de meia-hora
     if (!Number.isFinite(h) || h <= 0 || h > 24) {
-      toast.error("Horas por dia deve ser um número entre 0,5 e 24.");
+      toast.error("Horas por dia deve ficar entre 0:30 e 24:00.");
       return;
     }
     if (fim < inicio) {
@@ -51,7 +53,7 @@ export function MetaFormModal({ open, onClose, meta }: Props) {
     );
     if (sobreposta) {
       toast.error(
-        `Esse período cruza com a meta de ${sobreposta.horas_dia}h/dia (${sobreposta.data_inicio} a ${sobreposta.data_fim}). Ajuste as datas.`
+        `Esse período cruza com a meta de ${horasParaHM(sobreposta.horas_dia)}/dia (${sobreposta.data_inicio} a ${sobreposta.data_fim}). Ajuste as datas.`
       );
       return;
     }
@@ -119,13 +121,12 @@ export function MetaFormModal({ open, onClose, meta }: Props) {
               <Input type="date" required value={fim} onChange={(e) => setFim(e.target.value)} />
             </Field>
           </div>
-          <Field label="Horas de estudo por dia" hint="Aceita meia hora: 2,5">
+          <Field label="Horas de estudo por dia" hint="Formato hora:minuto — ex.: 2:30">
             <Input
-              type="number"
+              type="text"
+              inputMode="text"
               required
-              min="0.5"
-              max="24"
-              step="0.5"
+              placeholder="2:30"
               value={horas}
               onChange={(e) => setHoras(e.target.value)}
             />

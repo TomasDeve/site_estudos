@@ -7,6 +7,40 @@ export function somaHoras(valores: Array<number | null | undefined>): number {
   return valores.reduce<number>((s, v) => s + (Number(v) || 0), 0);
 }
 
+/**
+ * Horas decimais → "H:MM" para os CAMPOS que a pessoa digita/edita (relógio):
+ * 1,5 → "1:30", 0 → "0:00", 2 → "2:00". Evita o número quebrado ("1,5") nesses
+ * campos. Os rótulos de progresso continuam no estilo "1h30"/"45min" (fmtHoras).
+ */
+export function horasParaHM(horas: number): string {
+  const min = Math.max(0, Math.round((Number(horas) || 0) * 60));
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
+
+/**
+ * Lê um tempo digitado e devolve horas decimais. Aceita o formato de relógio
+ * ("1:30", "1h30", "1h") e também o decimal antigo ("1,5", "1.5") e o número
+ * puro ("2" = 2h), para não quebrar a memória de digitação. Devolve null quando
+ * o campo está vazio ou ilegível — quem chama decide o que fazer (manter valor).
+ */
+export function hmParaHoras(entrada: string): number | null {
+  const s = String(entrada).trim().toLowerCase().replace(/\s+/g, "");
+  if (!s) return null;
+  // "h:mm" / "h:m" / "1h30" / "1h" (minutos opcionais, 0–59)
+  const m = s.match(/^(\d+)[:h](\d{0,2})$/);
+  if (m) {
+    const h = Number(m[1]) || 0;
+    const min = m[2] ? Number(m[2]) : 0;
+    if (min > 59) return null;
+    return h + min / 60;
+  }
+  // decimal "1,5" / "1.5" ou número puro "2"
+  const dec = Number(s.replace(",", "."));
+  return Number.isFinite(dec) ? dec : null;
+}
+
 /** Horas que ainda faltam distribuir (negativo = estourou o orçamento). */
 export function restante(total: number, distribuido: number): number {
   return Math.round((total - distribuido) * 2) / 2;
