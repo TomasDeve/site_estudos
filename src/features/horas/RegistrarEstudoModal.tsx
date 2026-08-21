@@ -5,9 +5,11 @@ import type { Concurso, Topico } from "@/types/db";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { useRegistrarEstudo, useRegistrarRevisao } from "@/api/estudoHoras";
+import { useCicloItens, useSetItemConcluido } from "@/api/ciclo";
 import { distribuirInteiro } from "@/lib/horas";
 import { fmtHoras, fmtMinutos, hojeISO } from "@/lib/dates";
 import { ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
+import { estadoCiclo } from "@/lib/cicloOrder";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/Button";
 import { Field, Input, Select } from "@/components/Field";
@@ -40,6 +42,8 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
   const { data: topicos } = useTopicos();
   const registrar = useRegistrarEstudo();
   const registrarRevisao = useRegistrarRevisao();
+  const { data: cicloItens } = useCicloItens();
+  const concluirCiclo = useSetItemConcluido();
 
   const [modo, setModo] = useState<"conteudo" | "revisao">("conteudo");
   const [materiaId, setMateriaId] = useState("");
@@ -123,6 +127,37 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
     return { n, texto: min === max ? `${min}min` : `${min}–${max}min` };
   }, [selecionados.length, minutos]);
 
+  /**
+   * Registrar CONTEÚDO da matéria que está "na vez" no ciclo já a conclui e
+   * avança — assim o tempo entra e o ciclo anda num passo só, sem precisar
+   * marcar "concluído" à parte. Só a aba Conteúdo chama isto; Revisão (Anki) é
+   * trilha separada e não mexe no ciclo. Não faz nada se a matéria não for a
+   * atual do ciclo (ou não estiver nele). Espelha o filtro da CicloPage:
+   * matérias riscadas ficam fora da rotação.
+   */
+  async function concluirNoCicloSeForAtual(matId: string) {
+    const riscadas = new Set(
+      (vinculos ?? [])
+        .filter((v) => v.concurso_id === concurso.id && v.riscada)
+        .map((v) => v.materia_id)
+    );
+    const ativos = (cicloItens ?? []).filter(
+      (i) => i.concurso_id === concurso.id && !riscadas.has(i.materia_id)
+    );
+    const { atual, proxima } = estadoCiclo(ativos);
+    if (!atual || atual.materia_id !== matId) return;
+    try {
+      await concluirCiclo.mutateAsync({ item: atual, concluido: true });
+      const nomeProx = proxima
+        ? materias?.find((m) => m.id === proxima.materia_id)?.nome
+        : null;
+      toast.success(nomeProx ? `✓ Concluída no ciclo · a seguir: ${nomeProx}` : "✓ Concluída no ciclo");
+    } catch {
+      // O tempo já foi registrado; se a conclusão do ciclo falhar, não trava o
+      // fluxo — dá para concluir manualmente na página do Ciclo.
+    }
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!Number.isFinite(minutos) || minutos <= 0) return toast.error("Informe um tempo válido.");
@@ -171,6 +206,7 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
             ? ` em ${selecionados[0]?.titulo ?? "1 assunto"}`
             : "";
       toast.success(`Registrado: ${fmtMinutos(minutos)}${resumo} ⏱️`);
+      await concluirNoCicloSeForAtual(materiaId);
       await onSalvo?.();
       onClose();
     } catch (err) {
@@ -195,7 +231,7 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
           <Button
             type="submit"
             form="form-estudo"
-            loading={registrar.isPending || registrarRevisao.isPending}
+            loading={registrar.isPending || registrarRevisao.isPending || concluirCiclo.isPending}
           >
             <Check className="size-4" /> Registrar
           </Button>
