@@ -64,15 +64,16 @@ export function ChatIA({ titulo, chave, montarPayload, sugestoes, recap, onClose
   const [respondendo, setRespondendo] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     historicos.set(chave, mensagens);
   }, [chave, mensagens]);
 
+  // Rola só quando entra uma mensagem NOVA (você envia) — não a cada pedaço que a
+  // IA escreve. Enquanto ela responde, a rolagem fica no seu controle.
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [mensagens]);
+  }, [mensagens.length]);
 
   // Aborta o streaming se o modal fechar no meio da resposta.
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -115,7 +116,6 @@ export function ChatIA({ titulo, chave, montarPayload, sugestoes, recap, onClose
       }
     } finally {
       setRespondendo(false);
-      inputRef.current?.focus();
     }
   }
 
@@ -149,11 +149,9 @@ export function ChatIA({ titulo, chave, montarPayload, sugestoes, recap, onClose
             </button>
           )}
           <input
-            ref={inputRef}
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             placeholder="Escreva sua pergunta…"
-            autoFocus
             className="h-10 min-w-0 flex-1 rounded-lg border border-line bg-navy-950 px-3 text-sm text-txt outline-none placeholder:text-mut/70 focus:border-gold/60"
           />
           {respondendo ? (
