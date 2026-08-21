@@ -87,7 +87,7 @@ export function MetasPorAssunto() {
             100 questões de IA, o Anki dessas questões e 80% nas últimas 30.
           </p>
         ) : (
-          <ul className="max-h-96 space-y-1 overflow-y-auto pr-1">
+          <ul className="space-y-1 sm:max-h-96 sm:overflow-y-auto sm:pr-1">
             {linhas.map(({ topico, materia, placar, pendente, progresso }) => {
               const info = STATUS_INFO[topico.status as TopicoStatus];
               return (

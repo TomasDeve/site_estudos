@@ -96,7 +96,7 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
     <Card>
       <CardBody className="space-y-4">
         {/* navegação de dia */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-y-1.5">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setData(format(addDays(parseISO(data), -1), "yyyy-MM-dd"))}
@@ -124,7 +124,7 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
               <ChevronRight className="size-4" />
             </button>
           </div>
-          <div className="text-right text-xs text-dim">
+          <div className="w-full text-left text-xs text-dim sm:w-auto sm:text-right">
             {meta ? (
               <>
                 Meta:{" "}
