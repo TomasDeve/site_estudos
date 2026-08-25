@@ -227,15 +227,17 @@ export function QuestoesMistasPage() {
    */
   async function onResponder(q: TopicoQuestao, valor: boolean | string | null) {
     const estreia = valor !== null && !estaResolvida(q);
+    // Marca "respondida nesta sessão" já, junto com o resultado otimista, pra a
+    // questão não piscar pra fora de "Para responder" enquanto a gravação viaja.
+    if (valor !== null) {
+      setRespondidasAgora((s) => new Set(s).add(q.id));
+    }
     try {
       await responder.mutateAsync({
         id: q.id,
         resposta: typeof valor === "boolean" ? valor : null,
         respostaLetra: typeof valor === "string" ? valor : null,
       });
-      if (valor !== null) {
-        setRespondidasAgora((s) => new Set(s).add(q.id));
-      }
       // Mesma regra do caderno: só a estreia conta no desempenho do assunto.
       if (estreia && valor !== null) {
         clique.mutate({
@@ -246,6 +248,14 @@ export function QuestoesMistasPage() {
         });
       }
     } catch (err) {
+      // Desfaz a marca de sessão (o cache já é revertido pelo onError da mutação).
+      if (valor !== null) {
+        setRespondidasAgora((s) => {
+          const n = new Set(s);
+          n.delete(q.id);
+          return n;
+        });
+      }
       toast.error(err instanceof Error ? err.message : String(err));
     }
   }

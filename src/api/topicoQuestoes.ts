@@ -61,6 +61,14 @@ export function useTopicoQuestoes(topicoId: string | null) {
  * Grava a resposta do aluno. C/E usa `resposta` (boolean); múltipla usa
  * `respostaLetra` (a letra marcada). Ambos nulos = "refazer": devolve a questão
  * ao estado não resolvido, escondendo gabarito e comentário de novo.
+ *
+ * A resposta aparece na hora: fazemos um patch OTIMISTA no cache (a questão já
+ * tem o resultado final — resposta, letra e `respondida_em` — sem esperar a
+ * rede) e NÃO reinvalidamos o assunto. Antes, cada clique aguardava a gravação
+ * e depois re-baixava todas as questões do assunto (no modo misturado, as ~3600
+ * de uma vez) só pra mostrar "acertou/errou" — daí os ~10s. Como o valor otimista
+ * é idêntico ao que o banco grava, não há divergência a corrigir; um refetch
+ * natural (trocar de assunto, focar a aba) já re-sincroniza se preciso.
  */
 export function useResponderQuestao() {
   const qc = useQueryClient();
@@ -85,7 +93,30 @@ export function useResponderQuestao() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["topico_questoes"] }),
+    onMutate: async ({ id, resposta = null, respostaLetra = null }) => {
+      // Cancela refetches em voo pra não sobrescreverem o patch otimista.
+      await qc.cancelQueries({ queryKey: ["topico_questoes"] });
+      const anteriores = qc.getQueriesData({ queryKey: ["topico_questoes"] });
+      const resolvida = resposta !== null || respostaLetra !== null;
+      const respondidaEm = resolvida ? new Date().toISOString() : null;
+      // Aplica em TODA lista em cache (resumo, todas, assunto): a mesma questão
+      // pode estar em várias; casa pelo id e só troca os campos de resposta.
+      qc.setQueriesData<{ id: string }[]>({ queryKey: ["topico_questoes"] }, (lista) => {
+        if (!Array.isArray(lista)) return lista;
+        let mudou = false;
+        const nova = lista.map((row) => {
+          if (row?.id !== id) return row;
+          mudou = true;
+          return { ...row, resposta, resposta_letra: respostaLetra, respondida_em: respondidaEm };
+        });
+        return mudou ? nova : lista;
+      });
+      return { anteriores };
+    },
+    onError: (_err, _vars, ctx) => {
+      // Reverte o patch otimista se a gravação falhar.
+      ctx?.anteriores?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
   });
 }
 

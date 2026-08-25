@@ -312,17 +312,19 @@ function Caderno({ topico }: { topico: Topico }) {
    */
   async function onResponder(q: TopicoQuestao, valor: boolean | string | null) {
     const estreia = valor !== null && !estaResolvida(q);
+    // Marca "respondida nesta sessão" já, junto com o resultado otimista, pra a
+    // questão não piscar pra fora de "Para responder" enquanto a gravação viaja.
+    setRespondidasAgora((s) => {
+      const n = new Set(s);
+      if (valor === null) n.delete(q.id);
+      else n.add(q.id);
+      return n;
+    });
     try {
       await responder.mutateAsync({
         id: q.id,
         resposta: typeof valor === "boolean" ? valor : null,
         respostaLetra: typeof valor === "string" ? valor : null,
-      });
-      setRespondidasAgora((s) => {
-        const n = new Set(s);
-        if (valor === null) n.delete(q.id);
-        else n.add(q.id);
-        return n;
       });
       // Só a estreia conta no desempenho — refazer a questão não infla a estatística.
       if (estreia && valor !== null) {
@@ -334,6 +336,13 @@ function Caderno({ topico }: { topico: Topico }) {
         });
       }
     } catch (err) {
+      // Desfaz a marca de sessão (o cache já é revertido pelo onError da mutação).
+      setRespondidasAgora((s) => {
+        const n = new Set(s);
+        if (valor === null) n.add(q.id);
+        else n.delete(q.id);
+        return n;
+      });
       toast.error(err instanceof Error ? err.message : String(err));
     }
   }
