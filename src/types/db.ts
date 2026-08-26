@@ -578,6 +578,7 @@ export type Database = {
           prova: string | null
           status: string
           tags: Json
+          texto_associado: string | null
           tipo: string
           topico_id: string | null
           user_id: string
@@ -605,6 +606,7 @@ export type Database = {
           prova?: string | null
           status?: string
           tags?: Json
+          texto_associado?: string | null
           tipo?: string
           topico_id?: string | null
           user_id?: string
@@ -632,6 +634,7 @@ export type Database = {
           prova?: string | null
           status?: string
           tags?: Json
+          texto_associado?: string | null
           tipo?: string
           topico_id?: string | null
           user_id?: string
@@ -888,6 +891,7 @@ export type Database = {
           resposta: boolean | null
           resposta_letra: string | null
           status: string
+          texto_associado: string | null
           tipo: string
           topico_id: string
           user_id: string
@@ -911,6 +915,7 @@ export type Database = {
           resposta?: boolean | null
           resposta_letra?: string | null
           status?: string
+          texto_associado?: string | null
           tipo?: string
           topico_id: string
           user_id?: string
@@ -934,6 +939,7 @@ export type Database = {
           resposta?: boolean | null
           resposta_letra?: string | null
           status?: string
+          texto_associado?: string | null
           tipo?: string
           topico_id?: string
           user_id?: string

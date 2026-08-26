@@ -27,6 +27,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { ResumoRapido } from "./ResumoRapido";
+import { TextoAssociado } from "./TextoAssociado";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
@@ -512,6 +513,8 @@ function QuestaoMistaCard({
           {fonteQC && <FonteQuestao fonte={fonteQC} />}
         </div>
       )}
+
+      <TextoAssociado texto={q.texto_associado} />
 
       {q.contexto && (
         <p className="mb-2 whitespace-pre-wrap border-l-2 border-line pl-2.5 text-xs italic leading-relaxed text-mut">

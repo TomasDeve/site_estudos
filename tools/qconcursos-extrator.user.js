@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         QConcursos → Banco de Questões (abrir comentários rápido)
 // @namespace    meus-estudos.pmal
-// @version      2.2.1
-// @description  Abre os comentários de TODAS as questões da página de uma vez (em paralelo, rápido) pra você dar Ctrl+A/Ctrl+C e colar no chat da IA. Também copia um "texto limpo" pronto. Marca na página as questões que JÁ estão no seu banco (checa no Supabase) e as EXCLUI do texto limpo, pra você não recopiar. NÃO responde nada nem revela gabarito — quem decide o gabarito pelos comentários é a IA, no chat.
+// @version      2.3.0
+// @description  Abre os comentários de TODAS as questões da página de uma vez (em paralelo, rápido) pra você dar Ctrl+A/Ctrl+C e colar no chat da IA. Também abre os "Textos associados" (o enunciado-base escondido no "+") e os inclui no texto limpo. Copia um "texto limpo" pronto. Marca na página as questões que JÁ estão no seu banco (checa no Supabase) e as EXCLUI do texto limpo, pra você não recopiar. NÃO responde nada nem revela gabarito — quem decide o gabarito pelos comentários é a IA, no chat.
 // @match        https://www.qconcursos.com/questoes-de-concursos/questoes*
 // @match        https://www.qconcursos.com/questoes-de-concursos/*/questoes*
 // @match        https://www.qconcursos.com/questoes-de-concursos/*/questoes
@@ -20,6 +20,11 @@
  *  - Abre a aba "Comentários" de todas as questões de uma vez (dispara o carregamento em paralelo)
  *    em vez de esperar questão por questão.
  *  - "Carregar mais" é feito em rodadas: a cada rodada clica em todos os botões visíveis de uma vez.
+ *
+ * Texto associado: várias questões têm um enunciado-base escondido atrás do botão "Texto associado +"
+ * (uma passagem pra ler, ou uma imagem). O script abre esses blocos e inclui o texto (e as URLs das
+ * imagens) no "texto limpo", como "Texto associado:". Se várias questões compartilham a mesma passagem,
+ * o texto é escrito uma vez só e as seguintes viram "(igual ao da Questão N)" — pra não gastar token à toa.
  *
  * Anti-duplicata: ao abrir a página, o script pergunta ao seu banco (Supabase) quais destes IDs já
  * existem e marca cada questão repetida com um selo vermelho "⚠ Já no seu banco". No "Copiar texto limpo"
@@ -87,6 +92,63 @@
     return dq ? dq.getAttribute("data-question-id") : null;
   }
 
+  // ---------- Texto associado (enunciado-base do botão "Texto associado +") ----------
+  // Estrutura no QConcursos: um link <a class="q-link collapsed" data-toggle="collapse"
+  // href="#question-{id}-text"> abre um <div id="question-{id}-text" class="collapse"> com a passagem.
+  // O conteúdo normalmente já está no DOM (mesmo colapsado), então dá pra ler direto.
+
+  // Devolve o <div> do texto associado da questão (ou null).
+  function boxTextoAssociado(item, qid) {
+    if (qid) {
+      const byId = document.getElementById("question-" + qid + "-text");
+      if (byId) return byId;
+    }
+    const toggle = item.querySelector('a[data-toggle="collapse"][href^="#question-"][href$="-text"]');
+    const href = toggle && toggle.getAttribute("href");
+    return href && href.startsWith("#") ? document.querySelector(href) : null;
+  }
+
+  // Texto limpo do texto associado (+ URLs de imagens, já que muitas passagens são imagem). null se não houver.
+  function lerTextoAssociado(item, qid) {
+    const box = boxTextoAssociado(item, qid);
+    if (!box) return null;
+    let txt = (box.innerText || box.textContent || "")
+      .replace(/\u00a0/g, " ")
+      .replace(/[ \t]+/g, " ")
+      .replace(/[ \t]*\n[ \t]*/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    const imgs = [...new Set(Array.from(box.querySelectorAll("img")).map((im) => im.src).filter(Boolean))];
+    if (imgs.length) {
+      const marca = imgs.map((u) => "[imagem: " + u + "]").join("\n");
+      txt = txt ? txt + "\n" + marca : marca;
+    }
+    return txt || null;
+  }
+
+  // Abre (clica) os "Textos associados" que estão fechados. Serve pra dois casos:
+  //  - garantir o conteúdo mesmo quando ele só carrega ao abrir (sob demanda);
+  //  - deixar a passagem visível pro Ctrl+A/Ctrl+C do "Abrir comentários" pegar na cópia crua.
+  // O "texto limpo" já lê o DOM direto, então nem depende disto — mas não custa.
+  async function expandirTextosAssociados(onStatus) {
+    const toggles = Array.from(
+      document.querySelectorAll('a[data-toggle="collapse"][href^="#question-"][href$="-text"]')
+    );
+    const fechados = toggles.filter((t) => t.classList.contains("collapsed")); // Bootstrap: fechado = classe "collapsed"
+    if (!fechados.length) return 0;
+    if (onStatus) onStatus("Abrindo textos associados… (" + fechados.length + ")");
+    fechados.forEach((t) => t.click());
+    // espera algum box ganhar conteúdo/ficar visível (cobre carregamento sob demanda)
+    await waitFor(() =>
+      fechados.some((t) => {
+        const href = t.getAttribute("href") || "";
+        const box = href.startsWith("#") ? document.querySelector(href) : null;
+        return box && (box.textContent || "").trim().length > 0 && box.offsetParent !== null;
+      }), 3000
+    );
+    return fechados.length;
+  }
+
   function extrairQuestao(item) {
     const qid = idDaQuestao(item);
     const infoT = (item.querySelector(".q-question-info")?.innerText || "").replace(/\s+/g, " ").trim();
@@ -114,7 +176,7 @@
       disciplina,
       assunto,
       enunciado,
-      contexto: null,
+      contexto: lerTextoAssociado(item, qid),
       alternativas,
     };
   }
@@ -210,6 +272,7 @@
     // Pula as que já estão no seu banco (não recopiar → não gastar token à toa).
     const items = todos.filter((item) => !existentes.has(String(idDaQuestao(item) || "")));
     const puladas = todos.length - items.length;
+    const vistosCtx = new Map(); // texto associado -> nº da 1ª questão que o trouxe (pra não repetir a passagem)
     const blocos = items.map((item, i) => {
       const q = extrairQuestao(item);
       const ct = q.fonte_id ? document.querySelector("#question-belt-" + q.fonte_id + "-comments-tab") : null;
@@ -224,7 +287,16 @@
       if (meta) L.push(meta);
       if (q.assunto) L.push("Assunto: " + q.assunto);
       L.push("Tipo: " + (q.tipo === "multipla" ? "Múltipla escolha" : "Certo/Errado"));
-      if (q.contexto) L.push("Contexto: " + q.contexto);
+      if (q.contexto) {
+        const jaVisto = vistosCtx.get(q.contexto);
+        if (jaVisto) {
+          L.push("Texto associado: (igual ao da Questão " + jaVisto + ")");
+        } else {
+          vistosCtx.set(q.contexto, i + 1);
+          L.push("Texto associado:");
+          L.push(q.contexto);
+        }
+      }
       L.push("Enunciado: " + q.enunciado);
       if (q.alternativas.length) {
         L.push("Alternativas:");
@@ -366,6 +438,7 @@
   $("#qc-abrir").addEventListener("click", () => comLock(async () => {
     const r = await abrirComentarios(lerPaginas(), setStatus);
     if (!r.total) { setStatus("Nenhuma questão encontrada nesta página."); return; }
+    await expandirTextosAssociados(setStatus); // deixa as passagens visíveis pra entrarem no Ctrl+C
     selecionarQuestoes();
     setStatus("✅ " + r.total + " questões abertas (" + r.comComentarios + " c/ comentários) e já selecionadas. Ctrl+C e cole no chat — ou Ctrl+A pra pegar tudo.");
   }));
@@ -375,6 +448,7 @@
     if (!existentes.size) await marcarExistentes(setStatus); // garante o filtro antes de copiar
     const r = await abrirComentarios(lerPaginas(), setStatus);
     if (!r.total) { setStatus("Nenhuma questão encontrada nesta página."); return; }
+    await expandirTextosAssociados(setStatus); // garante os textos associados (inclusive os que carregam sob demanda)
     const novas = r.total - existentes.size;
     const ok = copiar(montarTextoLimpo());
     setStatus((ok ? "✅ Texto limpo copiado" : "⚠️ Não consegui copiar (selecione e copie na mão)") +

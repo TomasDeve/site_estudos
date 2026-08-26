@@ -46,6 +46,7 @@ import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { parsearQuestoesJson } from "./questoesJson";
 import { CATEGORIAS, CATEGORIAS_FILTRO, CATEGORIA_PADRAO } from "./categorias";
 import { ResumoRapido } from "./ResumoRapido";
+import { TextoAssociado } from "./TextoAssociado";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
@@ -777,6 +778,8 @@ function QuestaoCard({
         </div>
         {q.fonte && <FonteQuestao fonte={q.fonte} />}
       </div>
+
+      <TextoAssociado texto={q.texto_associado} />
 
       {q.contexto && (
         <p className="mb-2 whitespace-pre-wrap border-l-2 border-line pl-2.5 text-xs italic leading-relaxed text-mut">
