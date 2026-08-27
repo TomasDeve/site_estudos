@@ -46,7 +46,7 @@ import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
 import { CATEGORIAS_FILTRO } from "./categorias";
 import { ehFonteQC, FonteQuestao, PillCategoria } from "./QuestoesPage";
-import { embaralhar, gerarSemente } from "./embaralhar";
+import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
 
@@ -76,6 +76,26 @@ export function QuestoesMistasPage() {
   const marcarRefazer = useMarcarRefazer();
   const clique = useRegistrarClique();
   const { data: todosLogs } = useQuestaoLogsTodos();
+  const salvarGrifos = useSalvarGrifos();
+
+  // Salva um grifo. Enunciado é da questão; "Texto associado" vale para TODAS as questões
+  // com o texto idêntico — aplica em todas (mantendo o enunciado de cada uma), pra a
+  // marcação aparecer em toda questão que usa aquele texto.
+  function aoGrifar(q: TopicoQuestao, campo: CampoGrifavel, novos: Grifo[]) {
+    if (campo === "texto_associado" && q.texto_associado) {
+      const irmas = (questoes ?? []).filter((x) => x.texto_associado === q.texto_associado);
+      salvarGrifos.mutate({
+        updates: (irmas.length ? irmas : [q]).map((x) => ({
+          id: x.id,
+          grifos: comCampoAtualizado(x.grifos, "texto_associado", novos),
+        })),
+      });
+      return;
+    }
+    salvarGrifos.mutate({
+      updates: [{ id: q.id, grifos: comCampoAtualizado(q.grifos, campo, novos) }],
+    });
+  }
 
   const [semente, setSemente] = useState(gerarSemente);
   const [aba, setAba] = useState<Aba>("responder");
@@ -173,7 +193,9 @@ export function QuestoesMistasPage() {
     const vivas =
       cats.size === 0 ? base : base.filter((q) => cats.has(q.categoria as QuestaoCategoria));
     const arr = [...vivas].sort((a, b) => a.id.localeCompare(b.id));
-    return embaralhar(arr, semente);
+    // Embaralha e depois junta as que compartilham o mesmo "Texto associado" (sem
+    // desfazer o embaralho): você lê o texto uma vez e responde todas em sequência.
+    return agruparPorChave(embaralhar(arr, semente), (q) => q.texto_associado);
   }, [base, cats, semente]);
 
   // Histórico (questao_logs) no escopo da página — a matéria escolhida ou o site
@@ -401,6 +423,7 @@ export function QuestoesMistasPage() {
                       materia={materiaPorId.get(topicoPorId.get(q.topico_id)?.materia_id ?? "")}
                       mostrarMateria={!materiaId}
                       onResponder={onResponder}
+                      onGrifar={(campo, g) => aoGrifar(q, campo, g)}
                       onRefazer={mudarRefazer}
                       origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
                       onDuvida={() => setDuvida(q)}
@@ -473,6 +496,8 @@ interface CardProps {
   /** No modo por matéria a etiqueta some (é sempre a mesma, já vai no cabeçalho). */
   mostrarMateria: boolean;
   onResponder: (q: TopicoQuestao, valor: boolean | string | null) => void;
+  /** Grava um grifo do aluno (o do texto associado vale para todas as irmãs do texto). */
+  onGrifar: (campo: CampoGrifavel, novos: Grifo[]) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
   origem?: TopicoQuestao;
@@ -493,6 +518,7 @@ function QuestaoMistaCard({
   materia,
   mostrarMateria,
   onResponder,
+  onGrifar,
   onRefazer,
   origem,
   onDuvida,
@@ -507,9 +533,6 @@ function QuestaoMistaCard({
   // aparecem aqui no misturado igual ao caderno. Fonte de texto livre fica de fora
   // para não entregar o assunto.
   const fonteQC = q.fonte && ehFonteQC(q.fonte) ? q.fonte : null;
-  const salvarGrifos = useSalvarGrifos();
-  const mudarGrifos = (campo: CampoGrifavel, novos: Grifo[]) =>
-    salvarGrifos.mutate({ id: q.id, grifos: comCampoAtualizado(q.grifos, campo, novos) });
 
   return (
     <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
@@ -531,7 +554,7 @@ function QuestaoMistaCard({
         qid={q.id}
         texto={q.texto_associado}
         grifos={grifosDoCampo(q.grifos, "texto_associado")}
-        onChange={(g) => mudarGrifos("texto_associado", g)}
+        onChange={(g) => onGrifar("texto_associado", g)}
       />
 
       {q.contexto && (
@@ -546,7 +569,7 @@ function QuestaoMistaCard({
         className="whitespace-pre-wrap text-sm leading-relaxed text-txt"
         partes={[{ tipo: "texto", texto: q.enunciado, base: 0 }]}
         grifos={grifosDoCampo(q.grifos, "enunciado")}
-        onChange={(g) => mudarGrifos("enunciado", g)}
+        onChange={(g) => onGrifar("enunciado", g)}
       />
 
       {!resolvida ? (

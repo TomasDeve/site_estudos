@@ -63,7 +63,7 @@ import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
-import { embaralhar, gerarSemente } from "./embaralhar";
+import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
 
@@ -184,6 +184,7 @@ function Caderno({ topico }: { topico: Topico }) {
   const criarEmLote = useCriarQuestoesEmLote();
   const clique = useRegistrarClique();
   const { data: todosLogs } = useQuestaoLogsTodos();
+  const salvarGrifos = useSalvarGrifos();
 
   const [filtro, setFiltro] = useState<AbaCaderno>("responder");
   // Origens em foco (multi-seleção). Conjunto vazio = "Todas" (sem filtro); o
@@ -245,6 +246,24 @@ function Caderno({ topico }: { topico: Topico }) {
   // Índice por id — acha a questão original de uma reformulada (revelado só após responder).
   const porId = useMemo(() => new Map(todas.map((x) => [x.id, x])), [todas]);
 
+  // Salva um grifo. Enunciado é da questão; "Texto associado" vale para TODAS as questões
+  // do assunto com o texto idêntico — aplica em todas (mantendo o enunciado de cada uma).
+  function aoGrifar(q: TopicoQuestao, campo: CampoGrifavel, novos: Grifo[]) {
+    if (campo === "texto_associado" && q.texto_associado) {
+      const irmas = todas.filter((x) => x.texto_associado === q.texto_associado);
+      salvarGrifos.mutate({
+        updates: (irmas.length ? irmas : [q]).map((x) => ({
+          id: x.id,
+          grifos: comCampoAtualizado(x.grifos, "texto_associado", novos),
+        })),
+      });
+      return;
+    }
+    salvarGrifos.mutate({
+      updates: [{ id: q.id, grifos: comCampoAtualizado(q.grifos, campo, novos) }],
+    });
+  }
+
   // Recorte por origem: a base é a união das categorias marcadas (placar, abas e
   // numeração escopados). Conjunto vazio = "Todas" (junta tudo).
   const escopoBase = useMemo(
@@ -260,7 +279,9 @@ function Caderno({ topico }: { topico: Topico }) {
   // a mesma ordem mesmo após os refetches disparados ao responder. Alimenta o resto.
   const escopo = useMemo(() => {
     if (semente === null) return escopoBase;
-    return embaralhar([...escopoBase].sort((a, b) => a.id.localeCompare(b.id)), semente);
+    // Ao misturar, junta as questões do mesmo "Texto associado" (sem desfazer o embaralho).
+    const arr = embaralhar([...escopoBase].sort((a, b) => a.id.localeCompare(b.id)), semente);
+    return agruparPorChave(arr, (q) => q.texto_associado);
   }, [escopoBase, semente]);
 
   // Quantas questões há em cada categoria — número mostrado nas pílulas de filtro.
@@ -520,6 +541,7 @@ function Caderno({ topico }: { topico: Topico }) {
                     questao={q}
                     numero={numeroDe.get(q.id) ?? 0}
                     onResponder={onResponder}
+                    onGrifar={(campo, g) => aoGrifar(q, campo, g)}
                     onStatus={mudarStatus}
                     onRefazer={mudarRefazer}
                     origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
@@ -668,6 +690,8 @@ interface CardProps {
   questao: TopicoQuestao;
   numero: number;
   onResponder: (q: TopicoQuestao, valor: boolean | string | null) => void;
+  /** Grava um grifo do aluno (o do texto associado vale para todas as irmãs do texto). */
+  onGrifar: (campo: CampoGrifavel, novos: Grifo[]) => void;
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
@@ -751,6 +775,7 @@ function QuestaoCard({
   questao: q,
   numero,
   onResponder,
+  onGrifar,
   onStatus,
   onRefazer,
   origem,
@@ -764,9 +789,6 @@ function QuestaoCard({
 }: CardProps) {
   const resolvida = estaResolvida(q);
   const status = q.status as QuestaoStatus;
-  const salvarGrifos = useSalvarGrifos();
-  const mudarGrifos = (campo: CampoGrifavel, novos: Grifo[]) =>
-    salvarGrifos.mutate({ id: q.id, grifos: comCampoAtualizado(q.grifos, campo, novos) });
 
   return (
     <li className="group/q rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
@@ -796,7 +818,7 @@ function QuestaoCard({
         qid={q.id}
         texto={q.texto_associado}
         grifos={grifosDoCampo(q.grifos, "texto_associado")}
-        onChange={(g) => mudarGrifos("texto_associado", g)}
+        onChange={(g) => onGrifar("texto_associado", g)}
       />
 
       {q.contexto && (
@@ -811,7 +833,7 @@ function QuestaoCard({
         className="whitespace-pre-wrap text-sm leading-relaxed text-txt"
         partes={[{ tipo: "texto", texto: q.enunciado, base: 0 }]}
         grifos={grifosDoCampo(q.grifos, "enunciado")}
-        onChange={(g) => mudarGrifos("enunciado", g)}
+        onChange={(g) => onGrifar("enunciado", g)}
       />
 
       {!resolvida ? (

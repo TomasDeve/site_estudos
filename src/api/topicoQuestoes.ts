@@ -120,40 +120,41 @@ export function useResponderQuestao() {
   });
 }
 
+type GrifosUpdate = { id: string; grifos: Record<string, [number, number][]> | null };
+
 /**
- * Salva os grifos (sublinhados) do aluno numa questão. Como a resposta, o patch é
- * OTIMISTA: a marcação aparece na hora no cache e NÃO re-baixamos o assunto. Guarda um
+ * Salva os grifos (sublinhados) do aluno. Recebe UMA OU VÁRIAS linhas: o grifo do
+ * enunciado é de uma questão só, mas o do "Texto associado" vale para TODAS as questões
+ * que compartilham aquele texto (o chamador manda a lista das irmãs). Como a resposta, o
+ * patch é OTIMISTA: aparece na hora no cache e NÃO re-baixamos nada. `grifos` guarda um
  * objeto por campo — ex.: `{ texto_associado: [[12,20]], enunciado: [[0,7]] }` — onde
  * cada par é um intervalo de caracteres [início, fim) no texto daquele campo.
  */
 export function useSalvarGrifos() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      id,
-      grifos,
-    }: {
-      id: string;
-      grifos: Record<string, [number, number][]> | null;
-    }) => {
-      const { error } = await supabase
-        .from("topico_questoes")
-        .update({ grifos })
-        .eq("id", id);
-      if (error) throw error;
+    mutationFn: async ({ updates }: { updates: GrifosUpdate[] }) => {
+      const res = await Promise.all(
+        updates.map((u) =>
+          supabase.from("topico_questoes").update({ grifos: u.grifos }).eq("id", u.id),
+        ),
+      );
+      const falha = res.find((r) => r.error);
+      if (falha?.error) throw falha.error;
     },
-    onMutate: async ({ id, grifos }) => {
+    onMutate: async ({ updates }) => {
       await qc.cancelQueries({ queryKey: ["topico_questoes"] });
       const anteriores = qc.getQueriesData({ queryKey: ["topico_questoes"] });
+      const porId = new Map(updates.map((u) => [u.id, u.grifos]));
       // A mesma questão pode estar em várias listas em cache (resumo, todas, assunto);
       // casa pelo id e só troca `grifos`.
       qc.setQueriesData<{ id: string }[]>({ queryKey: ["topico_questoes"] }, (lista) => {
         if (!Array.isArray(lista)) return lista;
         let mudou = false;
         const nova = lista.map((row) => {
-          if (row?.id !== id) return row;
+          if (!row || !porId.has(row.id)) return row;
           mudou = true;
-          return { ...row, grifos };
+          return { ...row, grifos: porId.get(row.id) };
         });
         return mudou ? nova : lista;
       });

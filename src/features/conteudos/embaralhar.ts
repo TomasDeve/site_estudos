@@ -30,3 +30,36 @@ export function embaralhar<T>(itens: T[], semente: number): T[] {
   }
   return arr;
 }
+
+/**
+ * Mantém juntas as questões que compartilham o mesmo texto (ex.: o "Texto associado"),
+ * SEM desfazer o embaralho: preserva a ordem recebida, mas quando um grupo aparece pela
+ * primeira vez, puxa todas as questões daquele texto pra logo em seguida. Assim o aluno
+ * lê o texto uma vez e responde todas as questões dele em sequência, e o resto continua
+ * embaralhado (variedade preservada). Itens sem chave ficam onde estão.
+ *
+ * `chaveDe` devolve a chave do grupo (o texto) ou null/"" pra "não agrupar". Estável e O(n).
+ */
+export function agruparPorChave<T>(itens: T[], chaveDe: (item: T) => string | null | undefined): T[] {
+  const grupos = new Map<string, T[]>();
+  for (const item of itens) {
+    const k = chaveDe(item);
+    if (!k) continue;
+    const g = grupos.get(k);
+    if (g) g.push(item);
+    else grupos.set(k, [item]);
+  }
+  const emitido = new Set<string>();
+  const out: T[] = [];
+  for (const item of itens) {
+    const k = chaveDe(item);
+    if (!k) {
+      out.push(item);
+      continue;
+    }
+    if (emitido.has(k)) continue; // grupo já saiu inteiro na 1ª aparição
+    emitido.add(k);
+    out.push(...grupos.get(k)!);
+  }
+  return out;
+}
