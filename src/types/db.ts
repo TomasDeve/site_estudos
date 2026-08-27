@@ -883,6 +883,7 @@ export type Database = {
           fonte: string | null
           gabarito: boolean | null
           gabarito_letra: string | null
+          grifos: Json | null
           id: string
           ordem: number
           refazer: boolean
@@ -907,6 +908,7 @@ export type Database = {
           fonte?: string | null
           gabarito?: boolean | null
           gabarito_letra?: string | null
+          grifos?: Json | null
           id?: string
           ordem?: number
           refazer?: boolean
@@ -931,6 +933,7 @@ export type Database = {
           fonte?: string | null
           gabarito?: boolean | null
           gabarito_letra?: string | null
+          grifos?: Json | null
           id?: string
           ordem?: number
           refazer?: boolean

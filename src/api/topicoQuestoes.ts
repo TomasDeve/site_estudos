@@ -120,6 +120,51 @@ export function useResponderQuestao() {
   });
 }
 
+/**
+ * Salva os grifos (sublinhados) do aluno numa questão. Como a resposta, o patch é
+ * OTIMISTA: a marcação aparece na hora no cache e NÃO re-baixamos o assunto. Guarda um
+ * objeto por campo — ex.: `{ texto_associado: [[12,20]], enunciado: [[0,7]] }` — onde
+ * cada par é um intervalo de caracteres [início, fim) no texto daquele campo.
+ */
+export function useSalvarGrifos() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      grifos,
+    }: {
+      id: string;
+      grifos: Record<string, [number, number][]> | null;
+    }) => {
+      const { error } = await supabase
+        .from("topico_questoes")
+        .update({ grifos })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, grifos }) => {
+      await qc.cancelQueries({ queryKey: ["topico_questoes"] });
+      const anteriores = qc.getQueriesData({ queryKey: ["topico_questoes"] });
+      // A mesma questão pode estar em várias listas em cache (resumo, todas, assunto);
+      // casa pelo id e só troca `grifos`.
+      qc.setQueriesData<{ id: string }[]>({ queryKey: ["topico_questoes"] }, (lista) => {
+        if (!Array.isArray(lista)) return lista;
+        let mudou = false;
+        const nova = lista.map((row) => {
+          if (row?.id !== id) return row;
+          mudou = true;
+          return { ...row, grifos };
+        });
+        return mudou ? nova : lista;
+      });
+      return { anteriores };
+    },
+    onError: (_err, _vars, ctx) => {
+      ctx?.anteriores?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+  });
+}
+
 export function useSetQuestaoStatus() {
   const qc = useQueryClient();
   return useMutation({

@@ -28,6 +28,7 @@ import {
   useExcluirQuestao,
   useMarcarRefazer,
   useResponderQuestao,
+  useSalvarGrifos,
   useSetQuestaoStatus,
   useTopicoQuestoes,
 } from "@/api/topicoQuestoes";
@@ -47,6 +48,7 @@ import { parsearQuestoesJson } from "./questoesJson";
 import { CATEGORIAS, CATEGORIAS_FILTRO, CATEGORIA_PADRAO } from "./categorias";
 import { ResumoRapido } from "./ResumoRapido";
 import { TextoAssociado } from "./TextoAssociado";
+import { Grifavel, grifosDoCampo, comCampoAtualizado, type CampoGrifavel, type Grifo } from "./grifos";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
@@ -754,6 +756,9 @@ function QuestaoCard({
 }: CardProps) {
   const resolvida = estaResolvida(q);
   const status = q.status as QuestaoStatus;
+  const salvarGrifos = useSalvarGrifos();
+  const mudarGrifos = (campo: CampoGrifavel, novos: Grifo[]) =>
+    salvarGrifos.mutate({ id: q.id, grifos: comCampoAtualizado(q.grifos, campo, novos) });
 
   return (
     <li className="group/q rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
@@ -779,7 +784,11 @@ function QuestaoCard({
         {q.fonte && <FonteQuestao fonte={q.fonte} />}
       </div>
 
-      <TextoAssociado texto={q.texto_associado} />
+      <TextoAssociado
+        texto={q.texto_associado}
+        grifos={grifosDoCampo(q.grifos, "texto_associado")}
+        onChange={(g) => mudarGrifos("texto_associado", g)}
+      />
 
       {q.contexto && (
         <p className="mb-2 whitespace-pre-wrap border-l-2 border-line pl-2.5 text-xs italic leading-relaxed text-mut">
@@ -787,7 +796,12 @@ function QuestaoCard({
         </p>
       )}
 
-      <p className="whitespace-pre-wrap text-sm leading-relaxed text-txt">{q.enunciado}</p>
+      <Grifavel
+        className="whitespace-pre-wrap text-sm leading-relaxed text-txt"
+        partes={[{ tipo: "texto", texto: q.enunciado, base: 0 }]}
+        grifos={grifosDoCampo(q.grifos, "enunciado")}
+        onChange={(g) => mudarGrifos("enunciado", g)}
+      />
 
       {!resolvida ? (
         <BotoesResposta questao={q} onResponder={(v) => onResponder(q, v)} />
