@@ -23,10 +23,12 @@ import {
  * (com link "ver original" de reserva) — tratado dentro do `Grifavel`.
  */
 export function TextoAssociado({
+  qid,
   texto,
   grifos,
   onChange,
 }: {
+  qid: string;
   texto: string | null | undefined;
   grifos: Grifo[];
   onChange: (novos: Grifo[]) => void;
@@ -82,6 +84,8 @@ export function TextoAssociado({
 
       {aberto && (
         <Grifavel
+          qid={qid}
+          campo="texto_associado"
           partes={partes}
           grifos={grifos}
           onChange={onChange}

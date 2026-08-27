@@ -48,7 +48,14 @@ import { parsearQuestoesJson } from "./questoesJson";
 import { CATEGORIAS, CATEGORIAS_FILTRO, CATEGORIA_PADRAO } from "./categorias";
 import { ResumoRapido } from "./ResumoRapido";
 import { TextoAssociado } from "./TextoAssociado";
-import { Grifavel, grifosDoCampo, comCampoAtualizado, type CampoGrifavel, type Grifo } from "./grifos";
+import {
+  Grifavel,
+  GrifosLayer,
+  grifosDoCampo,
+  comCampoAtualizado,
+  type CampoGrifavel,
+  type Grifo,
+} from "./grifos";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
@@ -388,6 +395,7 @@ function Caderno({ topico }: { topico: Topico }) {
 
   return (
     <>
+      <GrifosLayer />
       {isLoading ? (
         <div className="flex justify-center py-10">
           <Spinner className="size-6" />
@@ -785,6 +793,7 @@ function QuestaoCard({
       </div>
 
       <TextoAssociado
+        qid={q.id}
         texto={q.texto_associado}
         grifos={grifosDoCampo(q.grifos, "texto_associado")}
         onChange={(g) => mudarGrifos("texto_associado", g)}
@@ -797,6 +806,8 @@ function QuestaoCard({
       )}
 
       <Grifavel
+        qid={q.id}
+        campo="enunciado"
         className="whitespace-pre-wrap text-sm leading-relaxed text-txt"
         partes={[{ tipo: "texto", texto: q.enunciado, base: 0 }]}
         grifos={grifosDoCampo(q.grifos, "enunciado")}

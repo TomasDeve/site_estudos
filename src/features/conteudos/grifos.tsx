@@ -16,7 +16,13 @@ import { createPortal } from "react-dom";
  * por campo, pra sincronizar entre celular e computador.
  *
  * Interação (fácil, mobile + desktop): seleciona o trecho → aparece um botãozinho
- * "Sublinhar" → clicou, sublinhou. Toca num trecho já sublinhado → remove.
+ * "Sublinhar" (o `GrifosLayer`, um só por página) → tocou, sublinhou. Toca de novo num
+ * trecho já sublinhado → remove.
+ *
+ * Por que um layer único com `selectionchange`? No celular a seleção nativa é feita com
+ * alças (handles) que ficam FORA do texto, então ouvir `touchend` no próprio bloco não
+ * pega o gesto. Um único listener de `selectionchange` no documento captura a seleção de
+ * qualquer forma — e é 1 listener só, mesmo com milhares de questões na tela.
  */
 
 export type Grifo = [number, number];
@@ -127,6 +133,10 @@ export function useFonteTextoAssociado(): [number, (px: number) => void] {
   return [px, setFonte];
 }
 
+// ---------- Registro dos campos grifáveis (pro layer achar quem salvar) ----------
+type Entrada = { grifos: Grifo[]; onChange: (novos: Grifo[]) => void };
+const registro = new Map<string, Entrada>();
+
 // ---------- Cálculo de deslocamento a partir da seleção ----------
 /** Deslocamento absoluto (na string do campo) de um ponto da seleção. */
 function deslocAbs(node: Node, offset: number): number | null {
@@ -140,14 +150,115 @@ function deslocAbs(node: Node, offset: number): number | null {
   return base + (offset > 0 ? txt.length : 0);
 }
 
-// ---------- Componente ----------
+/** Acha o bloco grifável (`data-grifo-chave`) que contém um nó da seleção. */
+function campoDe(node: Node | null): HTMLElement | null {
+  if (!node) return null;
+  const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : (node as Element);
+  return (el?.closest?.("[data-grifo-chave]") as HTMLElement | null) ?? null;
+}
+
+/**
+ * Layer único por página: escuta a seleção e mostra o botão "Sublinhar" ancorado nela.
+ * Não recebe props — descobre o campo pela seleção e salva pelo registro.
+ */
+export function GrifosLayer() {
+  const [botao, setBotao] = useState<{ x: number; y: number; chave: string; faixa: Grifo } | null>(
+    null,
+  );
+  const raf = useRef(0);
+
+  useEffect(() => {
+    function avaliar() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        setBotao(null);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      const campoIni = campoDe(range.startContainer);
+      const campoFim = campoDe(range.endContainer);
+      if (!campoIni || campoIni !== campoFim) {
+        setBotao(null);
+        return;
+      }
+      const chave = campoIni.dataset.grifoChave;
+      if (!chave) {
+        setBotao(null);
+        return;
+      }
+      const a = deslocAbs(range.startContainer, range.startOffset);
+      const b = deslocAbs(range.endContainer, range.endOffset);
+      if (a == null || b == null) {
+        setBotao(null);
+        return;
+      }
+      const ini = Math.min(a, b);
+      const fim = Math.max(a, b);
+      if (fim <= ini) {
+        setBotao(null);
+        return;
+      }
+      const rect = range.getBoundingClientRect();
+      setBotao({ x: rect.left + rect.width / 2, y: rect.bottom, chave, faixa: [ini, fim] });
+    }
+    function agendar() {
+      cancelAnimationFrame(raf.current);
+      raf.current = requestAnimationFrame(avaliar);
+    }
+    document.addEventListener("selectionchange", agendar);
+    window.addEventListener("scroll", agendar, true);
+    return () => {
+      document.removeEventListener("selectionchange", agendar);
+      window.removeEventListener("scroll", agendar, true);
+      cancelAnimationFrame(raf.current);
+    };
+  }, []);
+
+  function sublinhar() {
+    if (!botao) return;
+    const ent = registro.get(botao.chave);
+    if (ent) ent.onChange(unir([...ent.grifos, botao.faixa]));
+    setBotao(null);
+    window.getSelection()?.removeAllRanges();
+  }
+
+  if (!botao) return null;
+  return createPortal(
+    <button
+      type="button"
+      // pointerdown (não click): dispara antes de a seleção ser limpa pelo toque, e o
+      // preventDefault impede o toque de tirar a seleção / roubar o foco.
+      onPointerDown={(e) => {
+        e.preventDefault();
+        sublinhar();
+      }}
+      style={{
+        position: "fixed",
+        left: botao.x,
+        top: botao.y,
+        transform: "translate(-50%, 10px)",
+        zIndex: 9999,
+      }}
+      className="flex items-center gap-1 rounded-lg bg-gold px-3.5 py-2 text-xs font-bold text-navy-900 shadow-lg shadow-black/50"
+    >
+      <span className="underline decoration-2 underline-offset-2">Sublinhar</span>
+    </button>,
+    document.body,
+  );
+}
+
+// ---------- Componente do texto grifável ----------
 export function Grifavel({
+  qid,
+  campo,
   partes,
   grifos,
   onChange,
   className,
   style,
 }: {
+  qid: string;
+  campo: CampoGrifavel;
   partes: Parte[];
   grifos: Grifo[];
   onChange: (novos: Grifo[]) => void;
@@ -155,63 +266,15 @@ export function Grifavel({
   style?: CSSProperties;
 }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const pendente = useRef<Grifo | null>(null);
-  const [botao, setBotao] = useState<{ x: number; y: number } | null>(null);
+  const chave = `${qid}:${campo}`;
 
-  // Enquanto o botão está visível, um único listener temporário fecha ele ao clicar
-  // fora ou rolar a página (evita botão "fantasma"). Só existe 1 por vez na página toda.
+  // Mantém o registro sempre com os grifos/onChange atuais (o layer usa na hora de salvar).
   useEffect(() => {
-    if (!botao) return;
-    const fechar = (e?: Event) => {
-      if (e && e.type === "pointerdown") {
-        const alvo = e.target as Node;
-        if (rootRef.current?.contains(alvo)) return; // clique dentro trata no onClick/seleção
-      }
-      setBotao(null);
-      pendente.current = null;
-    };
-    document.addEventListener("pointerdown", fechar, true);
-    window.addEventListener("scroll", fechar, true);
+    registro.set(chave, { grifos, onChange });
     return () => {
-      document.removeEventListener("pointerdown", fechar, true);
-      window.removeEventListener("scroll", fechar, true);
+      registro.delete(chave);
     };
-  }, [botao]);
-
-  // Ao soltar o dedo/mouse, se há uma seleção dentro deste bloco, calcula o intervalo
-  // e mostra o botão. Usa evento delegado do React (não cria listener por card).
-  function aoSoltar() {
-    const sel = window.getSelection();
-    const root = rootRef.current;
-    if (!sel || !root || sel.rangeCount === 0 || sel.isCollapsed) {
-      setBotao(null);
-      return;
-    }
-    const range = sel.getRangeAt(0);
-    if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) return;
-    const a = deslocAbs(range.startContainer, range.startOffset);
-    const b = deslocAbs(range.endContainer, range.endOffset);
-    if (a == null || b == null) {
-      setBotao(null);
-      return;
-    }
-    const ini = Math.min(a, b);
-    const fim = Math.max(a, b);
-    if (fim <= ini) {
-      setBotao(null);
-      return;
-    }
-    const rect = range.getBoundingClientRect();
-    pendente.current = [ini, fim];
-    setBotao({ x: rect.left + rect.width / 2, y: rect.bottom });
-  }
-
-  function sublinhar() {
-    if (pendente.current) onChange(unir([...grifos, pendente.current]));
-    pendente.current = null;
-    setBotao(null);
-    window.getSelection()?.removeAllRanges();
-  }
+  });
 
   // Toque/clique num trecho já sublinhado remove a faixa inteira que o contém.
   function aoClicar(e: ReactMouseEvent) {
@@ -224,14 +287,7 @@ export function Grifavel({
   }
 
   return (
-    <div
-      ref={rootRef}
-      className={className}
-      style={style}
-      onMouseUp={aoSoltar}
-      onTouchEnd={aoSoltar}
-      onClick={aoClicar}
-    >
+    <div ref={rootRef} className={className} style={style} data-grifo-chave={chave} onClick={aoClicar}>
       {partes.map((p, i) =>
         p.tipo === "img" ? (
           <a
@@ -253,26 +309,6 @@ export function Grifavel({
           <span key={i}>{segmentos(p.texto, p.base, grifos)}</span>
         ),
       )}
-
-      {botao &&
-        createPortal(
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={sublinhar}
-            style={{
-              position: "fixed",
-              left: botao.x,
-              top: botao.y,
-              transform: "translate(-50%, 8px)",
-              zIndex: 60,
-            }}
-            className="flex items-center gap-1 rounded-md bg-gold px-3 py-1.5 text-xs font-bold text-navy-900 shadow-lg shadow-black/40"
-          >
-            <span className="underline decoration-2 underline-offset-2">Sublinhar</span>
-          </button>,
-          document.body,
-        )}
     </div>
   );
 }

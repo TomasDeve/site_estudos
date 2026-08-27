@@ -29,7 +29,14 @@ import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { ResumoRapido } from "./ResumoRapido";
 import { TextoAssociado } from "./TextoAssociado";
-import { Grifavel, grifosDoCampo, comCampoAtualizado, type CampoGrifavel, type Grifo } from "./grifos";
+import {
+  Grifavel,
+  GrifosLayer,
+  grifosDoCampo,
+  comCampoAtualizado,
+  type CampoGrifavel,
+  type Grifo,
+} from "./grifos";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
@@ -274,6 +281,7 @@ export function QuestoesMistasPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <GrifosLayer />
       <header className="sticky top-0 z-10 flex shrink-0 items-center gap-3 border-b border-line/50 bg-navy-900/90 px-4 py-3 backdrop-blur-sm">
         <button
           onClick={voltar}
@@ -520,6 +528,7 @@ function QuestaoMistaCard({
       )}
 
       <TextoAssociado
+        qid={q.id}
         texto={q.texto_associado}
         grifos={grifosDoCampo(q.grifos, "texto_associado")}
         onChange={(g) => mudarGrifos("texto_associado", g)}
@@ -532,6 +541,8 @@ function QuestaoMistaCard({
       )}
 
       <Grifavel
+        qid={q.id}
+        campo="enunciado"
         className="whitespace-pre-wrap text-sm leading-relaxed text-txt"
         partes={[{ tipo: "texto", texto: q.enunciado, base: 0 }]}
         grifos={grifosDoCampo(q.grifos, "enunciado")}
