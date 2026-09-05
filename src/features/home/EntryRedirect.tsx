@@ -1,12 +1,14 @@
 import { Navigate } from "react-router";
-import { useConcursos } from "@/api/concursos";
+import { concursoDeEstudo, useConcursos } from "@/api/concursos";
 import { getConcursoAtual } from "@/lib/currentConcurso";
 import { FullScreenSpinner } from "@/components/Spinner";
 
 /**
  * Rota "/" — manda o usuário direto para o concurso que ele está estudando:
- * o último aberto, ou o que está marcado como "ativo", ou o primeiro da lista.
- * Sem nenhum concurso, vai para o hub de gerenciamento.
+ * o último aberto (desde que NÃO esteja arquivado), senão o ativo. Um id salvo
+ * apontando para um concurso arquivado (ex.: PMAL antigo) é ignorado, para não
+ * despejar o aluno num concurso fora de foco. Sem concurso estudável, vai para
+ * o hub de gerenciamento.
  */
 export function EntryRedirect() {
   const { data: concursos, isLoading } = useConcursos();
@@ -17,9 +19,9 @@ export function EntryRedirect() {
 
   const salvo = getConcursoAtual();
   const atual =
-    lista.find((c) => c.id === salvo) ??
-    lista.find((c) => c.status === "ativo") ??
-    lista[0];
+    lista.find((c) => c.id === salvo && c.status !== "arquivado") ??
+    concursoDeEstudo(lista);
 
+  if (!atual) return <Navigate to="/concursos" replace />;
   return <Navigate to={`/concurso/${atual.id}`} replace />;
 }

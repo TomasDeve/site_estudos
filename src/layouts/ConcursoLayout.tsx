@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams } from "react-router";
+import { Link, Navigate, NavLink, Outlet, useLocation, useOutletContext, useParams } from "react-router";
 import {
   BarChart3,
   BookOpen,
@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Concurso } from "@/types/db";
-import { useConcurso } from "@/api/concursos";
+import { concursoDeEstudo, useConcurso } from "@/api/concursos";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { supabase } from "@/lib/supabase";
@@ -83,11 +83,19 @@ export function ConcursoLayout() {
       .filter((x): x is NonNullable<typeof x> => x !== null);
   }, [vinculos, materias, topicos, concurso]);
 
+  // Só lembra como "atual" um concurso que dá para estudar. Um arquivado (PMAL,
+  // Indefinido) nunca vira o atual — senão a rota "/" despejava o aluno de volta
+  // nele na próxima visita.
   useEffect(() => {
-    if (concursoId) setConcursoAtual(concursoId);
-  }, [concursoId]);
+    if (concurso && concurso.status !== "arquivado") setConcursoAtual(concurso.id);
+  }, [concurso?.id, concurso?.status]);
 
   if (isLoading) return <FullScreenSpinner />;
+  // Concurso arquivado não é estudável: manda para o concurso de estudo (PC AL).
+  if (concurso && concurso.status === "arquivado") {
+    const destino = concursoDeEstudo(concursos ?? []);
+    return <Navigate to={destino ? `/concurso/${destino.id}` : "/concursos"} replace />;
+  }
   if (!concurso) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16">

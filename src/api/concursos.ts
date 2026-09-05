@@ -22,6 +22,18 @@ export function useConcurso(id: string | undefined) {
   return { concurso: concursos?.find((c) => c.id === id), concursos, ...rest };
 }
 
+/**
+ * O concurso que o usuário DEVE estar estudando: o ativo, senão o primeiro
+ * não-arquivado. Concurso arquivado nunca é destino de estudo — quem cair num
+ * (PMAL, Indefinido) é redirecionado para cá. `undefined` = só há arquivados.
+ */
+export function concursoDeEstudo(lista: Concurso[]): Concurso | undefined {
+  return (
+    lista.find((c) => c.status === "ativo") ??
+    lista.find((c) => c.status !== "arquivado")
+  );
+}
+
 export function useCriarConcurso() {
   const qc = useQueryClient();
   return useMutation({

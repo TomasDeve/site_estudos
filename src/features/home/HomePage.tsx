@@ -106,36 +106,20 @@ export function HomePage() {
         {ativos.length === 0 && arquivados.length === 0 ? (
           <SeedCard />
         ) : (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {ativos.map((c) => (
-                <ConcursoCard
-                  key={c.id}
-                  concurso={c}
-                  pct={pcts.get(c.id) ?? 0}
-                  onEdit={abrirEdicao}
-                />
-              ))}
-            </div>
-
-            {arquivados.length > 0 && (
-              <details className="mt-8">
-                <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-mut hover:text-dim">
-                  Arquivados ({arquivados.length})
-                </summary>
-                <div className="mt-3 grid gap-4 opacity-70 sm:grid-cols-2">
-                  {arquivados.map((c) => (
-                    <ConcursoCard
-                      key={c.id}
-                      concurso={c}
-                      pct={pcts.get(c.id) ?? 0}
-                      onEdit={abrirEdicao}
-                    />
-                  ))}
-                </div>
-              </details>
-            )}
-          </>
+          // Concursos arquivados (PMAL, Indefinido) ficam FORA do hub de
+          // propósito — o estudo é concentrado no concurso ativo (PC AL). Os
+          // dados seguem no banco, arquivados; qualquer link antigo para eles
+          // é redirecionado ao ativo pelo ConcursoLayout.
+          <div className="grid gap-4 sm:grid-cols-2">
+            {ativos.map((c) => (
+              <ConcursoCard
+                key={c.id}
+                concurso={c}
+                pct={pcts.get(c.id) ?? 0}
+                onEdit={abrirEdicao}
+              />
+            ))}
+          </div>
         )}
       </main>
 
