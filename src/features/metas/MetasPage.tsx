@@ -19,11 +19,11 @@ export function MetasPage() {
       />
 
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="space-y-5 lg:col-span-2">
+        <div className="min-w-0 space-y-5 lg:col-span-2">
           <DiaPlanner concursoIdPadrao={concurso.id} />
           <MetasPorAssunto />
         </div>
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <MetaRangeList />
           <div className="grid grid-cols-2 gap-3">
             <StatCard
