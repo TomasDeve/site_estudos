@@ -63,9 +63,17 @@ export function useRegistrarBlocoConcluido() {
 }
 
 /**
- * Edita um bloco. Se o dia (`data`) mudar, move junto as sessões ligadas pelo
- * bloco_id — assim o "Estudo hoje" e o gráfico seguem o bloco para o novo dia
- * (útil para quem estuda virando a madrugada e joga o tempo para o dia seguinte).
+ * Edita um bloco e mantém a sessão de estudo ligada em sincronia (ela só existe
+ * se o bloco estiver concluído; senão o update casa 0 linhas, sem efeito):
+ *  - `data`: move a sessão junto — o "Estudo hoje" e o gráfico seguem o bloco
+ *    para o novo dia (útil para quem estuda virando a madrugada e joga o tempo
+ *    para o dia seguinte).
+ *  - `duracao_min`: reflete o novo tempo na sessão — senão o Painel (gráfico da
+ *    semana, somado das sessões) ficaria travado no valor de quando o bloco foi
+ *    concluído, divergindo do que as Metas mostram.
+ * Obs.: registros de estudo/revisão (origem ≠ 'plano') travam a duração no modal,
+ * então aqui `duracao_min` chega igual e o update vira no-op — sem mexer no
+ * abatimento de horas do assunto/revisão, que é por sessão individual.
  */
 export function useAtualizarBloco() {
   const qc = useQueryClient();
@@ -73,10 +81,13 @@ export function useAtualizarBloco() {
     mutationFn: async ({ id, ...patch }: { id: string } & TablesUpdate<"blocos_dia">) => {
       const { error } = await supabase.from("blocos_dia").update(patch).eq("id", id);
       if (error) throw error;
-      if (patch.data) {
+      const patchSessao: TablesUpdate<"sessoes_estudo"> = {};
+      if (patch.data !== undefined) patchSessao.data = patch.data;
+      if (patch.duracao_min !== undefined) patchSessao.minutos = patch.duracao_min;
+      if (Object.keys(patchSessao).length > 0) {
         const { error: e2 } = await supabase
           .from("sessoes_estudo")
-          .update({ data: patch.data })
+          .update(patchSessao)
           .eq("bloco_id", id);
         if (e2) throw e2;
       }
