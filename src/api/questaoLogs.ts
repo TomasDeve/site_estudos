@@ -3,8 +3,6 @@ import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
 import type { QuestaoLog, TablesInsert } from "@/types/db";
 
-export const PAGINA_HISTORICO = 25;
-
 /** Todos os registros vinculados a um tópico (assunto) — para o desempenho no edital. */
 export function useQuestaoLogsPorTopico() {
   return useQuery({
@@ -74,24 +72,6 @@ export function useQuestaoLogsJanela(inicioISO: string, fimISO: string) {
         .order("data");
       if (error) throw error;
       return data;
-    },
-  });
-}
-
-/** Histórico completo paginado (.range) com contagem total. */
-export function useQuestaoLogsHistorico(pagina: number) {
-  return useQuery({
-    queryKey: ["questao_logs", "historico", pagina],
-    queryFn: async (): Promise<{ rows: QuestaoLog[]; total: number }> => {
-      const de = pagina * PAGINA_HISTORICO;
-      const { data, error, count } = await supabase
-        .from("questao_logs")
-        .select("*", { count: "exact" })
-        .order("data", { ascending: false })
-        .order("created_at", { ascending: false })
-        .range(de, de + PAGINA_HISTORICO - 1);
-      if (error) throw error;
-      return { rows: data, total: count ?? 0 };
     },
   });
 }

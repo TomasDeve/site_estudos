@@ -8,7 +8,7 @@ import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/Button";
 import { QuickLogForm } from "./QuickLogForm";
 import { AcertosChart, PorMateriaChart } from "./charts";
-import { HistoricoTable } from "./HistoricoTable";
+import { AcertosPorMateria } from "./AcertosPorMateria";
 
 export function MetricasPage() {
   const hoje = hojeISO();
@@ -58,7 +58,7 @@ export function MetricasPage() {
         <PorMateriaChart logs={logs30 ?? []} materias={materias ?? []} />
       </div>
 
-      <HistoricoTable />
+      <AcertosPorMateria />
     </div>
   );
 }
