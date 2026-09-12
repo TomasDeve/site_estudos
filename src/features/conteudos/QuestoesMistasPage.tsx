@@ -34,6 +34,8 @@ import {
   GrifosLayer,
   grifosDoCampo,
   comCampoAtualizado,
+  alternativasRiscadas,
+  comAlternativasRiscadas,
   type CampoGrifavel,
   type Grifo,
 } from "./grifos";
@@ -94,6 +96,17 @@ export function QuestoesMistasPage() {
     }
     salvarGrifos.mutate({
       updates: [{ id: q.id, grifos: comCampoAtualizado(q.grifos, campo, novos) }],
+    });
+  }
+
+  // Risca/desrisca uma alternativa (múltipla escolha) e salva no banco — o risco
+  // sobrevive à resposta e sincroniza entre aparelhos. As não riscadas ficam "em dúvida".
+  function aoRiscar(q: TopicoQuestao, letra: string) {
+    const atuais = new Set(alternativasRiscadas(q.grifos));
+    if (atuais.has(letra)) atuais.delete(letra);
+    else atuais.add(letra);
+    salvarGrifos.mutate({
+      updates: [{ id: q.id, grifos: comAlternativasRiscadas(q.grifos, [...atuais]) }],
     });
   }
 
@@ -424,6 +437,7 @@ export function QuestoesMistasPage() {
                       mostrarMateria={!materiaId}
                       onResponder={onResponder}
                       onGrifar={(campo, g) => aoGrifar(q, campo, g)}
+                      onToggleRisco={(letra) => aoRiscar(q, letra)}
                       onRefazer={mudarRefazer}
                       origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
                       onDuvida={() => setDuvida(q)}
@@ -498,6 +512,8 @@ interface CardProps {
   onResponder: (q: TopicoQuestao, valor: boolean | string | null) => void;
   /** Grava um grifo do aluno (o do texto associado vale para todas as irmãs do texto). */
   onGrifar: (campo: CampoGrifavel, novos: Grifo[]) => void;
+  /** Risca/desrisca (elimina) uma alternativa da múltipla escolha. */
+  onToggleRisco: (letra: string) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
   origem?: TopicoQuestao;
@@ -519,6 +535,7 @@ function QuestaoMistaCard({
   mostrarMateria,
   onResponder,
   onGrifar,
+  onToggleRisco,
   onRefazer,
   origem,
   onDuvida,
@@ -573,7 +590,11 @@ function QuestaoMistaCard({
       />
 
       {!resolvida ? (
-        <BotoesResposta questao={q} onResponder={(v) => onResponder(q, v)} />
+        <BotoesResposta
+          questao={q}
+          onResponder={(v) => onResponder(q, v)}
+          onToggleRisco={onToggleRisco}
+        />
       ) : (
         <div className="mt-3 space-y-2.5">
           <ResultadoResposta questao={q} />

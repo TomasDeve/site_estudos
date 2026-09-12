@@ -2,60 +2,92 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import type { TopicoQuestao } from "@/types/db";
 import { useAnexarResumoQuestoes } from "@/api/topicoTextos";
-import { fetchIA } from "./ChatIA";
 import { anexarAoResumoAberto, chaveDestinoResumo } from "./ResumoRapido";
 import { envolverBlocoQuestao } from "./resumoBlocos";
+import { cabecalhoFonte } from "./fonteQuestao";
+import { alternativasRiscadas } from "./grifos";
+import { alternativasDe, ehMultipla, gabaritoLabel } from "./questaoModelo";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-/** Tira qualquer marcador de lista/seta que a IA tenha posto no início da linha. */
-const semMarcador = (l: string) => l.replace(/^(?:—>|->|→|[-–—•*·])\s*/, "");
-
-/** Rótulo de um sub-bloco: uma linha que termina em ":" (ex.: "Casos (art. 7º):"). */
-const ehRotulo = (l: string) => /:$/.test(l);
-
 /**
- * Monta o bloco esquematizado que entra no resumo a partir do texto da IA:
- * uma linha divisória (`<hr>`) separando este núcleo do anterior, a linha do
- * núcleo com seta (→) e, à volta, os pontos vizinhos agrupados. Cada grupo abre
- * com um rótulo em negrito (a linha "Alguma coisa:") e traz seus itens logo
- * abaixo, um por linha com travessão (—). Um respiro (linha em branco) separa o
- * núcleo e cada grupo.
+ * Converte um texto (possivelmente com várias linhas) em `<div>` por linha, com
+ * as linhas em branco colapsadas num único respiro (`<div><br></div>`). `em`
+ * envolve cada linha em itálico (usado no comando/contexto da questão).
  */
-function montarBlocoResumo(texto: string): string {
-  const linhas = texto.split("\n").map((l) => semMarcador(l.trim()));
-  const partes: string[] = ["<hr>"];
-  let primeira = true;
-  let espacoPendente = false;
-
-  for (const linha of linhas) {
-    if (!linha) {
-      if (!primeira) espacoPendente = true; // colapsa vazias e ignora as do começo
+function divsDeTexto(texto: string, em = false): string[] {
+  const linhas = texto.replace(/\r\n?/g, "\n").split("\n").map((l) => l.trim());
+  const out: string[] = [];
+  let espaco = false;
+  let comecou = false;
+  for (const l of linhas) {
+    if (!l) {
+      if (comecou) espaco = true; // colapsa vazias e ignora as do começo
       continue;
     }
-
-    // Rótulo de grupo (linha "…:") sempre ganha um respiro antes, para descolar
-    // do núcleo ou do grupo anterior.
-    const rotulo = !primeira && ehRotulo(linha);
-    if (rotulo) espacoPendente = true;
-
-    if (espacoPendente) {
-      partes.push("<div><br></div>");
-      espacoPendente = false;
+    if (espaco) {
+      out.push("<div><br></div>");
+      espaco = false;
     }
+    out.push(`<div>${em ? `<em>${esc(l)}</em>` : esc(l)}</div>`);
+    comecou = true;
+  }
+  return out;
+}
 
-    if (primeira) {
-      partes.push(`<div>→ ${esc(linha)}</div>`); // núcleo
-    } else if (rotulo) {
-      partes.push(`<div><strong>${esc(linha)}</strong></div>`); // rótulo do grupo
-    } else {
-      partes.push(`<div>— ${esc(linha)}</div>`); // item
-    }
-    primeira = false;
+/**
+ * Monta o bloco do resumo copiando a QUESTÃO como ela é — sem passar pela IA. A
+ * ordem reproduz o card: cabeçalho (Q… · ano (BANCA) - cargo), comando/contexto,
+ * enunciado, a "Dúvida" (na múltipla escolha, as alternativas que o aluno NÃO
+ * riscou — as que ficaram em aberto) e, por fim, a RESPOSTA (o comentário-resposta).
+ * Abre com `<hr>` separando este bloco do anterior.
+ */
+function montarBlocoQuestao(q: TopicoQuestao): string {
+  const partes: string[] = ["<hr>"];
+  const respiro = () => {
+    if (partes.length > 1) partes.push("<div><br></div>");
+  };
+
+  if (q.fonte?.trim()) {
+    partes.push(`<div><strong>${esc(cabecalhoFonte(q.fonte))}</strong></div>`);
   }
 
-  // Só o "<hr>" = a IA não devolveu conteúdo aproveitável; não grava linha solta.
+  if (q.contexto?.trim()) {
+    respiro();
+    partes.push(...divsDeTexto(q.contexto, true));
+  }
+
+  if (q.enunciado?.trim()) {
+    respiro();
+    partes.push(...divsDeTexto(q.enunciado));
+  }
+
+  // Múltipla escolha: entra a "Dúvida" — as alternativas que o aluno NÃO riscou
+  // (as que sobraram em aberto), para a questão ir ao resumo/Anki já focada no que
+  // ele hesitou. Se não riscou nada (ou riscou tudo), cai para todas as alternativas.
+  if (ehMultipla(q)) {
+    const alts = alternativasDe(q);
+    const riscadas = new Set(alternativasRiscadas(q.grifos));
+    const emDuvida = alts.filter((a) => !riscadas.has(a.letra));
+    const mostrar = emDuvida.length ? emDuvida : alts;
+    if (mostrar.length) {
+      respiro();
+      partes.push("<div><strong>Dúvida:</strong></div>", "<div><br></div>");
+      mostrar.forEach((a, i) => {
+        if (i > 0) partes.push("<div><br></div>");
+        partes.push(`<div>${esc(a.letra)}) ${esc(a.texto)}</div>`);
+      });
+    }
+  }
+
+  // Resposta: o comentário-resposta. Sem comentário, ao menos o gabarito.
+  const resposta = q.comentario?.trim() || gabaritoLabel(q);
+  respiro();
+  partes.push("<div><strong>RESPOSTA:</strong></div>", "<div><br></div>");
+  partes.push(...divsDeTexto(resposta));
+
+  // Só o "<hr>" = questão sem nada aproveitável; não grava linha solta.
   return partes.length > 1 ? partes.join("") : "";
 }
 
@@ -68,9 +100,10 @@ interface Args {
 }
 
 /**
- * "Adicionar ao resumo": a IA condensa o aprendizado da questão num esquema
- * curto e objetivo (núcleo + informações em volta) e o bloco é anexado ao resumo
- * rápido do destino — pelo editor aberto na tela, se houver, ou direto no banco.
+ * "Adicionar ao resumo": copia a questão inteira (enunciado + alternativas) e o
+ * comentário-resposta para o resumo rápido do destino — pelo editor aberto na
+ * tela, se houver, ou direto no banco. Não usa IA, para economizar tokens: o
+ * bloco vai cru, pronto para virar cards no resumo geral depois.
  */
 export function useAdicionarQuestaoAoResumo() {
   const anexarNoBanco = useAnexarResumoQuestoes();
@@ -88,7 +121,7 @@ export function useAdicionarQuestaoAoResumo() {
     });
   }, []);
 
-  async function adicionar({ questao, materiaNome, assunto, destino }: Args) {
+  async function adicionar({ questao, destino }: Args) {
     if (pendenteId) return;
     if (!destino.topicoId && !destino.materiaId) {
       toast.error("Não achei onde guardar este resumo.");
@@ -96,30 +129,8 @@ export function useAdicionarQuestaoAoResumo() {
     }
     setPendenteId(questao.id);
     try {
-      const res = await fetchIA({
-        acao: "resumir",
-        materia: materiaNome ?? null,
-        assunto: assunto ?? null,
-        questao: {
-          tipo: questao.tipo,
-          contexto: questao.contexto,
-          enunciado: questao.enunciado,
-          gabarito: questao.gabarito,
-          gabarito_letra: questao.gabarito_letra,
-          alternativas: questao.alternativas,
-          comentario: questao.comentario,
-          resposta: questao.resposta,
-          resposta_letra: questao.resposta_letra,
-        },
-        mensagens: [
-          { role: "user", content: "Gere o trecho para eu adicionar ao meu resumo." },
-        ],
-      });
-      const texto = (await res.text()).trim();
-      if (!texto) throw new Error("A IA não devolveu nada — tente de novo.");
-
-      const html = montarBlocoResumo(texto);
-      if (!html) throw new Error("A IA não devolveu nada — tente de novo.");
+      const html = montarBlocoQuestao(questao);
+      if (!html) throw new Error("Esta questão não tem conteúdo para adicionar.");
       // Marca o trecho com o id da questão para o "No resumo" achar depois.
       const bloco = envolverBlocoQuestao(html, questao.id);
       if (!anexarAoResumoAberto(chaveDestinoResumo(destino), bloco)) {

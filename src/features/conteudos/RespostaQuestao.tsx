@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Scissors, X } from "lucide-react";
 import type { TopicoQuestao } from "@/types/db";
+import { alternativasRiscadas } from "./grifos";
 import { acertou, alternativasDe, ehMultipla } from "./questaoModelo";
 
 /**
@@ -10,16 +11,21 @@ import { acertou, alternativasDe, ehMultipla } from "./questaoModelo";
  * registrada — evita responder sem querer com um clique acidental. Certo/Errado
  * mostra os dois botões clássicos; múltipla escolha mostra uma linha por
  * alternativa (A..E). `onResponder` recebe boolean (C/E) ou a letra (múltipla).
+ * `onToggleRisco` risca/desrisca uma alternativa (só usado na múltipla escolha).
  */
 export function BotoesResposta({
   questao: q,
   onResponder,
+  onToggleRisco,
 }: {
   questao: TopicoQuestao;
   onResponder: (valor: boolean | string) => void;
+  onToggleRisco: (letra: string) => void;
 }) {
   if (ehMultipla(q)) {
-    return <AlternativasResposta questao={q} onResponder={onResponder} />;
+    return (
+      <AlternativasResposta questao={q} onResponder={onResponder} onToggleRisco={onToggleRisco} />
+    );
   }
   return <CertoErradoResposta onResponder={onResponder} />;
 }
@@ -92,26 +98,24 @@ function CertoErradoResposta({
  * descartou — um apoio para resolver por eliminação. Uma alternativa riscada
  * fica travada para marcação até ser restaurada. Responder é em dois passos:
  * clicar numa alternativa apenas a seleciona (dá para trocar) e só ao confirmar
- * em "Responder" a resposta é registrada. O estado é local: vale só enquanto a
- * questão não foi respondida.
+ * em "Responder" a resposta é registrada. Os riscos ficam salvos no banco (via
+ * `onToggleRisco`), então sobrevivem à resposta: as alternativas NÃO riscadas são
+ * as que ficaram "em dúvida" e vão para o "Adicionar ao resumo".
  */
 function AlternativasResposta({
   questao: q,
   onResponder,
+  onToggleRisco,
 }: {
   questao: TopicoQuestao;
   onResponder: (valor: boolean | string) => void;
+  onToggleRisco: (letra: string) => void;
 }) {
-  const [riscadas, setRiscadas] = useState<Set<string>>(() => new Set());
+  const riscadas = useMemo(() => new Set(alternativasRiscadas(q.grifos)), [q.grifos]);
   const [selecionada, setSelecionada] = useState<string | null>(null);
 
   const alternarRisco = (letra: string) => {
-    setRiscadas((prev) => {
-      const proximo = new Set(prev);
-      if (proximo.has(letra)) proximo.delete(letra);
-      else proximo.add(letra);
-      return proximo;
-    });
+    onToggleRisco(letra);
     // Riscar a alternativa que estava selecionada limpa a seleção.
     setSelecionada((prev) => (prev === letra ? null : prev));
   };
@@ -189,6 +193,9 @@ function AlternativasResposta({
  */
 export function ResultadoResposta({ questao: q }: { questao: TopicoQuestao }) {
   const certo = acertou(q);
+  // As alternativas que o aluno riscou ficam à mostra (line-through) mesmo depois
+  // de responder — assim ele vê o que eliminou (as demais ficaram "em dúvida").
+  const riscadas = ehMultipla(q) ? new Set(alternativasRiscadas(q.grifos)) : null;
   return (
     <>
       <div
@@ -211,6 +218,7 @@ export function ResultadoResposta({ questao: q }: { questao: TopicoQuestao }) {
           {alternativasDe(q).map((a) => {
             const correta = a.letra === q.gabarito_letra;
             const marcadaErrada = a.letra === q.resposta_letra && !correta;
+            const riscada = riscadas?.has(a.letra) ?? false;
             return (
               <li
                 key={a.letra}
@@ -229,7 +237,13 @@ export function ResultadoResposta({ questao: q }: { questao: TopicoQuestao }) {
                 >
                   {a.letra}
                 </span>
-                <span className="leading-relaxed">{a.texto}</span>
+                <span
+                  className={`leading-relaxed ${
+                    riscada ? "line-through decoration-red/60 decoration-2 opacity-60" : ""
+                  }`}
+                >
+                  {a.texto}
+                </span>
                 {correta && <Check className="ml-auto size-4 shrink-0" />}
                 {marcadaErrada && <X className="ml-auto size-4 shrink-0" />}
               </li>

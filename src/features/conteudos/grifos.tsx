@@ -43,16 +43,47 @@ export function grifosDoCampo(grifos: unknown, campo: CampoGrifavel): Grifo[] {
   );
 }
 
+/**
+ * O `grifos` (jsonb) como objeto: por campo de texto, as faixas `[ini,fim]`; e, na
+ * chave `alt_riscadas`, as letras das alternativas riscadas (ver abaixo). Tipo largo
+ * o bastante pra guardar os dois formatos no mesmo objeto sem conflito.
+ */
+export type GrifosRecord = Record<string, number[][] | string[]>;
+
 /** Devolve o objeto `grifos` inteiro com o campo atualizado (ou removido, se vazio). */
 export function comCampoAtualizado(
   grifos: unknown,
   campo: CampoGrifavel,
   novos: Grifo[],
-): Record<string, Grifo[]> | null {
-  const base: Record<string, Grifo[]> =
-    grifos && typeof grifos === "object" ? { ...(grifos as Record<string, Grifo[]>) } : {};
+): GrifosRecord | null {
+  const base: GrifosRecord =
+    grifos && typeof grifos === "object" ? { ...(grifos as GrifosRecord) } : {};
   if (novos.length) base[campo] = novos;
   else delete base[campo];
+  return Object.keys(base).length ? base : null;
+}
+
+// ---------- Alternativas riscadas (múltipla escolha) ----------
+// As letras das alternativas que o aluno eliminou (riscou com a tesoura) ficam no
+// MESMO `grifos` (jsonb), sob a chave `alt_riscadas`. Salvá-las ali faz o risco
+// sobreviver à resposta e sincronizar entre celular e computador — e as alternativas
+// NÃO riscadas são as que ficaram "em dúvida", levadas ao "Adicionar ao resumo".
+const CHAVE_RISCADAS = "alt_riscadas";
+
+/** Lê as letras das alternativas riscadas (eliminadas pelo aluno) a partir do `q.grifos`. */
+export function alternativasRiscadas(grifos: unknown): string[] {
+  if (!grifos || typeof grifos !== "object") return [];
+  const arr = (grifos as Record<string, unknown>)[CHAVE_RISCADAS];
+  if (!Array.isArray(arr)) return [];
+  return arr.filter((x): x is string => typeof x === "string");
+}
+
+/** Devolve o objeto `grifos` inteiro com as alternativas riscadas atualizadas (ou removidas). */
+export function comAlternativasRiscadas(grifos: unknown, letras: string[]): GrifosRecord | null {
+  const base: GrifosRecord =
+    grifos && typeof grifos === "object" ? { ...(grifos as GrifosRecord) } : {};
+  if (letras.length) base[CHAVE_RISCADAS] = [...letras];
+  else delete base[CHAVE_RISCADAS];
   return Object.keys(base).length ? base : null;
 }
 

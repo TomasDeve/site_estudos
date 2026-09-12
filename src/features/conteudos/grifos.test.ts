@@ -5,6 +5,8 @@ import {
   partesDeTexto,
   grifosDoCampo,
   comCampoAtualizado,
+  alternativasRiscadas,
+  comAlternativasRiscadas,
   type Grifo,
 } from "./grifos";
 
@@ -95,5 +97,43 @@ describe("comCampoAtualizado (monta o jsonb pra salvar)", () => {
   it("remove só o campo esvaziado, mantendo o resto", () => {
     const antes = { enunciado: [[0, 2]], texto_associado: [[3, 7]] };
     expect(comCampoAtualizado(antes, "enunciado", [])).toEqual({ texto_associado: [[3, 7]] });
+  });
+  it("preserva as alternativas riscadas ao mexer num campo de texto", () => {
+    const antes = { alt_riscadas: ["A", "C"] };
+    expect(comCampoAtualizado(antes, "enunciado", [[0, 2]])).toEqual({
+      alt_riscadas: ["A", "C"],
+      enunciado: [[0, 2]],
+    });
+  });
+});
+
+describe("alternativasRiscadas (lê as alternativas eliminadas do jsonb)", () => {
+  it("lê as letras riscadas", () => {
+    expect(alternativasRiscadas({ alt_riscadas: ["B", "D"] })).toEqual(["B", "D"]);
+  });
+  it("descarta valores não-string e formatos inválidos", () => {
+    expect(alternativasRiscadas({ alt_riscadas: ["A", 2, null, "C"] })).toEqual(["A", "C"]);
+    expect(alternativasRiscadas({ alt_riscadas: "A" })).toEqual([]);
+  });
+  it("null/ausente vira lista vazia", () => {
+    expect(alternativasRiscadas(null)).toEqual([]);
+    expect(alternativasRiscadas({ enunciado: [[0, 2]] })).toEqual([]);
+  });
+});
+
+describe("comAlternativasRiscadas (monta o jsonb pra salvar)", () => {
+  it("grava as letras preservando os grifos de texto", () => {
+    const antes = { enunciado: [[0, 2]] };
+    expect(comAlternativasRiscadas(antes, ["B", "D"])).toEqual({
+      enunciado: [[0, 2]],
+      alt_riscadas: ["B", "D"],
+    });
+  });
+  it("remove a chave quando não sobra nenhuma riscada e vira null se não sobra nada", () => {
+    expect(comAlternativasRiscadas({ alt_riscadas: ["A"] }, [])).toBeNull();
+  });
+  it("remove só as riscadas, mantendo o resto", () => {
+    const antes = { enunciado: [[0, 2]], alt_riscadas: ["A"] };
+    expect(comAlternativasRiscadas(antes, [])).toEqual({ enunciado: [[0, 2]] });
   });
 });

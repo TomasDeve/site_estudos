@@ -120,7 +120,9 @@ export function useResponderQuestao() {
   });
 }
 
-type GrifosUpdate = { id: string; grifos: Record<string, [number, number][]> | null };
+// `grifos` guarda, por campo de texto, faixas [ini,fim]; e, em `alt_riscadas`, as
+// letras das alternativas riscadas. Daí o valor ser `number[][] | string[]`.
+type GrifosUpdate = { id: string; grifos: Record<string, number[][] | string[]> | null };
 
 /**
  * Salva os grifos (sublinhados) do aluno. Recebe UMA OU VÁRIAS linhas: o grifo do
@@ -128,7 +130,8 @@ type GrifosUpdate = { id: string; grifos: Record<string, [number, number][]> | n
  * que compartilham aquele texto (o chamador manda a lista das irmãs). Como a resposta, o
  * patch é OTIMISTA: aparece na hora no cache e NÃO re-baixamos nada. `grifos` guarda um
  * objeto por campo — ex.: `{ texto_associado: [[12,20]], enunciado: [[0,7]] }` — onde
- * cada par é um intervalo de caracteres [início, fim) no texto daquele campo.
+ * cada par é um intervalo de caracteres [início, fim) no texto daquele campo. A chave
+ * `alt_riscadas` (ex.: `["A","C"]`) guarda as alternativas riscadas na múltipla escolha.
  */
 export function useSalvarGrifos() {
   const qc = useQueryClient();

@@ -53,11 +53,14 @@ import {
   GrifosLayer,
   grifosDoCampo,
   comCampoAtualizado,
+  alternativasRiscadas,
+  comAlternativasRiscadas,
   type CampoGrifavel,
   type Grifo,
 } from "./grifos";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
+import { parseFonteQC } from "./fonteQuestao";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
@@ -261,6 +264,17 @@ function Caderno({ topico }: { topico: Topico }) {
     }
     salvarGrifos.mutate({
       updates: [{ id: q.id, grifos: comCampoAtualizado(q.grifos, campo, novos) }],
+    });
+  }
+
+  // Risca/desrisca uma alternativa (múltipla escolha) e salva no banco — o risco
+  // sobrevive à resposta e sincroniza entre aparelhos. As não riscadas ficam "em dúvida".
+  function aoRiscar(q: TopicoQuestao, letra: string) {
+    const atuais = new Set(alternativasRiscadas(q.grifos));
+    if (atuais.has(letra)) atuais.delete(letra);
+    else atuais.add(letra);
+    salvarGrifos.mutate({
+      updates: [{ id: q.id, grifos: comAlternativasRiscadas(q.grifos, [...atuais]) }],
     });
   }
 
@@ -542,6 +556,7 @@ function Caderno({ topico }: { topico: Topico }) {
                     numero={numeroDe.get(q.id) ?? 0}
                     onResponder={onResponder}
                     onGrifar={(campo, g) => aoGrifar(q, campo, g)}
+                    onToggleRisco={(letra) => aoRiscar(q, letra)}
                     onStatus={mudarStatus}
                     onRefazer={mudarRefazer}
                     origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
@@ -692,6 +707,8 @@ interface CardProps {
   onResponder: (q: TopicoQuestao, valor: boolean | string | null) => void;
   /** Grava um grifo do aluno (o do texto associado vale para todas as irmãs do texto). */
   onGrifar: (campo: CampoGrifavel, novos: Grifo[]) => void;
+  /** Risca/desrisca (elimina) uma alternativa da múltipla escolha. */
+  onToggleRisco: (letra: string) => void;
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
@@ -707,37 +724,8 @@ interface CardProps {
   onVerResumo: () => void;
 }
 
-/**
- * Quebra a fonte de uma questão do QConcursos nas suas partes. Formato canônico:
- * "QConcursos — Q{id} (BANCA) · {ano} · {cargo}" — mas é tolerante às variações antigas
- * ("Q{id} (BANCA)" e "Q{id} (BANCA) · {cargo} · C/E {X}"): extrai o que houver.
- */
-function parseFonteQC(fonte: string) {
-  const codM = fonte.match(/Q(\d+)/);
-  const codigo = codM ? codM[0] : null; // "Q4023266" (só a parte numérica; ignora sufixo "-a")
-  const id = codM ? codM[1] : null;
-  const bancaM = fonte.match(/\(([^)]+)\)/); // primeiro parêntese = banca
-  const banca = bancaM ? bancaM[1].trim() : null;
-  // ano: primeiro "19xx/20xx" fora do código Q (assim o ID numérico não vira "ano")
-  const anoM = (codigo ? fonte.replace(codigo, "") : fonte).match(/\b(?:19|20)\d{2}\b/);
-  const ano = anoM ? anoM[0] : null;
-  // cargo: o que vem depois do parêntese da banca, sem ano, sem marcador C/E e sem separadores
-  let cargo: string | null = null;
-  if (bancaM) {
-    let depois = fonte.slice((bancaM.index ?? 0) + bancaM[0].length);
-    depois = depois.replace(/\s*·?\s*(?:C\/E|item)\b.*$/i, ""); // tira "· C/E A" / "· item I"
-    if (ano) depois = depois.replace(ano, "");
-    cargo =
-      depois.replace(/^[\s·\-–—]+/, "").replace(/[\s·\-–—]+$/, "").replace(/\s{2,}/g, " ").trim() ||
-      null;
-  }
-  return { codigo, id, banca, ano, cargo };
-}
-
-/** Diz se a fonte é de uma questão real do QConcursos (tem "Q{id}"); as demais são texto livre. */
-export function ehFonteQC(fonte: string) {
-  return /Q\d+/.test(fonte);
-}
+// Reexportado do módulo compartilhado para não quebrar quem importa de "./QuestoesPage".
+export { ehFonteQC } from "./fonteQuestao";
 
 /**
  * Linha de origem da questão. Em questões do QConcursos mostra "ano (BANCA) - cargo" e torna o
@@ -776,6 +764,7 @@ function QuestaoCard({
   numero,
   onResponder,
   onGrifar,
+  onToggleRisco,
   onStatus,
   onRefazer,
   origem,
@@ -837,7 +826,11 @@ function QuestaoCard({
       />
 
       {!resolvida ? (
-        <BotoesResposta questao={q} onResponder={(v) => onResponder(q, v)} />
+        <BotoesResposta
+          questao={q}
+          onResponder={(v) => onResponder(q, v)}
+          onToggleRisco={onToggleRisco}
+        />
       ) : (
         <div className="mt-3 space-y-2.5">
           <ResultadoResposta questao={q} />
