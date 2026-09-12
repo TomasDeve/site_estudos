@@ -45,6 +45,16 @@ function corBarra(pct: number) {
   return "bg-red";
 }
 
+/** Fração de acerto (0–1) para ordenar — mais preciso que o % arredondado. */
+function taxa(x: { total: number; acertos: number }) {
+  return x.total > 0 ? x.acertos / x.total : 0;
+}
+
+/** Maior taxa primeiro; empate desfeito por volume (quem fez mais questões). */
+function porAcertoDesc<T extends { total: number; acertos: number }>(a: T, b: T) {
+  return taxa(b) - taxa(a) || b.total - a.total;
+}
+
 /**
  * Acertos por matéria no período escolhido (Tudo/120D/30D/7D, 30D por padrão).
  * Clicar numa matéria abre a quebra por assunto. Substitui o antigo Histórico da
@@ -117,12 +127,10 @@ export function AcertosPorMateria() {
           nome: g.nome,
           total: g.total,
           acertos: g.acertos,
-          assuntos: temAssunto
-            ? [...g.assuntos.values()].sort((a, b) => b.total - a.total)
-            : [],
+          assuntos: temAssunto ? [...g.assuntos.values()].sort(porAcertoDesc) : [],
         };
       })
-      .sort((a, b) => b.total - a.total);
+      .sort(porAcertoDesc);
 
     const totalQuestoes = janela.reduce((s, l) => s + l.total, 0);
     return { grupos, totalQuestoes };
