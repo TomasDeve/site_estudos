@@ -49,7 +49,7 @@ import { estaResolvida } from "./questaoModelo";
 import { metasPorTopico, useAplicarPlanoPadrao, useTopicoMetas } from "@/api/topicoMetas";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { useRedacoes } from "@/api/redacoes";
-import { materiasComuns, ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
+import { ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
 import type { QuestaoLog, TopicoLink, TopicoTexto } from "@/types/db";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -128,7 +128,6 @@ export function MateriaPage() {
   const idx = meusVinculos.findIndex((v) => v.materia_id === materiaId);
   const vinculo = idx >= 0 ? meusVinculos[idx] : undefined;
   const materia = (materias ?? []).find((m) => m.id === materiaId);
-  const comum = useMemo(() => materiasComuns(vinculos ?? []).has(materiaId ?? ""), [vinculos, materiaId]);
 
   // Assuntos deste concurso (recorte do edital), na ordem do recorte.
   const meusTopicos = useMemo(() => {
@@ -316,14 +315,6 @@ export function MateriaPage() {
                 <span className="rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-dim">
                   {NOME_AREA[vinculo.area] ?? vinculo.area}
                 </span>
-                {comum && (
-                  <span
-                    className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold"
-                    title="Matéria usada em outro concurso: o progresso conta para todos"
-                  >
-                    Comum
-                  </span>
-                )}
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">

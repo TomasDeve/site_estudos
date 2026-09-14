@@ -5,7 +5,6 @@ import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import {
-  materiasComuns,
   progressoConcurso,
   progressoMateria,
   topicosDoConcurso,
@@ -39,7 +38,6 @@ export function ConteudosPage() {
         .sort((a, b) => a.ordem - b.ordem),
     [vinculos, concurso.id]
   );
-  const comuns = useMemo(() => materiasComuns(vinculos ?? []), [vinculos]);
   // Cada concurso conta/mostra só o recorte de assuntos do seu edital.
   const tops = useMemo(
     () => topicosDoConcurso(topicos ?? [], concurso, vinculos ?? []),
@@ -96,9 +94,7 @@ export function ConteudosPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-xs text-mut">
-          Escolha uma matéria para estudar sem distrações. Matérias{" "}
-          <span className="font-bold text-gold">comuns</span> compartilham progresso entre
-          concursos.
+          Escolha uma matéria para estudar sem distrações.
         </p>
         <Button variant="secondary" size="sm" onClick={() => setModalMateria(true)}>
           <Plus className="size-4" /> Matéria
@@ -144,14 +140,6 @@ export function ConteudosPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-sm font-semibold text-txt">{materia.nome}</h3>
-                          {comuns.has(materia.id) && (
-                            <span
-                              className="rounded-full bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold"
-                              title="Matéria usada em outro concurso: o progresso conta para todos"
-                            >
-                              Comum
-                            </span>
-                          )}
                         </div>
                         <div className="mt-1.5 flex items-center gap-2.5">
                           <ProgressBar

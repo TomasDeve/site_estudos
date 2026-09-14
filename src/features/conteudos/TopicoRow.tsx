@@ -286,20 +286,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
               {topico.titulo}
             </span>
           )}
-          {/* etiquetas do assunto (ex.: "COMUM PCPE" = também cai no edital da PC-PE) */}
-          {topico.tags?.map((tag) => (
-            <span
-              key={tag}
-              className="shrink-0 rounded-full border border-cyan/30 bg-cyan/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan"
-              title={
-                tag === "COMUM PCPE"
-                  ? "Este assunto também cai no edital da PC-PE"
-                  : tag
-              }
-            >
-              {tag}
-            </span>
-          ))}
           {sistemaHoras && (
             // Contador regressivo: mostra as horas que FALTAM (plano − estudado) e
             // desce a cada estudo. Editar redefine o plano como estudado + digitado.
@@ -509,6 +495,22 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
           </button>
         </div>
       </div>
+
+      {/* Etiquetas do assunto (ex.: "COMUM PCPE" = também cai no edital da PC-PE).
+          Em linha própria, abaixo do nome, para não espremer o título. */}
+      {topico.tags?.length ? (
+        <div className="mb-1.5 ml-15 flex flex-wrap items-center gap-1.5">
+          {topico.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-cyan/30 bg-cyan/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan"
+              title={tag === "COMUM PCPE" ? "Este assunto também cai no edital da PC-PE" : tag}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       {/* Saldo de horas do assunto: o "resta" desce a cada estudo registrado. */}
       {sistemaHoras && (topico.horas_alvo > 0 || topico.horas_estudadas > 0) && (
