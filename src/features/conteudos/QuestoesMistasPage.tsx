@@ -18,7 +18,9 @@ import {
   useTodasQuestoes,
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
-import { useMaterias } from "@/api/materias";
+import { useMaterias, useConcursoMaterias } from "@/api/materias";
+import { useConcursos, concursoDeEstudo } from "@/api/concursos";
+import { topicosDoConcurso } from "@/lib/progresso";
 import { useResumosDeQuestoes, useTopicosComLei } from "@/api/topicoTextos";
 import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
@@ -60,8 +62,10 @@ type Aba = (typeof ABAS)[number]["chave"];
 
 /**
  * Modo misturado — questões embaralhadas em ordem aleatória, do jeito que caem
- * na prova. Sem `:materiaId` na rota, traz todas as questões do site; com ele,
- * só as da matéria escolhida (misturando os assuntos dela). Abre em aba própria,
+ * na prova. Só entram os assuntos que caem no edital do concurso em estudo (o
+ * recorte de `topicos_incluidos`), pra não misturar questões de outros editais.
+ * Sem `:materiaId` na rota, traz todas as matérias desse edital; com ele, só as
+ * da matéria escolhida (ainda respeitando o recorte). Abre em aba própria,
  * como o caderno de um assunto. Não revela o assunto (nem o número da questão),
  * para não dar pista; a fonte da questão real (cargo, banca e ano) aparece, pois
  * não entrega a resposta. Responder aqui grava na mesma questão do caderno e segue
@@ -73,6 +77,8 @@ export function QuestoesMistasPage() {
   const { data: questoes, isLoading: carregandoQuestoes } = useTodasQuestoes();
   const { data: topicos, isLoading: carregandoTopicos } = useTopicos();
   const { data: materias, isLoading: carregandoMaterias } = useMaterias();
+  const { data: concursos, isLoading: carregandoConcursos } = useConcursos();
+  const { data: vinculos, isLoading: carregandoVinculos } = useConcursoMaterias();
 
   const responder = useResponderQuestao();
   const marcarRefazer = useMarcarRefazer();
@@ -173,17 +179,35 @@ export function QuestoesMistasPage() {
   // Índice por id — acha a questão original de uma reformulada (revelado só após responder).
   const porId = useMemo(() => new Map((questoes ?? []).map((x) => [x.id, x])), [questoes]);
 
-  // Questões vivas no escopo da página (a matéria ou o site todo), antes do
+  // Assuntos que caem no edital do concurso em estudo (recorte `topicos_incluidos`),
+  // menos as matérias e assuntos riscados nele ("não vou estudar" — saem daqui como
+  // saem do progresso/horas/ciclo). `null` quando só há concursos arquivados: não filtra.
+  const concursoAtivo = useMemo(() => concursoDeEstudo(concursos ?? []), [concursos]);
+  const idsDoEdital = useMemo(() => {
+    if (!concursoAtivo || !vinculos || !topicos) return null;
+    const meus = vinculos.filter((v) => v.concurso_id === concursoAtivo.id);
+    const materiasRiscadas = new Set(meus.filter((v) => v.riscada).map((v) => v.materia_id));
+    const topicosRiscados = new Set(meus.flatMap((v) => v.topicos_riscados ?? []));
+    return new Set(
+      topicosDoConcurso(topicos, concursoAtivo, vinculos)
+        .filter((t) => !materiasRiscadas.has(t.materia_id) && !topicosRiscados.has(t.id))
+        .map((t) => t.id)
+    );
+  }, [concursoAtivo, vinculos, topicos]);
+
+  // Questões vivas no escopo da página (a matéria ou o edital inteiro), antes do
   // filtro por origem — alimenta as contagens das pílulas e o total de "Todas".
   const base = useMemo(
     () =>
       (questoes ?? []).filter((q) => {
         if (q.status === "arquivada") return false;
+        // Fora do edital do concurso em estudo → não entra (não mistura outros editais).
+        if (idsDoEdital && !idsDoEdital.has(q.topico_id)) return false;
         // No modo por matéria, só entram as questões dos assuntos dessa matéria.
         if (materiaId) return topicoPorId.get(q.topico_id)?.materia_id === materiaId;
         return true;
       }),
-    [questoes, materiaId, topicoPorId]
+    [questoes, materiaId, topicoPorId, idsDoEdital]
   );
 
   // Quantas questões há em cada origem — número mostrado nas pílulas de filtro.
@@ -250,7 +274,13 @@ export function QuestoesMistasPage() {
   const catsKey = [...cats].sort().join(",");
   const bloco = useBloquinhos(lista, `${catsKey}-${aba}-${semente}`);
 
-  if (carregandoQuestoes || carregandoTopicos || carregandoMaterias) {
+  if (
+    carregandoQuestoes ||
+    carregandoTopicos ||
+    carregandoMaterias ||
+    carregandoConcursos ||
+    carregandoVinculos
+  ) {
     return <FullScreenSpinner />;
   }
 
