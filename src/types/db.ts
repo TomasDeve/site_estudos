@@ -1026,6 +1026,7 @@ export type Database = {
           observacao: string
           separador_apos: boolean
           status: string
+          tags: string[]
           titulo: string
           user_id: string
         }
@@ -1040,6 +1041,7 @@ export type Database = {
           observacao?: string
           separador_apos?: boolean
           status?: string
+          tags?: string[]
           titulo: string
           user_id?: string
         }
@@ -1054,6 +1056,7 @@ export type Database = {
           observacao?: string
           separador_apos?: boolean
           status?: string
+          tags?: string[]
           titulo?: string
           user_id?: string
         }
