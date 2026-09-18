@@ -16,6 +16,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      audios: {
+        Row: {
+          created_at: string
+          id: string
+          ordem: number
+          ouvido: boolean
+          ouvido_em: string | null
+          titulo: string
+          url: string
+          user_id: string
+          vezes: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ordem?: number
+          ouvido?: boolean
+          ouvido_em?: string | null
+          titulo?: string
+          url: string
+          user_id?: string
+          vezes?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ordem?: number
+          ouvido?: boolean
+          ouvido_em?: string | null
+          titulo?: string
+          url?: string
+          user_id?: string
+          vezes?: number
+        }
+        Relationships: []
+      }
       blocos_dia: {
         Row: {
           concluido: boolean
@@ -1241,6 +1277,7 @@ export type MateriaAlias = Tables<"materia_aliases">
 export type Evento = Tables<"eventos">
 export type Nota = Tables<"notas">
 export type Ferramenta = Tables<"ferramentas">
+export type Audio = Tables<"audios">
 export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
 

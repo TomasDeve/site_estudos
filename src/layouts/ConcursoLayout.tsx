@@ -7,6 +7,7 @@ import {
   Check,
   ChevronRight,
   ChevronsUpDown,
+  Headphones,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
@@ -46,6 +47,7 @@ const NAV: { to: string; label: string; icon: LucideIcon; end: boolean; novaAba?
   { to: "ciclo", label: "Ciclo", icon: Repeat, end: false },
   { to: "metas", label: "Metas", icon: CalendarCheck, end: false },
   { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
+  { to: "audios", label: "Áudios", icon: Headphones, end: false },
   { to: "apoio", label: "Apoio", icon: Wrench, end: false },
 ];
 
@@ -428,7 +430,7 @@ export function ConcursoLayout() {
       </main>
 
       {/* ===== Tab bar mobile ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-line/50 bg-navy-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-8 border-t border-line/50 bg-navy-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {navLink(true)}
       </nav>
     </div>

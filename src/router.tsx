@@ -19,6 +19,7 @@ const MetasPage = lazy(() => import("@/features/metas/MetasPage").then((m) => ({
 const MetricasPage = lazy(() => import("@/features/metricas/MetricasPage").then((m) => ({ default: m.MetricasPage })));
 const ImportarPage = lazy(() => import("@/features/importar/ImportarPage").then((m) => ({ default: m.ImportarPage })));
 const ApoioPage = lazy(() => import("@/features/apoio/ApoioPage").then((m) => ({ default: m.ApoioPage })));
+const AudiosPage = lazy(() => import("@/features/audios/AudiosPage").then((m) => ({ default: m.AudiosPage })));
 const BancoQuestoesPage = lazy(() => import("@/features/banco/BancoQuestoesPage").then((m) => ({ default: m.BancoQuestoesPage })));
 
 function pagina(node: ReactNode) {
@@ -56,6 +57,7 @@ export const router = createBrowserRouter([
           { path: "metas", element: pagina(<MetasPage />) },
           { path: "metricas", element: pagina(<MetricasPage />) },
           { path: "metricas/importar", element: pagina(<ImportarPage />) },
+          { path: "audios", element: pagina(<AudiosPage />) },
           { path: "apoio", element: pagina(<ApoioPage />) },
         ],
       },
