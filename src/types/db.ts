@@ -19,10 +19,13 @@ export type Database = {
       audios: {
         Row: {
           created_at: string
+          duracao_seg: number
           id: string
+          materia_id: string | null
           ordem: number
           ouvido: boolean
           ouvido_em: string | null
+          posicao_seg: number
           titulo: string
           url: string
           user_id: string
@@ -30,10 +33,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          duracao_seg?: number
           id?: string
+          materia_id?: string | null
           ordem?: number
           ouvido?: boolean
           ouvido_em?: string | null
+          posicao_seg?: number
           titulo?: string
           url: string
           user_id?: string
@@ -41,16 +47,62 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          duracao_seg?: number
           id?: string
+          materia_id?: string | null
           ordem?: number
           ouvido?: boolean
           ouvido_em?: string | null
+          posicao_seg?: number
           titulo?: string
           url?: string
           user_id?: string
           vezes?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audios_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_grupos: {
+        Row: {
+          aberto: boolean
+          created_at: string
+          id: string
+          materia_id: string | null
+          ordem: number
+          user_id: string
+        }
+        Insert: {
+          aberto?: boolean
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          ordem?: number
+          user_id?: string
+        }
+        Update: {
+          aberto?: boolean
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          ordem?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_grupos_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blocos_dia: {
         Row: {
@@ -1278,6 +1330,7 @@ export type Evento = Tables<"eventos">
 export type Nota = Tables<"notas">
 export type Ferramenta = Tables<"ferramentas">
 export type Audio = Tables<"audios">
+export type AudioGrupo = Tables<"audio_grupos">
 export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
 
