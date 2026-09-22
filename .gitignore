@@ -17,3 +17,9 @@ Desktop.ini
 
 # Logs
 npm-debug.log*
+
+# Scratch / dumps de análise (temporários, gerados por sessões de agente)
+/_tmp_*
+/deckNames
+/modelNames
+/version
