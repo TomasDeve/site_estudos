@@ -18,14 +18,11 @@ import {
 } from "@dnd-kit/sortable";
 import {
   ArrowLeft,
-  Ban,
-  ChevronLeft,
+  BookOpen,
   ChevronRight,
   GripVertical,
   ListChecks,
   Plus,
-  Settings2,
-  SlidersHorizontal,
   Sparkles,
   Target,
   TimerReset,
@@ -37,7 +34,6 @@ import {
   useConcursoMaterias,
   useDesvincularMateria,
   useMaterias,
-  useRiscarMateria,
   useRiscarTopico,
   useSetTopicosIncluidos,
 } from "@/api/materias";
@@ -62,10 +58,9 @@ import { TopicoRow } from "./TopicoRow";
 import { MateriaEstudo } from "./MateriaEstudo";
 import { DistribuicaoHorasMateria } from "./DistribuicaoHorasMateria";
 import { RegistrarEstudoModal } from "@/features/horas/RegistrarEstudoModal";
-import { MateriaConfigModal } from "./MateriaConfigModal";
-import { AssuntosDoConcursoModal } from "./AssuntosDoConcursoModal";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
+import { ResumosDaMateriaModal } from "./ResumosDaMateriaModal";
 import { RedacoesPanel } from "./RedacoesPanel";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho, desempenhoGeral } from "./desempenho";
@@ -98,7 +93,6 @@ export function MateriaPage() {
   const setTopicosIncluidos = useSetTopicosIncluidos();
   const desvincular = useDesvincularMateria();
   const aplicarPlano = useAplicarPlanoPadrao();
-  const riscarMateria = useRiscarMateria();
   const riscarTopico = useRiscarTopico();
 
   const sensors = useSensors(
@@ -111,9 +105,8 @@ export function MateriaPage() {
   const [adicionando, setAdicionando] = useState(false);
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
   const [abrirQuestoes, setAbrirQuestoes] = useState(false);
-  const [configurando, setConfigurando] = useState(false);
   const [modalEstudo, setModalEstudo] = useState(false);
-  const [modalAssuntos, setModalAssuntos] = useState(false);
+  const [modalResumos, setModalResumos] = useState(false);
 
   const irPara = `/concurso/${concurso.id}/conteudos`;
 
@@ -214,14 +207,16 @@ export function MateriaPage() {
   const topicosRiscados = new Set(vinculo.topicos_riscados ?? []);
   const contaveis = meusTopicos.filter((t) => !topicosRiscados.has(t.id));
 
+  // Assuntos desta matéria com ao menos um texto/resumo salvo — habilita e conta
+  // o botão "Resumos dos assuntos".
+  const assuntosComResumo = meusTopicos.filter(
+    (t) => (textosPorTopico.get(t.id) ?? []).length > 0
+  ).length;
+
   // Assuntos que ainda não têm metas: dá para aplicar o plano padrão de uma vez.
   const semMetas = meusTopicos.filter((t) => (metasDoTopico.get(t.id) ?? []).length === 0);
   const concluidos = contaveis.filter((t) => t.status === "concluido").length;
   const pct = contaveis.length === 0 ? 0 : Math.round((concluidos / contaveis.length) * 100);
-  const anterior = idx > 0 ? meusVinculos[idx - 1] : undefined;
-  const proximo = idx < meusVinculos.length - 1 ? meusVinculos[idx + 1] : undefined;
-  const nomeDe = (mId: string) => (materias ?? []).find((m) => m.id === mId)?.nome ?? "matéria";
-  const iconeDe = (mId: string) => (materias ?? []).find((m) => m.id === mId)?.icone ?? "📘";
   const cor = desempenho.pct !== null ? corDesempenho(desempenho.pct) : null;
 
   // Questões por IA da matéria inteira (todos os assuntos) — alimentam o modo
@@ -339,36 +334,28 @@ export function MateriaPage() {
               </div>
             </div>
 
-            <div className="flex shrink-0 flex-col items-end gap-2">
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
               {concurso.sistema_horas && !ehRedacao && (
                 <Button size="sm" onClick={() => setModalEstudo(true)} title="Registrar tempo estudado e abater das horas dos assuntos">
                   <TimerReset className="size-3.5" /> Registrar estudo
                 </Button>
               )}
-              <button
-                onClick={() => setConfigurando(true)}
-                className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1.5 text-xs text-mut transition-colors hover:border-line hover:text-gold"
-                title="Escolher quais blocos aparecem nesta matéria"
-              >
-                <Settings2 className="size-3.5" />
-                <span className="max-sm:hidden">Configurações da matéria</span>
-              </button>
-              <button
-                onClick={() => riscarMateria.mutate({ id: vinculo.id, riscada: !vinculo.riscada })}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs transition-colors ${
-                  vinculo.riscada
-                    ? "border-red/40 bg-red/10 text-red hover:bg-red/15"
-                    : "border-line/60 text-mut hover:border-red/40 hover:text-red"
-                }`}
-                title={
-                  vinculo.riscada
-                    ? "Matéria riscada — fora do progresso, das horas e pulada no ciclo (clique para voltar)"
-                    : "Riscar matéria: não vou estudar. Sai do progresso e das horas, e é pulada no ciclo (não apaga nada)"
-                }
-              >
-                <Ban className="size-3.5" />
-                <span className="max-sm:hidden">{vinculo.riscada ? "Riscada" : "Riscar matéria"}</span>
-              </button>
+              {!ehRedacao && questoesIA.length > 0 && (
+                <a
+                  href={`/questoes/materia/${materia.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition-colors ${
+                    pendentesIA > 0
+                      ? "border-gold/40 bg-gold/10 text-gold hover:border-gold/60 hover:bg-gold/15"
+                      : "border-green/40 bg-green/10 text-green hover:bg-green/15"
+                  }`}
+                  title="Abre um caderno com as questões da IA desta matéria, misturando todos os assuntos (nova aba)"
+                >
+                  <Sparkles className="size-3.5" />
+                  Resolver Questões ({pendentesIA > 0 ? pendentesIA : questoesIA.length})
+                </a>
+              )}
             </div>
           </div>
         </CardBody>
@@ -407,30 +394,6 @@ export function MateriaPage() {
               </span>
             </button>
 
-            {/* Responder as questões da IA da matéria toda, misturando os
-                assuntos — como caem na prova. Abre em aba própria. */}
-            {questoesIA.length > 0 && (
-              <a
-                href={`/questoes/materia/${materia.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 flex items-center gap-2 rounded-lg border border-gold/30 bg-gold/5 px-3 py-2.5 text-sm transition-colors hover:border-gold/50 hover:bg-gold/10"
-                title="Abre um caderno com as questões da IA desta matéria, misturando todos os assuntos (nova aba)"
-              >
-                <Sparkles className="size-4 shrink-0 text-gold" />
-                <span className="font-medium text-txt">Responder questões da IA misturadas</span>
-                <span
-                  className={`ml-auto shrink-0 text-xs font-semibold tabular-nums ${
-                    pendentesIA > 0 ? "text-gold" : "text-green"
-                  }`}
-                >
-                  {pendentesIA > 0
-                    ? `${pendentesIA} a resolver`
-                    : `${questoesIA.length} resolvidas`}
-                </span>
-              </a>
-            )}
-
             {abrirQuestoes && (
               <div className="mt-3 border-t border-line/30 pt-3">
                 <p className="mb-3 text-xs text-mut">
@@ -455,19 +418,19 @@ export function MateriaPage() {
           <div className="mb-1 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold text-txt">Tópicos do edital</h2>
-              <button
-                onClick={() => setModalAssuntos(true)}
-                className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1 text-[11px] text-mut transition-colors hover:border-line hover:text-gold"
-                title="Escolher quais assuntos desta matéria caem no edital deste concurso (a matéria e o progresso continuam compartilhados)"
-              >
-                <SlidersHorizontal className="size-3.5" />
-                <span className="max-sm:hidden">Assuntos deste concurso</span>
-                {temRecorte && (
+              {assuntosComResumo > 0 && (
+                <button
+                  onClick={() => setModalResumos(true)}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1 text-[11px] text-mut transition-colors hover:border-line hover:text-gold"
+                  title="Ver, num lugar só, os resumos de todos os assuntos desta matéria (ótimo para transformar em cards no Anki)"
+                >
+                  <BookOpen className="size-3.5" />
+                  <span className="max-sm:hidden">Ver resumos</span>
                   <span className="rounded-full bg-gold/15 px-1.5 font-semibold tabular-nums text-gold">
-                    {meusTopicos.length}
+                    {assuntosComResumo}
                   </span>
-                )}
-              </button>
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-2.5 text-[11px] text-mut">
               {Object.entries(STATUS_INFO).map(([k, v]) => (
@@ -592,33 +555,8 @@ export function MateriaPage() {
         </CardBody>
       </Card>
 
-      {/* Navegar entre matérias + remover do concurso */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          {anterior && (
-            <Link
-              to={`/concurso/${concurso.id}/conteudos/${anterior.materia_id}`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-line/60 bg-navy-800/80 px-3 py-2 text-xs text-dim transition-colors hover:border-line hover:text-txt"
-            >
-              <ChevronLeft className="size-4" />
-              <span className="max-w-32 truncate">
-                {iconeDe(anterior.materia_id)} {nomeDe(anterior.materia_id)}
-              </span>
-            </Link>
-          )}
-          {proximo && (
-            <Link
-              to={`/concurso/${concurso.id}/conteudos/${proximo.materia_id}`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-line/60 bg-navy-800/80 px-3 py-2 text-xs text-dim transition-colors hover:border-line hover:text-txt"
-            >
-              <span className="max-w-32 truncate">
-                {iconeDe(proximo.materia_id)} {nomeDe(proximo.materia_id)}
-              </span>
-              <ChevronRight className="size-4" />
-            </Link>
-          )}
-        </div>
-
+      {/* Remover a matéria do concurso */}
+      <div className="flex justify-end">
         <button
           onClick={() => setConfirmarRemocao(true)}
           className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-mut transition-colors hover:text-red"
@@ -628,19 +566,12 @@ export function MateriaPage() {
         </button>
       </div>
 
-      <MateriaConfigModal
-        open={configurando}
-        onClose={() => setConfigurando(false)}
-        materia={materia}
-      />
-
-      <AssuntosDoConcursoModal
-        open={modalAssuntos}
-        onClose={() => setModalAssuntos(false)}
-        concursoNome={concurso.nome_curto || concurso.nome}
+      <ResumosDaMateriaModal
+        open={modalResumos}
+        onClose={() => setModalResumos(false)}
         materiaNome={materia.nome}
-        topicos={(topicos ?? []).filter((t) => t.materia_id === materia.id)}
-        vinculo={vinculo}
+        topicos={meusTopicos}
+        textosPorTopico={textosPorTopico}
       />
 
       {concurso.sistema_horas && (
