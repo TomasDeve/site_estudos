@@ -56,14 +56,14 @@ import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TopicoRow } from "./TopicoRow";
 import { MateriaEstudo } from "./MateriaEstudo";
-import { DistribuicaoHorasMateria } from "./DistribuicaoHorasMateria";
+import { HorasMateriaBarra, HorasMateriaControles } from "./DistribuicaoHorasMateria";
 import { RegistrarEstudoModal } from "@/features/horas/RegistrarEstudoModal";
 import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
 import { ResumosDaMateriaModal } from "./ResumosDaMateriaModal";
 import { RedacoesPanel } from "./RedacoesPanel";
 import { STATUS_INFO } from "./statusInfo";
-import { corDesempenho, desempenhoGeral } from "./desempenho";
+import { corDesempenho, desempenhoGeral, desempenhoRecente } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 
 const NOME_AREA: Record<string, string> = {
@@ -218,6 +218,10 @@ export function MateriaPage() {
   const concluidos = contaveis.filter((t) => t.status === "concluido").length;
   const pct = contaveis.length === 0 ? 0 : Math.round((concluidos / contaveis.length) * 100);
   const cor = desempenho.pct !== null ? corDesempenho(desempenho.pct) : null;
+  // Se o chip das "Últimas N" vai aparecer — para não deixar a linha de chips
+  // vazia quando não há desempenho recente com o que comparar.
+  const recente = desempenhoRecente(logsDaMateria);
+  const temChipRecente = recente.vale && recente.pct !== null;
 
   // Questões por IA da matéria inteira (todos os assuntos) — alimentam o modo
   // misturado, do jeito que caem na prova. Só contam as ainda não arquivadas.
@@ -312,25 +316,32 @@ export function MateriaPage() {
                 </span>
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-                <div className="flex min-w-52 flex-1 items-center gap-2.5">
+              <div className="mt-3 space-y-2.5">
+                {/* Progresso dos assuntos concluídos */}
+                <div className="flex items-center gap-3">
                   <ProgressBar value={pct} color={concurso.cor} size="md" className="flex-1" />
                   <span className="shrink-0 text-xs font-semibold tabular-nums text-dim">
                     {concluidos}/{contaveis.length} · {pct}%
                   </span>
                 </div>
-                {desempenho.pct !== null && cor && (
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${cor.texto} ${cor.fundo}`}
-                    title={`${desempenho.acertos}/${desempenho.total} questões registradas nos tópicos`}
-                  >
-                    <Target className="size-3.5" /> {desempenho.pct}% em questões
-                    <span className="font-normal text-mut">
-                      ({desempenho.acertos}/{desempenho.total})
-                    </span>
-                  </span>
+
+                {/* Desempenho em questões: geral + tendência recente, lado a lado */}
+                {(desempenho.pct !== null || temChipRecente) && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {desempenho.pct !== null && cor && (
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${cor.texto} ${cor.fundo}`}
+                        title={`${desempenho.acertos}/${desempenho.total} questões registradas nos tópicos`}
+                      >
+                        <Target className="size-3.5" /> {desempenho.pct}% em questões
+                        <span className="font-normal text-mut">
+                          ({desempenho.acertos}/{desempenho.total})
+                        </span>
+                      </span>
+                    )}
+                    <DesempenhoRecenteChip logs={logsDaMateria} />
+                  </div>
                 )}
-                <DesempenhoRecenteChip logs={logsDaMateria} />
               </div>
             </div>
 
@@ -415,43 +426,52 @@ export function MateriaPage() {
       {/* Tópicos da matéria */}
       <Card>
         <CardBody>
-          <div className="mb-1 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-txt">Tópicos do edital</h2>
-              {assuntosComResumo > 0 && (
-                <button
-                  onClick={() => setModalResumos(true)}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1 text-[11px] text-mut transition-colors hover:border-line hover:text-gold"
-                  title="Ver, num lugar só, os resumos de todos os assuntos desta matéria (ótimo para transformar em cards no Anki)"
-                >
-                  <BookOpen className="size-3.5" />
-                  <span className="max-sm:hidden">Ver resumos</span>
-                  <span className="rounded-full bg-gold/15 px-1.5 font-semibold tabular-nums text-gold">
-                    {assuntosComResumo}
-                  </span>
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2.5 text-[11px] text-mut">
-              {Object.entries(STATUS_INFO).map(([k, v]) => (
-                <span key={k} className="flex items-center gap-1.5">
-                  <span
-                    className="size-2.5 rounded-full border"
-                    style={{
-                      borderColor: v.cor,
-                      background: k === "nao_estudado" ? "transparent" : v.cor,
-                    }}
-                  />
-                  <span className="max-sm:hidden">{v.label}</span>
-                </span>
-              ))}
-            </div>
-          </div>
+          {/* Cabeçalho numa linha só: título, "Ver resumos", horas da matéria +
+              Distribuir e a legenda de status — tudo lado a lado, com a barra de
+              horas logo abaixo. Quebra em várias linhas só quando não couber. */}
+          <div className="mb-3 space-y-2 border-b border-line/30 pb-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-txt">Tópicos do edital</h2>
+                {assuntosComResumo > 0 && (
+                  <button
+                    onClick={() => setModalResumos(true)}
+                    className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2 py-1 text-[11px] text-mut transition-colors hover:border-line hover:text-gold"
+                    title="Ver, num lugar só, os resumos de todos os assuntos desta matéria (ótimo para transformar em cards no Anki)"
+                  >
+                    <BookOpen className="size-3.5" />
+                    <span className="max-sm:hidden">Ver resumos</span>
+                    <span className="rounded-full bg-gold/15 px-1.5 font-semibold tabular-nums text-gold">
+                      {assuntosComResumo}
+                    </span>
+                  </button>
+                )}
+              </div>
 
-          {/* Barra de horas da matéria — orçamento junto dos assuntos */}
-          {!ehRedacao && concurso.sistema_horas && (
-            <DistribuicaoHorasMateria vinculo={vinculo} topicos={meusTopicos} cor={concurso.cor} />
-          )}
+              {!ehRedacao && concurso.sistema_horas && (
+                <HorasMateriaControles vinculo={vinculo} topicos={meusTopicos} />
+              )}
+
+              <div className="ml-auto flex items-center gap-2.5 text-[11px] text-mut">
+                {Object.entries(STATUS_INFO).map(([k, v]) => (
+                  <span key={k} className="flex items-center gap-1.5">
+                    <span
+                      className="size-2.5 rounded-full border"
+                      style={{
+                        borderColor: v.cor,
+                        background: k === "nao_estudado" ? "transparent" : v.cor,
+                      }}
+                    />
+                    <span className="max-sm:hidden">{v.label}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {!ehRedacao && concurso.sistema_horas && (
+              <HorasMateriaBarra vinculo={vinculo} topicos={meusTopicos} cor={concurso.cor} />
+            )}
+          </div>
 
           {meusTopicos.length === 0 ? (
             <p className="py-4 text-center text-sm text-mut">
