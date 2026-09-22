@@ -278,6 +278,29 @@ export function MateriaPage() {
     }
   }
 
+  // Matéria com sistema de horas: ganha a barra de progresso do tempo. Nesse
+  // caso a legenda de status desce para a mesma linha da barra.
+  const mostrarHoras = !ehRedacao && concurso.sistema_horas;
+
+  // Legenda dos status dos assuntos — usada no cabeçalho, ao lado da barra de
+  // horas (ou do título, quando não há barra).
+  const legendaStatus = (
+    <div className="flex shrink-0 items-center gap-2.5 text-[11px] text-mut">
+      {Object.entries(STATUS_INFO).map(([k, v]) => (
+        <span key={k} className="flex items-center gap-1.5">
+          <span
+            className="size-2.5 rounded-full border"
+            style={{
+              borderColor: v.cor,
+              background: k === "nao_estudado" ? "transparent" : v.cor,
+            }}
+          />
+          <span className="max-sm:hidden">{v.label}</span>
+        </span>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-5">
       <Link
@@ -426,9 +449,10 @@ export function MateriaPage() {
       {/* Tópicos da matéria */}
       <Card>
         <CardBody>
-          {/* Cabeçalho numa linha só: título, "Ver resumos", horas da matéria +
-              Distribuir e a legenda de status — tudo lado a lado, com a barra de
-              horas logo abaixo. Quebra em várias linhas só quando não couber. */}
+          {/* Cabeçalho dos tópicos. Com sistema de horas: linha 1 traz o título,
+              "Ver resumos" e os controles de horas; linha 2 alinha a barra de
+              horas com a legenda de status na mesma altura. Sem horas, a legenda
+              fica na própria linha do título. */}
           <div className="mb-3 space-y-2 border-b border-line/30 pb-3">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <div className="flex items-center gap-2">
@@ -448,28 +472,23 @@ export function MateriaPage() {
                 )}
               </div>
 
-              {!ehRedacao && concurso.sistema_horas && (
-                <HorasMateriaControles vinculo={vinculo} topicos={meusTopicos} />
+              {mostrarHoras ? (
+                <div className="ml-auto">
+                  <HorasMateriaControles vinculo={vinculo} topicos={meusTopicos} />
+                </div>
+              ) : (
+                <div className="ml-auto">{legendaStatus}</div>
               )}
-
-              <div className="ml-auto flex items-center gap-2.5 text-[11px] text-mut">
-                {Object.entries(STATUS_INFO).map(([k, v]) => (
-                  <span key={k} className="flex items-center gap-1.5">
-                    <span
-                      className="size-2.5 rounded-full border"
-                      style={{
-                        borderColor: v.cor,
-                        background: k === "nao_estudado" ? "transparent" : v.cor,
-                      }}
-                    />
-                    <span className="max-sm:hidden">{v.label}</span>
-                  </span>
-                ))}
-              </div>
             </div>
 
-            {!ehRedacao && concurso.sistema_horas && (
-              <HorasMateriaBarra vinculo={vinculo} topicos={meusTopicos} cor={concurso.cor} />
+            {/* Barra de horas e legenda de status na mesma altura */}
+            {mostrarHoras && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <div className="min-w-0 flex-1">
+                  <HorasMateriaBarra vinculo={vinculo} topicos={meusTopicos} cor={concurso.cor} />
+                </div>
+                {legendaStatus}
+              </div>
             )}
           </div>
 
