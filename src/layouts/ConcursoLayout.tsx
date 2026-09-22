@@ -13,7 +13,6 @@ import {
   LogOut,
   Repeat,
   Shuffle,
-  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import type { Concurso } from "@/types/db";
@@ -21,7 +20,6 @@ import { concursoDeEstudo, useConcurso } from "@/api/concursos";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/auth/AuthProvider";
 import { setConcursoAtual } from "@/lib/currentConcurso";
 import { diasAte, fmtData } from "@/lib/dates";
 import { progressoMateria, topicosDoConcurso } from "@/lib/progresso";
@@ -48,13 +46,11 @@ const NAV: { to: string; label: string; icon: LucideIcon; end: boolean; novaAba?
   { to: "metas", label: "Metas", icon: CalendarCheck, end: false },
   { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
   { to: "audios", label: "Áudios", icon: Headphones, end: false },
-  { to: "apoio", label: "Apoio", icon: Wrench, end: false },
 ];
 
 export function ConcursoLayout() {
   const { concursoId } = useParams();
   const { concurso, concursos, isLoading } = useConcurso(concursoId);
-  const { session } = useAuth();
   const location = useLocation();
   const [switcherAberto, setSwitcherAberto] = useState(false);
   const [conteudosAberto, setConteudosAberto] = useState(() =>
@@ -180,28 +176,49 @@ export function ConcursoLayout() {
     <div className="min-h-dvh md:flex">
       {/* ===== Sidebar desktop — 100% sobre o concurso ativo ===== */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line/50 bg-navy-900/90 md:flex">
-        {/* seletor de concurso */}
+        {/* seletor de concurso + resumo, tudo numa caixinha só */}
         <div className="relative px-3 pt-4">
-          <button
-            onClick={() => setSwitcherAberto((v) => !v)}
-            className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl border border-line/60 bg-navy-800 px-3 py-2.5 text-left transition-colors hover:border-line"
-          >
-            <span
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-lg"
-              style={{ background: `${cor}1a` }}
+          <div className="overflow-hidden rounded-xl border border-line/60 bg-navy-800">
+            <button
+              onClick={() => setSwitcherAberto((v) => !v)}
+              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left transition-colors hover:bg-navy-700/50"
             >
-              {concurso.icone}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-txt">
-                {concurso.nome_curto ?? concurso.nome}
+              <span
+                className="flex size-10 shrink-0 items-center justify-center rounded-lg text-xl"
+                style={{ background: `${cor}1a` }}
+              >
+                {concurso.icone}
               </span>
-              <span className="block truncate text-[11px] text-mut">
-                {concurso.banca ?? concurso.orgao ?? "concurso"}
+              <span className="min-w-0 flex-1">
+                <span className="block text-[10px] font-semibold uppercase tracking-wide text-mut">
+                  Concurso
+                </span>
+                <span className="block truncate text-sm font-bold leading-tight text-txt">
+                  {concurso.nome_curto ?? concurso.nome}
+                </span>
               </span>
-            </span>
-            <ChevronsUpDown className="size-4 shrink-0 text-mut" />
-          </button>
+              <ChevronsUpDown className="size-4 shrink-0 text-mut" />
+            </button>
+
+            <div className="space-y-2 border-t border-line/40 px-3 py-2.5">
+              <StreakBadge />
+              {dias !== null && (
+                <p className="text-[11px] text-dim">
+                  {dias >= 0 ? (
+                    <>
+                      <strong className="font-bold" style={{ color: cor }}>
+                        {dias}
+                      </strong>{" "}
+                      {dias === 1 ? "dia" : "dias"} para a prova
+                    </>
+                  ) : (
+                    "prova realizada"
+                  )}
+                  <span className="text-mut"> · {fmtData(concurso.data_prova)}</span>
+                </p>
+              )}
+            </div>
+          </div>
 
           {switcherAberto && (
             <>
@@ -237,28 +254,6 @@ export function ConcursoLayout() {
               </div>
             </>
           )}
-        </div>
-
-        {/* dias para a prova + sequência */}
-        <div className="px-4 pb-1 pt-3">
-          {dias !== null && (
-            <p className="text-[11px] text-dim">
-              {dias >= 0 ? (
-                <>
-                  <strong className="font-bold" style={{ color: cor }}>
-                    {dias}
-                  </strong>{" "}
-                  {dias === 1 ? "dia" : "dias"} para a prova
-                </>
-              ) : (
-                "prova realizada"
-              )}
-              <span className="text-mut"> · {fmtData(concurso.data_prova)}</span>
-            </p>
-          )}
-          <div className="mt-2.5">
-            <StreakBadge />
-          </div>
         </div>
 
         <nav className="scrollbar-thin mt-3 flex-1 space-y-1 overflow-y-auto px-3">
@@ -380,13 +375,14 @@ export function ConcursoLayout() {
           })}
         </nav>
 
-        <div className="border-t border-line/40 px-4 py-4">
-          <p className="truncate text-[11px] text-mut">{session?.user.email}</p>
+        {/* última opção do menu: sair */}
+        <div className="border-t border-line/40 p-3">
           <button
             onClick={() => supabase.auth.signOut()}
-            className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-dim transition-colors hover:text-red"
+            className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-dim transition-colors hover:bg-red/10 hover:text-red"
           >
-            <LogOut className="size-3.5" /> Sair
+            <LogOut className="size-4.5" />
+            Sair
           </button>
         </div>
       </aside>
@@ -430,7 +426,7 @@ export function ConcursoLayout() {
       </main>
 
       {/* ===== Tab bar mobile ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-8 border-t border-line/50 bg-navy-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-line/50 bg-navy-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {navLink(true)}
       </nav>
     </div>
