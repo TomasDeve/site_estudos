@@ -313,112 +313,123 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
             </button>
           )}
 
-          {/* metas do assunto: o placar diz o quanto falta para poder concluir */}
-          <button
-            onClick={() => alternar("metas")}
-            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
-              placar.total === 0
-                ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-                : placar.fechado
-                  ? "text-green hover:bg-green/10"
-                  : "text-dim hover:bg-navy-600"
-            } ${painel === "metas" ? "ring-1 ring-line" : ""}`}
-            title={
-              placar.total === 0
-                ? "Metas deste assunto"
-                : `Metas: ${placar.feitas} de ${placar.total} fechadas`
-            }
-          >
-            <ListChecks className="size-3.5" />
-            {placar.total > 0 && (
-              <span className="tabular-nums">
-                {placar.feitas}/{placar.total}
-              </span>
-            )}
-          </button>
+          {/* metas do assunto: o placar diz o quanto falta para poder concluir.
+              Slot de largura fixa (desktop) para os chips alinharem em coluna. */}
+          <div className="flex shrink-0 sm:w-[60px]">
+            <button
+              onClick={() => alternar("metas")}
+              className={`flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
+                placar.total === 0
+                  ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+                  : placar.fechado
+                    ? "text-green hover:bg-green/10"
+                    : "text-dim hover:bg-navy-600"
+              } ${painel === "metas" ? "ring-1 ring-line" : ""}`}
+              title={
+                placar.total === 0
+                  ? "Metas deste assunto"
+                  : `Metas: ${placar.feitas} de ${placar.total} fechadas`
+              }
+            >
+              <ListChecks className="size-3.5 shrink-0" />
+              {placar.total > 0 && (
+                <span className="tabular-nums">
+                  {placar.feitas}/{placar.total}
+                </span>
+              )}
+            </button>
+          </div>
 
           {/* desempenho: mostra a taxa de acerto, ou convida a registrar */}
-          <button
-            onClick={() => alternar("questoes")}
-            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
-              cor
-                ? `${cor.texto} ${cor.fundo}`
-                : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-            } ${painel === "questoes" ? "ring-1 ring-line" : ""}`}
-            title={
-              resumo.pct !== null
-                ? `${resumo.acertos}/${resumo.total} questões · ${resumo.pct}% de acerto`
-                : "Registrar questões deste assunto"
-            }
-          >
-            <Target className="size-3.5" />
-            {resumo.pct !== null && (
-              <span className="tabular-nums">
-                {resumo.total}Q · {resumo.pct}%
-              </span>
-            )}
-          </button>
+          <div className="flex shrink-0 sm:w-[104px]">
+            <button
+              onClick={() => alternar("questoes")}
+              className={`flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
+                cor
+                  ? `${cor.texto} ${cor.fundo}`
+                  : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+              } ${painel === "questoes" ? "ring-1 ring-line" : ""}`}
+              title={
+                resumo.pct !== null
+                  ? `${resumo.acertos}/${resumo.total} questões · ${resumo.pct}% de acerto`
+                  : "Registrar questões deste assunto"
+              }
+            >
+              <Target className="size-3.5 shrink-0" />
+              {resumo.pct !== null && (
+                <span className="tabular-nums">
+                  {resumo.total}Q · {resumo.pct}%
+                </span>
+              )}
+            </button>
+          </div>
 
           {/* questões geradas por IA — caderno em aba própria, com espaço para resolver */}
-          <a
-            href={`/questoes/${topico.id}`}
-            target="_blank"
-            rel="noreferrer"
-            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
-              caderno.total === 0
-                ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-                : caderno.pendentes > 0
-                  ? "text-gold hover:bg-gold/10"
-                  : "text-green hover:bg-green/10"
-            }`}
-            title={
-              caderno.total === 0
-                ? "Questões por IA deste assunto (nova aba)"
-                : `Questões por IA — ${caderno.total} ${caderno.total === 1 ? "questão" : "questões"} · ${
-                    caderno.pendentes > 0 ? `${caderno.pendentes} a resolver` : "todas resolvidas"
-                  } (nova aba)`
-            }
-            aria-label={`Questões por IA de ${topico.titulo}`}
-          >
-            <Sparkles className="size-3.5" />
-            {caderno.total > 0 && (
-              <span className="font-semibold tabular-nums">
-                {caderno.pendentes > 0 ? caderno.pendentes : caderno.total}
-              </span>
-            )}
-          </a>
+          <div className="flex shrink-0 sm:w-[52px]">
+            <a
+              href={`/questoes/${topico.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className={`flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
+                caderno.total === 0
+                  ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+                  : caderno.pendentes > 0
+                    ? "text-gold hover:bg-gold/10"
+                    : "text-green hover:bg-green/10"
+              }`}
+              title={
+                caderno.total === 0
+                  ? "Questões por IA deste assunto (nova aba)"
+                  : `Questões por IA — ${caderno.total} ${caderno.total === 1 ? "questão" : "questões"} · ${
+                      caderno.pendentes > 0 ? `${caderno.pendentes} a resolver` : "todas resolvidas"
+                    } (nova aba)`
+              }
+              aria-label={`Questões por IA de ${topico.titulo}`}
+            >
+              <Sparkles className="size-3.5 shrink-0" />
+              {caderno.total > 0 && (
+                <span className="font-semibold tabular-nums">
+                  {caderno.pendentes > 0 ? caderno.pendentes : caderno.total}
+                </span>
+              )}
+            </a>
+          </div>
 
           {/* textos e resumos */}
-          <button
-            onClick={() => alternar("textos")}
-            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
-              textos.length > 0 || temObs
-                ? "text-gold hover:bg-gold/10"
-                : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-            } ${painel === "textos" ? "ring-1 ring-line" : ""}`}
-            title="Textos, resumos e observação deste assunto"
-          >
-            <BookOpen className="size-3.5" />
-            {textos.length > 0 ? (
-              <span className="font-semibold">{textos.length}</span>
-            ) : (
-              temObs && <span className="size-1.5 rounded-full bg-gold" aria-hidden />
-            )}
-          </button>
+          <div className="flex shrink-0 sm:w-[44px]">
+            <button
+              onClick={() => alternar("textos")}
+              className={`flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
+                textos.length > 0 || temObs
+                  ? "text-gold hover:bg-gold/10"
+                  : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+              } ${painel === "textos" ? "ring-1 ring-line" : ""}`}
+              title="Textos, resumos e observação deste assunto"
+            >
+              <BookOpen className="size-3.5 shrink-0" />
+              {textos.length > 0 ? (
+                <span className="font-semibold">{textos.length}</span>
+              ) : (
+                temObs && <span className="size-1.5 rounded-full bg-gold" aria-hidden />
+              )}
+            </button>
+          </div>
 
           {/* adicionar/gerenciar links */}
-          <button
-            onClick={abrirNovoLink}
-            className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
-              links.length > 0
-                ? "text-gold hover:bg-gold/10"
-                : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-            } ${painel === "links" ? "ring-1 ring-line" : ""}`}
-            title="Links do tópico (questões, aulas...)"
-          >
-            <Link2 className="size-3.5" />
-            {links.length > 0 && <span className="font-semibold">{links.length}</span>}
-          </button>
+          <div className="flex shrink-0 sm:w-[44px]">
+            <button
+              onClick={abrirNovoLink}
+              className={`flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs transition-colors ${
+                links.length > 0
+                  ? "text-gold hover:bg-gold/10"
+                  : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
+              } ${painel === "links" ? "ring-1 ring-line" : ""}`}
+              title="Links do tópico (questões, aulas...)"
+            >
+              <Link2 className="size-3.5 shrink-0" />
+              {links.length > 0 && <span className="font-semibold">{links.length}</span>}
+            </button>
+          </div>
 
           {/* núcleo comum: se o assunto entra no Concurso Indefinido (cai nos dois editais) */}
           {mostrarNucleo && (
