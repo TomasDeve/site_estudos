@@ -177,14 +177,14 @@ export function ConcursoLayout() {
       {/* ===== Sidebar desktop — 100% sobre o concurso ativo ===== */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line/50 bg-navy-900/90 md:flex">
         {/* seletor de concurso + resumo, tudo numa caixinha só */}
-        <div className="relative px-3 pt-4">
+        <div className="relative px-3 pt-3">
           <div className="overflow-hidden rounded-xl border border-line/60 bg-navy-800">
             <button
               onClick={() => setSwitcherAberto((v) => !v)}
-              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left transition-colors hover:bg-navy-700/50"
+              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-navy-700/50"
             >
               <span
-                className="flex size-10 shrink-0 items-center justify-center rounded-lg text-xl"
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-lg"
                 style={{ background: `${cor}1a` }}
               >
                 {concurso.icone}
@@ -200,10 +200,10 @@ export function ConcursoLayout() {
               <ChevronsUpDown className="size-4 shrink-0 text-mut" />
             </button>
 
-            <div className="space-y-2 border-t border-line/40 px-3 py-2.5">
-              <StreakBadge />
+            <div className="flex flex-col items-start gap-1.5 border-t border-line/40 px-3 py-2">
+              <StreakBadge compact />
               {dias !== null && (
-                <p className="text-[11px] text-dim">
+                <p className="text-[11px] leading-tight text-dim">
                   {dias >= 0 ? (
                     <>
                       <strong className="font-bold" style={{ color: cor }}>
