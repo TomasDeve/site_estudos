@@ -973,6 +973,8 @@ export type Database = {
           gabarito_letra: string | null
           grifos: Json | null
           id: string
+          imprimir_em: string | null
+          impressao_numero: number | null
           ordem: number
           refazer: boolean
           reformulada_de: string | null
@@ -998,6 +1000,8 @@ export type Database = {
           gabarito_letra?: string | null
           grifos?: Json | null
           id?: string
+          imprimir_em?: string | null
+          impressao_numero?: number | null
           ordem?: number
           refazer?: boolean
           reformulada_de?: string | null
@@ -1023,6 +1027,8 @@ export type Database = {
           gabarito_letra?: string | null
           grifos?: Json | null
           id?: string
+          imprimir_em?: string | null
+          impressao_numero?: number | null
           ordem?: number
           refazer?: boolean
           reformulada_de?: string | null

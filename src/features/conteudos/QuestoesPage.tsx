@@ -69,6 +69,11 @@ import { BotaoRefazer, OrigemReformulada } from "./refazer";
 import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
+import {
+  CaixaImpressao,
+  LinkImpressao,
+  useAlternarImpressao,
+} from "@/features/impressao/CaixaImpressao";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
@@ -158,6 +163,9 @@ export function QuestoesPage() {
         <h1 className="min-w-0 truncate text-base font-semibold text-txt">
           Questões por IA · {topico.titulo}
         </h1>
+        <div className="ml-auto">
+          <LinkImpressao />
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-3 py-4 sm:px-6 sm:py-6">
@@ -188,6 +196,7 @@ function Caderno({ topico }: { topico: Topico }) {
   const clique = useRegistrarClique();
   const { data: todosLogs } = useQuestaoLogsTodos();
   const salvarGrifos = useSalvarGrifos();
+  const alternarImpressao = useAlternarImpressao();
 
   const [filtro, setFiltro] = useState<AbaCaderno>("responder");
   // Origens em foco (multi-seleção). Conjunto vazio = "Todas" (sem filtro); o
@@ -559,6 +568,7 @@ function Caderno({ topico }: { topico: Topico }) {
                     onToggleRisco={(letra) => aoRiscar(q, letra)}
                     onStatus={mudarStatus}
                     onRefazer={mudarRefazer}
+                    onImprimir={() => alternarImpressao(q)}
                     origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
                     onExcluir={() => setAExcluir(q)}
                     onDuvida={() => setDuvida(q)}
@@ -711,6 +721,8 @@ interface CardProps {
   onToggleRisco: (letra: string) => void;
   onStatus: (q: TopicoQuestao, status: QuestaoStatus, aviso: string) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
+  /** Marca/desmarca a questão para a seção "Impressão" (a caixinha do topo do card). */
+  onImprimir: () => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
   origem?: TopicoQuestao;
   onExcluir: () => void;
@@ -767,6 +779,7 @@ function QuestaoCard({
   onToggleRisco,
   onStatus,
   onRefazer,
+  onImprimir,
   origem,
   onExcluir,
   onDuvida,
@@ -791,9 +804,10 @@ function QuestaoCard({
               Arquivada
             </span>
           )}
+          <CaixaImpressao className="ml-auto" marcada={!!q.imprimir_em} onToggle={onImprimir} />
           <button
             onClick={onExcluir}
-            className="ml-auto shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/q:opacity-100 max-md:opacity-100"
+            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/q:opacity-100 max-md:opacity-100"
             title="Apagar questão"
             aria-label={`Apagar questão ${numero}`}
           >
@@ -909,7 +923,7 @@ function QuestaoCard({
   );
 }
 
-function AcaoQuestao({
+export function AcaoQuestao({
   icone,
   ativo = false,
   onClick,

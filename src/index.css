@@ -237,3 +237,254 @@ textarea,
   border-radius: 4px;
   padding: 1px 6px;
 }
+
+/* ================= Folha de impressão (seção "Impressão") =================
+   A folha é um documento à parte, preto no branco, que só aparece ao imprimir
+   (ou na prévia da página). Medidas em pt/mm porque o destino é o papel A4. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 12mm 14mm;
+  }
+  html {
+    color-scheme: light;
+  }
+  body {
+    background: #fff !important;
+  }
+  /* avisos (toasts) nunca vão pro papel */
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+}
+
+.folha {
+  --folha-fs: 10.5pt;
+  color: #161616;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: var(--folha-fs);
+  line-height: 1.45;
+}
+.folha[data-letra="p"] {
+  --folha-fs: 9.5pt;
+}
+.folha[data-letra="g"] {
+  --folha-fs: 12pt;
+}
+/* rótulos e títulos em sans, como no caderno de uma prova */
+.folha h1,
+.folha h2,
+.folha h3,
+.folha-sub,
+.folha-campos,
+.folha-q-cab,
+.folha-texto-rotulo,
+.folha-ce,
+.folha-letra {
+  font-family: var(--font-sans);
+}
+
+.folha-cabecalho {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6mm;
+  border-bottom: 2pt solid #161616;
+  padding-bottom: 2.5mm;
+}
+.folha h1 {
+  font-size: 1.6em;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.folha-sub {
+  margin-top: 1mm;
+  font-size: 0.8em;
+  color: #444;
+}
+.folha-data {
+  flex: none;
+}
+.folha-campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2mm 9mm;
+  margin: 3mm 0 6mm;
+  font-size: 0.78em;
+  color: #333;
+}
+
+.folha-materia + .folha-materia {
+  margin-top: 7mm;
+}
+.folha h2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4mm;
+  margin-bottom: 3mm;
+  border-bottom: 1pt solid #161616;
+  padding-bottom: 1mm;
+  font-size: 1.12em;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  break-after: avoid;
+}
+.folha h2 small {
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #555;
+}
+.folha h3 {
+  margin: 0 0 2.5mm;
+  border-left: 2.5pt solid #8a8a8a;
+  padding-left: 2mm;
+  font-size: 0.86em;
+  font-weight: 700;
+  color: #333;
+  break-after: avoid;
+}
+.folha-assunto + .folha-assunto {
+  margin-top: 5mm;
+}
+.folha[data-colunas="2"] .folha-colunas {
+  column-count: 2;
+  column-gap: 7mm;
+  column-rule: 0.5pt solid #c4c4c4;
+}
+/* Na coluna estreita, justificar sem hifenização abre buracos entre as palavras:
+   alinhado à esquerda lê melhor. */
+.folha[data-colunas="2"] .folha-q-enunciado,
+.folha[data-colunas="2"] .folha-texto-corpo {
+  text-align: left;
+}
+
+.folha-q {
+  margin-bottom: 4.5mm;
+  break-inside: avoid;
+}
+.folha-q-cab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 2.5mm;
+  margin-bottom: 1mm;
+  font-size: 0.76em;
+}
+.folha-q-num {
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.folha-q-fonte {
+  color: #555;
+}
+.folha-q-contexto {
+  margin-bottom: 1mm;
+  font-style: italic;
+  color: #333;
+  white-space: pre-wrap;
+}
+.folha-q-enunciado {
+  white-space: pre-wrap;
+  text-align: justify;
+  hyphens: auto;
+}
+.folha-alts {
+  display: grid;
+  gap: 1.2mm;
+  margin-top: 1.8mm;
+}
+.folha-alts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 2mm;
+}
+.folha-letra {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
+  margin-top: 0.05em;
+  border: 0.8pt solid #161616;
+  border-radius: 50%;
+  font-size: 0.75em;
+  font-weight: 700;
+}
+.folha-ce {
+  display: flex;
+  gap: 7mm;
+  margin-top: 1.8mm;
+  font-size: 0.82em;
+}
+.folha-ce > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5mm;
+}
+.folha-caixa {
+  display: inline-block;
+  width: 3.3mm;
+  height: 3.3mm;
+  border: 0.8pt solid #161616;
+  border-radius: 0.8pt;
+}
+
+.folha-texto {
+  margin-bottom: 3mm;
+  border: 0.8pt solid #9a9a9a;
+  border-radius: 1.5mm;
+  padding: 2.5mm 3.5mm;
+}
+.folha-texto-rotulo {
+  margin-bottom: 1.2mm;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #444;
+}
+.folha-texto-corpo {
+  font-size: 0.95em;
+  white-space: pre-wrap;
+  text-align: justify;
+  hyphens: auto;
+}
+.folha-texto-corpo img {
+  display: block;
+  max-width: 100%;
+  max-height: 120mm;
+  margin: 1.5mm 0;
+}
+.folha-texto-ref {
+  margin-bottom: 2mm;
+  font-size: 0.8em;
+  font-style: italic;
+  color: #444;
+}
+
+/* Prévia na tela: a folha vira uma página de papel (as quebras de página só
+   existem na impressão). */
+@media screen {
+  .folha {
+    max-width: 210mm;
+    margin: 0 auto;
+    border-radius: 6px;
+    background: #fff;
+    padding: 12mm;
+    box-shadow: 0 10px 40px rgb(0 0 0 / 0.45);
+  }
+}
+@media screen and (max-width: 640px) {
+  .folha {
+    padding: 6mm 5mm;
+    border-radius: 4px;
+  }
+}

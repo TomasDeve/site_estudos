@@ -20,6 +20,7 @@ const MetricasPage = lazy(() => import("@/features/metricas/MetricasPage").then(
 const ImportarPage = lazy(() => import("@/features/importar/ImportarPage").then((m) => ({ default: m.ImportarPage })));
 const AudiosPage = lazy(() => import("@/features/audios/AudiosPage").then((m) => ({ default: m.AudiosPage })));
 const BancoQuestoesPage = lazy(() => import("@/features/banco/BancoQuestoesPage").then((m) => ({ default: m.BancoQuestoesPage })));
+const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
 
 function pagina(node: ReactNode) {
   return <Suspense fallback={<FullScreenSpinner />}>{node}</Suspense>;
@@ -44,6 +45,8 @@ export const router = createBrowserRouter([
       { path: "questoes/:topicoId", element: pagina(<QuestoesPage />) },
       // banco de questões reais: capturar do QConcursos, tratar e mapear ao edital
       { path: "banco", element: pagina(<BancoQuestoesPage />) },
+      // questões marcadas para impressão: folha pronta + correção (aba própria, sem sidebar)
+      { path: "impressao", element: pagina(<ImpressaoPage />) },
       // tudo abaixo vive dentro do concurso ativo
       {
         path: "concurso/:concursoId",

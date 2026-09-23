@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LogOut,
+  Printer,
   Repeat,
   Shuffle,
   type LucideIcon,
@@ -19,6 +20,7 @@ import type { Concurso } from "@/types/db";
 import { concursoDeEstudo, useConcurso } from "@/api/concursos";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
+import { useContagemImpressao } from "@/api/topicoQuestoes";
 import { supabase } from "@/lib/supabase";
 import { setConcursoAtual } from "@/lib/currentConcurso";
 import { diasAte, fmtData } from "@/lib/dates";
@@ -42,6 +44,8 @@ const NAV: { to: string; label: string; icon: LucideIcon; end: boolean; novaAba?
   { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
   // modo misturado: todas as questões do site, em aba própria como o caderno
   { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },
+  // questões marcadas (a caixinha 🖨 do card): folha para imprimir + correção, em aba própria
+  { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
   { to: "ciclo", label: "Ciclo", icon: Repeat, end: false },
   { to: "metas", label: "Metas", icon: CalendarCheck, end: false },
   { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
@@ -60,6 +64,8 @@ export function ConcursoLayout() {
   const { data: materias } = useMaterias();
   const { data: vinculos } = useConcursoMaterias();
   const { data: topicos } = useTopicos();
+  // Quantas questões esperam na "Impressão" — o numerozinho ao lado do item.
+  const { data: marcadasImpressao } = useContagemImpressao();
 
   // Matérias do concurso ativo, na ordem do edital, com progresso para o submenu.
   const materiasDoConcurso = useMemo(() => {
@@ -134,7 +140,7 @@ export function ConcursoLayout() {
             rel="noreferrer"
             className={
               mobile
-                ? "flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[10px] font-medium leading-none text-dim transition-colors"
+                ? "flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[10px] font-medium leading-none tracking-tight text-dim transition-colors"
                 : "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-dim transition-colors hover:bg-navy-700/70 hover:text-txt"
             }
           >
@@ -151,7 +157,7 @@ export function ConcursoLayout() {
           onClick={() => setSwitcherAberto(false)}
           className={({ isActive }) =>
             mobile
-              ? `flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[10px] font-medium leading-none transition-colors ${
+              ? `flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[10px] font-medium leading-none tracking-tight transition-colors ${
                   isActive ? "" : "text-dim"
                 }`
               : `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -269,6 +275,16 @@ export function ConcursoLayout() {
                 >
                   <Icon className="size-4.5" />
                   {label}
+                  {to === "/impressao" && !!marcadasImpressao && (
+                    <span
+                      className="ml-auto rounded-full bg-navy-700 px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-dim"
+                      title={`${marcadasImpressao} ${
+                        marcadasImpressao === 1 ? "questão marcada" : "questões marcadas"
+                      } para impressão`}
+                    >
+                      {marcadasImpressao}
+                    </span>
+                  )}
                 </a>
               );
             }
@@ -426,7 +442,7 @@ export function ConcursoLayout() {
       </main>
 
       {/* ===== Tab bar mobile ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-line/50 bg-navy-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-8 border-t border-line/50 bg-navy-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {navLink(true)}
       </nav>
     </div>

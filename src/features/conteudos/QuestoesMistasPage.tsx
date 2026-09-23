@@ -53,6 +53,11 @@ import { ehFonteQC, FonteQuestao, PillCategoria } from "./QuestoesPage";
 import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
+import {
+  CaixaImpressao,
+  LinkImpressao,
+  useAlternarImpressao,
+} from "@/features/impressao/CaixaImpressao";
 
 const ABAS = [
   { chave: "responder", label: "Para responder" },
@@ -85,6 +90,7 @@ export function QuestoesMistasPage() {
   const clique = useRegistrarClique();
   const { data: todosLogs } = useQuestaoLogsTodos();
   const salvarGrifos = useSalvarGrifos();
+  const alternarImpressao = useAlternarImpressao();
 
   // Salva um grifo. Enunciado é da questão; "Texto associado" vale para TODAS as questões
   // com o texto idêntico — aplica em todas (mantendo o enunciado de cada uma), pra a
@@ -362,14 +368,17 @@ export function QuestoesMistasPage() {
           <Shuffle className="size-4 shrink-0 text-gold" />
         )}
         <h1 className="min-w-0 truncate text-base font-semibold text-txt">{titulo}</h1>
-        <button
-          onClick={reembaralhar}
-          className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2.5 py-1.5 text-xs font-medium text-dim transition-colors hover:border-line hover:bg-navy-700/60 hover:text-txt"
-          title="Embaralhar as questões de novo"
-        >
-          <Shuffle className="size-3.5" />
-          <span className="max-sm:hidden">Embaralhar</span>
-        </button>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <LinkImpressao />
+          <button
+            onClick={reembaralhar}
+            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2.5 py-1.5 text-xs font-medium text-dim transition-colors hover:border-line hover:bg-navy-700/60 hover:text-txt"
+            title="Embaralhar as questões de novo"
+          >
+            <Shuffle className="size-3.5" />
+            <span className="max-sm:hidden">Embaralhar</span>
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-3 py-4 sm:px-6 sm:py-6">
@@ -469,6 +478,7 @@ export function QuestoesMistasPage() {
                       onGrifar={(campo, g) => aoGrifar(q, campo, g)}
                       onToggleRisco={(letra) => aoRiscar(q, letra)}
                       onRefazer={mudarRefazer}
+                      onImprimir={() => alternarImpressao(q)}
                       origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
                       onDuvida={() => setDuvida(q)}
                       onConferirLei={comLei?.has(q.topico_id) ? () => setNaLei(q) : undefined}
@@ -545,6 +555,8 @@ interface CardProps {
   /** Risca/desrisca (elimina) uma alternativa da múltipla escolha. */
   onToggleRisco: (letra: string) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
+  /** Marca/desmarca a questão para a seção "Impressão" (a caixinha do topo do card). */
+  onImprimir: () => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
   origem?: TopicoQuestao;
   onDuvida: () => void;
@@ -567,6 +579,7 @@ function QuestaoMistaCard({
   onGrifar,
   onToggleRisco,
   onRefazer,
+  onImprimir,
   origem,
   onDuvida,
   onConferirLei,
@@ -583,8 +596,9 @@ function QuestaoMistaCard({
 
   return (
     <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
-      {(mostrarMateria || fonteQC) && (
-        <div className="mb-2">
+      {/* Matéria e fonte à esquerda; a caixinha de impressão sempre no canto */}
+      <div className="mb-2 flex items-start gap-2">
+        <div className="min-w-0 flex-1">
           {mostrarMateria && (
             <div className="flex items-center gap-2">
               <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-navy-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-dim">
@@ -595,7 +609,8 @@ function QuestaoMistaCard({
           )}
           {fonteQC && <FonteQuestao fonte={fonteQC} />}
         </div>
-      )}
+        <CaixaImpressao marcada={!!q.imprimir_em} onToggle={onImprimir} />
+      </div>
 
       <TextoAssociado
         qid={q.id}

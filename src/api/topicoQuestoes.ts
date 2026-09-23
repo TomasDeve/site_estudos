@@ -199,6 +199,139 @@ export function useMarcarRefazer() {
   });
 }
 
+/**
+ * As questões marcadas para impressão (a caixinha 🖨 do card) — a seção "Impressão"
+ * busca só elas, uma lista pequena. `staleTime: 0` porque a marcação costuma
+ * acontecer em OUTRA aba (caderno/misturado): ao voltar o foco pra cá, as novas já vêm.
+ */
+export function useQuestoesImpressao() {
+  return useQuery({
+    queryKey: ["topico_questoes", "impressao"],
+    staleTime: 0,
+    queryFn: () =>
+      fetchAll<TopicoQuestao>((f, t) =>
+        supabase
+          .from("topico_questoes")
+          .select("*")
+          .not("imprimir_em", "is", null)
+          .order("imprimir_em")
+          .order("id")
+          .range(f, t)
+      ),
+  });
+}
+
+/** Quantas questões estão marcadas para impressão — o numerozinho do menu e dos cadernos. */
+export function useContagemImpressao() {
+  return useQuery({
+    queryKey: ["topico_questoes", "impressao-contagem"],
+    staleTime: 0,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("topico_questoes")
+        .select("id", { count: "exact", head: true })
+        .not("imprimir_em", "is", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+}
+
+/**
+ * Questões avulsas pelo id. Na "Impressão" só as marcadas vêm do banco; daqui saem as
+ * originais das reformuladas (o "ver a questão original" revelado após responder).
+ */
+export function useQuestoesPorIds(ids: string[]) {
+  const chave = [...ids].sort().join(",");
+  return useQuery({
+    queryKey: ["topico_questoes", "por-ids", chave],
+    enabled: ids.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topico_questoes")
+        .select("*")
+        .in("id", chave.split(","));
+      if (error) throw error;
+      return data as TopicoQuestao[];
+    },
+  });
+}
+
+/** Quantos ids vão por requisição no update em lote (a lista entra na URL). */
+const LOTE_IDS = 100;
+
+/** O estado de impressão de uma questão: marcada em (null = não) e o número na folha. */
+export interface ImpressaoDaQuestao {
+  questao: TopicoQuestao;
+  imprimir_em: string | null;
+  impressao_numero: number | null;
+}
+
+/**
+ * Grava o estado de impressão de uma ou várias questões: marcar/desmarcar (a caixinha),
+ * desmarcar em lote, o "Desfazer" (que devolve marca E número) e o número que cada uma
+ * recebe ao ser impressa. Quem chama gera os valores (o horário da marca inclusive) e eles
+ * vão IGUAIS para o cache e para o banco — o patch otimista é exato e, como na resposta,
+ * nada é re-baixado. Questões com os mesmos valores vão numa requisição só (em lotes de
+ * ids). Ao marcar, a questão entra também na lista da seção "Impressão" (se estiver em
+ * cache); ao desmarcar, a página a esconde pelo `imprimir_em` nulo.
+ */
+export function useSalvarImpressao() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itens }: { itens: ImpressaoDaQuestao[] }) => {
+      const grupos = new Map<string, { valores: Omit<ImpressaoDaQuestao, "questao">; ids: string[] }>();
+      for (const { questao, ...valores } of itens) {
+        const chave = `${valores.imprimir_em}|${valores.impressao_numero}`;
+        const g = grupos.get(chave);
+        if (g) g.ids.push(questao.id);
+        else grupos.set(chave, { valores, ids: [questao.id] });
+      }
+      const pedidos = [...grupos.values()].flatMap(({ valores, ids }) => {
+        const lotes: string[][] = [];
+        for (let i = 0; i < ids.length; i += LOTE_IDS) lotes.push(ids.slice(i, i + LOTE_IDS));
+        return lotes.map((lote) => supabase.from("topico_questoes").update(valores).in("id", lote));
+      });
+      const res = await Promise.all(pedidos);
+      const falha = res.find((r) => r.error);
+      if (falha?.error) throw falha.error;
+    },
+    onMutate: async ({ itens }) => {
+      await qc.cancelQueries({ queryKey: ["topico_questoes"] });
+      const anteriores = qc.getQueriesData({ queryKey: ["topico_questoes"] });
+      const porId = new Map(itens.map(({ questao, ...valores }) => [questao.id, valores]));
+      // A mesma questão pode estar em várias listas em cache; casa pelo id.
+      qc.setQueriesData<{ id: string }[]>({ queryKey: ["topico_questoes"] }, (lista) => {
+        if (!Array.isArray(lista)) return lista;
+        let mudou = false;
+        const nova = lista.map((row) => {
+          if (!row || !porId.has(row.id)) return row;
+          mudou = true;
+          return { ...row, ...porId.get(row.id) };
+        });
+        return mudou ? nova : lista;
+      });
+      const marcadas = itens.filter((it) => it.imprimir_em);
+      if (marcadas.length) {
+        qc.setQueryData<TopicoQuestao[]>(["topico_questoes", "impressao"], (lista) => {
+          if (!lista) return lista;
+          const ja = new Set(lista.map((q) => q.id));
+          const novas = marcadas
+            .filter((it) => !ja.has(it.questao.id))
+            .map(({ questao, ...valores }) => ({ ...questao, ...valores }));
+          return novas.length ? [...lista, ...novas] : lista;
+        });
+      }
+      return { anteriores };
+    },
+    onError: (_err, _vars, ctx) => {
+      ctx?.anteriores?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: ["topico_questoes", "impressao-contagem"], exact: true }),
+  });
+}
+
 export function useExcluirQuestao() {
   const qc = useQueryClient();
   return useMutation({
