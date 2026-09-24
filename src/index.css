@@ -412,10 +412,12 @@ textarea,
   text-align: justify;
   hyphens: auto;
 }
+/* Espaço entre as alternativas: o bastante para as letras não ficarem coladas,
+   sem desperdiçar folha. */
 .folha-alts {
   display: grid;
-  gap: 1.2mm;
-  margin-top: 1.8mm;
+  gap: 2.4mm;
+  margin-top: 2.4mm;
 }
 .folha-alts li {
   display: flex;
