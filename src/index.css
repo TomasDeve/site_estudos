@@ -382,8 +382,18 @@ textarea,
   text-align: left;
 }
 
+/* A seção da questão tem três partes com regras de quebra próprias: a divisória nunca
+   fica sozinha no fim da coluna; o texto associado (se houver) flui livre, enchendo a
+   coluna; e o corpo (enunciado + alternativas) não se parte. A seção inteira NÃO é
+   inquebrável — senão texto longo + questão pulavam juntos e abriam buraco. */
 .folha-q {
   margin-bottom: 4.5mm;
+}
+.folha-q-topo {
+  break-inside: avoid;
+  break-after: avoid;
+}
+.folha-q-corpo {
   break-inside: avoid;
 }
 /* Cabeçalho como no caderno do CESPE: etiqueta preta com o número e, saindo dela, uma

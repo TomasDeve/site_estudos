@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { TopicoQuestao } from "@/types/db";
 import { hojeISO, fmtData } from "@/lib/dates";
 import { partesDeTexto } from "@/features/conteudos/grifos";
@@ -19,7 +19,7 @@ interface Props {
 /**
  * A folha de impressão: um documento à parte, preto no branco, que só aparece ao
  * imprimir (ou na prévia). Organizada como uma prova — matéria, assunto, o texto
- * associado uma vez só antes das questões dele — e SÓ com as questões: sem gabarito,
+ * associado uma vez só, dentro da seção da 1ª questão dele — e SÓ com as questões: sem gabarito,
  * comentário, grifos, riscos ou respostas dadas. A correção é no site, pela mesma
  * numeração. Os estilos ficam em `index.css` (bloco "Folha de impressão"), em pt/mm.
  */
@@ -82,25 +82,26 @@ export function FolhaImpressao({ materias, numeroDe, opcoes, concurso }: Props) 
               {m.assuntos.map((a) => (
                 <section key={a.questoes[0].id} className="folha-assunto">
                   <h3>{a.titulo}</h3>
-                  {blocosPorTexto(a.questoes).map((b) => {
+                  {blocosPorTexto(a.questoes).flatMap((b) => {
                     const numeros = b.texto ? (numerosDoTexto.get(b.texto) ?? []) : [];
                     const primeiro = numeros.length ? Math.min(...numeros) : 0;
                     const textoAqui = b.texto && b.questoes.some((q) => num(q) === primeiro);
-                    return (
-                      <div key={b.questoes[0].id}>
-                        {b.texto &&
-                          (textoAqui ? (
-                            <TextoFolha texto={b.texto} numeros={numeros} />
-                          ) : (
-                            <p className="folha-texto-ref">
-                              Texto associado: o mesmo impresso antes da questão {primeiro}.
-                            </p>
-                          ))}
-                        {b.questoes.map((q) => (
-                          <QuestaoFolha key={q.id} questao={q} numero={num(q)} />
-                        ))}
-                      </div>
+                    // O texto entra na seção da 1ª questão do bloco, logo abaixo da divisória.
+                    const texto = !b.texto ? null : textoAqui ? (
+                      <TextoFolha texto={b.texto} numeros={numeros} />
+                    ) : (
+                      <p className="folha-texto-ref">
+                        Texto associado: o mesmo da questão {primeiro}.
+                      </p>
                     );
+                    return b.questoes.map((q, i) => (
+                      <QuestaoFolha
+                        key={q.id}
+                        questao={q}
+                        numero={num(q)}
+                        texto={i === 0 ? texto : null}
+                      />
+                    ));
                   })}
                 </section>
               ))}
@@ -133,37 +134,53 @@ function TextoFolha({ texto, numeros }: { texto: string; numeros: number[] }) {
   );
 }
 
-function QuestaoFolha({ questao: q, numero }: { questao: TopicoQuestao; numero: number }) {
+/**
+ * A seção de uma questão: a divisória (etiqueta + linha, como no caderno do CESPE) abre
+ * a seção; o texto associado, quando a questão é a 1ª do texto, vem logo abaixo dela; e
+ * por fim o corpo (enunciado e alternativas), que não se parte entre colunas.
+ */
+function QuestaoFolha({
+  questao: q,
+  numero,
+  texto,
+}: {
+  questao: TopicoQuestao;
+  numero: number;
+  texto?: ReactNode;
+}) {
   return (
     <article className="folha-q">
-      {/* Cabeçalho no estilo do caderno do CESPE: etiqueta preta com o número e uma
-          linha até a borda da coluna, separando uma questão da outra. */}
-      <p className="folha-q-cab">
-        <span className="folha-q-num">Questão {numero}</span>
-      </p>
-      {q.fonte?.trim() && <p className="folha-q-fonte">{cabecalhoFonte(q.fonte)}</p>}
-      {q.contexto?.trim() && <p className="folha-q-contexto">{q.contexto.trim()}</p>}
-      <p className="folha-q-enunciado">{q.enunciado.trim()}</p>
-
-      {ehMultipla(q) ? (
-        <ol className="folha-alts">
-          {alternativasDe(q).map((a) => (
-            <li key={a.letra}>
-              <span className="folha-letra">{a.letra}</span>
-              <span>{a.texto}</span>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <p className="folha-ce">
-          <span>
-            <span className="folha-caixa" /> Certo
-          </span>
-          <span>
-            <span className="folha-caixa" /> Errado
-          </span>
+      <div className="folha-q-topo">
+        <p className="folha-q-cab">
+          <span className="folha-q-num">Questão {numero}</span>
         </p>
-      )}
+        {q.fonte?.trim() && <p className="folha-q-fonte">{cabecalhoFonte(q.fonte)}</p>}
+      </div>
+      {texto}
+      <div className="folha-q-corpo">
+        {q.contexto?.trim() && <p className="folha-q-contexto">{q.contexto.trim()}</p>}
+        <p className="folha-q-enunciado">{q.enunciado.trim()}</p>
+
+        {ehMultipla(q) ? (
+          <ol className="folha-alts">
+            {alternativasDe(q).map((a) => (
+              <li key={a.letra}>
+                <span className="folha-letra">{a.letra}</span>
+                <span>{a.texto}</span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="folha-ce">
+            <span>
+              <span className="folha-caixa" /> Certo
+            </span>
+            <span>
+              <span className="folha-caixa" /> Errado
+            </span>
+          </p>
+        )}
+      </div>
     </article>
   );
 }
