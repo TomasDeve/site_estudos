@@ -242,15 +242,24 @@ textarea,
    A folha é um documento à parte, preto no branco, que só aparece ao imprimir
    (ou na prévia da página). Medidas em pt/mm porque o destino é o papel A4. */
 @media print {
+  /* Margem zero na página e a margem de verdade DENTRO da folha, repetida em cada
+     página (clone): assim sai igual com "Margens: Padrão" ou "Nenhuma" no diálogo.
+     Com "Nenhuma", uma margem só no @page era ignorada e o texto encostava (e era
+     cortado) na borda do papel. */
   @page {
     size: A4;
-    margin: 12mm 12mm 14mm;
+    margin: 0;
   }
   html {
     color-scheme: light;
   }
   body {
     background: #fff !important;
+  }
+  .folha {
+    padding: 12mm 12mm 14mm;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
   /* avisos (toasts) nunca vão pro papel */
   [data-sonner-toaster] {
