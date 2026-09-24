@@ -454,15 +454,14 @@ textarea,
   border-radius: 0.8pt;
 }
 
-/* O texto associado PODE continuar na coluna seguinte (proibir a quebra deixava
-   buracos enormes quando texto + questão não cabiam juntos), mas o fim dele fica
-   sempre colado na 1ª questão, nunca sozinho no fim da coluna. */
+/* O texto associado segue o fluxo livre: enche a coluna e só continua na seguinte se
+   não couber. Nada de "evitar quebra" nele — prender o texto (inteiro ou o fim dele)
+   à questão abria buracos na coluna sem necessidade. */
 .folha-texto {
   margin-bottom: 3mm;
   border: 0.8pt solid #9a9a9a;
   border-radius: 1.5mm;
   padding: 2.5mm 3.5mm;
-  break-after: avoid;
 }
 .folha-texto-rotulo {
   margin-bottom: 1.2mm;
