@@ -474,7 +474,9 @@ export function ImpressaoPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    // Na impressão a página vira bloco comum: como item de flex, a folha era medida antes
+    // da paginação (colunas em sequência contadas como uma só) e sobravam folhas em branco.
+    <div className="flex min-h-dvh flex-col print:block print:min-h-0">
       <GrifosLayer />
       <header className="sticky top-0 z-10 flex shrink-0 items-center gap-3 border-b border-line/50 bg-navy-900/90 px-4 py-3 backdrop-blur-sm print:hidden">
         <button
@@ -651,6 +653,10 @@ export function ImpressaoPage() {
 
         {/* A folha: escondida na tela (salvo na prévia), é o que sai na impressão */}
         <div className={previa && visiveis.length > 0 ? "px-2 pb-24 sm:px-6 print:p-0" : "hidden print:block"}>
+          <p className="mx-auto mb-2 max-w-[210mm] px-1 text-[11px] text-mut print:hidden">
+            Prévia aproximada: a quebra das páginas e das colunas (a 1ª enche antes da 2ª)
+            aparece exata na janela de impressão.
+          </p>
           <FolhaImpressao
             materias={grupos.folha}
             numeroDe={numeroDe}

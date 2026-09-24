@@ -65,17 +65,20 @@ export function FolhaImpressao({ materias, numeroDe, opcoes, concurso }: Props) 
         <span>Fim: ____:____</span>
       </p>
 
-      {materias.map((m, i) => {
-        const qtd = m.assuntos.reduce((s, a) => s + a.questoes.length, 0);
-        return (
-          <section key={`${m.materiaId}-${i}`} className="folha-materia">
-            <h2>
-              {m.nome}
-              <small>
-                {qtd} {qtd === 1 ? "questão" : "questões"}
-              </small>
-            </h2>
-            <div className="folha-colunas">
+      {/* Um fluxo só de colunas para a folha inteira (os títulos de matéria vão dentro
+          dele, como no caderno da prova): a 1ª coluna enche até o fim da página antes
+          de a 2ª começar — inclusive na última página. */}
+      <div className="folha-colunas">
+        {materias.map((m, i) => {
+          const qtd = m.assuntos.reduce((s, a) => s + a.questoes.length, 0);
+          return (
+            <section key={`${m.materiaId}-${i}`} className="folha-materia">
+              <h2>
+                {m.nome}
+                <small>
+                  {qtd} {qtd === 1 ? "questão" : "questões"}
+                </small>
+              </h2>
               {m.assuntos.map((a) => (
                 <section key={a.questoes[0].id} className="folha-assunto">
                   <h3>{a.titulo}</h3>
@@ -101,10 +104,10 @@ export function FolhaImpressao({ materias, numeroDe, opcoes, concurso }: Props) 
                   })}
                 </section>
               ))}
-            </div>
-          </section>
-        );
-      })}
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }

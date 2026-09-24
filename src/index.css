@@ -366,6 +366,14 @@ textarea,
   column-gap: 7mm;
   column-rule: 0.5pt solid #c4c4c4;
 }
+/* No papel, preenchimento em sequência: a 1ª coluna vai até o fim da página e só então
+   começa a 2ª — o padrão (balance) dividiria a última página ao meio. Só na impressão:
+   na tela não há páginas, e o "auto" jogaria tudo na 1ª coluna da prévia. */
+@media print {
+  .folha[data-colunas="2"] .folha-colunas {
+    column-fill: auto;
+  }
+}
 /* Na coluna estreita, justificar sem hifenização abre buracos entre as palavras:
    alinhado à esquerda lê melhor. */
 .folha[data-colunas="2"] .folha-q-enunciado,
@@ -446,11 +454,15 @@ textarea,
   border-radius: 0.8pt;
 }
 
+/* O texto associado não se parte (a não ser que seja maior que a coluna) e fica
+   colado na 1ª questão dele, em vez de sobrar sozinho no fim da coluna. */
 .folha-texto {
   margin-bottom: 3mm;
   border: 0.8pt solid #9a9a9a;
   border-radius: 1.5mm;
   padding: 2.5mm 3.5mm;
+  break-inside: avoid;
+  break-after: avoid;
 }
 .folha-texto-rotulo {
   margin-bottom: 1.2mm;
@@ -477,6 +489,7 @@ textarea,
   font-size: 0.8em;
   font-style: italic;
   color: #444;
+  break-after: avoid;
 }
 
 /* Prévia na tela: a folha vira uma página de papel (as quebras de página só
