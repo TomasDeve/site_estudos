@@ -136,10 +136,12 @@ function TextoFolha({ texto, numeros }: { texto: string; numeros: number[] }) {
 function QuestaoFolha({ questao: q, numero }: { questao: TopicoQuestao; numero: number }) {
   return (
     <article className="folha-q">
+      {/* Cabeçalho no estilo do caderno do CESPE: etiqueta preta com o número e uma
+          linha até a borda da coluna, separando uma questão da outra. */}
       <p className="folha-q-cab">
         <span className="folha-q-num">Questão {numero}</span>
-        {q.fonte?.trim() && <span className="folha-q-fonte">{cabecalhoFonte(q.fonte)}</span>}
       </p>
+      {q.fonte?.trim() && <p className="folha-q-fonte">{cabecalhoFonte(q.fonte)}</p>}
       {q.contexto?.trim() && <p className="folha-q-contexto">{q.contexto.trim()}</p>}
       <p className="folha-q-enunciado">{q.enunciado.trim()}</p>
 

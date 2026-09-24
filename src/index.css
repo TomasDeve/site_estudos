@@ -287,6 +287,7 @@ textarea,
 .folha-sub,
 .folha-campos,
 .folha-q-cab,
+.folha-q-fonte,
 .folha-texto-rotulo,
 .folha-ce,
 .folha-letra {
@@ -385,20 +386,34 @@ textarea,
   margin-bottom: 4.5mm;
   break-inside: avoid;
 }
+/* Cabeçalho como no caderno do CESPE: etiqueta preta com o número e, saindo dela, uma
+   linha até a borda da coluna — é ela que separa uma questão da outra. O fundo preto é
+   forçado na impressão (print-color-adjust), senão o navegador o omite por padrão. */
 .folha-q-cab {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 2.5mm;
-  margin-bottom: 1mm;
-  font-size: 0.76em;
+  align-items: flex-end;
+  margin-bottom: 1.2mm;
+  font-size: 0.74em;
+  line-height: 1;
+}
+.folha-q-cab::after {
+  content: "";
+  flex: 1;
+  border-bottom: 0.9pt solid #161616;
 }
 .folha-q-num {
+  background: #161616;
+  color: #fff;
+  padding: 0.9mm 2.4mm 0.8mm;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 .folha-q-fonte {
+  margin-bottom: 1.2mm;
+  font-size: 0.72em;
   color: #555;
 }
 .folha-q-contexto {
