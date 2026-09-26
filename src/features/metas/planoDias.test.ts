@@ -3,7 +3,7 @@ import {
   atividadeDe,
   blocosVisiveis,
   diasDoPlano,
-  rotuloDoBloco,
+  ROTULO_BLOCO,
   rotuloDoDia,
   somarDias,
   tempoDosBlocos,
@@ -52,7 +52,6 @@ describe("plano de 6 dias", () => {
     expect(tempoDosBlocos(0)).toBe("0");
     expect(tempoDosBlocos(1)).toBe("30min");
     expect(tempoDosBlocos(3)).toBe("1h30");
-    expect(rotuloDoBloco(2)).toBe("1h");
-    expect(rotuloDoBloco(6)).toBe("3h");
+    expect(ROTULO_BLOCO).toBe("30min");
   });
 });

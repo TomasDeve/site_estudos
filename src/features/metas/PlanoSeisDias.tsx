@@ -27,7 +27,7 @@ import {
   atividadeDe,
   blocosVisiveis,
   diasDoPlano,
-  rotuloDoBloco,
+  ROTULO_BLOCO,
   rotuloDoDia,
   somarDias,
   tempoDosBlocos,
@@ -304,7 +304,7 @@ function CaixaDia({
       </div>
 
       {/* Os blocos de meia hora do dia, como linhas de planilha. A 1ª coluna
-          mostra até onde o dia chega ao fim do bloco (30min, 1h, 1h30…). */}
+          traz a duração de cada um (30min), igual em todas as linhas. */}
       <ol className="border-t border-line/50">
         {Array.from({ length: visiveis }, (_, i) => i + 1).map((h) => {
           const l = horas?.get(h);
@@ -319,7 +319,7 @@ function CaixaDia({
                 className="flex w-12 shrink-0 items-center justify-center border-r border-line/30 text-[10px] font-semibold tabular-nums text-mut"
                 title={`${h}º bloco de 30 min`}
               >
-                {rotuloDoBloco(h)}
+                {ROTULO_BLOCO}
               </span>
               {l ? (
                 <LinhaPreenchida
@@ -484,9 +484,7 @@ function EditarHoraModal({
       title={
         <>
           {nome} <span className="font-normal text-mut">{dataCurta}</span> · {hora}º bloco{" "}
-          <span className="font-normal text-mut">
-            ({hora === 1 ? "0" : rotuloDoBloco(hora - 1)} a {rotuloDoBloco(hora)})
-          </span>
+          <span className="font-normal text-mut">({ROTULO_BLOCO})</span>
         </>
       }
       footer={

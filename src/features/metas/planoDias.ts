@@ -55,10 +55,8 @@ export function tempoDosBlocos(n: number): string {
   return n === 0 ? "0" : fmtMinutos(n * MINUTOS_POR_BLOCO);
 }
 
-/** Rótulo da linha: até onde o dia chega ao fim do bloco ("30min", "1h", "1h30"…). */
-export function rotuloDoBloco(n: number): string {
-  return fmtMinutos(n * MINUTOS_POR_BLOCO);
-}
+/** Rótulo de cada linha: a duração do bloco ("30min"), igual em todas. */
+export const ROTULO_BLOCO = fmtMinutos(MINUTOS_POR_BLOCO);
 
 /** Os N dias seguidos a partir de `inicio` (inclusive), como "YYYY-MM-DD". */
 export function diasDoPlano(inicio: string, n = DIAS_NO_PLANO): string[] {
