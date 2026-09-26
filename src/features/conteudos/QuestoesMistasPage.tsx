@@ -20,7 +20,7 @@ import {
 import { useTopicos } from "@/api/topicos";
 import { useMaterias, useConcursoMaterias } from "@/api/materias";
 import { useConcursos, concursoDeEstudo } from "@/api/concursos";
-import { topicosDoConcurso } from "@/lib/progresso";
+import { ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
 import { useResumosDeQuestoes, useTopicosComLei } from "@/api/topicoTextos";
 import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
 import { hojeISO } from "@/lib/dates";
@@ -49,6 +49,8 @@ import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
 import { CATEGORIAS_FILTRO } from "./categorias";
+import { FiltroMateriaAssunto, type GrupoFiltro } from "./FiltroMateriaAssunto";
+import { chaveFiltro, compilarFiltro, FILTRO_VAZIO, type FiltroQuestoes } from "./filtroQuestoes";
 import { ehFonteQC, FonteQuestao, PillCategoria } from "./QuestoesPage";
 import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
@@ -70,7 +72,9 @@ type Aba = (typeof ABAS)[number]["chave"];
  * na prova. Só entram os assuntos que caem no edital do concurso em estudo (o
  * recorte de `topicos_incluidos`), pra não misturar questões de outros editais.
  * Sem `:materiaId` na rota, traz todas as matérias desse edital; com ele, só as
- * da matéria escolhida (ainda respeitando o recorte). Abre em aba própria,
+ * da matéria escolhida (ainda respeitando o recorte). Sempre abre sem filtro;
+ * dá para recortar por matéria e assunto (estilo QConcursos — matéria sem
+ * assunto marcado traz todos os dela) e por origem. Abre em aba própria,
  * como o caderno de um assunto. Não revela o assunto (nem o número da questão),
  * para não dar pista; a fonte da questão real (cargo, banca e ano) aparece, pois
  * não entrega a resposta. Responder aqui grava na mesma questão do caderno e segue
@@ -127,6 +131,8 @@ export function QuestoesMistasPage() {
   // Filtro por origem (mesmas pílulas do caderno do assunto), com multi-seleção.
   // Conjunto vazio = "Todas" (sem filtro); o escopo vira a união das marcadas.
   const [cats, setCats] = useState<ReadonlySet<QuestaoCategoria>>(new Set());
+  // Filtro por matéria e assunto (estilo QConcursos). Sempre abre sem filtro.
+  const [filtro, setFiltro] = useState<FiltroQuestoes>(FILTRO_VAZIO);
 
   /** Liga/desliga uma origem no filtro — várias podem ficar ativas ao mesmo tempo. */
   function alternarCategoria(chave: QuestaoCategoria) {
@@ -216,37 +222,87 @@ export function QuestoesMistasPage() {
     [questoes, materiaId, topicoPorId, idsDoEdital]
   );
 
+  const materiaDe = (q: TopicoQuestao) => topicoPorId.get(q.topico_id)?.materia_id;
+  const passaCat = (q: TopicoQuestao) =>
+    cats.size === 0 || cats.has(q.categoria as QuestaoCategoria);
+
+  // Recorte por matéria/assunto. As pílulas de origem contam em cima dele, e o
+  // painel do filtro conta em cima da origem marcada (cada filtro conta pelo outro).
+  const noFiltro = useMemo(() => {
+    const passa = compilarFiltro(filtro);
+    return base.filter((q) => passa(topicoPorId.get(q.topico_id)?.materia_id, q.topico_id));
+  }, [base, filtro, topicoPorId]);
+
+  // Matérias e assuntos oferecidos no filtro: os que têm questão no escopo, na
+  // ordem do edital do concurso em estudo. Contagem já respeita a origem marcada.
+  const gruposFiltro = useMemo<GrupoFiltro[]>(() => {
+    const porTopico = new Map<string, number>();
+    const comQuestao = new Set<string>();
+    for (const q of base) {
+      comQuestao.add(q.topico_id);
+      if (cats.size && !cats.has(q.categoria as QuestaoCategoria)) continue;
+      porTopico.set(q.topico_id, (porTopico.get(q.topico_id) ?? 0) + 1);
+    }
+    const meus = (vinculos ?? []).filter((v) => v.concurso_id === concursoAtivo?.id);
+    const vinculoDe = new Map(meus.map((v) => [v.materia_id, v]));
+    const grupos: GrupoFiltro[] = [];
+    for (const m of materias ?? []) {
+      const dela = (topicos ?? []).filter((t) => t.materia_id === m.id && comQuestao.has(t.id));
+      if (dela.length === 0) continue;
+      const assuntos = ordenarTopicosDoVinculo(dela, vinculoDe.get(m.id)?.topicos_incluidos).map(
+        (t) => ({ topico: t, total: porTopico.get(t.id) ?? 0 })
+      );
+      grupos.push({ materia: m, total: assuntos.reduce((s, a) => s + a.total, 0), assuntos });
+    }
+    const ordem = (id: string) => vinculoDe.get(id)?.ordem ?? 1e9;
+    return grupos.sort(
+      (a, b) =>
+        ordem(a.materia.id) - ordem(b.materia.id) || a.materia.nome.localeCompare(b.materia.nome)
+    );
+  }, [base, cats, materias, topicos, vinculos, concursoAtivo]);
+
+  /** Prévia do botão "Filtrar": quantas questões o rascunho traria (com a origem marcada). */
+  function contarFiltro(f: FiltroQuestoes) {
+    const passa = compilarFiltro(f);
+    return base.filter((q) => passaCat(q) && passa(materiaDe(q), q.topico_id)).length;
+  }
+
   // Quantas questões há em cada origem — número mostrado nas pílulas de filtro.
   const contagemCategoria = useMemo(() => {
     const c = { doutrina_jurisprudencia: 0, baseada_questoes: 0, ia: 0, real: 0 } as Record<
       QuestaoCategoria,
       number
     >;
-    for (const q of base) {
+    for (const q of noFiltro) {
       const k = q.categoria as QuestaoCategoria;
       if (k in c) c[k]++;
     }
     return c;
-  }, [base]);
+  }, [noFiltro]);
 
   // Ordena por id antes de embaralhar: a mesma semente reproduz a mesma ordem
   // mesmo após os refetches disparados pelas respostas. O filtro por origem
   // recorta antes do embaralho ("todas" = sem recorte).
   const misturadas = useMemo(() => {
     const vivas =
-      cats.size === 0 ? base : base.filter((q) => cats.has(q.categoria as QuestaoCategoria));
+      cats.size === 0
+        ? noFiltro
+        : noFiltro.filter((q) => cats.has(q.categoria as QuestaoCategoria));
     const arr = [...vivas].sort((a, b) => a.id.localeCompare(b.id));
     // Embaralha e depois junta as que compartilham o mesmo "Texto associado" (sem
     // desfazer o embaralho): você lê o texto uma vez e responde todas em sequência.
     return agruparPorChave(embaralhar(arr, semente), (q) => q.texto_associado);
-  }, [base, cats, semente]);
+  }, [noFiltro, cats, semente]);
 
   // Histórico (questao_logs) no escopo da página — a matéria escolhida ou o site
-  // todo — para a janela das últimas 30 questões.
+  // todo, recortado pelo filtro de matéria/assunto — para a janela das últimas 30.
   const logsEscopo = useMemo(() => {
     const todos = todosLogs ?? [];
-    return materiaId ? todos.filter((l) => l.materia_id === materiaId) : todos;
-  }, [todosLogs, materiaId]);
+    const passa = compilarFiltro(filtro);
+    return todos.filter(
+      (l) => (!materiaId || l.materia_id === materiaId) && passa(l.materia_id, l.topico_id)
+    );
+  }, [todosLogs, materiaId, filtro]);
 
   // Placar de tudo que já foi respondido, em qualquer aba.
   const placar = useMemo(() => {
@@ -278,7 +334,7 @@ export function QuestoesMistasPage() {
   // Chave estável do conjunto (ordenada). Modo bloquinhos: resolve de 5 em 5;
   // trocar de origem, aba ou embaralhar recomeça do 1º bloco.
   const catsKey = [...cats].sort().join(",");
-  const bloco = useBloquinhos(lista, `${catsKey}-${aba}-${semente}`);
+  const bloco = useBloquinhos(lista, `${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`);
 
   if (
     carregandoQuestoes ||
@@ -414,6 +470,16 @@ export function QuestoesMistasPage() {
               <BotaoBloquinhos b={bloco} className="ml-auto" />
             </div>
 
+            {/* Filtro por matéria e assunto (estilo QConcursos) — abre sem filtro;
+                matéria sem assunto marcado traz todos os assuntos dela. */}
+            <FiltroMateriaAssunto
+              grupos={gruposFiltro}
+              aplicado={filtro}
+              onAplicar={setFiltro}
+              contar={contarFiltro}
+              materiaFixa={materiaId}
+            />
+
             {/* Filtro por origem — as mesmas pílulas do caderno do assunto. Dá para
                 marcar várias (o escopo vira a união); "Todas" limpa e junta tudo. */}
             <div className="flex flex-wrap items-center gap-1.5">
@@ -424,7 +490,7 @@ export function QuestoesMistasPage() {
                 ativo={cats.size === 0}
                 onClick={() => setCats(new Set())}
                 label="Todas"
-                contagem={base.length}
+                contagem={noFiltro.length}
               />
               {CATEGORIAS_FILTRO.map((c) => (
                 <PillCategoria
@@ -459,7 +525,9 @@ export function QuestoesMistasPage() {
             {lista.length === 0 ? (
               <p className="py-8 text-center text-sm text-mut">
                 {misturadas.length === 0
-                  ? `Nenhuma questão em “${catsLabel}” ainda.`
+                  ? cats.size > 0
+                    ? `Nenhuma questão em “${catsLabel}”${filtro.length ? " neste filtro" : ""} ainda.`
+                    : "Nenhuma questão neste filtro ainda."
                   : aba === "responder"
                     ? "Tudo resolvido 🎉 Use “Responder de novo” nas resolvidas para revisar."
                     : "Nenhuma questão resolvida ainda."}
