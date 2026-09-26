@@ -285,6 +285,7 @@ export type Database = {
         Row: {
           banca: string | null
           ciclo_plano_inicio: string | null
+          ciclo_plano_ordem: string[] | null
           cor: string
           created_at: string
           data_prova: string | null
@@ -309,6 +310,7 @@ export type Database = {
         Insert: {
           banca?: string | null
           ciclo_plano_inicio?: string | null
+          ciclo_plano_ordem?: string[] | null
           cor?: string
           created_at?: string
           data_prova?: string | null
@@ -333,6 +335,7 @@ export type Database = {
         Update: {
           banca?: string | null
           ciclo_plano_inicio?: string | null
+          ciclo_plano_ordem?: string[] | null
           cor?: string
           created_at?: string
           data_prova?: string | null

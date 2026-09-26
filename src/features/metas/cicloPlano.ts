@@ -119,3 +119,20 @@ export function voltaDoCiclo(vezes: readonly number[]): VoltaCiclo {
   const atual = completas + 1;
   return { completas, atual, naVolta: vezes.filter((v) => v >= atual).length };
 }
+
+/**
+ * As matérias na ordem do ciclo: primeiro as da `ordem` gravada (a que você
+ * arrastou), na sequência dela; as que não estão lá (matéria que entrou depois no
+ * edital) vêm no fim, na ordem do edital. Id da `ordem` que não é mais matéria do
+ * concurso (riscada, desvinculada) é ignorado. Sem `ordem` = ordem do edital.
+ */
+export function ordenarCiclo<T extends { id: string }>(
+  materias: readonly T[],
+  ordem: readonly string[] | null | undefined
+): T[] {
+  if (!ordem?.length) return [...materias];
+  const pos = new Map(ordem.map((id, i) => [id, i]));
+  const gravadas = materias.filter((m) => pos.has(m.id));
+  gravadas.sort((a, b) => pos.get(a.id)! - pos.get(b.id)!);
+  return [...gravadas, ...materias.filter((m) => !pos.has(m.id))];
+}

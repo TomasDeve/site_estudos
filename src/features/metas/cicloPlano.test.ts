@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RANKS, TIERS, contarCiclo, rankDoCiclo, voltaDoCiclo } from "./cicloPlano";
+import { RANKS, TIERS, contarCiclo, ordenarCiclo, rankDoCiclo, voltaDoCiclo } from "./cicloPlano";
 
 const bloco = (data: string, materia_id: string | null, feita = false, minutos?: number) => ({
   data,
@@ -62,5 +62,17 @@ describe("ciclo das matérias", () => {
     expect(voltaDoCiclo([1, 1, 1])).toEqual({ completas: 1, atual: 2, naVolta: 0 });
     expect(voltaDoCiclo([2, 1, 1])).toEqual({ completas: 1, atual: 2, naVolta: 1 });
     expect(voltaDoCiclo([])).toEqual({ completas: 0, atual: 1, naVolta: 0 });
+  });
+
+  it("ordem do ciclo: a arrastada vale; matéria nova vai pro fim e id que saiu é ignorado", () => {
+    const edital = ["a", "b", "c", "d"].map((id) => ({ id }));
+    const ids = (ms: { id: string }[]) => ms.map((m) => m.id);
+    expect(ids(ordenarCiclo(edital, null))).toEqual(["a", "b", "c", "d"]);
+    expect(ids(ordenarCiclo(edital, []))).toEqual(["a", "b", "c", "d"]);
+    expect(ids(ordenarCiclo(edital, ["c", "a", "d", "b"]))).toEqual(["c", "a", "d", "b"]);
+    // "b" e "d" não estavam na ordem gravada (entraram depois): vão pro fim, na ordem do edital
+    expect(ids(ordenarCiclo(edital, ["c", "a"]))).toEqual(["c", "a", "b", "d"]);
+    // "x" saiu do concurso (riscada): some
+    expect(ids(ordenarCiclo(edital, ["x", "d", "c", "b", "a"]))).toEqual(["d", "c", "b", "a"]);
   });
 });

@@ -152,6 +152,42 @@ export function useInicioCicloPlano() {
   });
 }
 
+/**
+ * Grava a ordem do ciclo das matérias (ids, na sequência arrastada) no concurso;
+ * `null` volta à ordem do edital. Otimista: o ciclo e o modal do bloco já
+ * mostram a ordem nova na hora.
+ */
+export function useOrdemCicloPlano() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ciclo_plano_ordem,
+    }: {
+      id: string;
+      ciclo_plano_ordem: string[] | null;
+    }) => {
+      const { error } = await supabase
+        .from("concursos")
+        .update({ ciclo_plano_ordem })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, ciclo_plano_ordem }) => {
+      await qc.cancelQueries({ queryKey: ["concursos"] });
+      const prev = qc.getQueryData<Concurso[]>(["concursos"]);
+      qc.setQueryData<Concurso[]>(["concursos"], (old) =>
+        old?.map((c) => (c.id === id ? { ...c, ciclo_plano_ordem } : c))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concursos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concursos"] }),
+  });
+}
+
 export function useExcluirConcurso() {
   const qc = useQueryClient();
   return useMutation({

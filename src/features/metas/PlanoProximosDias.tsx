@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -44,7 +44,9 @@ import { Input } from "@/components/Field";
 import { MenuMais } from "@/components/MenuMais";
 import { Modal } from "@/components/Modal";
 import { Spinner } from "@/components/Spinner";
-import { CicloDasMaterias } from "./CicloDasMaterias";
+import { CicloDasMaterias, PontoDoRank } from "./CicloDasMaterias";
+import type { ContagemCiclo } from "./cicloPlano";
+import { useCicloDoPlano } from "./useCicloDoPlano";
 import {
   ATIVIDADES,
   BLOCOS_INICIAIS,
@@ -163,6 +165,9 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
     return meus.map((v) => porId.get(v.materia_id)).filter((m): m is Materia => !!m);
   }, [vinculos, materias, concursoId]);
   const materiaPorId = useMemo(() => new Map((materias ?? []).map((m) => [m.id, m])), [materias]);
+  // A ordem do ciclo (arrastável) e o rank de cada matéria: a faixa do ciclo e o
+  // modal do bloco mostram as matérias do mesmo jeito.
+  const ciclo = useCicloDoPlano(materiasDoConcurso);
 
   const porDia = useMemo(() => {
     const mapa = new Map<string, Map<number, PlanoHora>>();
@@ -384,8 +389,8 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
               </DragOverlay>
             </DndContext>
 
-            {/* O ciclo das matérias: o que já entrou no plano, na ordem do edital */}
-            <CicloDasMaterias materias={materiasDoConcurso} />
+            {/* O ciclo das matérias: o que já entrou no plano, na ordem do ciclo */}
+            <CicloDasMaterias ciclo={ciclo} />
           </>
         )}
 
@@ -394,7 +399,8 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           key={`${editando.data}-${editando.hora}`}
           edicao={editando}
           hoje={hoje}
-          materias={materiasDoConcurso}
+          materias={ciclo.materias}
+          contagem={ciclo.contagem}
           atividadePadrao={ultimaAtividade}
           onSalvo={setUltimaAtividade}
           onErro={erro}
@@ -782,6 +788,7 @@ function EditarHoraModal({
   edicao,
   hoje,
   materias,
+  contagem,
   atividadePadrao,
   onSalvo,
   onErro,
@@ -789,7 +796,9 @@ function EditarHoraModal({
 }: {
   edicao: Edicao;
   hoje: string;
+  /** As matérias do edital, na ordem do ciclo. */
   materias: Materia[];
+  contagem: Map<string, ContagemCiclo>;
   atividadePadrao: AtividadeChave;
   onSalvo: (atividade: AtividadeChave) => void;
   onErro: (err: unknown) => void;
@@ -833,6 +842,8 @@ function EditarHoraModal({
     <Modal
       open
       onClose={onClose}
+      // Mais largo que o padrão: as matérias em 2 colunas cabem sem espremer o nome.
+      width="max-w-2xl"
       title={
         <>
           {nome} <span className="font-normal text-mut">{dataCurta}</span> · {hora}º bloco{" "}
@@ -868,7 +879,8 @@ function EditarHoraModal({
           <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
             Atividade
           </h3>
-          <div className="flex flex-wrap gap-1.5">
+          {/* Grade de 3 colunas (2 no celular): as 6 atividades em 2 linhas certinhas */}
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
             {ATIVIDADES.map((a) => {
               const ativo = atividade === a.chave;
               return (
@@ -877,7 +889,7 @@ function EditarHoraModal({
                   type="button"
                   onClick={() => setAtividade(a.chave)}
                   aria-pressed={ativo}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`flex min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-left text-xs font-semibold transition-colors ${
                     ativo
                       ? `border-current ${a.fundo} ${a.texto}`
                       : "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
@@ -916,8 +928,14 @@ function EditarHoraModal({
               <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
                 Matéria
               </h3>
-              <div className="flex flex-wrap gap-1.5">
-                {materias.map((m) => {
+              {/* Igual ao ciclo: numeradas na ordem dele, descendo pela 1ª coluna e
+                  depois pela 2ª, com o rank de cada uma à direita (quem está atrás no
+                  ciclo salta aos olhos). No celular, uma coluna só. */}
+              <div
+                className="grid gap-1.5 sm:grid-flow-col sm:grid-cols-2 sm:[grid-template-rows:repeat(var(--linhas),minmax(0,auto))]"
+                style={{ "--linhas": Math.ceil(materias.length / 2) } as CSSProperties}
+              >
+                {materias.map((m, i) => {
                   const ativo = materiaId === m.id;
                   return (
                     <button
@@ -925,20 +943,29 @@ function EditarHoraModal({
                       type="button"
                       onClick={() => setMateriaId(ativo ? null : m.id)}
                       aria-pressed={ativo}
-                      className={`flex max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                      className={`flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs font-medium transition-colors ${
                         ativo
                           ? "border-gold/50 bg-gold/15 text-gold"
                           : "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
                       }`}
                     >
-                      <span className="leading-none">{m.icone}</span>
-                      <span className="truncate">{m.nome}</span>
+                      <span
+                        className={`w-4 shrink-0 text-[10px] font-semibold tabular-nums ${
+                          ativo ? "text-gold/70" : "text-mut"
+                        }`}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="shrink-0 text-sm leading-none">{m.icone}</span>
+                      <span className="min-w-0 flex-1 leading-snug">{m.nome}</span>
+                      <PontoDoRank vezes={contagem.get(m.id)?.blocos ?? 0} />
                     </button>
                   );
                 })}
               </div>
               <p className="mt-2 text-[11px] text-mut">
-                Opcional — sem matéria vale para tudo (ex.: Anki geral, simulado completo).
+                Na ordem do ciclo; a bolinha é o rank da matéria nele. Opcional — sem matéria vale
+                para tudo (ex.: Anki geral, simulado completo).
               </p>
             </section>
 
