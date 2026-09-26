@@ -11,6 +11,19 @@ import type { PlanoHora } from "@/types/db";
  */
 const KEY = ["plano_horas"];
 
+/**
+ * Bloco feito conta 30 min de estudo: o banco (trigger da migração 0035) cria/
+ * apaga a sessão ligada pelo `plano_id`. Aqui só se recarrega o que depende dela
+ * — o gráfico "Tempo de estudo" e o "Estudo hoje".
+ */
+function useRecarregar() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: KEY });
+    qc.invalidateQueries({ queryKey: ["sessoes"] });
+  };
+}
+
 export function usePlanoHoras(inicio: string, fim: string) {
   return useQuery({
     queryKey: [...KEY, inicio, fim],
@@ -64,7 +77,7 @@ const mesmaHora = (l: PlanoHora, data: string, hora: number) => l.data === data 
 
 /** Preenche (ou troca) o que vai ser feito numa hora do dia. Mantém o "feita". */
 export function useSalvarHora() {
-  const qc = useQueryClient();
+  const recarregar = useRecarregar();
   const mudarCache = useMudarCache();
   const desfazer = useDesfazer();
   return useMutation({
@@ -88,13 +101,13 @@ export function useSalvarHora() {
         return [...linhas, nova];
       }),
     onError: (_e, _v, antes) => desfazer(antes),
-    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSettled: recarregar,
   });
 }
 
 /** Libera a hora (apaga a linha). */
 export function useLimparHora() {
-  const qc = useQueryClient();
+  const recarregar = useRecarregar();
   const mudarCache = useMudarCache();
   const desfazer = useDesfazer();
   return useMutation({
@@ -108,13 +121,13 @@ export function useLimparHora() {
     },
     onMutate: ({ data, hora }) => mudarCache((ls) => ls.filter((l) => !mesmaHora(l, data, hora))),
     onError: (_e, _v, antes) => desfazer(antes),
-    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSettled: recarregar,
   });
 }
 
 /** Marca/desmarca a hora como feita. */
 export function useMarcarHoraFeita() {
-  const qc = useQueryClient();
+  const recarregar = useRecarregar();
   const mudarCache = useMudarCache();
   const desfazer = useDesfazer();
   return useMutation({
@@ -129,7 +142,7 @@ export function useMarcarHoraFeita() {
     onMutate: ({ data, hora, feita }) =>
       mudarCache((ls) => ls.map((l) => (mesmaHora(l, data, hora) ? { ...l, feita } : l))),
     onError: (_e, _v, antes) => desfazer(antes),
-    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSettled: recarregar,
   });
 }
 
@@ -139,7 +152,7 @@ export function useMarcarHoraFeita() {
  * quantas horas foram copiadas.
  */
 export function useCopiarDiaPlano() {
-  const qc = useQueryClient();
+  const recarregar = useRecarregar();
   return useMutation({
     mutationFn: async ({ de, para }: { de: string; para: string }) => {
       const { data: origem, error } = await supabase
@@ -155,13 +168,13 @@ export function useCopiarDiaPlano() {
       if (e2) throw e2;
       return origem.length;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSettled: recarregar,
   });
 }
 
 /** Apaga todas as horas de um dia. */
 export function useLimparDiaPlano() {
-  const qc = useQueryClient();
+  const recarregar = useRecarregar();
   const mudarCache = useMudarCache();
   const desfazer = useDesfazer();
   return useMutation({
@@ -171,6 +184,6 @@ export function useLimparDiaPlano() {
     },
     onMutate: (data) => mudarCache((ls) => ls.filter((l) => l.data !== data)),
     onError: (_e, _v, antes) => desfazer(antes),
-    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSettled: recarregar,
   });
 }

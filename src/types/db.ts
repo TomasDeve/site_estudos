@@ -848,6 +848,7 @@ export type Database = {
           materia_id: string | null
           minutos: number
           origem: string
+          plano_id: string | null
           topico_id: string | null
           user_id: string
         }
@@ -860,6 +861,7 @@ export type Database = {
           materia_id?: string | null
           minutos: number
           origem?: string
+          plano_id?: string | null
           topico_id?: string | null
           user_id?: string
         }
@@ -872,6 +874,7 @@ export type Database = {
           materia_id?: string | null
           minutos?: number
           origem?: string
+          plano_id?: string | null
           topico_id?: string | null
           user_id?: string
         }

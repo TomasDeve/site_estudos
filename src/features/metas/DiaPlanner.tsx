@@ -195,7 +195,11 @@ export function DiaPlanner({ concursoIdPadrao }: { concursoIdPadrao?: string }) 
                 >
                   <button
                     onClick={() => toggle.mutate(b)}
-                    disabled={concluido || ehRegistro}
+                    // Travado enquanto grava: dois cliques seguidos se atropelavam e
+                    // deixavam o bloco feito sem a sessão de tempo (o gráfico não somava).
+                    disabled={
+                      concluido || ehRegistro || (toggle.isPending && toggle.variables?.id === b.id)
+                    }
                     title={
                       ehRegistro
                         ? "Registro de estudo — use a lixeira para desfazer e devolver as horas"

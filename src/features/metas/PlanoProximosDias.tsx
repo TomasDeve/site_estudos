@@ -464,7 +464,11 @@ function LinhaPreenchida({
         onClick={onFeita}
         className="flex w-10 shrink-0 cursor-pointer items-center justify-center"
         aria-label={l.feita ? "Desmarcar bloco feito" : "Marcar bloco como feito"}
-        title={l.feita ? "Desmarcar" : "Marcar como feita"}
+        title={
+          l.feita
+            ? "Desmarcar (tira os 30 min do tempo de estudo)"
+            : "Marcar como feito (soma 30 min no tempo de estudo)"
+        }
       >
         <span
           className={`flex size-5 items-center justify-center rounded-full border-2 transition-all ${
