@@ -6,9 +6,11 @@ import {
   diasDoPlano,
   lerQuantosDias,
   ROTULO_BLOCO,
+  fmtTempo,
+  lerMinutos,
+  minutosDe,
   rotuloDoDia,
   somarDias,
-  tempoDosBlocos,
 } from "./planoDias";
 
 describe("plano dos próximos dias", () => {
@@ -60,9 +62,26 @@ describe("plano dos próximos dias", () => {
   });
 
   it("blocos de meia hora viram tempo no estilo 1h30", () => {
-    expect(tempoDosBlocos(0)).toBe("0");
-    expect(tempoDosBlocos(1)).toBe("30min");
-    expect(tempoDosBlocos(3)).toBe("1h30");
+    expect(fmtTempo(0)).toBe("0");
+    expect(fmtTempo(30)).toBe("30min");
+    expect(fmtTempo(90)).toBe("1h30");
     expect(ROTULO_BLOCO).toBe("30min");
+    expect(minutosDe({})).toBe(30); // bloco sem tempo próprio (antes da 0035)
+    expect(minutosDe({ minutos: 45 })).toBe(45);
+  });
+
+  it("lê o tempo digitado: número é minuto, com h ou : é hora", () => {
+    expect(lerMinutos("45")).toBe(45);
+    expect(lerMinutos("45min")).toBe(45);
+    expect(lerMinutos(" 20 min ")).toBe(20);
+    expect(lerMinutos("1h")).toBe(60);
+    expect(lerMinutos("1h30")).toBe(90);
+    expect(lerMinutos("1:15")).toBe(75);
+    expect(lerMinutos("2H")).toBe(120);
+    expect(lerMinutos("")).toBeNull();
+    expect(lerMinutos("0")).toBeNull();
+    expect(lerMinutos("700")).toBeNull();
+    expect(lerMinutos("1h75")).toBeNull();
+    expect(lerMinutos("abc")).toBeNull();
   });
 });

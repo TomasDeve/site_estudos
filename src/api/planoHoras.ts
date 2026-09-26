@@ -54,9 +54,10 @@ export function tabelaFaltando(err: unknown): boolean {
   );
 }
 
-/** `feita` só vem no "Desfazer" do apagar (volta o bloco como estava). */
+/** `feita`/`minutos` só vêm no "Desfazer" do apagar (volta o bloco como estava). */
 type Campos = Pick<PlanoHora, "data" | "hora" | "materia_id" | "atividade" | "nota"> & {
   feita?: boolean;
+  minutos?: number;
 };
 
 /** Aplica uma mudança em todas as janelas de dias em cache (otimista). */
@@ -100,6 +101,7 @@ export function useSalvarHora() {
           id: `tmp-${c.data}-${c.hora}`,
           user_id: "",
           feita: c.feita ?? false,
+          minutos: c.minutos ?? 30,
           created_at: new Date().toISOString(),
         };
         return [...linhas, nova];
@@ -145,6 +147,8 @@ export function useReplicarHora() {
         materia_id: l.materia_id,
         atividade: l.atividade,
         nota: l.nota,
+        // Antes da 0035 a linha não tem `minutos`: aí fica o padrão do banco.
+        ...(l.minutos != null ? { minutos: l.minutos } : {}),
       });
       if (e2) throw e2;
     },
@@ -168,6 +172,27 @@ export function useReplicarHora() {
           copia,
         ];
       }),
+    onError: (_e, _v, antes) => desfazer(antes),
+    onSettled: recarregar,
+  });
+}
+
+/** Troca o tempo do bloco (se já estiver feito, o banco ajusta a sessão junto). */
+export function useTempoHora() {
+  const recarregar = useRecarregar();
+  const mudarCache = useMudarCache();
+  const desfazer = useDesfazer();
+  return useMutation({
+    mutationFn: async ({ data, hora, minutos }: { data: string; hora: number; minutos: number }) => {
+      const { error } = await supabase
+        .from("plano_horas")
+        .update({ minutos })
+        .eq("data", data)
+        .eq("hora", hora);
+      if (error) throw error;
+    },
+    onMutate: ({ data, hora, minutos }) =>
+      mudarCache((ls) => ls.map((l) => (mesmaHora(l, data, hora) ? { ...l, minutos } : l))),
     onError: (_e, _v, antes) => desfazer(antes),
     onSettled: recarregar,
   });
@@ -225,12 +250,20 @@ export function useCopiarDiaPlano() {
     mutationFn: async ({ de, para }: { de: string; para: string }) => {
       const { data: origem, error } = await supabase
         .from("plano_horas")
-        .select("hora, materia_id, atividade, nota")
+        .select("*")
         .eq("data", de);
       if (error) throw error;
       if (!origem.length) return 0;
       const { error: e2 } = await supabase.from("plano_horas").upsert(
-        origem.map((l) => ({ ...l, data: para, feita: false })),
+        origem.map((l) => ({
+          data: para,
+          hora: l.hora,
+          materia_id: l.materia_id,
+          atividade: l.atividade,
+          nota: l.nota,
+          feita: false,
+          ...(l.minutos != null ? { minutos: l.minutos } : {}),
+        })),
         { onConflict: "user_id,data,hora" }
       );
       if (e2) throw e2;

@@ -11,9 +11,10 @@ import {
   usePlanoHoras,
   useReplicarHora,
   useSalvarHora,
+  useTempoHora,
 } from "@/api/planoHoras";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
-import { hojeISO } from "@/lib/dates";
+import { fmtMinutos, hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Field";
 import { MenuMais } from "@/components/MenuMais";
@@ -27,11 +28,13 @@ import {
   blocosQueDescem,
   blocosVisiveis,
   diasDoPlano,
+  fmtTempo,
+  lerMinutos,
   lerQuantosDias,
+  minutosDe,
   ROTULO_BLOCO,
   rotuloDoDia,
   somarDias,
-  tempoDosBlocos,
   OPCOES_DIAS,
   type AtividadeChave,
   type QuantosDias,
@@ -88,6 +91,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const limparHora = useLimparHora();
   const salvarHora = useSalvarHora();
   const replicarHora = useReplicarHora();
+  const tempoHora = useTempoHora();
 
   const [editando, setEditando] = useState<Edicao | null>(null);
   // Blocos acrescentados além dos 6 iniciais, por dia. Não vai pro banco: bloco
@@ -115,8 +119,9 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
     return mapa;
   }, [linhas]);
 
-  const planejadas = (linhas ?? []).length;
-  const feitas = (linhas ?? []).filter((l) => l.feita).length;
+  // Totais em minutos: cada bloco conta o tempo dele (30 por padrão).
+  const planejadas = (linhas ?? []).reduce((s, l) => s + minutosDe(l), 0);
+  const feitas = (linhas ?? []).filter((l) => l.feita).reduce((s, l) => s + minutosDe(l), 0);
   const ehJanelaDeHoje = inicio === hoje;
   const titulo = ehJanelaDeHoje
     ? `Próximos ${quantos} dias`
@@ -125,6 +130,14 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   function erro(err: unknown) {
     // Bloco além do 5º antes de rodar a 0034: o CHECK antigo (1 a 5) recusa.
     const e = err as { code?: string; message?: string } | null;
+    // Tempo do bloco antes de rodar a 0035: a coluna `minutos` ainda não existe.
+    if (e?.message?.includes("minutos")) {
+      toast.error(
+        "Falta rodar a migração 0035 (tempo de cada bloco) no Supabase → SQL Editor.",
+        { duration: 8000 }
+      );
+      return;
+    }
     if (e?.code === "23514" || e?.message?.includes("plano_horas_hora_check")) {
       toast.error(
         "Falta rodar a migração 0034 (blocos de meia hora) no Supabase → SQL Editor.",
@@ -154,6 +167,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
                     atividade: l.atividade,
                     nota: l.nota,
                     feita: l.feita,
+                    ...(l.minutos != null ? { minutos: l.minutos } : {}),
                   },
                   { onError: erro }
                 ),
@@ -184,8 +198,8 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
                 "Blocos de 30 min — toque num bloco para escolher o que fazer nele."
               ) : (
                 <>
-                  <strong className="text-dim">{tempoDosBlocos(planejadas)}</strong> planejadas ·{" "}
-                  <strong className="text-green">{tempoDosBlocos(feitas)}</strong> feitas
+                  <strong className="text-dim">{fmtTempo(planejadas)}</strong> planejadas ·{" "}
+                  <strong className="text-green">{fmtTempo(feitas)}</strong> feitas
                 </>
               )}
             </p>
@@ -278,6 +292,9 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
                   )
                 }
                 onApagar={apagar}
+                onTempo={(l, minutos) =>
+                  tempoHora.mutate({ data: l.data, hora: l.hora, minutos }, { onError: erro })
+                }
                 onReplicar={(l) => replicarHora.mutate(l, { onError: erro })}
                 onCopiarAnterior={() => void copiarDoAnterior(d)}
                 onLimparDia={() => limparDia.mutate(d, { onError: erro })}
@@ -313,6 +330,7 @@ function CaixaDia({
   onFeita,
   onApagar,
   onReplicar,
+  onTempo,
   onCopiarAnterior,
   onLimparDia,
 }: {
@@ -327,6 +345,7 @@ function CaixaDia({
   onFeita: (linha: PlanoHora) => void;
   onApagar: (linha: PlanoHora) => void;
   onReplicar: (linha: PlanoHora) => void;
+  onTempo: (linha: PlanoHora, minutos: number) => void;
   onCopiarAnterior: () => void;
   onLimparDia: () => void;
 }) {
@@ -334,8 +353,10 @@ function CaixaDia({
   const ehHoje = data === hoje;
   const passado = data < hoje;
   const preenchidas = horas?.size ?? 0;
-  const feitas = [...(horas?.values() ?? [])].filter((l) => l.feita).length;
-  const completo = preenchidas > 0 && feitas === preenchidas;
+  const blocos = [...(horas?.values() ?? [])];
+  const completo = preenchidas > 0 && blocos.every((l) => l.feita);
+  const minPlanejados = blocos.reduce((s, l) => s + minutosDe(l), 0);
+  const minFeitos = blocos.filter((l) => l.feita).reduce((s, l) => s + minutosDe(l), 0);
   const maiorPreenchido = Math.max(0, ...(horas?.keys() ?? []));
   const visiveis = blocosVisiveis(extras, maiorPreenchido);
   // Só dá para tirar bloco vazio do fim, e nunca abaixo dos 6 iniciais.
@@ -359,9 +380,9 @@ function CaixaDia({
             className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
               completo ? "bg-green/15 text-green" : "bg-navy-700 text-dim"
             }`}
-            title={`${tempoDosBlocos(feitas)} feitas de ${tempoDosBlocos(preenchidas)} planejadas`}
+            title={`${fmtTempo(minFeitos)} feitas de ${fmtTempo(minPlanejados)} planejadas`}
           >
-            {tempoDosBlocos(feitas)}/{tempoDosBlocos(preenchidas)}
+            {fmtTempo(minFeitos)}/{fmtTempo(minPlanejados)}
           </span>
         )}
         <MenuMais
@@ -398,12 +419,14 @@ function CaixaDia({
                 l?.feita ? "bg-green/8" : ""
               }`}
             >
-              <span
-                className="flex w-12 shrink-0 items-center justify-center border-r border-line/30 text-[10px] font-semibold tabular-nums text-mut"
-                title={`${h}º bloco de 30 min`}
-              >
-                {ROTULO_BLOCO}
-              </span>
+              {/* 1ª coluna: o tempo do bloco. Preenchido → clica e digita o tempo real. */}
+              {l ? (
+                <TempoDoBloco minutos={minutosDe(l)} onSalvar={(m) => onTempo(l, m)} />
+              ) : (
+                <span className="flex w-12 shrink-0 items-center justify-center border-r border-line/30 text-[10px] font-semibold tabular-nums text-mut">
+                  {ROTULO_BLOCO}
+                </span>
+              )}
               {l ? (
                 <LinhaPreenchida
                   linha={l}
@@ -451,6 +474,61 @@ function CaixaDia({
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Tempo do bloco na 1ª coluna: clica, digita ("45", "20min", "1h", "1h30") e
+ * Enter ou clicar fora salva; Esc cancela. É esse tempo que soma no gráfico.
+ */
+function TempoDoBloco({ minutos, onSalvar }: { minutos: number; onSalvar: (m: number) => void }) {
+  const [editando, setEditando] = useState(false);
+  const [valor, setValor] = useState("");
+  const invalido = editando && valor.trim() !== "" && lerMinutos(valor) === null;
+
+  function fechar(salvarValor: boolean) {
+    const m = lerMinutos(valor);
+    if (salvarValor && m !== null && m !== minutos) onSalvar(m);
+    setEditando(false);
+  }
+
+  if (!editando) {
+    return (
+      <button
+        onClick={() => {
+          setValor(String(minutos));
+          setEditando(true);
+        }}
+        className="flex w-12 shrink-0 cursor-pointer items-center justify-center border-r border-line/30 text-[10px] font-semibold tabular-nums text-dim transition-colors hover:bg-navy-700/40 hover:text-gold"
+        title="Clique para mudar o tempo deste bloco (ex.: 45, 20min, 1h)"
+        aria-label={`Tempo do bloco: ${fmtMinutos(minutos)}. Clique para mudar`}
+      >
+        <span className="underline decoration-dotted decoration-1 underline-offset-2">
+          {fmtMinutos(minutos)}
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <span className="flex w-12 shrink-0 items-center border-r border-line/30 px-0.5">
+      <input
+        autoFocus
+        value={valor}
+        onChange={(e) => setValor(e.target.value)}
+        onFocus={(e) => e.target.select()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") fechar(true);
+          if (e.key === "Escape") fechar(false);
+        }}
+        onBlur={() => fechar(true)}
+        aria-label="Tempo deste bloco (minutos, ou 1h30)"
+        title="Minutos (45) ou horas (1h, 1h30). Enter salva, Esc cancela"
+        className={`w-full rounded border bg-navy-950 px-0.5 py-1 text-center text-[11px] font-semibold tabular-nums text-txt outline-none ${
+          invalido ? "border-red" : "border-gold/60"
+        }`}
+      />
+    </span>
   );
 }
 

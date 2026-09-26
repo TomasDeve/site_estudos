@@ -597,6 +597,7 @@ export type Database = {
           hora: number
           id: string
           materia_id: string | null
+          minutos: number
           nota: string
           user_id: string
         }
@@ -608,6 +609,7 @@ export type Database = {
           hora: number
           id?: string
           materia_id?: string | null
+          minutos?: number
           nota?: string
           user_id?: string
         }
@@ -619,6 +621,7 @@ export type Database = {
           hora?: number
           id?: string
           materia_id?: string | null
+          minutos?: number
           nota?: string
           user_id?: string
         }

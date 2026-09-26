@@ -74,9 +74,34 @@ export function blocosQueDescem(preenchidos: number[], h: number, max = MAX_BLOC
   return descem.reverse();
 }
 
-/** Tempo somado de N blocos: 0 → "0", 3 → "1h30", 1 → "30min". */
-export function tempoDosBlocos(n: number): string {
-  return n === 0 ? "0" : fmtMinutos(n * MINUTOS_POR_BLOCO);
+/** Tempo de um bloco: o que você digitou nele, ou 30 min (padrão). */
+export function minutosDe(bloco: { minutos?: number | null }): number {
+  return bloco.minutos ?? MINUTOS_POR_BLOCO;
+}
+
+/** Soma de tempo para os totais: 0 → "0", 90 → "1h30", 45 → "45min". */
+export function fmtTempo(minutos: number): string {
+  return minutos === 0 ? "0" : fmtMinutos(minutos);
+}
+
+/**
+ * Lê o tempo digitado num bloco, em minutos. Número puro é minuto ("45",
+ * "45min"); com "h" ou ":" é hora ("1h", "1h30", "1:15"). Devolve null quando
+ * vazio, ilegível ou fora de 1 min a 10h.
+ */
+export function lerMinutos(entrada: string): number | null {
+  const s = entrada.trim().toLowerCase().replace(/\s+/g, "");
+  let min: number | null = null;
+  const soMin = s.match(/^(\d+)(?:min|m)?$/);
+  const comHora = s.match(/^(\d+)[h:](\d{1,2})?(?:min|m)?$/);
+  if (soMin) min = Number(soMin[1]);
+  else if (comHora) {
+    const m = comHora[2] ? Number(comHora[2]) : 0;
+    if (m > 59) return null;
+    min = Number(comHora[1]) * 60 + m;
+  }
+  if (min === null || min < 1 || min > 600) return null;
+  return min;
 }
 
 /** Rótulo de cada linha: a duração do bloco ("30min"), igual em todas. */
