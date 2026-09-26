@@ -1,5 +1,16 @@
-import { useMemo } from "react";
-import { CalendarPlus, ChevronRight, Repeat, RotateCcw } from "lucide-react";
+import { useMemo, type CSSProperties } from "react";
+import {
+  CalendarPlus,
+  CircleDashed,
+  Crown,
+  Gem,
+  Medal,
+  RotateCcw,
+  Shield,
+  Star,
+  Trophy,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { Materia } from "@/types/db";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
@@ -9,19 +20,49 @@ import { hojeISO } from "@/lib/dates";
 import { MenuMais } from "@/components/MenuMais";
 import { fmtTempo, rotuloDoDia, somarDias } from "./planoDias";
 import {
-  NIVEIS_CICLO,
+  RANKS,
+  TIERS,
   contarCiclo,
-  nivelDoCiclo,
+  rankDoCiclo,
   voltaDoCiclo,
   type ContagemCiclo,
+  type Rank,
+  type TierRank,
 } from "./cicloPlano";
 
+const ICONES: Record<TierRank["icone"], LucideIcon> = {
+  medalha: Medal,
+  escudo: Shield,
+  gema: Gem,
+  estrela: Star,
+  trofeu: Trophy,
+  coroa: Crown,
+};
+
+/** Fundo e borda da linha por divisão (I, II, III), em alfa hex: o tom cresce. */
+const TONS = [
+  ["12", "4d"],
+  ["1f", "80"],
+  ["2e", "b3"],
+] as const;
+
+function estiloDaLinha({ tier, divisao }: Rank): CSSProperties | undefined {
+  if (!tier) return undefined;
+  if (tier.degrade)
+    return {
+      backgroundColor: `${tier.cor}1f`,
+      borderColor: `${tier.cor}cc`,
+      boxShadow: `0 0 14px ${tier.cor}40`,
+    };
+  const [fundo, borda] = TONS[divisao - 1];
+  return { backgroundColor: `${tier.cor}${fundo}`, borderColor: `${tier.cor}${borda}` };
+}
+
 /**
- * Ciclo das matérias, logo abaixo da grade do plano: as matérias do edital, na
- * ordem, pintadas conforme quantas vezes já entraram no plano neste ciclo. Cinza
- * = ainda não entrou; cada bloco com a matéria sobe ela um nível (verde → azul →
- * roxo → dourado), como um ranking. "Novo ciclo" zera a contagem a partir de hoje
- * ou de amanhã.
+ * Ciclo das matérias, logo abaixo da grade do plano: as matérias do edital,
+ * numeradas na ordem, cada uma com o seu rank — cada bloco dela no plano sobe um
+ * (Bronze I, II, III, Prata… até a Lenda, 27 ranks). "Novo ciclo" zera a
+ * contagem a partir de hoje ou de amanhã.
  */
 export function CicloDasMaterias({ materias }: { materias: Materia[] }) {
   const concurso = useConcursoAtual();
@@ -130,72 +171,108 @@ export function CicloDasMaterias({ materias }: { materias: Materia[] }) {
         />
       </div>
 
-      {/* As matérias em sequência; depois da última, volta para a primeira */}
+      {/* Uma linha por matéria, na ordem do edital; as colunas se equilibram sozinhas */}
       <ol
-        className="mt-3 flex flex-wrap items-center gap-x-1 gap-y-2"
+        className="mt-3 columns-[26rem] gap-x-3"
         aria-label="Matérias do ciclo, na ordem do edital"
       >
         {materias.map((m, i) => (
-          <li key={m.id} className="flex min-w-0 max-w-full items-center gap-1">
-            <ChipDoCiclo materia={m} contagem={contagem.get(m.id)} />
-            {i < total - 1 ? (
-              <ChevronRight className="size-3.5 shrink-0 text-mut/50" aria-hidden />
-            ) : (
-              <span className="shrink-0 text-mut/70" title="Depois da última, volta para a primeira">
-                <Repeat className="size-3.5" aria-hidden />
-              </span>
-            )}
-          </li>
+          <LinhaDoCiclo key={m.id} ordem={i + 1} materia={m} contagem={contagem.get(m.id)} />
         ))}
       </ol>
 
-      <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-mut">
-        <span>Cada bloco no plano sobe a matéria um nível:</span>
-        {NIVEIS_CICLO.map((n) => (
-          <span key={n.legenda} className="inline-flex items-center gap-1">
-            <span className={`size-2.5 shrink-0 rounded-full ${n.ponto}`} aria-hidden />
-            {n.legenda}
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-mut">
+        <span>
+          {RANKS.length - 1} ranks — cada bloco no plano sobe um (I → II → III em cada cor):
+        </span>
+        {TIERS.map((t) => (
+          <span key={t.nome} className="inline-flex items-center gap-1">
+            <span
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ background: t.degrade ?? t.cor }}
+              aria-hidden
+            />
+            {t.nome}
           </span>
         ))}
-      </p>
+      </div>
     </section>
   );
 }
 
-function ChipDoCiclo({
+function LinhaDoCiclo({
+  ordem,
   materia,
   contagem,
 }: {
+  ordem: number;
   materia: Materia;
   contagem: ContagemCiclo | undefined;
 }) {
   const vezes = contagem?.blocos ?? 0;
-  const nivel = nivelDoCiclo(vezes);
+  const rank = rankDoCiclo(vezes);
+  const proximo = RANKS[rank.nivel + 1];
   const detalhe = contagem
-    ? `${vezes === 1 ? "1 bloco" : `${vezes} blocos`} no ciclo (${fmtTempo(contagem.minutos)})` +
+    ? `${rank.nome} · ${vezes === 1 ? "1 bloco" : `${vezes} blocos`} no ciclo (${fmtTempo(contagem.minutos)})` +
       (contagem.feitos ? ` · ${contagem.feitos} ${contagem.feitos === 1 ? "feito" : "feitos"}` : "")
     : "ainda não entrou no plano neste ciclo";
   return (
-    <span
-      title={`${materia.nome} — ${detalhe}`}
-      className={`inline-flex min-w-0 max-w-64 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${nivel.chip}`}
+    <li
+      title={`${materia.nome} — ${detalhe}${proximo ? ` · próximo: ${proximo.nome}` : ""}`}
+      className={`mb-1.5 flex break-inside-avoid items-center gap-2 rounded-lg border px-2.5 py-1.5 ${
+        rank.tier ? "" : "border-dashed border-line/70 bg-navy-900/40"
+      }`}
+      style={estiloDaLinha(rank)}
     >
-      <span
-        className={`shrink-0 text-sm leading-none ${vezes === 0 ? "opacity-50 grayscale" : ""}`}
-        aria-hidden
-      >
-        {materia.icone}
+      <span className="w-5 shrink-0 self-start text-[11px] font-semibold leading-5 tabular-nums text-mut">
+        {String(ordem).padStart(2, "0")}
       </span>
-      <span className="truncate">{materia.nome}</span>
-      {vezes > 0 ? (
+      {/* Estreito (celular): a insígnia desce para baixo do nome */}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
         <span
-          className={`shrink-0 rounded-full px-1.5 py-px text-[10px] font-bold tabular-nums ${nivel.selo}`}
+          className={`flex min-w-0 flex-[1_1_12rem] items-center gap-1.5 text-xs font-semibold leading-5 ${
+            rank.tier ? "text-txt" : "text-dim"
+          }`}
         >
-          {vezes}×
+          <span
+            className={`shrink-0 text-sm leading-none ${rank.tier ? "" : "opacity-50 grayscale"}`}
+            aria-hidden
+          >
+            {materia.icone}
+          </span>
+          <span className="truncate">{materia.nome}</span>
         </span>
-      ) : (
-        <span className="sr-only">(ainda não entrou)</span>
-      )}
+        <span className="flex shrink-0 items-center gap-2">
+          <Insignia rank={rank} />
+          <span className="w-7 text-right text-[11px] font-semibold tabular-nums text-dim">
+            {vezes > 0 ? `${vezes}×` : ""}
+          </span>
+        </span>
+      </div>
+    </li>
+  );
+}
+
+/** A insígnia do rank, com largura fixa para ficarem todas alinhadas em coluna. */
+function Insignia({ rank }: { rank: Rank }) {
+  // A borda (transparente nos ranks) deixa todas as linhas com a mesma altura.
+  const base =
+    "inline-flex w-[7.75rem] shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase leading-4 tracking-wide";
+  if (!rank.tier)
+    return (
+      <span className={`${base} border-dashed border-line text-mut`}>
+        <CircleDashed className="size-3 shrink-0" aria-hidden />
+        Sem rank
+      </span>
+    );
+  const Icone = ICONES[rank.tier.icone];
+  return (
+    <span
+      className={`${base} border-transparent text-navy-950`}
+      style={{ background: rank.tier.degrade ?? rank.tier.cor }}
+    >
+      <Icone className="size-3 shrink-0" strokeWidth={2.5} aria-hidden />
+      <span className="truncate">{rank.nome}</span>
     </span>
   );
 }

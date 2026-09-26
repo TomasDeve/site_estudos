@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NIVEIS_CICLO, contarCiclo, nivelDoCiclo, voltaDoCiclo } from "./cicloPlano";
+import { RANKS, TIERS, contarCiclo, rankDoCiclo, voltaDoCiclo } from "./cicloPlano";
 
 const bloco = (data: string, materia_id: string | null, feita = false, minutos?: number) => ({
   data,
@@ -35,13 +35,25 @@ describe("ciclo das matérias", () => {
     expect(c.get("port")?.blocos).toBe(2);
   });
 
-  it("sobe um nível por bloco: cinza, verde, azul, roxo e dourado dali pra cima", () => {
-    expect(nivelDoCiclo(0)).toBe(NIVEIS_CICLO[0]);
-    expect(nivelDoCiclo(1).ponto).toBe("bg-green");
-    expect(nivelDoCiclo(2).ponto).toBe("bg-blue");
-    expect(nivelDoCiclo(3).legenda).toBe("3×");
-    expect(nivelDoCiclo(4).ponto).toBe("bg-gold");
-    expect(nivelDoCiclo(9)).toBe(nivelDoCiclo(4));
+  it("tem pelo menos 25 ranks, sem nome repetido, um por bloco", () => {
+    expect(RANKS.length - 1).toBeGreaterThanOrEqual(25);
+    expect(new Set(RANKS.map((r) => r.nome)).size).toBe(RANKS.length);
+    RANKS.forEach((r, i) => expect(rankDoCiclo(i)).toBe(r));
+  });
+
+  it("sobe um rank por bloco: I, II e III em cada tier, até a Lenda", () => {
+    expect(rankDoCiclo(0).nome).toBe("Sem rank");
+    expect(rankDoCiclo(0).tier).toBeNull();
+    expect(rankDoCiclo(1).nome).toBe("Bronze I");
+    expect(rankDoCiclo(3).nome).toBe("Bronze III");
+    expect(rankDoCiclo(4).nome).toBe("Prata I");
+    expect(rankDoCiclo(8).nome).toBe("Ouro II");
+    expect(rankDoCiclo(24).nome).toBe("Rubi III");
+    expect(rankDoCiclo(25).nome).toBe("Mestre");
+    expect(rankDoCiclo(26).nome).toBe("Grão-Mestre");
+    expect(rankDoCiclo(27).nome).toBe("Lenda");
+    expect(rankDoCiclo(60)).toBe(rankDoCiclo(27));
+    expect(TIERS[TIERS.length - 1].nome).toBe("Lenda");
   });
 
   it("a volta fecha quando todas as matérias entraram; quem repete já conta na próxima", () => {

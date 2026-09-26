@@ -1,46 +1,84 @@
 import { minutosDe } from "./planoDias";
 
 /**
- * Ciclo das matérias (Painel, abaixo do plano): cada matéria do edital sobe um
- * nível a cada bloco dela que entra no plano, como um ranking. As classes ficam
- * escritas por inteiro para o Tailwind achá-las.
+ * Ciclo das matérias (Painel, abaixo do plano): cada bloco de uma matéria que
+ * entra no plano sobe ela um rank, como num jogo — Bronze I, II e III, depois
+ * Prata, Ouro… até a Lenda.
  */
-export interface NivelCiclo {
-  legenda: string;
-  /** Borda, fundo e texto do chip da matéria. */
-  chip: string;
-  /** Selo com o número de vezes (o cinza não tem selo). */
-  selo: string;
-  /** Bolinha da legenda. */
-  ponto: string;
+export interface TierRank {
+  nome: string;
+  /** Cor do tier (hex): pinta a linha da matéria e a insígnia. */
+  cor: string;
+  /** Tiers de elite: um rank só, insígnia em degradê e linha com brilho. */
+  degrade?: string;
+  icone: "medalha" | "escudo" | "gema" | "estrela" | "trofeu" | "coroa";
 }
 
-/** Cinza (ainda não entrou) → verde → azul → roxo → dourado, que vale dali pra cima. */
-export const NIVEIS_CICLO: readonly NivelCiclo[] = [
-  {
-    legenda: "ainda não entrou",
-    chip: "border-dashed border-line bg-navy-900/40 text-dim",
-    selo: "",
-    ponto: "border border-dashed border-mut",
-  },
-  { legenda: "1×", chip: "border-green/50 bg-green/15 text-txt", selo: "bg-green text-navy-950", ponto: "bg-green" },
-  { legenda: "2×", chip: "border-blue/50 bg-blue/15 text-txt", selo: "bg-blue text-navy-950", ponto: "bg-blue" },
-  {
-    legenda: "3×",
-    chip: "border-[#8b7bd8]/60 bg-[#8b7bd8]/20 text-txt",
-    selo: "bg-[#8b7bd8] text-navy-950",
-    ponto: "bg-[#8b7bd8]",
-  },
-  { legenda: "4× ou mais", chip: "border-gold/60 bg-gold/15 text-txt", selo: "bg-gold text-navy-950", ponto: "bg-gold" },
+export interface Rank {
+  /** 0 = sem rank; depois, um por bloco no plano. */
+  nivel: number;
+  nome: string;
+  /** Nulo no "Sem rank". */
+  tier: TierRank | null;
+  /** I, II ou III dentro do tier; 0 = sem divisões (sem rank e elite). */
+  divisao: 0 | 1 | 2 | 3;
+}
+
+const COM_DIVISOES: TierRank[] = [
+  { nome: "Bronze", cor: "#c98552", icone: "medalha" },
+  { nome: "Prata", cor: "#b8c4d4", icone: "medalha" },
+  { nome: "Ouro", cor: "#e0a83e", icone: "medalha" },
+  { nome: "Platina", cor: "#45cbbd", icone: "escudo" },
+  { nome: "Esmeralda", cor: "#3fbf6f", icone: "gema" },
+  { nome: "Diamante", cor: "#57a8f0", icone: "gema" },
+  { nome: "Ametista", cor: "#9f7aea", icone: "gema" },
+  { nome: "Rubi", cor: "#e8506e", icone: "gema" },
 ];
 
-/** O nível de uma matéria que entrou `vezes` no plano; do último em diante, fica nele. */
-export function nivelDoCiclo(vezes: number): NivelCiclo {
-  return NIVEIS_CICLO[Math.min(Math.max(vezes, 0), NIVEIS_CICLO.length - 1)];
+const ELITE: TierRank[] = [
+  {
+    nome: "Mestre",
+    cor: "#d946ef",
+    degrade: "linear-gradient(90deg, #9f7aea, #d946ef)",
+    icone: "estrela",
+  },
+  {
+    nome: "Grão-Mestre",
+    cor: "#f97316",
+    degrade: "linear-gradient(90deg, #e8506e, #f97316)",
+    icone: "trofeu",
+  },
+  {
+    nome: "Lenda",
+    cor: "#facc15",
+    degrade: "linear-gradient(90deg, #facc15, #f97316, #d946ef, #57a8f0)",
+    icone: "coroa",
+  },
+];
+
+/** Os tiers, do mais baixo ao mais alto. */
+export const TIERS: readonly TierRank[] = [...COM_DIVISOES, ...ELITE];
+
+const ROMANOS = ["I", "II", "III"] as const;
+
+/** A escada inteira: "Sem rank", 8 tiers com I, II e III e os 3 de elite — 27 ranks. */
+export const RANKS: readonly Rank[] = (
+  [
+    { nome: "Sem rank", tier: null, divisao: 0 },
+    ...COM_DIVISOES.flatMap((tier) =>
+      ROMANOS.map((r, i) => ({ nome: `${tier.nome} ${r}`, tier, divisao: (i + 1) as Rank["divisao"] }))
+    ),
+    ...ELITE.map((tier) => ({ nome: tier.nome, tier, divisao: 0 })),
+  ] as Omit<Rank, "nivel">[]
+).map((r, nivel) => ({ ...r, nivel }));
+
+/** O rank de uma matéria que entrou `vezes` no plano; da Lenda em diante, fica nela. */
+export function rankDoCiclo(vezes: number): Rank {
+  return RANKS[Math.min(Math.max(vezes, 0), RANKS.length - 1)];
 }
 
 export interface ContagemCiclo {
-  /** Blocos da matéria no ciclo — cada um sobe um nível. */
+  /** Blocos da matéria no ciclo — cada um sobe um rank. */
   blocos: number;
   feitos: number;
   minutos: number;
