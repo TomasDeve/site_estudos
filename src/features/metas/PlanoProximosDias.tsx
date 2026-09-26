@@ -59,6 +59,7 @@ import {
   ROTULO_BLOCO,
   rotuloDoDia,
   somarDias,
+  tituloDoBloco,
   OPCOES_DIAS,
   type AtividadeChave,
   type QuantosDias,
@@ -185,6 +186,13 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
     if (e?.message?.includes("minutos")) {
       toast.error(
         "Falta rodar a migração 0035 (tempo de cada bloco) no Supabase → SQL Editor.",
+        { duration: 8000 }
+      );
+      return;
+    }
+    if (e?.message?.includes("plano_horas_atividade_check")) {
+      toast.error(
+        "Falta rodar a migração 0036 (texto livre) no Supabase → SQL Editor.",
         { duration: 8000 }
       );
       return;
@@ -630,13 +638,14 @@ function Celula({
 /** Prévia do bloco que acompanha o cursor/dedo durante o arraste. */
 function BlocoNaMao({ linha: l, materia }: { linha: PlanoHora; materia: Materia | undefined }) {
   const at = atividadeDe(l.atividade);
+  const livre = l.atividade === "livre";
   return (
     <div className="flex w-60 cursor-grabbing items-stretch gap-2 rounded-lg border border-gold/50 bg-navy-800 px-2.5 py-2 shadow-2xl shadow-navy-950/70">
       <span className={`w-1 rounded-full ${at.barra}`} aria-hidden />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 text-xs font-semibold text-txt">
-          <span className="text-sm leading-none">{materia?.icone ?? at.icone}</span>
-          <span className="truncate">{materia ? materia.nome : at.label}</span>
+          <span className="text-sm leading-none">{livre ? at.icone : (materia?.icone ?? at.icone)}</span>
+          <span className="truncate">{tituloDoBloco(l, materia)}</span>
         </span>
         <span className={`text-[10px] font-bold uppercase tracking-wide ${at.texto}`}>
           {at.label} · {fmtMinutos(minutosDe(l))}
@@ -665,7 +674,8 @@ function LinhaPreenchida({
   podeReplicar: boolean;
 }) {
   const at = atividadeDe(l.atividade);
-  const principal = materia ? materia.nome : at.label;
+  const livre = l.atividade === "livre";
+  const principal = tituloDoBloco(l, livre ? undefined : materia);
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({
     id: `b:${l.data}|${l.hora}`,
     data: { linha: l },
@@ -693,11 +703,14 @@ function LinhaPreenchida({
               l.feita ? "text-mut line-through" : "text-txt"
             }`}
           >
-            <span className="shrink-0 text-sm leading-none">{materia?.icone ?? at.icone}</span>
+            <span className="shrink-0 text-sm leading-none">
+              {livre ? at.icone : (materia?.icone ?? at.icone)}
+            </span>
             <span className="truncate">{principal}</span>
           </span>
-          {/* Com matéria, a atividade vai na 2ª linha; sem matéria ela já é o título. */}
-          {(materia || l.nota) && (
+          {/* Com matéria, a atividade vai na 2ª linha; sem matéria ela já é o título.
+              Texto livre: o próprio texto é o título, sem 2ª linha. */}
+          {!livre && (materia || l.nota) && (
             <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px]">
               {materia && (
                 <span className={`shrink-0 font-bold uppercase tracking-wide ${at.texto}`}>
@@ -784,10 +797,20 @@ function EditarHoraModal({
   const [materiaId, setMateriaId] = useState<string | null>(linha?.materia_id ?? null);
   const [nota, setNota] = useState(linha?.nota ?? "");
   const { nome, data: dataCurta } = rotuloDoDia(data, hoje);
+  // Texto livre: sem matéria; o texto (obrigatório) é o que vai fazer.
+  const livre = atividade === "livre";
+  const podeSalvar = !livre || nota.trim() !== "";
 
   function onSalvar() {
+    if (!podeSalvar) return;
     salvar.mutate(
-      { data, hora, atividade, materia_id: materiaId, nota: nota.trim() },
+      {
+        data,
+        hora,
+        atividade,
+        materia_id: livre ? null : materiaId,
+        nota: nota.trim(),
+      },
       { onError: onErro }
     );
     onSalvo(atividade);
@@ -806,7 +829,9 @@ function EditarHoraModal({
       title={
         <>
           {nome} <span className="font-normal text-mut">{dataCurta}</span> · {hora}º bloco{" "}
-          <span className="font-normal text-mut">({ROTULO_BLOCO})</span>
+          <span className="font-normal text-mut">
+            ({linha ? fmtMinutos(minutosDe(linha)) : ROTULO_BLOCO})
+          </span>
         </>
       }
       footer={
@@ -824,7 +849,7 @@ function EditarHoraModal({
             <Button variant="ghost" size="sm" onClick={onClose}>
               Cancelar
             </Button>
-            <Button size="sm" onClick={onSalvar}>
+            <Button size="sm" onClick={onSalvar} disabled={!podeSalvar}>
               Salvar
             </Button>
           </div>
@@ -859,50 +884,73 @@ function EditarHoraModal({
           </div>
         </section>
 
-        <section>
-          <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
-            Matéria
-          </h3>
-          <div className="flex flex-wrap gap-1.5">
-            {materias.map((m) => {
-              const ativo = materiaId === m.id;
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMateriaId(ativo ? null : m.id)}
-                  aria-pressed={ativo}
-                  className={`flex max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-                    ativo
-                      ? "border-gold/50 bg-gold/15 text-gold"
-                      : "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
-                  }`}
-                >
-                  <span className="leading-none">{m.icone}</span>
-                  <span className="truncate">{m.nome}</span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-2 text-[11px] text-mut">
-            Opcional — sem matéria vale para tudo (ex.: Anki geral, simulado completo).
-          </p>
-        </section>
+        {livre ? (
+          <section>
+            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
+              O que vai fazer?
+            </h3>
+            <Input
+              autoFocus
+              value={nota}
+              onChange={(e) => setNota(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSalvar();
+              }}
+              placeholder="Ex.: Revisão dos PDFs"
+              maxLength={120}
+            />
+            <p className="mt-2 text-[11px] text-mut">
+              Sem matéria — o texto vira o título do bloco. Feito, conta tempo de estudo normal.
+            </p>
+          </section>
+        ) : (
+          <>
+            <section>
+              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
+                Matéria
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {materias.map((m) => {
+                  const ativo = materiaId === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setMateriaId(ativo ? null : m.id)}
+                      aria-pressed={ativo}
+                      className={`flex max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                        ativo
+                          ? "border-gold/50 bg-gold/15 text-gold"
+                          : "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
+                      }`}
+                    >
+                      <span className="leading-none">{m.icone}</span>
+                      <span className="truncate">{m.nome}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-[11px] text-mut">
+                Opcional — sem matéria vale para tudo (ex.: Anki geral, simulado completo).
+              </p>
+            </section>
 
-        <section>
-          <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
-            Detalhe (opcional)
-          </h3>
-          <Input
-            value={nota}
-            onChange={(e) => setNota(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onSalvar();
-            }}
-            placeholder="Ex.: crimes contra a pessoa, 30 questões"
-            maxLength={120}
-          />
-        </section>
+            <section>
+              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
+                Detalhe (opcional)
+              </h3>
+              <Input
+                value={nota}
+                onChange={(e) => setNota(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") onSalvar();
+                }}
+                placeholder="Ex.: crimes contra a pessoa, 30 questões"
+                maxLength={120}
+              />
+            </section>
+          </>
+        )}
       </div>
     </Modal>
   );

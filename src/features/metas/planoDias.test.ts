@@ -10,6 +10,7 @@ import {
   lerMinutos,
   minutosDe,
   primeiraLivre,
+  tituloDoBloco,
   rotuloDoDia,
   somarDias,
 } from "./planoDias";
@@ -39,6 +40,17 @@ describe("plano dos próximos dias", () => {
     expect(rotuloDoDia("2026-09-24", hoje).nome).toBe("Ontem");
     expect(rotuloDoDia("2026-09-28", hoje)).toEqual({ nome: "Segunda", data: "28/09" });
     expect(rotuloDoDia("2026-09-27", hoje).nome).toBe("Domingo");
+  });
+
+  it("título do bloco: texto livre > matéria > atividade", () => {
+    expect(tituloDoBloco({ atividade: "livre", nota: " Revisão dos PDFs " }, undefined)).toBe(
+      "Revisão dos PDFs"
+    );
+    expect(tituloDoBloco({ atividade: "livre", nota: "" }, undefined)).toBe("Texto livre");
+    expect(tituloDoBloco({ atividade: "questoes", nota: "30" }, { nome: "Direito Penal" })).toBe(
+      "Direito Penal"
+    );
+    expect(tituloDoBloco({ atividade: "revisao", nota: "" }, undefined)).toBe("Revisão / Anki");
   });
 
   it("atividade desconhecida cai em Teoria", () => {

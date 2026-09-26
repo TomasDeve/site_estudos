@@ -20,7 +20,13 @@ export const BLOCOS_INICIAIS = 6;
 /** Teto de blocos por dia (8h) — casa com o CHECK da migração 0034. */
 export const MAX_BLOCOS = 16;
 
-export type AtividadeChave = "teoria" | "questoes" | "revisao" | "lei_seca" | "simulado";
+export type AtividadeChave =
+  | "teoria"
+  | "questoes"
+  | "revisao"
+  | "lei_seca"
+  | "simulado"
+  | "livre";
 
 export interface Atividade {
   chave: AtividadeChave;
@@ -45,7 +51,18 @@ export const ATIVIDADES: Atividade[] = [
   },
   { chave: "lei_seca", label: "Lei seca", icone: "📜", texto: "text-cyan", fundo: "bg-cyan/15", barra: "bg-cyan" },
   { chave: "simulado", label: "Simulado", icone: "🏁", texto: "text-green", fundo: "bg-green/15", barra: "bg-green" },
+  // Sem matéria: você escreve o que vai fazer ("Revisão dos PDFs"); o texto vira o título.
+  { chave: "livre", label: "Texto livre", icone: "✏️", texto: "text-txt", fundo: "bg-navy-600", barra: "bg-mut" },
 ];
+
+/** Título do bloco na grade: o texto escrito (livre), a matéria, ou a atividade. */
+export function tituloDoBloco(
+  bloco: { atividade: string; nota: string },
+  materia: { nome: string } | undefined
+): string {
+  if (bloco.atividade === "livre") return bloco.nota.trim() || "Texto livre";
+  return materia ? materia.nome : atividadeDe(bloco.atividade).label;
+}
 
 export function atividadeDe(chave: string): Atividade {
   return ATIVIDADES.find((a) => a.chave === chave) ?? ATIVIDADES[0];
