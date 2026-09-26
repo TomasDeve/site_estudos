@@ -284,6 +284,7 @@ export type Database = {
       concursos: {
         Row: {
           banca: string | null
+          ciclo_plano_inicio: string | null
           cor: string
           created_at: string
           data_prova: string | null
@@ -307,6 +308,7 @@ export type Database = {
         }
         Insert: {
           banca?: string | null
+          ciclo_plano_inicio?: string | null
           cor?: string
           created_at?: string
           data_prova?: string | null
@@ -330,6 +332,7 @@ export type Database = {
         }
         Update: {
           banca?: string | null
+          ciclo_plano_inicio?: string | null
           cor?: string
           created_at?: string
           data_prova?: string | null

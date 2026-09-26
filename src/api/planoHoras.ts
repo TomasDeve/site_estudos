@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { fetchAll } from "@/lib/fetchAll";
 import type { PlanoHora } from "@/types/db";
 import { blocosQueDescem, primeiraLivre } from "@/features/metas/planoDias";
 
@@ -40,6 +41,25 @@ export function usePlanoHoras(inicio: string, fim: string) {
       return data;
     },
     // Tabela ainda não criada: não adianta tentar de novo até rodarem o SQL.
+    retry: (n, err) => !tabelaFaltando(err) && n < 2,
+  });
+}
+
+/**
+ * Todos os blocos a partir de `desde`, sem data final (nulo = o plano inteiro):
+ * é o que o "Ciclo das matérias" conta. Fica sob a mesma chave do plano, então as
+ * mudanças otimistas da grade (salvar, mover, apagar…) já pintam o ciclo na hora.
+ * Ao recomeçar o ciclo, a lista anterior segue na tela até a nova chegar.
+ */
+export function usePlanoDesde(desde: string | null) {
+  return useQuery({
+    queryKey: [...KEY, "desde", desde],
+    queryFn: () =>
+      fetchAll<PlanoHora>((de, ate) => {
+        const q = supabase.from("plano_horas").select("*");
+        return (desde ? q.gte("data", desde) : q).order("data").order("hora").range(de, ate);
+      }),
+    placeholderData: keepPreviousData,
     retry: (n, err) => !tabelaFaltando(err) && n < 2,
   });
 }

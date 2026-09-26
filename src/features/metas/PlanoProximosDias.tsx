@@ -44,6 +44,7 @@ import { Input } from "@/components/Field";
 import { MenuMais } from "@/components/MenuMais";
 import { Modal } from "@/components/Modal";
 import { Spinner } from "@/components/Spinner";
+import { CicloDasMaterias } from "./CicloDasMaterias";
 import {
   ATIVIDADES,
   BLOCOS_INICIAIS,
@@ -89,7 +90,8 @@ interface Edicao {
  * Card próprio).
  * Cada dia é uma coluna de blocos de meia hora (como linhas do Excel): começa
  * com 6 (3h) e dá para acrescentar até 16. Em cada bloco você escolhe a matéria
- * e a atividade e, depois, marca como feito.
+ * e a atividade e, depois, marca como feito. Embaixo da grade, o Ciclo das
+ * matérias mostra quantas vezes cada matéria do edital já entrou no plano.
  */
 export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const hoje = hojeISO();
@@ -333,53 +335,58 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
             <Spinner className="size-5" />
           </div>
         ) : (
-          <DndContext
-            sensors={sensores}
-            // Cai na linha que está debaixo do ponteiro/dedo (não na que a prévia cobre mais).
-            collisionDetection={pointerWithin}
-            onDragStart={aoComecarArrastar}
-            onDragEnd={aoSoltar}
-            onDragCancel={() => setArrastando(null)}
-          >
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {dias.map((d) => (
-                <CaixaDia
-                  key={d}
-                  data={d}
-                  hoje={hoje}
-                  horas={porDia.get(d)}
-                  extras={extras[d] ?? 0}
-                  onExtras={(n) => setExtras((x) => ({ ...x, [d]: n }))}
-                  materiaPorId={materiaPorId}
-                  onEditar={(hora, linha) => setEditando({ data: d, hora, linha })}
-                  onFeita={(l) =>
-                    marcarFeita.mutate(
-                      { data: l.data, hora: l.hora, feita: !l.feita },
-                      { onError: erro }
-                    )
-                  }
-                  onApagar={apagar}
-                  onTempo={(l, minutos) =>
-                    tempoHora.mutate({ data: l.data, hora: l.hora, minutos }, { onError: erro })
-                  }
-                  onReplicar={(l) => replicarHora.mutate(l, { onError: erro })}
-                  onCopiarAnterior={() => void copiarDoAnterior(d)}
-                  onLimparDia={() => limparDia.mutate(d, { onError: erro })}
-                />
-              ))}
-            </div>
-            {/* O bloco "na mão" enquanto arrasta */}
-            <DragOverlay dropAnimation={null}>
-              {arrastando && (
-                <BlocoNaMao
-                  linha={arrastando}
-                  materia={
-                    arrastando.materia_id ? materiaPorId.get(arrastando.materia_id) : undefined
-                  }
-                />
-              )}
-            </DragOverlay>
-          </DndContext>
+          <>
+            <DndContext
+              sensors={sensores}
+              // Cai na linha que está debaixo do ponteiro/dedo (não na que a prévia cobre mais).
+              collisionDetection={pointerWithin}
+              onDragStart={aoComecarArrastar}
+              onDragEnd={aoSoltar}
+              onDragCancel={() => setArrastando(null)}
+            >
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {dias.map((d) => (
+                  <CaixaDia
+                    key={d}
+                    data={d}
+                    hoje={hoje}
+                    horas={porDia.get(d)}
+                    extras={extras[d] ?? 0}
+                    onExtras={(n) => setExtras((x) => ({ ...x, [d]: n }))}
+                    materiaPorId={materiaPorId}
+                    onEditar={(hora, linha) => setEditando({ data: d, hora, linha })}
+                    onFeita={(l) =>
+                      marcarFeita.mutate(
+                        { data: l.data, hora: l.hora, feita: !l.feita },
+                        { onError: erro }
+                      )
+                    }
+                    onApagar={apagar}
+                    onTempo={(l, minutos) =>
+                      tempoHora.mutate({ data: l.data, hora: l.hora, minutos }, { onError: erro })
+                    }
+                    onReplicar={(l) => replicarHora.mutate(l, { onError: erro })}
+                    onCopiarAnterior={() => void copiarDoAnterior(d)}
+                    onLimparDia={() => limparDia.mutate(d, { onError: erro })}
+                  />
+                ))}
+              </div>
+              {/* O bloco "na mão" enquanto arrasta */}
+              <DragOverlay dropAnimation={null}>
+                {arrastando && (
+                  <BlocoNaMao
+                    linha={arrastando}
+                    materia={
+                      arrastando.materia_id ? materiaPorId.get(arrastando.materia_id) : undefined
+                    }
+                  />
+                )}
+              </DragOverlay>
+            </DndContext>
+
+            {/* O ciclo das matérias: o que já entrou no plano, na ordem do edital */}
+            <CicloDasMaterias materias={materiasDoConcurso} />
+          </>
         )}
 
       {editando && (

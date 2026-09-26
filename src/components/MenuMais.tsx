@@ -12,9 +12,17 @@ export interface ItemMenu {
  * Menu "⋯" para as ações secundárias — mantém a fileira de botões limpa e
  * guarda o resto (refazer, arquivar…) atrás de um clique. Fecha ao escolher um
  * item, ao clicar fora ou com Esc. Abre para cima, já que costuma ficar no
- * rodapé do card.
+ * rodapé do card. `rotulo` troca o "⋯" por um botão com texto.
  */
-export function MenuMais({ itens, aria = "Mais ações" }: { itens: ItemMenu[]; aria?: string }) {
+export function MenuMais({
+  itens,
+  aria = "Mais ações",
+  rotulo,
+}: {
+  itens: ItemMenu[];
+  aria?: string;
+  rotulo?: ReactNode;
+}) {
   const [aberto, setAberto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -41,13 +49,13 @@ export function MenuMais({ itens, aria = "Mais ações" }: { itens: ItemMenu[]; 
         aria-label={aria}
         aria-haspopup="menu"
         aria-expanded={aberto}
-        className={`flex cursor-pointer items-center rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+        className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
           aberto
             ? "border-line bg-navy-700/60 text-txt"
             : "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
         }`}
       >
-        <MoreHorizontal className="size-3.5" />
+        {rotulo ?? <MoreHorizontal className="size-3.5" />}
       </button>
       {aberto && (
         <div
@@ -62,7 +70,7 @@ export function MenuMais({ itens, aria = "Mais ações" }: { itens: ItemMenu[]; 
                 setAberto(false);
                 it.onClick();
               }}
-              className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs font-medium transition-colors hover:bg-navy-700 ${
+              className={`flex w-full cursor-pointer items-center gap-2 whitespace-nowrap px-3 py-2 text-left text-xs font-medium transition-colors hover:bg-navy-700 ${
                 it.danger ? "text-red" : "text-dim hover:text-txt"
               }`}
             >

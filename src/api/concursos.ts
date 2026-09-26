@@ -116,6 +116,42 @@ export function useToggleSistemaHoras() {
   });
 }
 
+/**
+ * Recomeça o "Ciclo das matérias" do Painel: a contagem passa a valer a partir
+ * de `ciclo_plano_inicio` (nulo = o plano inteiro). Otimista: as cores mudam na
+ * hora do clique.
+ */
+export function useInicioCicloPlano() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ciclo_plano_inicio,
+    }: {
+      id: string;
+      ciclo_plano_inicio: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("concursos")
+        .update({ ciclo_plano_inicio })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, ciclo_plano_inicio }) => {
+      await qc.cancelQueries({ queryKey: ["concursos"] });
+      const prev = qc.getQueryData<Concurso[]>(["concursos"]);
+      qc.setQueryData<Concurso[]>(["concursos"], (old) =>
+        old?.map((c) => (c.id === id ? { ...c, ciclo_plano_inicio } : c))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concursos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concursos"] }),
+  });
+}
+
 export function useExcluirConcurso() {
   const qc = useQueryClient();
   return useMutation({
