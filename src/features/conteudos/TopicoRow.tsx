@@ -23,6 +23,7 @@ import { TextoReaderModal } from "./TextoReaderModal";
 import { MetasAssunto } from "./MetasAssunto";
 import { ObservacaoAssunto } from "./ObservacaoAssunto";
 import { placarAssunto } from "./metasTopico";
+import { ajudaDaEtiqueta, etiquetaDoProprioConcurso } from "@/lib/concursoInfo";
 
 const TIPO_LINK: Record<string, string> = {
   questoes: "✍️",
@@ -51,9 +52,14 @@ interface Props {
   riscado?: boolean;
   /** Alterna o risco do assunto. Sem o callback, o botão de riscar não aparece. */
   onToggleRiscar?: () => void;
+  /** Slug do concurso aberto: a etiqueta "COMUM <ele mesmo>" fica escondida. */
+  slugConcurso?: string;
 }
 
-export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast, mostrarNucleo, sistemaHoras, riscado, onToggleRiscar }: Props) {
+export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast, mostrarNucleo, sistemaHoras, riscado, onToggleRiscar, slugConcurso }: Props) {
+  const etiquetas = (topico.tags ?? []).filter(
+    (tag) => !slugConcurso || !etiquetaDoProprioConcurso(tag, slugConcurso)
+  );
   const setStatus = useSetTopicoStatus();
   const setSeparador = useSetTopicoSeparador();
   const setNucleo = useSetTopicoNucleo();
@@ -507,15 +513,16 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
         </div>
       </div>
 
-      {/* Etiquetas do assunto (ex.: "COMUM PCPE" = também cai no edital da PC-PE).
-          Em linha própria, abaixo do nome, para não espremer o título. */}
-      {topico.tags?.length ? (
+      {/* Etiquetas do assunto (ex.: "COMUM PCAL" = também cai no edital da PC-AL).
+          Em linha própria, abaixo do nome, para não espremer o título. A que aponta
+          para o próprio concurso aberto ("COMUM PCPE" vendo a PC PE) fica escondida. */}
+      {etiquetas.length ? (
         <div className="mb-1.5 ml-15 flex flex-wrap items-center gap-1.5">
-          {topico.tags.map((tag) => (
+          {etiquetas.map((tag) => (
             <span
               key={tag}
               className="rounded-full border border-cyan/30 bg-cyan/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan"
-              title={tag === "COMUM PCPE" ? "Este assunto também cai no edital da PC-PE" : tag}
+              title={ajudaDaEtiqueta(tag)}
             >
               {tag}
             </span>

@@ -107,7 +107,7 @@ export function HomePage() {
           <SeedCard />
         ) : (
           // Concursos arquivados (PMAL, Indefinido) ficam FORA do hub de
-          // propósito — o estudo é concentrado no concurso ativo (PC AL). Os
+          // propósito — o estudo é concentrado no concurso ativo (PC PE). Os
           // dados seguem no banco, arquivados; qualquer link antigo para eles
           // é redirecionado ao ativo pelo ConcursoLayout.
           <div className="grid gap-4 sm:grid-cols-2">

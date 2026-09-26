@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { ChevronRight, Plus } from "lucide-react";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
+import { nomeDaArea } from "@/lib/concursoInfo";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import {
@@ -16,12 +17,6 @@ import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { MateriaFormModal } from "./MateriaFormModal";
 import { STATUS_INFO } from "./statusInfo";
-
-const NOME_AREA: Record<string, string> = {
-  P1: "Conhecimentos Básicos",
-  P2: "Conhecimentos Específicos",
-  outros: "Outros conteúdos",
-};
 
 export function ConteudosPage() {
   const concurso = useConcursoAtual();
@@ -116,7 +111,7 @@ export function ConteudosPage() {
         areas.map((area) => (
           <section key={area}>
             <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-mut">
-              {NOME_AREA[area]}
+              {nomeDaArea(concurso, area)}
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {meusVinculos

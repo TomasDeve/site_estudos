@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
+import { nomeDaArea } from "@/lib/concursoInfo";
 import {
   useConcursoMaterias,
   useDesvincularMateria,
@@ -65,12 +66,6 @@ import { RedacoesPanel } from "./RedacoesPanel";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho, desempenhoGeral, desempenhoRecente } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
-
-const NOME_AREA: Record<string, string> = {
-  P1: "Conhecimentos Básicos",
-  P2: "Conhecimentos Específicos",
-  outros: "Outros conteúdos",
-};
 
 export function MateriaPage() {
   const concurso = useConcursoAtual();
@@ -335,7 +330,7 @@ export function MateriaPage() {
                   </span>
                 )}
                 <span className="rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-dim">
-                  {NOME_AREA[vinculo.area] ?? vinculo.area}
+                  {nomeDaArea(concurso, vinculo.area)}
                 </span>
               </div>
 
@@ -527,6 +522,7 @@ export function MateriaPage() {
                         isLast={i === meusTopicos.length - 1}
                         mostrarNucleo
                         sistemaHoras={concurso.sistema_horas}
+                        slugConcurso={concurso.slug}
                         riscado={topicosRiscados.has(t.id)}
                         onToggleRiscar={() =>
                           riscarTopico.mutate({

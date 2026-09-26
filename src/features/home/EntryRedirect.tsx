@@ -5,10 +5,10 @@ import { FullScreenSpinner } from "@/components/Spinner";
 
 /**
  * Rota "/" — manda o usuário direto para o concurso que ele está estudando:
- * o último aberto (desde que NÃO esteja arquivado), senão o ativo. Um id salvo
- * apontando para um concurso arquivado (ex.: PMAL antigo) é ignorado, para não
- * despejar o aluno num concurso fora de foco. Sem concurso estudável, vai para
- * o hub de gerenciamento.
+ * o último aberto (desde que esteja ATIVO), senão o ativo. Um id salvo apontando
+ * para um concurso pausado ("futuro", ex.: PC AL depois da troca para a PC PE) ou
+ * arquivado é ignorado, para não despejar o aluno num concurso fora de foco. Sem
+ * concurso estudável, vai para o hub de gerenciamento.
  */
 export function EntryRedirect() {
   const { data: concursos, isLoading } = useConcursos();
@@ -19,7 +19,7 @@ export function EntryRedirect() {
 
   const salvo = getConcursoAtual();
   const atual =
-    lista.find((c) => c.id === salvo && c.status !== "arquivado") ??
+    lista.find((c) => c.id === salvo && c.status === "ativo") ??
     concursoDeEstudo(lista);
 
   if (!atual) return <Navigate to="/concursos" replace />;
