@@ -52,6 +52,7 @@ import {
   BLOCOS_INICIAIS,
   MAX_BLOCOS,
   atividadeDe,
+  atividadeDoBloco,
   blocosQueDescem,
   blocosVisiveis,
   diasDoPlano,
@@ -70,6 +71,9 @@ import {
 
 /** Preferência de exibição (quantos dias aparecem): fica neste navegador. */
 const CHAVE_QUANTOS = "plano.diasVisiveis";
+
+/** As atividades do modal: o texto livre é o campo "O que vai estudar?" do topo. */
+const ATIVIDADES_DO_BLOCO = ATIVIDADES.filter((a) => a.chave !== "livre");
 
 function quantosSalvo(): QuantosDias {
   try {
@@ -721,21 +725,14 @@ function LinhaPreenchida({
             </span>
             <span className="truncate">{principal}</span>
           </span>
-          {/* Com matéria, a atividade vai na 2ª linha; sem matéria ela já é o título.
-              Texto livre: o próprio texto é o título, sem 2ª linha. */}
+          {/* 2ª linha: a atividade (e o detalhe, quando há matéria). Sem matéria e
+              sem texto, a atividade já é o título; texto livre não tem 2ª linha. */}
           {!livre && (materia || l.nota) && (
             <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px]">
-              {materia && (
-                <span className={`shrink-0 font-bold uppercase tracking-wide ${at.texto}`}>
-                  {at.label}
-                </span>
-              )}
-              {l.nota && (
-                <span className="truncate text-mut">
-                  {materia ? "· " : ""}
-                  {l.nota}
-                </span>
-              )}
+              <span className={`shrink-0 font-bold uppercase tracking-wide ${at.texto}`}>
+                {at.label}
+              </span>
+              {materia && l.nota && <span className="truncate text-mut">· {l.nota}</span>}
             </span>
           )}
         </span>
@@ -807,15 +804,23 @@ function EditarHoraModal({
   const { data, hora, linha } = edicao;
   const salvar = useSalvarHora();
   const limpar = useLimparHora();
-  const [atividade, setAtividade] = useState<AtividadeChave>(
-    (linha?.atividade as AtividadeChave | undefined) ?? atividadePadrao
-  );
+  // Atividade escolhida neste bloco; nula = vale a padrão (ou texto livre, quando
+  // só há o texto). Bloco de texto livre abre sem atividade escolhida.
+  const [escolhida, setEscolhida] = useState<AtividadeChave | null>(() => {
+    const a = linha?.atividade as AtividadeChave | undefined;
+    return a && a !== "livre" ? a : null;
+  });
   const [materiaId, setMateriaId] = useState<string | null>(linha?.materia_id ?? null);
   const [nota, setNota] = useState(linha?.nota ?? "");
   const { nome, data: dataCurta } = rotuloDoDia(data, hoje);
-  // Texto livre: sem matéria; o texto (obrigatório) é o que vai fazer.
+  const atividade = atividadeDoBloco(escolhida, atividadePadrao, materiaId !== null, nota);
+  // Texto livre: sem matéria; o texto (obrigatório) é o título do bloco.
   const livre = atividade === "livre";
   const podeSalvar = !livre || nota.trim() !== "";
+  const materiaEscolhida = materias.find((m) => m.id === materiaId);
+  // No computador o cursor já abre no texto (é só escrever e dar Enter); no
+  // celular não, pra o teclado não cobrir as matérias.
+  const focarTexto = window.matchMedia?.("(pointer: fine)").matches ?? false;
 
   function onSalvar() {
     if (!podeSalvar) return;
@@ -829,7 +834,8 @@ function EditarHoraModal({
       },
       { onError: onErro }
     );
-    onSalvo(atividade);
+    // Texto livre não vira o padrão do próximo bloco vazio.
+    if (!livre) onSalvo(atividade);
     onClose();
   }
 
@@ -875,19 +881,51 @@ function EditarHoraModal({
       }
     >
       <div className="space-y-4">
+        {/* Só escrever já basta: sem matéria, o texto vira o título do bloco; com
+            matéria, é o detalhe dela. */}
+        <section>
+          <label
+            htmlFor="bloco-texto"
+            className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-mut"
+          >
+            O que vai estudar?
+          </label>
+          <Input
+            id="bloco-texto"
+            autoFocus={focarTexto}
+            value={nota}
+            onChange={(e) => setNota(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onSalvar();
+            }}
+            placeholder={
+              materiaId ? "Ex.: crimes contra a pessoa, 30 questões" : "Ex.: Revisar PDFs"
+            }
+            maxLength={120}
+          />
+          <p className="mt-2 text-[11px] text-mut">
+            {materiaId
+              ? `Detalhe do bloco de ${materiaEscolhida?.nome ?? "matéria"} (opcional).`
+              : nota.trim()
+                ? "Sem matéria: esse texto vira o título do bloco. Feito, conta tempo de estudo normal."
+                : "Só escrever já basta — atividade e matéria são opcionais."}
+          </p>
+        </section>
+
         <section>
           <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
             Atividade
           </h3>
-          {/* Grade de 3 colunas (2 no celular): as 6 atividades em 2 linhas certinhas */}
+          {/* Grade de 3 colunas (2 no celular). Clicar de novo desmarca: aí, só com o
+              texto e sem matéria, o bloco fica como texto livre. */}
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-            {ATIVIDADES.map((a) => {
+            {ATIVIDADES_DO_BLOCO.map((a) => {
               const ativo = atividade === a.chave;
               return (
                 <button
                   key={a.chave}
                   type="button"
-                  onClick={() => setAtividade(a.chave)}
+                  onClick={() => setEscolhida(escolhida === a.chave ? null : a.chave)}
                   aria-pressed={ativo}
                   className={`flex min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-left text-xs font-semibold transition-colors ${
                     ativo
@@ -903,88 +941,50 @@ function EditarHoraModal({
           </div>
         </section>
 
-        {livre ? (
-          <section>
-            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
-              O que vai fazer?
-            </h3>
-            <Input
-              autoFocus
-              value={nota}
-              onChange={(e) => setNota(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onSalvar();
-              }}
-              placeholder="Ex.: Revisão dos PDFs"
-              maxLength={120}
-            />
-            <p className="mt-2 text-[11px] text-mut">
-              Sem matéria — o texto vira o título do bloco. Feito, conta tempo de estudo normal.
-            </p>
-          </section>
-        ) : (
-          <>
-            <section>
-              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
-                Matéria
-              </h3>
-              {/* Igual ao ciclo: numeradas na ordem dele, descendo pela 1ª coluna e
-                  depois pela 2ª, com o rank de cada uma à direita (quem está atrás no
-                  ciclo salta aos olhos). No celular, uma coluna só. */}
-              <div
-                className="grid gap-1.5 sm:grid-flow-col sm:grid-cols-2 sm:[grid-template-rows:repeat(var(--linhas),minmax(0,auto))]"
-                style={{ "--linhas": Math.ceil(materias.length / 2) } as CSSProperties}
-              >
-                {materias.map((m, i) => {
-                  const ativo = materiaId === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setMateriaId(ativo ? null : m.id)}
-                      aria-pressed={ativo}
-                      className={`flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs font-medium transition-colors ${
-                        ativo
-                          ? "border-gold/50 bg-gold/15 text-gold"
-                          : "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
-                      }`}
-                    >
-                      <span
-                        className={`w-4 shrink-0 text-[10px] font-semibold tabular-nums ${
-                          ativo ? "text-gold/70" : "text-mut"
-                        }`}
-                      >
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="shrink-0 text-sm leading-none">{m.icone}</span>
-                      <span className="min-w-0 flex-1 leading-snug">{m.nome}</span>
-                      <PontoDoRank vezes={contagem.get(m.id)?.blocos ?? 0} />
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-2 text-[11px] text-mut">
-                Na ordem do ciclo; a bolinha é o rank da matéria nele. Opcional — sem matéria vale
-                para tudo (ex.: Anki geral, simulado completo).
-              </p>
-            </section>
-
-            <section>
-              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
-                Detalhe (opcional)
-              </h3>
-              <Input
-                value={nota}
-                onChange={(e) => setNota(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") onSalvar();
-                }}
-                placeholder="Ex.: crimes contra a pessoa, 30 questões"
-                maxLength={120}
-              />
-            </section>
-          </>
-        )}
+        <section>
+          <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
+            Matéria
+          </h3>
+          {/* Igual ao ciclo: numeradas na ordem dele, descendo pela 1ª coluna e
+              depois pela 2ª, com o rank de cada uma à direita (quem está atrás no
+              ciclo salta aos olhos). No celular, uma coluna só. */}
+          <div
+            className="grid gap-1.5 sm:grid-flow-col sm:grid-cols-2 sm:[grid-template-rows:repeat(var(--linhas),minmax(0,auto))]"
+            style={{ "--linhas": Math.ceil(materias.length / 2) } as CSSProperties}
+          >
+            {materias.map((m, i) => {
+              const ativo = materiaId === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setMateriaId(ativo ? null : m.id)}
+                  aria-pressed={ativo}
+                  className={`flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs font-medium transition-colors ${
+                    ativo
+                      ? "border-gold/50 bg-gold/15 text-gold"
+                      : "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
+                  }`}
+                >
+                  <span
+                    className={`w-4 shrink-0 text-[10px] font-semibold tabular-nums ${
+                      ativo ? "text-gold/70" : "text-mut"
+                    }`}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="shrink-0 text-sm leading-none">{m.icone}</span>
+                  <span className="min-w-0 flex-1 leading-snug">{m.nome}</span>
+                  <PontoDoRank vezes={contagem.get(m.id)?.blocos ?? 0} />
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[11px] text-mut">
+            Na ordem do ciclo; a bolinha é o rank da matéria nele. Opcional — sem matéria vale
+            para tudo (ex.: Anki geral, simulado completo).
+          </p>
+        </section>
       </div>
     </Modal>
   );

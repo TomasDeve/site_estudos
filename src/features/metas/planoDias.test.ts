@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   atividadeDe,
+  atividadeDoBloco,
   blocosQueDescem,
   blocosVisiveis,
   diasDoPlano,
@@ -51,6 +52,17 @@ describe("plano dos próximos dias", () => {
       "Direito Penal"
     );
     expect(tituloDoBloco({ atividade: "revisao", nota: "" }, undefined)).toBe("Revisão / Anki");
+    // Sem matéria, o que foi escrito é o título (a atividade vai embaixo)
+    expect(tituloDoBloco({ atividade: "simulado", nota: "Simulado DSO 3" }, undefined)).toBe(
+      "Simulado DSO 3"
+    );
+  });
+
+  it("escrever sem marcar matéria vira texto livre, a não ser que a atividade seja escolhida", () => {
+    expect(atividadeDoBloco(null, "questoes", false, "Revisar PDFs")).toBe("livre");
+    expect(atividadeDoBloco("simulado", "teoria", false, "Simulado DSO 3")).toBe("simulado");
+    expect(atividadeDoBloco(null, "questoes", true, "crase, 20 questões")).toBe("questoes");
+    expect(atividadeDoBloco(null, "teoria", false, "   ")).toBe("teoria");
   });
 
   it("atividade desconhecida cai em Teoria", () => {

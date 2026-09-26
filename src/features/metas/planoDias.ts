@@ -55,13 +55,33 @@ export const ATIVIDADES: Atividade[] = [
   { chave: "livre", label: "Texto livre", icone: "✏️", texto: "text-txt", fundo: "bg-navy-600", barra: "bg-mut" },
 ];
 
-/** Título do bloco na grade: o texto escrito (livre), a matéria, ou a atividade. */
+/**
+ * Título do bloco na grade: a matéria; sem matéria, o que você escreveu; sem
+ * nada escrito, a atividade.
+ */
 export function tituloDoBloco(
   bloco: { atividade: string; nota: string },
   materia: { nome: string } | undefined
 ): string {
   if (bloco.atividade === "livre") return bloco.nota.trim() || "Texto livre";
-  return materia ? materia.nome : atividadeDe(bloco.atividade).label;
+  if (materia) return materia.nome;
+  return bloco.nota.trim() || atividadeDe(bloco.atividade).label;
+}
+
+/**
+ * A atividade que o bloco grava. Escrever o que vai estudar sem marcar matéria
+ * vira texto livre — a não ser que você tenha escolhido a atividade. Com matéria
+ * (ou sem nada escrito), vale a escolhida ou, sem escolha, a padrão (a do último
+ * bloco salvo).
+ */
+export function atividadeDoBloco(
+  escolhida: AtividadeChave | null,
+  padrao: AtividadeChave,
+  temMateria: boolean,
+  texto: string
+): AtividadeChave {
+  if (escolhida) return escolhida;
+  return temMateria || texto.trim() === "" ? padrao : "livre";
 }
 
 export function atividadeDe(chave: string): Atividade {
