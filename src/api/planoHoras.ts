@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { PlanoHora } from "@/types/db";
+import { blocosQueDescem } from "@/features/metas/planoDias";
 
 /**
  * Plano dos próximos dias em blocos de meia hora (6 a 16 por dia). Uma linha por
@@ -53,7 +54,10 @@ export function tabelaFaltando(err: unknown): boolean {
   );
 }
 
-type Campos = Pick<PlanoHora, "data" | "hora" | "materia_id" | "atividade" | "nota">;
+/** `feita` só vem no "Desfazer" do apagar (volta o bloco como estava). */
+type Campos = Pick<PlanoHora, "data" | "hora" | "materia_id" | "atividade" | "nota"> & {
+  feita?: boolean;
+};
 
 /** Aplica uma mudança em todas as janelas de dias em cache (otimista). */
 function useMudarCache() {
@@ -95,10 +99,74 @@ export function useSalvarHora() {
           ...c,
           id: `tmp-${c.data}-${c.hora}`,
           user_id: "",
-          feita: false,
+          feita: c.feita ?? false,
           created_at: new Date().toISOString(),
         };
         return [...linhas, nova];
+      }),
+    onError: (_e, _v, antes) => desfazer(antes),
+    onSettled: recarregar,
+  });
+}
+
+/**
+ * Replica um bloco logo abaixo (cópia ainda não feita). Os blocos colados embaixo
+ * descem uma posição até o primeiro livre — lido do banco na hora, pra não mover
+ * nada com base numa tela desatualizada.
+ */
+export function useReplicarHora() {
+  const recarregar = useRecarregar();
+  const mudarCache = useMudarCache();
+  const desfazer = useDesfazer();
+  return useMutation({
+    mutationFn: async (l: PlanoHora) => {
+      const { data: dia, error } = await supabase
+        .from("plano_horas")
+        .select("hora")
+        .eq("data", l.data);
+      if (error) throw error;
+      const descem = blocosQueDescem(
+        dia.map((d) => d.hora),
+        l.hora
+      );
+      if (!descem) throw new Error("Não cabe mais nenhum bloco neste dia (máximo de 16).");
+      // De baixo pra cima: cada um vai para uma posição que já está livre.
+      for (const h of descem) {
+        const { error: e } = await supabase
+          .from("plano_horas")
+          .update({ hora: h + 1 })
+          .eq("data", l.data)
+          .eq("hora", h);
+        if (e) throw e;
+      }
+      const { error: e2 } = await supabase.from("plano_horas").insert({
+        data: l.data,
+        hora: l.hora + 1,
+        materia_id: l.materia_id,
+        atividade: l.atividade,
+        nota: l.nota,
+      });
+      if (e2) throw e2;
+    },
+    onMutate: (l) =>
+      mudarCache((ls) => {
+        const descem = blocosQueDescem(
+          ls.filter((x) => x.data === l.data).map((x) => x.hora),
+          l.hora
+        );
+        if (!descem) return ls;
+        const movem = new Set(descem);
+        const copia: PlanoHora = {
+          ...l,
+          id: `tmp-${l.data}-${l.hora + 1}`,
+          hora: l.hora + 1,
+          feita: false,
+          created_at: new Date().toISOString(),
+        };
+        return [
+          ...ls.map((x) => (x.data === l.data && movem.has(x.hora) ? { ...x, hora: x.hora + 1 } : x)),
+          copia,
+        ];
       }),
     onError: (_e, _v, antes) => desfazer(antes),
     onSettled: recarregar,

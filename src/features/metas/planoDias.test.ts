@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   atividadeDe,
+  blocosQueDescem,
   blocosVisiveis,
   diasDoPlano,
   lerQuantosDias,
@@ -48,6 +49,14 @@ describe("plano dos próximos dias", () => {
     expect(blocosVisiveis(0, 9)).toBe(9);
     expect(blocosVisiveis(1, 9)).toBe(9);
     expect(blocosVisiveis(40, 0)).toBe(16);
+  });
+
+  it("replicar: a cópia entra logo abaixo e só a sequência colada desce", () => {
+    expect(blocosQueDescem([1], 1)).toEqual([]); // 2 livre: nada desce
+    expect(blocosQueDescem([1, 2, 3], 1)).toEqual([3, 2]); // de baixo pra cima
+    expect(blocosQueDescem([1, 2, 4], 1)).toEqual([2]); // o 3 livre absorve
+    expect(blocosQueDescem([16], 16)).toBeNull(); // cópia cairia no 17º
+    expect(blocosQueDescem([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], 3)).toBeNull();
   });
 
   it("blocos de meia hora viram tempo no estilo 1h30", () => {

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Copy, Minus, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy, CopyPlus, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Materia, PlanoHora } from "@/types/db";
 import {
@@ -9,6 +9,7 @@ import {
   useLimparHora,
   useMarcarHoraFeita,
   usePlanoHoras,
+  useReplicarHora,
   useSalvarHora,
 } from "@/api/planoHoras";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
@@ -23,6 +24,7 @@ import {
   BLOCOS_INICIAIS,
   MAX_BLOCOS,
   atividadeDe,
+  blocosQueDescem,
   blocosVisiveis,
   diasDoPlano,
   lerQuantosDias,
@@ -83,6 +85,9 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const marcarFeita = useMarcarHoraFeita();
   const copiarDia = useCopiarDiaPlano();
   const limparDia = useLimparDiaPlano();
+  const limparHora = useLimparHora();
+  const salvarHora = useSalvarHora();
+  const replicarHora = useReplicarHora();
 
   const [editando, setEditando] = useState<Edicao | null>(null);
   // Blocos acrescentados além dos 6 iniciais, por dia. Não vai pro banco: bloco
@@ -128,6 +133,34 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
       return;
     }
     toast.error(err instanceof Error ? err.message : String(err));
+  }
+
+  /** Apaga o bloco direto da grade; o aviso traz "Desfazer" (volta como estava). */
+  function apagar(l: PlanoHora) {
+    limparHora.mutate(
+      { data: l.data, hora: l.hora },
+      {
+        onError: erro,
+        onSuccess: () =>
+          toast("Bloco apagado", {
+            action: {
+              label: "Desfazer",
+              onClick: () =>
+                salvarHora.mutate(
+                  {
+                    data: l.data,
+                    hora: l.hora,
+                    materia_id: l.materia_id,
+                    atividade: l.atividade,
+                    nota: l.nota,
+                    feita: l.feita,
+                  },
+                  { onError: erro }
+                ),
+            },
+          }),
+      }
+    );
   }
 
   async function copiarDoAnterior(data: string) {
@@ -244,6 +277,8 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
                     { onError: erro }
                   )
                 }
+                onApagar={apagar}
+                onReplicar={(l) => replicarHora.mutate(l, { onError: erro })}
                 onCopiarAnterior={() => void copiarDoAnterior(d)}
                 onLimparDia={() => limparDia.mutate(d, { onError: erro })}
               />
@@ -276,6 +311,8 @@ function CaixaDia({
   materiaPorId,
   onEditar,
   onFeita,
+  onApagar,
+  onReplicar,
   onCopiarAnterior,
   onLimparDia,
 }: {
@@ -288,6 +325,8 @@ function CaixaDia({
   materiaPorId: Map<string, Materia>;
   onEditar: (hora: number, linha?: PlanoHora) => void;
   onFeita: (linha: PlanoHora) => void;
+  onApagar: (linha: PlanoHora) => void;
+  onReplicar: (linha: PlanoHora) => void;
   onCopiarAnterior: () => void;
   onLimparDia: () => void;
 }) {
@@ -355,7 +394,7 @@ function CaixaDia({
           return (
             <li
               key={h}
-              className={`flex min-h-11 items-stretch border-b border-line/30 ${
+              className={`group flex min-h-11 items-stretch border-b border-line/30 ${
                 l?.feita ? "bg-green/8" : ""
               }`}
             >
@@ -371,6 +410,9 @@ function CaixaDia({
                   materia={l.materia_id ? materiaPorId.get(l.materia_id) : undefined}
                   onEditar={() => onEditar(h, l)}
                   onFeita={() => onFeita(l)}
+                  onApagar={() => onApagar(l)}
+                  onReplicar={() => onReplicar(l)}
+                  podeReplicar={blocosQueDescem([...(horas?.keys() ?? [])], h) !== null}
                 />
               ) : (
                 <button
@@ -417,11 +459,18 @@ function LinhaPreenchida({
   materia,
   onEditar,
   onFeita,
+  onApagar,
+  onReplicar,
+  podeReplicar,
 }: {
   linha: PlanoHora;
   materia: Materia | undefined;
   onEditar: () => void;
   onFeita: () => void;
+  onApagar: () => void;
+  onReplicar: () => void;
+  /** Falso quando o dia já está cheio (16 blocos) até embaixo. */
+  podeReplicar: boolean;
 }) {
   const at = atividadeDe(l.atividade);
   const principal = materia ? materia.nome : at.label;
@@ -460,6 +509,26 @@ function LinhaPreenchida({
           )}
         </span>
       </button>
+      {/* Ações rápidas, sem abrir o bloco: discretas, acendem ao passar o mouse */}
+      <span className="flex shrink-0 items-center opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100">
+        <button
+          onClick={onReplicar}
+          disabled={!podeReplicar}
+          className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-600 hover:text-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-mut"
+          aria-label="Replicar este bloco abaixo"
+          title={podeReplicar ? "Replicar abaixo" : "Dia cheio (16 blocos)"}
+        >
+          <CopyPlus className="size-3.5" />
+        </button>
+        <button
+          onClick={onApagar}
+          className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-red/10 hover:text-red"
+          aria-label="Apagar este bloco"
+          title="Apagar bloco"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      </span>
       <button
         onClick={onFeita}
         className="flex w-10 shrink-0 cursor-pointer items-center justify-center"

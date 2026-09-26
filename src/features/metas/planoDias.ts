@@ -59,6 +59,21 @@ export function blocosVisiveis(extras: number, maiorPreenchido: number): number 
   return Math.min(MAX_BLOCOS, Math.max(BLOCOS_INICIAIS + extras, maiorPreenchido));
 }
 
+/**
+ * Replicar o bloco da posição `h` para baixo: a cópia entra em `h + 1` e os blocos
+ * preenchidos logo abaixo (a sequência contínua, até o primeiro livre) descem uma
+ * posição. Devolve essas posições de baixo para cima — a ordem segura de mover sem
+ * esbarrar na posição ocupada — ou `null` se não cabe (passaria de 16 blocos).
+ */
+export function blocosQueDescem(preenchidos: number[], h: number, max = MAX_BLOCOS): number[] | null {
+  const ocupados = new Set(preenchidos);
+  const descem: number[] = [];
+  let livre = h + 1;
+  while (ocupados.has(livre)) descem.push(livre++);
+  if (livre > max) return null;
+  return descem.reverse();
+}
+
 /** Tempo somado de N blocos: 0 → "0", 3 → "1h30", 1 → "30min". */
 export function tempoDosBlocos(n: number): string {
   return n === 0 ? "0" : fmtMinutos(n * MINUTOS_POR_BLOCO);
