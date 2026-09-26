@@ -2,8 +2,8 @@ import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fmtMinutos } from "@/lib/dates";
 
-/** Quantos dias o plano mostra de uma vez (3 em cima, 3 embaixo). */
-export const DIAS_NO_PLANO = 6;
+/** Quantos dias o plano mostra de uma vez, lado a lado. */
+export const DIAS_NO_PLANO = 3;
 /** Cada linha do dia é um bloco de meia hora. */
 export const MINUTOS_POR_BLOCO = 30;
 /** Todo dia começa com 6 blocos (3h). */

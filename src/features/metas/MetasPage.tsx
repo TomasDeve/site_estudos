@@ -5,7 +5,6 @@ import { StatCard } from "@/components/StatCard";
 import { DiaPlanner } from "./DiaPlanner";
 import { MetaRangeList } from "./MetaRangeList";
 import { MetasPorAssunto } from "./MetasPorAssunto";
-import { PlanoSeisDias } from "./PlanoSeisDias";
 
 export function MetasPage() {
   const concurso = useConcursoAtual();
@@ -18,11 +17,6 @@ export function MetasPage() {
         title="Prazos e Metas"
         subtitle="Planeje o dia em blocos e feche com chave de ouro"
       />
-
-      {/* Próximos 6 dias, hora a hora (até 5h/dia): o que fazer em cada hora */}
-      <div className="mb-5">
-        <PlanoSeisDias concursoId={concurso.id} />
-      </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="min-w-0 space-y-5 lg:col-span-2">

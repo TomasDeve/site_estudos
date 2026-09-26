@@ -13,7 +13,6 @@ import {
 } from "@/api/planoHoras";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { hojeISO } from "@/lib/dates";
-import { Card, CardBody } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Field";
 import { MenuMais } from "@/components/MenuMais";
@@ -42,12 +41,13 @@ interface Edicao {
 }
 
 /**
- * Plano dos próximos 6 dias do calendário, 3 caixinhas em cima e 3 embaixo.
+ * Plano dos próximos 3 dias do calendário, lado a lado (mora no Painel, dentro
+ * do card do Status do edital — por isso não traz Card próprio).
  * Cada dia é uma coluna de blocos de meia hora (como linhas do Excel): começa
  * com 6 (3h) e dá para acrescentar até 16. Em cada bloco você escolhe a matéria
  * e a atividade e, depois, marca como feito.
  */
-export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
+export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const hoje = hojeISO();
   const [inicio, setInicio] = useState(hoje);
   const dias = useMemo(() => diasDoPlano(inicio), [inicio]);
@@ -90,7 +90,7 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
   const feitas = (linhas ?? []).filter((l) => l.feita).length;
   const ehJanelaDeHoje = inicio === hoje;
   const titulo = ehJanelaDeHoje
-    ? "Próximos 6 dias"
+    ? `Próximos ${DIAS_NO_PLANO} dias`
     : `${rotuloDoDia(inicio, hoje).data} a ${rotuloDoDia(fim, hoje).data}`;
 
   function erro(err: unknown) {
@@ -117,9 +117,8 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
   }
 
   return (
-    <Card>
-      <CardBody className="space-y-4">
-        {/* Cabeçalho: título, resumo das horas e navegação de 6 em 6 dias */}
+    <div className="space-y-4">
+        {/* Cabeçalho: título, resumo das horas e navegação de 3 em 3 dias */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-txt">{titulo}</h2>
@@ -138,8 +137,8 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
             <button
               onClick={() => setInicio(somarDias(inicio, -DIAS_NO_PLANO))}
               className="cursor-pointer rounded-lg p-1.5 text-dim hover:bg-navy-700 hover:text-txt"
-              aria-label="6 dias anteriores"
-              title="6 dias anteriores"
+              aria-label={`${DIAS_NO_PLANO} dias anteriores`}
+              title={`${DIAS_NO_PLANO} dias anteriores`}
             >
               <ChevronLeft className="size-4" />
             </button>
@@ -154,8 +153,8 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
             <button
               onClick={() => setInicio(somarDias(inicio, DIAS_NO_PLANO))}
               className="cursor-pointer rounded-lg p-1.5 text-dim hover:bg-navy-700 hover:text-txt"
-              aria-label="Próximos 6 dias"
-              title="Próximos 6 dias"
+              aria-label={`Próximos ${DIAS_NO_PLANO} dias`}
+              title={`Próximos ${DIAS_NO_PLANO} dias`}
             >
               <ChevronRight className="size-4" />
             </button>
@@ -205,7 +204,6 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
             ))}
           </div>
         )}
-      </CardBody>
 
       {editando && (
         <EditarHoraModal
@@ -219,7 +217,7 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
           onClose={() => setEditando(null)}
         />
       )}
-    </Card>
+    </div>
   );
 }
 

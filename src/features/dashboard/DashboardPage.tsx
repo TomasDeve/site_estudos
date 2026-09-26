@@ -9,15 +9,10 @@ import { progressoConcurso, topicosDoConcurso } from "@/lib/progresso";
 import { fmtMinutos, hojeISO } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
+import { PlanoProximosDias } from "@/features/metas/PlanoProximosDias";
 import { DesempenhoQuestoes } from "./DesempenhoQuestoes";
 import { PlanejamentoHoras } from "./PlanejamentoHoras";
 import { WeekStudyChart } from "./WeekStudyChart";
-
-const NOME_AREA: Record<string, string> = {
-  P1: "Básicos",
-  P2: "Específicos",
-  outros: "Outros",
-};
 
 export function DashboardPage() {
   const concurso = useConcursoAtual();
@@ -41,9 +36,10 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      {/* Status do edital: primeira seção (visão geral do quanto do edital já andou) */}
+      {/* Status do edital: primeira seção (visão geral do quanto do edital já andou),
+          com o plano dos próximos 3 dias logo abaixo da barra */}
       <Card>
-        <CardBody>
+        <CardBody className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-mut">
@@ -64,24 +60,10 @@ export function DashboardPage() {
               Ver edital verticalizado <ArrowRight className="size-3.5" />
             </Link>
           </div>
-          <ProgressBar value={progresso.pct} color={concurso.cor} size="lg" className="mt-3" />
-          {Object.keys(progresso.porArea).length > 1 && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {Object.entries(progresso.porArea).map(([area, p]) => (
-                <div key={area}>
-                  <div className="mb-1 flex justify-between text-[11px]">
-                    <span className="font-semibold text-dim">
-                      {NOME_AREA[area] ?? area}
-                    </span>
-                    <span className="tabular-nums text-mut">
-                      {p.concluidos}/{p.total} · {p.pct}%
-                    </span>
-                  </div>
-                  <ProgressBar value={p.pct} size="sm" color={area === "P1" ? "#4f9dde" : concurso.cor} />
-                </div>
-              ))}
-            </div>
-          )}
+          <ProgressBar value={progresso.pct} color={concurso.cor} size="lg" className="!mt-3" />
+          <div className="border-t border-line/40 pt-4">
+            <PlanoProximosDias concursoId={concurso.id} />
+          </div>
         </CardBody>
       </Card>
 

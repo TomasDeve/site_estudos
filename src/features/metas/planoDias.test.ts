@@ -9,21 +9,14 @@ import {
   tempoDosBlocos,
 } from "./planoDias";
 
-describe("plano de 6 dias", () => {
-  it("gera 6 dias seguidos a partir do início, virando o mês", () => {
-    expect(diasDoPlano("2026-09-28")).toEqual([
-      "2026-09-28",
-      "2026-09-29",
-      "2026-09-30",
-      "2026-10-01",
-      "2026-10-02",
-      "2026-10-03",
-    ]);
+describe("plano dos próximos dias", () => {
+  it("gera 3 dias seguidos a partir do início, virando o mês", () => {
+    expect(diasDoPlano("2026-09-29")).toEqual(["2026-09-29", "2026-09-30", "2026-10-01"]);
   });
 
-  it("anda de 6 em 6 dias para os lados", () => {
-    expect(somarDias("2026-09-25", 6)).toBe("2026-10-01");
-    expect(somarDias("2026-09-25", -6)).toBe("2026-09-19");
+  it("anda de 3 em 3 dias para os lados", () => {
+    expect(somarDias("2026-09-29", 3)).toBe("2026-10-02");
+    expect(somarDias("2026-09-29", -3)).toBe("2026-09-26");
   });
 
   it("rotula hoje, amanhã, ontem e o resto pelo dia da semana (sem '-feira')", () => {
