@@ -74,6 +74,13 @@ export function blocosQueDescem(preenchidos: number[], h: number, max = MAX_BLOC
   return descem.reverse();
 }
 
+/** Primeira posição livre do dia (1 a 16), ou null se o dia está cheio. */
+export function primeiraLivre(ocupadas: number[], max = MAX_BLOCOS): number | null {
+  const ocupado = new Set(ocupadas);
+  for (let h = 1; h <= max; h++) if (!ocupado.has(h)) return h;
+  return null;
+}
+
 /** Tempo de um bloco: o que você digitou nele, ou 30 min (padrão). */
 export function minutosDe(bloco: { minutos?: number | null }): number {
   return bloco.minutos ?? MINUTOS_POR_BLOCO;

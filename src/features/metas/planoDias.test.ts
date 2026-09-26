@@ -9,6 +9,7 @@ import {
   fmtTempo,
   lerMinutos,
   minutosDe,
+  primeiraLivre,
   rotuloDoDia,
   somarDias,
 } from "./planoDias";
@@ -68,6 +69,12 @@ describe("plano dos próximos dias", () => {
     expect(ROTULO_BLOCO).toBe("30min");
     expect(minutosDe({})).toBe(30); // bloco sem tempo próprio (antes da 0035)
     expect(minutosDe({ minutos: 45 })).toBe(45);
+  });
+
+  it("acha a primeira posição livre do dia (vaga para estacionar na troca)", () => {
+    expect(primeiraLivre([])).toBe(1);
+    expect(primeiraLivre([1, 2, 4])).toBe(3);
+    expect(primeiraLivre(Array.from({ length: 16 }, (_, i) => i + 1))).toBeNull();
   });
 
   it("lê o tempo digitado: número é minuto, com h ou : é hora", () => {

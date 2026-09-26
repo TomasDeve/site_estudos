@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { PlanoHora } from "@/types/db";
-import { blocosQueDescem } from "@/features/metas/planoDias";
+import { blocosQueDescem, primeiraLivre } from "@/features/metas/planoDias";
 
 /**
  * Plano dos próximos dias em blocos de meia hora (6 a 16 por dia). Uma linha por
@@ -172,6 +172,63 @@ export function useReplicarHora() {
           copia,
         ];
       }),
+    onError: (_e, _v, antes) => desfazer(antes),
+    onSettled: recarregar,
+  });
+}
+
+type Posicao = { data: string; hora: number };
+
+/**
+ * Arrasta um bloco para outra posição, em qualquer dia. Posição livre: o bloco vai
+ * para lá. Ocupada: os dois trocam de lugar — a origem "estaciona" numa posição
+ * livre do próprio dia durante a troca, porque o banco não aceita dois blocos na
+ * mesma posição. Bloco feito leva o tempo contado junto (o trigger acompanha o dia).
+ */
+export function useMoverHora() {
+  const recarregar = useRecarregar();
+  const mudarCache = useMudarCache();
+  const desfazer = useDesfazer();
+  return useMutation({
+    mutationFn: async ({ origem, destino }: { origem: Posicao; destino: Posicao }) => {
+      const mover = async (de: Posicao, para: Posicao) => {
+        const { error } = await supabase
+          .from("plano_horas")
+          .update({ data: para.data, hora: para.hora })
+          .eq("data", de.data)
+          .eq("hora", de.hora);
+        if (error) throw error;
+      };
+      const { data: ocupante, error } = await supabase
+        .from("plano_horas")
+        .select("id")
+        .eq("data", destino.data)
+        .eq("hora", destino.hora);
+      if (error) throw error;
+      if (!ocupante.length) return mover(origem, destino);
+
+      const { data: dia, error: e2 } = await supabase
+        .from("plano_horas")
+        .select("hora")
+        .eq("data", origem.data);
+      if (e2) throw e2;
+      const vaga = primeiraLivre(dia.map((d) => d.hora));
+      if (vaga === null) throw new Error("Dia cheio (16 blocos): não dá para trocar os blocos de lugar.");
+      const estacionado = { data: origem.data, hora: vaga };
+      await mover(origem, estacionado);
+      await mover(destino, origem);
+      await mover(estacionado, destino);
+    },
+    onMutate: ({ origem, destino }) =>
+      mudarCache((ls) =>
+        ls.map((l) =>
+          mesmaHora(l, origem.data, origem.hora)
+            ? { ...l, data: destino.data, hora: destino.hora }
+            : mesmaHora(l, destino.data, destino.hora)
+              ? { ...l, data: origem.data, hora: origem.hora }
+              : l
+        )
+      ),
     onError: (_e, _v, antes) => desfazer(antes),
     onSettled: recarregar,
   });

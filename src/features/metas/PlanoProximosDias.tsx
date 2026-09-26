@@ -1,5 +1,28 @@
-import { useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Copy, CopyPlus, Minus, Plus, Trash2 } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  pointerWithin,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  CopyPlus,
+  GripVertical,
+  Minus,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { Materia, PlanoHora } from "@/types/db";
 import {
@@ -8,6 +31,7 @@ import {
   useLimparDiaPlano,
   useLimparHora,
   useMarcarHoraFeita,
+  useMoverHora,
   usePlanoHoras,
   useReplicarHora,
   useSalvarHora,
@@ -92,6 +116,33 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const salvarHora = useSalvarHora();
   const replicarHora = useReplicarHora();
   const tempoHora = useTempoHora();
+  const moverHora = useMoverHora();
+
+  // Arrastar blocos: mouse começa a arrastar depois de mexer 6px (um clique curto
+  // continua abrindo o bloco); no toque, segurar um instante — assim rolar a
+  // página por cima dos blocos não vira arraste.
+  const sensores = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } })
+  );
+  const [arrastando, setArrastando] = useState<PlanoHora | null>(null);
+
+  function aoComecarArrastar(e: DragStartEvent) {
+    setArrastando((e.active.data.current?.linha as PlanoHora | undefined) ?? null);
+  }
+
+  /** Soltou numa linha: livre → o bloco vai pra lá; ocupada → os dois trocam. */
+  function aoSoltar(e: DragEndEvent) {
+    setArrastando(null);
+    const origem = e.active.data.current?.linha as PlanoHora | undefined;
+    const destino = e.over?.data.current as { data: string; hora: number } | undefined;
+    if (!origem || !destino) return;
+    if (origem.data === destino.data && origem.hora === destino.hora) return;
+    moverHora.mutate(
+      { origem: { data: origem.data, hora: origem.hora }, destino },
+      { onError: erro }
+    );
+  }
 
   const [editando, setEditando] = useState<Edicao | null>(null);
   // Blocos acrescentados além dos 6 iniciais, por dia. Não vai pro banco: bloco
@@ -274,33 +325,53 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
             <Spinner className="size-5" />
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {dias.map((d) => (
-              <CaixaDia
-                key={d}
-                data={d}
-                hoje={hoje}
-                horas={porDia.get(d)}
-                extras={extras[d] ?? 0}
-                onExtras={(n) => setExtras((x) => ({ ...x, [d]: n }))}
-                materiaPorId={materiaPorId}
-                onEditar={(hora, linha) => setEditando({ data: d, hora, linha })}
-                onFeita={(l) =>
-                  marcarFeita.mutate(
-                    { data: l.data, hora: l.hora, feita: !l.feita },
-                    { onError: erro }
-                  )
-                }
-                onApagar={apagar}
-                onTempo={(l, minutos) =>
-                  tempoHora.mutate({ data: l.data, hora: l.hora, minutos }, { onError: erro })
-                }
-                onReplicar={(l) => replicarHora.mutate(l, { onError: erro })}
-                onCopiarAnterior={() => void copiarDoAnterior(d)}
-                onLimparDia={() => limparDia.mutate(d, { onError: erro })}
-              />
-            ))}
-          </div>
+          <DndContext
+            sensors={sensores}
+            // Cai na linha que está debaixo do ponteiro/dedo (não na que a prévia cobre mais).
+            collisionDetection={pointerWithin}
+            onDragStart={aoComecarArrastar}
+            onDragEnd={aoSoltar}
+            onDragCancel={() => setArrastando(null)}
+          >
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {dias.map((d) => (
+                <CaixaDia
+                  key={d}
+                  data={d}
+                  hoje={hoje}
+                  horas={porDia.get(d)}
+                  extras={extras[d] ?? 0}
+                  onExtras={(n) => setExtras((x) => ({ ...x, [d]: n }))}
+                  materiaPorId={materiaPorId}
+                  onEditar={(hora, linha) => setEditando({ data: d, hora, linha })}
+                  onFeita={(l) =>
+                    marcarFeita.mutate(
+                      { data: l.data, hora: l.hora, feita: !l.feita },
+                      { onError: erro }
+                    )
+                  }
+                  onApagar={apagar}
+                  onTempo={(l, minutos) =>
+                    tempoHora.mutate({ data: l.data, hora: l.hora, minutos }, { onError: erro })
+                  }
+                  onReplicar={(l) => replicarHora.mutate(l, { onError: erro })}
+                  onCopiarAnterior={() => void copiarDoAnterior(d)}
+                  onLimparDia={() => limparDia.mutate(d, { onError: erro })}
+                />
+              ))}
+            </div>
+            {/* O bloco "na mão" enquanto arrasta */}
+            <DragOverlay dropAnimation={null}>
+              {arrastando && (
+                <BlocoNaMao
+                  linha={arrastando}
+                  materia={
+                    arrastando.materia_id ? materiaPorId.get(arrastando.materia_id) : undefined
+                  }
+                />
+              )}
+            </DragOverlay>
+          </DndContext>
         )}
 
       {editando && (
@@ -413,12 +484,7 @@ function CaixaDia({
         {Array.from({ length: visiveis }, (_, i) => i + 1).map((h) => {
           const l = horas?.get(h);
           return (
-            <li
-              key={h}
-              className={`group flex min-h-11 items-stretch border-b border-line/30 ${
-                l?.feita ? "bg-green/8" : ""
-              }`}
-            >
+            <Celula key={h} data={data} hora={h} feita={!!l?.feita}>
               {/* 1ª coluna: o tempo do bloco. Preenchido → clica e digita o tempo real. */}
               {l ? (
                 <TempoDoBloco minutos={minutosDe(l)} onSalvar={(m) => onTempo(l, m)} />
@@ -447,7 +513,7 @@ function CaixaDia({
                   livre
                 </button>
               )}
-            </li>
+            </Celula>
           );
         })}
       </ol>
@@ -532,6 +598,54 @@ function TempoDoBloco({ minutos, onSalvar }: { minutos: number; onSalvar: (m: nu
   );
 }
 
+/** Uma linha do dia: também é onde se solta um bloco arrastado (acende em dourado). */
+function Celula({
+  data,
+  hora,
+  feita,
+  children,
+}: {
+  data: string;
+  hora: number;
+  feita: boolean;
+  children: ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `s:${data}|${hora}`, data: { data, hora } });
+  return (
+    <li
+      ref={setNodeRef}
+      className={`group flex min-h-11 items-stretch border-b border-line/30 transition-colors ${
+        isOver
+          ? "bg-gold/10 shadow-[inset_0_0_0_1px_rgb(224_168_62/0.7)]"
+          : feita
+            ? "bg-green/8"
+            : ""
+      }`}
+    >
+      {children}
+    </li>
+  );
+}
+
+/** Prévia do bloco que acompanha o cursor/dedo durante o arraste. */
+function BlocoNaMao({ linha: l, materia }: { linha: PlanoHora; materia: Materia | undefined }) {
+  const at = atividadeDe(l.atividade);
+  return (
+    <div className="flex w-60 cursor-grabbing items-stretch gap-2 rounded-lg border border-gold/50 bg-navy-800 px-2.5 py-2 shadow-2xl shadow-navy-950/70">
+      <span className={`w-1 rounded-full ${at.barra}`} aria-hidden />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 text-xs font-semibold text-txt">
+          <span className="text-sm leading-none">{materia?.icone ?? at.icone}</span>
+          <span className="truncate">{materia ? materia.nome : at.label}</span>
+        </span>
+        <span className={`text-[10px] font-bold uppercase tracking-wide ${at.texto}`}>
+          {at.label} · {fmtMinutos(minutosDe(l))}
+        </span>
+      </span>
+    </div>
+  );
+}
+
 function LinhaPreenchida({
   linha: l,
   materia,
@@ -552,13 +666,26 @@ function LinhaPreenchida({
 }) {
   const at = atividadeDe(l.atividade);
   const principal = materia ? materia.nome : at.label;
+  const { setNodeRef, listeners, attributes, isDragging } = useDraggable({
+    id: `b:${l.data}|${l.hora}`,
+    data: { linha: l },
+  });
   return (
     <>
       <button
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
         onClick={onEditar}
-        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-1.5 pl-2 pr-1 text-left transition-colors hover:bg-navy-700/40"
-        title={[materia?.nome, at.label, l.nota].filter(Boolean).join(" · ")}
+        className={`flex min-w-0 flex-1 cursor-grab touch-manipulation items-center gap-2 py-1.5 pl-1 pr-1 text-left transition-colors hover:bg-navy-700/40 active:cursor-grabbing ${
+          isDragging ? "opacity-30" : ""
+        }`}
+        title={`${[materia?.nome, at.label, l.nota].filter(Boolean).join(" · ")} — clique para editar, arraste para mover`}
       >
+        <GripVertical
+          className="size-3 shrink-0 text-mut opacity-0 transition-opacity group-hover:opacity-70 max-md:opacity-40"
+          aria-hidden
+        />
         <span className={`w-1 self-stretch rounded-full ${at.barra}`} aria-hidden />
         <span className="min-w-0 flex-1">
           <span
