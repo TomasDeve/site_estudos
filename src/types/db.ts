@@ -588,6 +588,50 @@ export type Database = {
         }
         Relationships: []
       }
+      plano_horas: {
+        Row: {
+          atividade: string
+          created_at: string
+          data: string
+          feita: boolean
+          hora: number
+          id: string
+          materia_id: string | null
+          nota: string
+          user_id: string
+        }
+        Insert: {
+          atividade?: string
+          created_at?: string
+          data: string
+          feita?: boolean
+          hora: number
+          id?: string
+          materia_id?: string | null
+          nota?: string
+          user_id?: string
+        }
+        Update: {
+          atividade?: string
+          created_at?: string
+          data?: string
+          feita?: boolean
+          hora?: number
+          id?: string
+          materia_id?: string | null
+          nota?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_horas_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questao_logs: {
         Row: {
           acertos: number
@@ -1339,6 +1383,7 @@ export type Audio = Tables<"audios">
 export type AudioGrupo = Tables<"audio_grupos">
 export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
+export type PlanoHora = Tables<"plano_horas">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "arquivada"
