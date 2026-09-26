@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================================
-// Rotação de ângulos — Anki / PCAL 2.0
+// Rotação de ângulos — Anki / PCPE
 // ----------------------------------------------------------------------------
 // Gira, por NÚCLEO (premissas que compartilham o mesmo data-real), qual ângulo
 // fica visível: esconde o card ativo e mostra o PRÓXIMO da fila (A→B→C→A...),
@@ -25,7 +25,7 @@
 import readline from "node:readline";
 
 const MODEL = "Resumo Universal (Devv)";
-const RAIZ = "PCAL 2.0";
+const RAIZ = "PCPE";
 const AC_URL = "http://localhost:8765";
 
 // ---------- AnkiConnect ----------

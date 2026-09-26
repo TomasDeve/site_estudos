@@ -43,7 +43,7 @@ if (-not $cadernos) {
 
 # ============================ Janela ============================
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'Rotação de ângulos — Anki (PCAL 2.0)'
+$form.Text = 'Rotação de ângulos — Anki (PCPE)'
 $form.Size = New-Object System.Drawing.Size(560, 660)
 $form.StartPosition = 'CenterScreen'
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
