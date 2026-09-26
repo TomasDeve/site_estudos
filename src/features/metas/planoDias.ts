@@ -1,10 +1,15 @@
 import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { fmtMinutos } from "@/lib/dates";
 
 /** Quantos dias o plano mostra de uma vez (3 em cima, 3 embaixo). */
 export const DIAS_NO_PLANO = 6;
-/** Teto de horas de estudo por dia — uma linha por hora. */
-export const HORAS_POR_DIA = 5;
+/** Cada linha do dia é um bloco de meia hora. */
+export const MINUTOS_POR_BLOCO = 30;
+/** Todo dia começa com 6 blocos (3h). */
+export const BLOCOS_INICIAIS = 6;
+/** Teto de blocos por dia (8h) — casa com o CHECK da migração 0034. */
+export const MAX_BLOCOS = 16;
 
 export type AtividadeChave = "teoria" | "questoes" | "revisao" | "lei_seca" | "simulado";
 
@@ -35,6 +40,24 @@ export const ATIVIDADES: Atividade[] = [
 
 export function atividadeDe(chave: string): Atividade {
   return ATIVIDADES.find((a) => a.chave === chave) ?? ATIVIDADES[0];
+}
+
+/**
+ * Quantas linhas o dia mostra: os 6 blocos iniciais mais os que você acrescentou
+ * (`extras`), nunca escondendo um bloco já preenchido, e no máximo 16.
+ */
+export function blocosVisiveis(extras: number, maiorPreenchido: number): number {
+  return Math.min(MAX_BLOCOS, Math.max(BLOCOS_INICIAIS + extras, maiorPreenchido));
+}
+
+/** Tempo somado de N blocos: 0 → "0", 3 → "1h30", 1 → "30min". */
+export function tempoDosBlocos(n: number): string {
+  return n === 0 ? "0" : fmtMinutos(n * MINUTOS_POR_BLOCO);
+}
+
+/** Rótulo da linha: até onde o dia chega ao fim do bloco ("30min", "1h", "1h30"…). */
+export function rotuloDoBloco(n: number): string {
+  return fmtMinutos(n * MINUTOS_POR_BLOCO);
 }
 
 /** Os N dias seguidos a partir de `inicio` (inclusive), como "YYYY-MM-DD". */

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Materia, PlanoHora } from "@/types/db";
 import {
@@ -21,18 +21,20 @@ import { Modal } from "@/components/Modal";
 import { Spinner } from "@/components/Spinner";
 import {
   ATIVIDADES,
+  BLOCOS_INICIAIS,
   DIAS_NO_PLANO,
-  HORAS_POR_DIA,
+  MAX_BLOCOS,
   atividadeDe,
+  blocosVisiveis,
   diasDoPlano,
+  rotuloDoBloco,
   rotuloDoDia,
   somarDias,
+  tempoDosBlocos,
   type AtividadeChave,
 } from "./planoDias";
 
-const HORAS = Array.from({ length: HORAS_POR_DIA }, (_, i) => i + 1);
-
-/** A hora que está sendo editada no modal. */
+/** O bloco (de meia hora) que está sendo editado no modal. `hora` = posição no dia. */
 interface Edicao {
   data: string;
   hora: number;
@@ -41,8 +43,9 @@ interface Edicao {
 
 /**
  * Plano dos próximos 6 dias do calendário, 3 caixinhas em cima e 3 embaixo.
- * Cada dia tem até 5 linhas (uma por hora de estudo, como linhas do Excel): em
- * cada uma você escolhe a matéria e a atividade e, depois, marca como feita.
+ * Cada dia é uma coluna de blocos de meia hora (como linhas do Excel): começa
+ * com 6 (3h) e dá para acrescentar até 16. Em cada bloco você escolhe a matéria
+ * e a atividade e, depois, marca como feito.
  */
 export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
   const hoje = hojeISO();
@@ -58,7 +61,10 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
   const limparDia = useLimparDiaPlano();
 
   const [editando, setEditando] = useState<Edicao | null>(null);
-  // Atividade da última hora salva: vira o padrão da próxima hora vazia.
+  // Blocos acrescentados além dos 6 iniciais, por dia. Não vai pro banco: bloco
+  // vazio não tem linha, então some ao recarregar — o preenchido fica.
+  const [extras, setExtras] = useState<Record<string, number>>({});
+  // Atividade do último bloco salvo: vira o padrão do próximo bloco vazio.
   const [ultimaAtividade, setUltimaAtividade] = useState<AtividadeChave>("teoria");
 
   // Matérias do concurso em estudo, na ordem do edital, sem as riscadas.
@@ -88,6 +94,15 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
     : `${rotuloDoDia(inicio, hoje).data} a ${rotuloDoDia(fim, hoje).data}`;
 
   function erro(err: unknown) {
+    // Bloco além do 5º antes de rodar a 0034: o CHECK antigo (1 a 5) recusa.
+    const e = err as { code?: string; message?: string } | null;
+    if (e?.code === "23514" || e?.message?.includes("plano_horas_hora_check")) {
+      toast.error(
+        "Falta rodar a migração 0034 (blocos de meia hora) no Supabase → SQL Editor.",
+        { duration: 8000 }
+      );
+      return;
+    }
     toast.error(err instanceof Error ? err.message : String(err));
   }
 
@@ -95,7 +110,7 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
     try {
       const n = await copiarDia.mutateAsync({ de: somarDias(data, -1), para: data });
       if (n === 0) toast.info("O dia anterior não tinha nada planejado.");
-      else toast.success(`${n === 1 ? "1 hora copiada" : `${n} horas copiadas`} do dia anterior.`);
+      else toast.success(`${n === 1 ? "1 bloco copiado" : `${n} blocos copiados`} do dia anterior.`);
     } catch (err) {
       erro(err);
     }
@@ -110,11 +125,11 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
             <h2 className="text-sm font-semibold text-txt">{titulo}</h2>
             <p className="mt-0.5 text-xs text-mut">
               {planejadas === 0 ? (
-                "Até 5 horas por dia — toque numa linha para escolher o que fazer nela."
+                "Blocos de 30 min — toque num bloco para escolher o que fazer nele."
               ) : (
                 <>
-                  <strong className="text-dim">{planejadas}h</strong> planejadas ·{" "}
-                  <strong className="text-green">{feitas}h</strong> feitas
+                  <strong className="text-dim">{tempoDosBlocos(planejadas)}</strong> planejadas ·{" "}
+                  <strong className="text-green">{tempoDosBlocos(feitas)}</strong> feitas
                 </>
               )}
             </p>
@@ -174,6 +189,8 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
                 data={d}
                 hoje={hoje}
                 horas={porDia.get(d)}
+                extras={extras[d] ?? 0}
+                onExtras={(n) => setExtras((x) => ({ ...x, [d]: n }))}
                 materiaPorId={materiaPorId}
                 onEditar={(hora, linha) => setEditando({ data: d, hora, linha })}
                 onFeita={(l) =>
@@ -198,6 +215,7 @@ export function PlanoSeisDias({ concursoId }: { concursoId: string }) {
           materias={materiasDoConcurso}
           atividadePadrao={ultimaAtividade}
           onSalvo={setUltimaAtividade}
+          onErro={erro}
           onClose={() => setEditando(null)}
         />
       )}
@@ -209,6 +227,8 @@ function CaixaDia({
   data,
   hoje,
   horas,
+  extras,
+  onExtras,
   materiaPorId,
   onEditar,
   onFeita,
@@ -218,6 +238,9 @@ function CaixaDia({
   data: string;
   hoje: string;
   horas: Map<number, PlanoHora> | undefined;
+  /** Blocos acrescentados além dos 6 iniciais. */
+  extras: number;
+  onExtras: (n: number) => void;
   materiaPorId: Map<string, Materia>;
   onEditar: (hora: number, linha?: PlanoHora) => void;
   onFeita: (linha: PlanoHora) => void;
@@ -230,6 +253,10 @@ function CaixaDia({
   const preenchidas = horas?.size ?? 0;
   const feitas = [...(horas?.values() ?? [])].filter((l) => l.feita).length;
   const completo = preenchidas > 0 && feitas === preenchidas;
+  const maiorPreenchido = Math.max(0, ...(horas?.keys() ?? []));
+  const visiveis = blocosVisiveis(extras, maiorPreenchido);
+  // Só dá para tirar bloco vazio do fim, e nunca abaixo dos 6 iniciais.
+  const podeTirar = visiveis > BLOCOS_INICIAIS && visiveis > maiorPreenchido;
 
   return (
     <div
@@ -249,9 +276,9 @@ function CaixaDia({
             className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
               completo ? "bg-green/15 text-green" : "bg-navy-700 text-dim"
             }`}
-            title={`${feitas} de ${preenchidas} horas feitas`}
+            title={`${tempoDosBlocos(feitas)} feitas de ${tempoDosBlocos(preenchidas)} planejadas`}
           >
-            {feitas}/{preenchidas}h
+            {tempoDosBlocos(feitas)}/{tempoDosBlocos(preenchidas)}
           </span>
         )}
         <MenuMais
@@ -276,19 +303,23 @@ function CaixaDia({
         />
       </div>
 
-      {/* As 5 horas do dia, como linhas de planilha */}
+      {/* Os blocos de meia hora do dia, como linhas de planilha. A 1ª coluna
+          mostra até onde o dia chega ao fim do bloco (30min, 1h, 1h30…). */}
       <ol className="border-t border-line/50">
-        {HORAS.map((h) => {
+        {Array.from({ length: visiveis }, (_, i) => i + 1).map((h) => {
           const l = horas?.get(h);
           return (
             <li
               key={h}
-              className={`flex min-h-12 items-stretch border-b border-line/30 last:border-b-0 ${
+              className={`flex min-h-11 items-stretch border-b border-line/30 ${
                 l?.feita ? "bg-green/8" : ""
               }`}
             >
-              <span className="flex w-9 shrink-0 items-center justify-center border-r border-line/30 text-[10px] font-semibold tabular-nums text-mut">
-                {h}ª
+              <span
+                className="flex w-12 shrink-0 items-center justify-center border-r border-line/30 text-[10px] font-semibold tabular-nums text-mut"
+                title={`${h}º bloco de 30 min`}
+              >
+                {rotuloDoBloco(h)}
               </span>
               {l ? (
                 <LinhaPreenchida
@@ -301,7 +332,7 @@ function CaixaDia({
                 <button
                   onClick={() => onEditar(h)}
                   className="group flex flex-1 cursor-pointer items-center gap-1.5 px-2.5 text-left text-xs text-mut/70 transition-colors hover:bg-navy-700/40 hover:text-dim"
-                  aria-label={`Escolher o que fazer na ${h}ª hora de ${nome}`}
+                  aria-label={`Escolher o que fazer no ${h}º bloco de ${nome}`}
                 >
                   <Plus className="size-3.5 opacity-60 group-hover:opacity-100" />
                   livre
@@ -311,6 +342,28 @@ function CaixaDia({
           );
         })}
       </ol>
+
+      {/* Acrescentar/tirar blocos de meia hora */}
+      <div className="mt-auto flex items-center">
+        <button
+          onClick={() => onExtras(visiveis + 1 - BLOCOS_INICIAIS)}
+          disabled={visiveis >= MAX_BLOCOS}
+          className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 py-2 text-[11px] font-semibold text-dim transition-colors hover:bg-navy-700/40 hover:text-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-dim"
+          title={visiveis >= MAX_BLOCOS ? "Máximo de 16 blocos (8h) por dia" : undefined}
+        >
+          <Plus className="size-3.5" /> Bloco de 30 min
+        </button>
+        {podeTirar && (
+          <button
+            onClick={() => onExtras(visiveis - 1 - BLOCOS_INICIAIS)}
+            className="flex cursor-pointer items-center gap-1 border-l border-line/30 px-3 py-2 text-[11px] font-semibold text-mut transition-colors hover:bg-navy-700/40 hover:text-red"
+            aria-label="Tirar o último bloco vazio"
+            title="Tirar o último bloco vazio"
+          >
+            <Minus className="size-3.5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -366,7 +419,7 @@ function LinhaPreenchida({
       <button
         onClick={onFeita}
         className="flex w-10 shrink-0 cursor-pointer items-center justify-center"
-        aria-label={l.feita ? "Desmarcar hora feita" : "Marcar hora como feita"}
+        aria-label={l.feita ? "Desmarcar bloco feito" : "Marcar bloco como feito"}
         title={l.feita ? "Desmarcar" : "Marcar como feita"}
       >
         <span
@@ -389,6 +442,7 @@ function EditarHoraModal({
   materias,
   atividadePadrao,
   onSalvo,
+  onErro,
   onClose,
 }: {
   edicao: Edicao;
@@ -396,6 +450,7 @@ function EditarHoraModal({
   materias: Materia[];
   atividadePadrao: AtividadeChave;
   onSalvo: (atividade: AtividadeChave) => void;
+  onErro: (err: unknown) => void;
   onClose: () => void;
 }) {
   const { data, hora, linha } = edicao;
@@ -411,17 +466,14 @@ function EditarHoraModal({
   function onSalvar() {
     salvar.mutate(
       { data, hora, atividade, materia_id: materiaId, nota: nota.trim() },
-      { onError: (err) => toast.error(err instanceof Error ? err.message : String(err)) }
+      { onError: onErro }
     );
     onSalvo(atividade);
     onClose();
   }
 
   function onLimpar() {
-    limpar.mutate(
-      { data, hora },
-      { onError: (err) => toast.error(err instanceof Error ? err.message : String(err)) }
-    );
+    limpar.mutate({ data, hora }, { onError: onErro });
     onClose();
   }
 
@@ -431,7 +483,10 @@ function EditarHoraModal({
       onClose={onClose}
       title={
         <>
-          {nome} <span className="font-normal text-mut">{dataCurta}</span> · {hora}ª hora
+          {nome} <span className="font-normal text-mut">{dataCurta}</span> · {hora}º bloco{" "}
+          <span className="font-normal text-mut">
+            ({hora === 1 ? "0" : rotuloDoBloco(hora - 1)} a {rotuloDoBloco(hora)})
+          </span>
         </>
       }
       footer={
@@ -442,7 +497,7 @@ function EditarHoraModal({
               onClick={onLimpar}
               className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-sm text-red transition-colors hover:bg-red/10"
             >
-              <Trash2 className="size-3.5" /> Liberar hora
+              <Trash2 className="size-3.5" /> Liberar bloco
             </button>
           )}
           <div className="ml-auto flex items-center gap-2">

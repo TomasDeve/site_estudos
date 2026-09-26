@@ -3,8 +3,9 @@ import { supabase } from "@/lib/supabase";
 import type { PlanoHora } from "@/types/db";
 
 /**
- * Plano dos próximos dias, hora a hora (até 5 por dia). Uma linha por hora
- * preenchida — hora livre não tem linha. A chave é (dia, hora), então as
+ * Plano dos próximos dias em blocos de meia hora (6 a 16 por dia). Uma linha por
+ * bloco preenchido — bloco livre não tem linha; a coluna `hora` guarda a posição
+ * do bloco no dia (nome herdado da 1ª versão, de 1h). A chave é (dia, hora), então as
  * mutações miram `data` + `hora` (não o id): funciona mesmo com a linha
  * otimista, que ainda não tem o id do banco.
  */

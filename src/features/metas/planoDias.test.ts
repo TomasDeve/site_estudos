@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { atividadeDe, diasDoPlano, rotuloDoDia, somarDias } from "./planoDias";
+import {
+  atividadeDe,
+  blocosVisiveis,
+  diasDoPlano,
+  rotuloDoBloco,
+  rotuloDoDia,
+  somarDias,
+  tempoDosBlocos,
+} from "./planoDias";
 
 describe("plano de 6 dias", () => {
   it("gera 6 dias seguidos a partir do início, virando o mês", () => {
@@ -30,5 +38,21 @@ describe("plano de 6 dias", () => {
   it("atividade desconhecida cai em Teoria", () => {
     expect(atividadeDe("questoes").label).toBe("Questões");
     expect(atividadeDe("xyz").chave).toBe("teoria");
+  });
+
+  it("começa com 6 blocos, soma os acrescentados e nunca esconde bloco preenchido", () => {
+    expect(blocosVisiveis(0, 0)).toBe(6);
+    expect(blocosVisiveis(2, 0)).toBe(8);
+    expect(blocosVisiveis(0, 9)).toBe(9);
+    expect(blocosVisiveis(1, 9)).toBe(9);
+    expect(blocosVisiveis(40, 0)).toBe(16);
+  });
+
+  it("blocos de meia hora viram tempo no estilo 1h30", () => {
+    expect(tempoDosBlocos(0)).toBe("0");
+    expect(tempoDosBlocos(1)).toBe("30min");
+    expect(tempoDosBlocos(3)).toBe("1h30");
+    expect(rotuloDoBloco(2)).toBe("1h");
+    expect(rotuloDoBloco(6)).toBe("3h");
   });
 });
