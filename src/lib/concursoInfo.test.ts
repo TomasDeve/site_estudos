@@ -27,12 +27,14 @@ describe("etiquetas COMUM", () => {
     expect(etiquetaDoProprioConcurso("COMUM PCPE", "pc_pe")).toBe(true);
     expect(etiquetaDoProprioConcurso("COMUM PCAL", "pc_pe")).toBe(false);
     expect(etiquetaDoProprioConcurso("COMUM PCAL", "pc_al")).toBe(true);
+    expect(etiquetaDoProprioConcurso("COMUM PPPE", "pp_pe")).toBe(true);
     expect(etiquetaDoProprioConcurso("REVISAR", "pc_pe")).toBe(false);
   });
 
   it("explica a etiqueta com o nome do outro concurso", () => {
     expect(ajudaDaEtiqueta("COMUM PCAL")).toBe("Este assunto também cai no edital da PC-AL");
     expect(ajudaDaEtiqueta("COMUM PCPE")).toBe("Este assunto também cai no edital da PC-PE");
+    expect(ajudaDaEtiqueta("COMUM PPPE")).toBe("Este assunto também cai no edital da Polícia Penal-PE");
     expect(ajudaDaEtiqueta("REVISAR")).toBe("REVISAR");
   });
 });
