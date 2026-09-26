@@ -3,6 +3,7 @@ import {
   atividadeDe,
   blocosVisiveis,
   diasDoPlano,
+  lerQuantosDias,
   ROTULO_BLOCO,
   rotuloDoDia,
   somarDias,
@@ -11,7 +12,15 @@ import {
 
 describe("plano dos próximos dias", () => {
   it("gera 3 dias seguidos a partir do início, virando o mês", () => {
-    expect(diasDoPlano("2026-09-29")).toEqual(["2026-09-29", "2026-09-30", "2026-10-01"]);
+    expect(diasDoPlano("2026-09-29", 3)).toEqual(["2026-09-29", "2026-09-30", "2026-10-01"]);
+    expect(diasDoPlano("2026-09-29", 9)).toHaveLength(9);
+  });
+
+  it("lê a quantidade de dias salva e cai em 3 se for inválida", () => {
+    expect(lerQuantosDias("6")).toBe(6);
+    expect(lerQuantosDias("9")).toBe(9);
+    expect(lerQuantosDias("4")).toBe(3);
+    expect(lerQuantosDias(null)).toBe(3);
   });
 
   it("anda de 3 em 3 dias para os lados", () => {

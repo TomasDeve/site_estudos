@@ -2,8 +2,17 @@ import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fmtMinutos } from "@/lib/dates";
 
-/** Quantos dias o plano mostra de uma vez, lado a lado. */
-export const DIAS_NO_PLANO = 3;
+/** Quantos dias o plano pode mostrar de uma vez (3 por linha). */
+export const OPCOES_DIAS = [3, 6, 9] as const;
+export type QuantosDias = (typeof OPCOES_DIAS)[number];
+/** Padrão: uma linha de 3 dias. */
+export const DIAS_PADRAO: QuantosDias = 3;
+
+/** Lê a escolha salva ("3", "6", "9"); qualquer outra coisa cai no padrão. */
+export function lerQuantosDias(valor: string | null | undefined): QuantosDias {
+  const n = Number(valor);
+  return (OPCOES_DIAS as readonly number[]).includes(n) ? (n as QuantosDias) : DIAS_PADRAO;
+}
 /** Cada linha do dia é um bloco de meia hora. */
 export const MINUTOS_POR_BLOCO = 30;
 /** Todo dia começa com 6 blocos (3h). */
@@ -59,7 +68,7 @@ export function tempoDosBlocos(n: number): string {
 export const ROTULO_BLOCO = fmtMinutos(MINUTOS_POR_BLOCO);
 
 /** Os N dias seguidos a partir de `inicio` (inclusive), como "YYYY-MM-DD". */
-export function diasDoPlano(inicio: string, n = DIAS_NO_PLANO): string[] {
+export function diasDoPlano(inicio: string, n: number): string[] {
   const base = parseISO(inicio);
   return Array.from({ length: n }, (_, i) => format(addDays(base, i), "yyyy-MM-dd"));
 }

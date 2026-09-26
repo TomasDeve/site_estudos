@@ -21,17 +21,30 @@ import { Spinner } from "@/components/Spinner";
 import {
   ATIVIDADES,
   BLOCOS_INICIAIS,
-  DIAS_NO_PLANO,
   MAX_BLOCOS,
   atividadeDe,
   blocosVisiveis,
   diasDoPlano,
+  lerQuantosDias,
   ROTULO_BLOCO,
   rotuloDoDia,
   somarDias,
   tempoDosBlocos,
+  OPCOES_DIAS,
   type AtividadeChave,
+  type QuantosDias,
 } from "./planoDias";
+
+/** Preferência de exibição (quantos dias aparecem): fica neste navegador. */
+const CHAVE_QUANTOS = "plano.diasVisiveis";
+
+function quantosSalvo(): QuantosDias {
+  try {
+    return lerQuantosDias(localStorage.getItem(CHAVE_QUANTOS));
+  } catch {
+    return lerQuantosDias(null);
+  }
+}
 
 /** O bloco (de meia hora) que está sendo editado no modal. `hora` = posição no dia. */
 interface Edicao {
@@ -41,8 +54,9 @@ interface Edicao {
 }
 
 /**
- * Plano dos próximos 3 dias do calendário, lado a lado (mora no Painel, dentro
- * do card do Status do edital — por isso não traz Card próprio).
+ * Plano dos próximos dias do calendário, 3 por linha — você escolhe ver 3, 6 ou
+ * 9 dias (mora no Painel, dentro do card do Status do edital — por isso não traz
+ * Card próprio).
  * Cada dia é uma coluna de blocos de meia hora (como linhas do Excel): começa
  * com 6 (3h) e dá para acrescentar até 16. Em cada bloco você escolhe a matéria
  * e a atividade e, depois, marca como feito.
@@ -50,7 +64,17 @@ interface Edicao {
 export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const hoje = hojeISO();
   const [inicio, setInicio] = useState(hoje);
-  const dias = useMemo(() => diasDoPlano(inicio), [inicio]);
+  const [quantos, setQuantos] = useState<QuantosDias>(quantosSalvo);
+  const dias = useMemo(() => diasDoPlano(inicio, quantos), [inicio, quantos]);
+
+  function escolherQuantos(n: QuantosDias) {
+    setQuantos(n);
+    try {
+      localStorage.setItem(CHAVE_QUANTOS, String(n));
+    } catch {
+      /* localStorage indisponível: vale só nesta visita */
+    }
+  }
   const fim = dias[dias.length - 1];
 
   const { data: linhas, isLoading, error } = usePlanoHoras(inicio, fim);
@@ -90,7 +114,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const feitas = (linhas ?? []).filter((l) => l.feita).length;
   const ehJanelaDeHoje = inicio === hoje;
   const titulo = ehJanelaDeHoje
-    ? `Próximos ${DIAS_NO_PLANO} dias`
+    ? `Próximos ${quantos} dias`
     : `${rotuloDoDia(inicio, hoje).data} a ${rotuloDoDia(fim, hoje).data}`;
 
   function erro(err: unknown) {
@@ -118,7 +142,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
 
   return (
     <div className="space-y-4">
-        {/* Cabeçalho: título, resumo das horas e navegação de 3 em 3 dias */}
+        {/* Cabeçalho: título, resumo das horas, quantos dias mostrar e navegação */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-txt">{titulo}</h2>
@@ -133,12 +157,33 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
               )}
             </p>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Quantos dias mostrar: 3 (uma linha), 6 ou 9 */}
+            <div
+              className="inline-flex shrink-0 rounded-xl border border-line/60 bg-navy-900/60 p-0.5"
+              role="group"
+              aria-label="Quantos dias mostrar"
+            >
+              {OPCOES_DIAS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => escolherQuantos(n)}
+                  aria-pressed={quantos === n}
+                  className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    quantos === n ? "bg-gold text-navy-950 shadow-sm" : "text-dim hover:text-txt"
+                  }`}
+                >
+                  {n} dias
+                </button>
+              ))}
+            </div>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setInicio(somarDias(inicio, -DIAS_NO_PLANO))}
+              onClick={() => setInicio(somarDias(inicio, -quantos))}
               className="cursor-pointer rounded-lg p-1.5 text-dim hover:bg-navy-700 hover:text-txt"
-              aria-label={`${DIAS_NO_PLANO} dias anteriores`}
-              title={`${DIAS_NO_PLANO} dias anteriores`}
+              aria-label={`${quantos} dias anteriores`}
+              title={`${quantos} dias anteriores`}
             >
               <ChevronLeft className="size-4" />
             </button>
@@ -151,13 +196,14 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
               </button>
             )}
             <button
-              onClick={() => setInicio(somarDias(inicio, DIAS_NO_PLANO))}
+              onClick={() => setInicio(somarDias(inicio, quantos))}
               className="cursor-pointer rounded-lg p-1.5 text-dim hover:bg-navy-700 hover:text-txt"
-              aria-label={`Próximos ${DIAS_NO_PLANO} dias`}
-              title={`Próximos ${DIAS_NO_PLANO} dias`}
+              aria-label={`Próximos ${quantos} dias`}
+              title={`Próximos ${quantos} dias`}
             >
               <ChevronRight className="size-4" />
             </button>
+          </div>
           </div>
         </div>
 
