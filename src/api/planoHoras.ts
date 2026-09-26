@@ -2,7 +2,11 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
 import type { PlanoHora } from "@/types/db";
-import { blocosQueDescem, primeiraLivre } from "@/features/metas/planoDias";
+import {
+  blocosQueDescem,
+  primeiraLivre,
+  type AtividadeChave,
+} from "@/features/metas/planoDias";
 
 /**
  * Plano dos próximos dias em blocos de meia hora (6 a 16 por dia). Uma linha por
@@ -129,6 +133,38 @@ export function useSalvarHora() {
     onError: (_e, _v, antes) => desfazer(antes),
     onSettled: recarregar,
   });
+}
+
+/** Um bloco já feito, lançado de fora da grade (Registrar estudo, Ciclo). */
+export interface BlocoFeito {
+  data: string;
+  materia_id: string | null;
+  atividade: AtividadeChave;
+  nota: string;
+  minutos: number;
+}
+
+/**
+ * Lança um bloco já feito na primeira posição livre do dia — é por aqui que o
+ * "Registrar estudo" e o "Concluir e avançar" do Ciclo entram no plano. Feito,
+ * o trigger da 0035 cria a sessão: o tempo soma no "Estudo hoje" e no gráfico.
+ * Valida antes de gravar (tempo e vaga no dia), pra quem chama poder lançar o
+ * bloco primeiro e só depois mexer no resto.
+ */
+export async function inserirBlocoFeito(b: BlocoFeito): Promise<void> {
+  if (!Number.isInteger(b.minutos) || b.minutos < 1 || b.minutos > 600)
+    throw new Error("Cada bloco vai de 1 min a 10h.");
+  const { data: dia, error } = await supabase.from("plano_horas").select("hora").eq("data", b.data);
+  if (error) throw error;
+  const hora = primeiraLivre(dia.map((d) => d.hora));
+  if (hora === null) throw new Error("Esse dia já tem 16 blocos no plano (o máximo).");
+  const { error: e2 } = await supabase.from("plano_horas").insert({ ...b, hora, feita: true });
+  if (e2) throw e2;
+}
+
+export function useRegistrarBlocoFeito() {
+  const recarregar = useRecarregar();
+  return useMutation({ mutationFn: inserirBlocoFeito, onSettled: recarregar });
 }
 
 /**

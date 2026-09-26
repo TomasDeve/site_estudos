@@ -1,18 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { distribuirInteiro } from "@/lib/horas";
-import type { Concurso, TablesInsert, Topico } from "@/types/db";
-
-/** Próxima ordem de bloco num dia — anexa o registro ao fim da lista de Metas. */
-async function proximaOrdemDoDia(data: string): Promise<number> {
-  const { data: rows } = await supabase
-    .from("blocos_dia")
-    .select("ordem")
-    .eq("data", data)
-    .order("ordem", { ascending: false })
-    .limit(1);
-  return (rows?.[0]?.ordem ?? -1) + 1;
-}
+import type { Concurso, Topico } from "@/types/db";
+import { inserirBlocoFeito } from "./planoHoras";
 
 /** Uma parte da distribuição: quanto foi lançado em cada assunto. */
 export interface ParteEstudo {
@@ -29,16 +19,16 @@ export interface RegistrarEstudoInput {
   minutos: number;
   /** Assuntos que recebem o tempo. "Todos" = todos os assuntos da matéria no edital. */
   topicoIds: string[];
-  /** Título do bloco de Metas criado (ex.: o assunto ou "Estudo de conteúdo"). */
+  /** Texto do bloco lançado no plano (ex.: o assunto ou "Estudo de conteúdo"). */
   titulo: string;
 }
 
 /**
- * Reparte o tempo estudado igualmente entre os assuntos escolhidos (em minutos),
- * abate cada fatia do saldo do assunto (`horas_estudadas`) e cria um BLOCO DE
- * METAS já concluído para o dia, com uma sessão por assunto ligada a ele
- * (`bloco_id`). Assim o estudo entra nas Metas como feito (conta na meta do dia
- * e no gráfico da semana) e, ao apagar o bloco, as horas voltam para o assunto.
+ * Lança no plano do Painel um bloco de teoria já feito, na 1ª posição livre do
+ * dia (o tempo entra no "Estudo hoje" e no gráfico pela sessão do bloco), e
+ * reparte o tempo igualmente entre os assuntos escolhidos, abatendo cada fatia
+ * do saldo do assunto (`horas_estudadas`). Apagar o bloco depois tira o tempo do
+ * dia, mas não devolve as horas ao assunto.
  */
 export function useRegistrarEstudo() {
   const qc = useQueryClient();
@@ -49,6 +39,15 @@ export function useRegistrarEstudo() {
       const partes: ParteEstudo[] = ids
         .map((topicoId, i) => ({ topicoId, minutos: fatias[i] ?? 0 }))
         .filter((p) => p.minutos > 0);
+
+      // O bloco primeiro: ele valida o tempo e a vaga no dia antes de abater nada.
+      await inserirBlocoFeito({
+        data: input.data,
+        materia_id: input.materiaId,
+        atividade: "teoria",
+        nota: input.titulo,
+        minutos: input.minutos,
+      });
 
       // Abate o tempo do saldo de cada assunto (soma sobre o valor atual). O
       // valor-base vem do banco, não do cache: o update otimista já somou no
@@ -74,51 +73,6 @@ export function useRegistrarEstudo() {
           if (error) throw error;
         }
       }
-
-      // Bloco de Metas já concluído (conta na meta do dia).
-      const { data: bloco, error: eB } = await supabase
-        .from("blocos_dia")
-        .insert({
-          data: input.data,
-          titulo: input.titulo,
-          duracao_min: input.minutos,
-          materia_id: input.materiaId,
-          concurso_id: input.concursoId,
-          ordem: await proximaOrdemDoDia(input.data),
-          concluido: true,
-          concluido_at: new Date().toISOString(),
-          origem: "estudo",
-        })
-        .select()
-        .single();
-      if (eB) throw eB;
-
-      // Uma sessão por assunto (guarda o abatimento p/ devolver ao apagar). Sem
-      // assuntos, cai numa sessão no nível da matéria (topico_id nulo).
-      const linhasSessao: TablesInsert<"sessoes_estudo">[] =
-        partes.length > 0
-          ? partes.map((p) => ({
-              data: input.data,
-              minutos: p.minutos,
-              materia_id: input.materiaId,
-              concurso_id: input.concursoId,
-              topico_id: p.topicoId,
-              origem: "manual",
-              bloco_id: bloco.id,
-            }))
-          : [
-              {
-                data: input.data,
-                minutos: input.minutos,
-                materia_id: input.materiaId,
-                concurso_id: input.concursoId,
-                topico_id: null,
-                origem: "manual",
-                bloco_id: bloco.id,
-              },
-            ];
-      const { error: e2 } = await supabase.from("sessoes_estudo").insert(linhasSessao);
-      if (e2) throw e2;
 
       return partes;
     },
@@ -152,7 +106,7 @@ export function useRegistrarEstudo() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["topicos"] });
       qc.invalidateQueries({ queryKey: ["sessoes"] });
-      qc.invalidateQueries({ queryKey: ["blocos"] });
+      qc.invalidateQueries({ queryKey: ["plano_horas"] });
     },
   });
 }
@@ -165,22 +119,31 @@ export interface RegistrarRevisaoInput {
   data: string;
   /** Tempo revisado, em minutos. */
   minutos: number;
-  /** Título do bloco de Metas criado (ex.: "Revisão · Anki"). */
+  /** Texto do bloco lançado no plano quando não há matéria (ex.: "Revisão · Anki"). */
   titulo: string;
 }
 
 /**
- * Registra tempo de revisão (Anki) e abate do orçamento de revisão do concurso
- * (`horas_revisao_feita` sobe → o balde "Revisão · Anki" desce). Também grava a
- * sessão do dia (origem `revisao`), que soma no "Estudo hoje" e no gráfico da
- * semana — é tempo de estudo de verdade, só que na trilha de revisão. Cria
- * também um bloco de Metas concluído; apagá-lo devolve a revisão ao balde.
+ * Registra tempo de revisão (Anki): lança no plano do Painel um bloco de
+ * revisão já feito (o tempo soma no "Estudo hoje" e no gráfico — é estudo de
+ * verdade, só que na trilha de revisão) e abate do orçamento de revisão do
+ * concurso (`horas_revisao_feita` sobe → o balde "Revisão · Anki" desce).
  */
 export function useRegistrarRevisao() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: RegistrarRevisaoInput) => {
       const horas = input.minutos / 60;
+
+      // O bloco primeiro: ele valida o tempo e a vaga no dia antes de abater nada.
+      // Com matéria, o nome dela já é o título; sem, vale o texto.
+      await inserirBlocoFeito({
+        data: input.data,
+        materia_id: input.materiaId,
+        atividade: "revisao",
+        nota: input.materiaId ? "" : input.titulo,
+        minutos: input.minutos,
+      });
 
       // Base do banco, não do cache: o update otimista já somou no cache antes
       // daqui, então ler dali contaria o tempo duas vezes.
@@ -197,37 +160,6 @@ export function useRegistrarRevisao() {
         .update({ horas_revisao_feita: novo })
         .eq("id", input.concursoId);
       if (e1) throw e1;
-
-      // Bloco de Metas concluído + sessão ligada (origem 'revisao'). Apagar o
-      // bloco devolve a horas_revisao_feita ao balde. Revisão não aponta para
-      // assunto (topico_id nulo).
-      const { data: bloco, error: eB } = await supabase
-        .from("blocos_dia")
-        .insert({
-          data: input.data,
-          titulo: input.titulo,
-          duracao_min: input.minutos,
-          materia_id: input.materiaId,
-          concurso_id: input.concursoId,
-          ordem: await proximaOrdemDoDia(input.data),
-          concluido: true,
-          concluido_at: new Date().toISOString(),
-          origem: "revisao",
-        })
-        .select()
-        .single();
-      if (eB) throw eB;
-
-      const { error: e2 } = await supabase.from("sessoes_estudo").insert({
-        data: input.data,
-        minutos: input.minutos,
-        materia_id: input.materiaId,
-        concurso_id: input.concursoId,
-        topico_id: null,
-        origem: "revisao",
-        bloco_id: bloco.id,
-      });
-      if (e2) throw e2;
     },
     // otimista: o balde de revisão desce na hora
     onMutate: async (input) => {
@@ -253,7 +185,7 @@ export function useRegistrarRevisao() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["concursos"] });
       qc.invalidateQueries({ queryKey: ["sessoes"] });
-      qc.invalidateQueries({ queryKey: ["blocos"] });
+      qc.invalidateQueries({ queryKey: ["plano_horas"] });
     },
   });
 }

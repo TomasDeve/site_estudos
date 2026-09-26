@@ -3,7 +3,6 @@ import { Link, Navigate, NavLink, Outlet, useLocation, useOutletContext, usePara
 import {
   BarChart3,
   BookOpen,
-  CalendarCheck,
   Check,
   ChevronRight,
   ChevronsUpDown,
@@ -47,7 +46,6 @@ const NAV: { to: string; label: string; icon: LucideIcon; end: boolean; novaAba?
   // questões marcadas (a caixinha 🖨 do card): folha para imprimir + correção, em aba própria
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
   { to: "ciclo", label: "Ciclo", icon: Repeat, end: false },
-  { to: "metas", label: "Metas", icon: CalendarCheck, end: false },
   { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
   { to: "audios", label: "Áudios", icon: Headphones, end: false },
 ];

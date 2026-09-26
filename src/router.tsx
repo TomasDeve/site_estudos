@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import { LoginPage } from "@/auth/LoginPage";
 import { RequireAuth } from "@/auth/RequireAuth";
 import { ConcursoLayout } from "@/layouts/ConcursoLayout";
@@ -15,7 +15,6 @@ const TextoLeiPage = lazy(() => import("@/features/conteudos/TextoLeiPage").then
 const QuestoesPage = lazy(() => import("@/features/conteudos/QuestoesPage").then((m) => ({ default: m.QuestoesPage })));
 const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMistasPage").then((m) => ({ default: m.QuestoesMistasPage })));
 const CicloPage = lazy(() => import("@/features/ciclo/CicloPage").then((m) => ({ default: m.CicloPage })));
-const MetasPage = lazy(() => import("@/features/metas/MetasPage").then((m) => ({ default: m.MetasPage })));
 const MetricasPage = lazy(() => import("@/features/metricas/MetricasPage").then((m) => ({ default: m.MetricasPage })));
 const ImportarPage = lazy(() => import("@/features/importar/ImportarPage").then((m) => ({ default: m.ImportarPage })));
 const AudiosPage = lazy(() => import("@/features/audios/AudiosPage").then((m) => ({ default: m.AudiosPage })));
@@ -56,7 +55,8 @@ export const router = createBrowserRouter([
           { path: "conteudos", element: pagina(<ConteudosPage />) },
           { path: "conteudos/:materiaId", element: pagina(<MateriaPage />) },
           { path: "ciclo", element: pagina(<CicloPage />) },
-          { path: "metas", element: pagina(<MetasPage />) },
+          // a antiga seção Metas virou o plano do Painel: link salvo cai lá
+          { path: "metas", element: <Navigate to=".." replace /> },
           { path: "metricas", element: pagina(<MetricasPage />) },
           { path: "metricas/importar", element: pagina(<ImportarPage />) },
           { path: "audios", element: pagina(<AudiosPage />) },

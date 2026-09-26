@@ -23,7 +23,7 @@ export function useDiasConcluidos() {
 /**
  * Streak: dias consecutivos terminando hoje (ou ontem, se hoje ainda não foi fechado).
  */
-export function calcStreak(dias: DiaConcluido[] | undefined, hojeISO: string): number {
+export function calcStreak(dias: readonly { data: string }[] | undefined, hojeISO: string): number {
   if (!dias || dias.length === 0) return 0;
   const datas = new Set(dias.map((d) => d.data));
   const hoje = parseISO(hojeISO);

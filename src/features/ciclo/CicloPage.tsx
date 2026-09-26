@@ -44,12 +44,10 @@ import {
   useReordenarCiclo,
   useSetItemConcluido,
 } from "@/api/ciclo";
-import { useBlocosDia } from "@/api/blocos";
 import { hojeISO } from "@/lib/dates";
 import { estadoCiclo, sugerirOrdemCiclo } from "@/lib/cicloOrder";
 import { progressoMateria } from "@/lib/progresso";
 import { celebrar } from "@/features/metas/celebration";
-import { BlocoFormModal } from "@/features/metas/BlocoFormModal";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardBody } from "@/components/Card";
 import { Button } from "@/components/Button";
@@ -60,6 +58,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { BarraHoras } from "@/features/horas/BarraHoras";
 import { RegistrarEstudoModal } from "@/features/horas/RegistrarEstudoModal";
 import { AdicionarMateriaModal } from "./AdicionarMateriaModal";
+import { ConcluirMateriaModal } from "./ConcluirMateriaModal";
 import { CicloItemRow } from "./CicloItemRow";
 
 export function CicloPage() {
@@ -70,7 +69,6 @@ export function CicloPage() {
   const { data: topicos, isLoading: l3 } = useTopicos();
   const { data: itens, isLoading: l4 } = useCicloItens();
   const hoje = hojeISO();
-  const { data: blocosHoje } = useBlocosDia(hoje);
 
   const gerar = useGerarCiclo();
   const setConcluido = useSetItemConcluido();
@@ -560,23 +558,16 @@ export function CicloPage() {
         />
       )}
 
-      {/* Ao concluir a matéria do ciclo: registra o estudo do dia em Metas e avança. */}
+      {/* Ao concluir a matéria do ciclo: lança o estudo no plano do Painel e avança. */}
       {atual && (
-        <BlocoFormModal
+        <ConcluirMateriaModal
           open={modalConcluir}
           onClose={() => setModalConcluir(false)}
+          materiaId={atual.materia_id}
+          materiaNome={nome(atual)}
+          materiaIcone={icone(atual)}
           dataISO={hoje}
-          bloco={null}
-          tituloPadrao={nome(atual)}
-          materiaIdPadrao={atual.materia_id}
-          concursoIdPadrao={concurso.id}
-          proximaOrdem={(blocosHoje ?? []).reduce((m, b) => Math.max(m, b.ordem), -1) + 1}
-          concluirAoSalvar
-          onSalvo={onConcluirAtual}
-          tituloModal="Registrar estudo e avançar"
-          labelSalvar="Salvar e avançar"
-          avancarSemRegistrar
-          labelPular="Já registrei"
+          onAvancar={onConcluirAtual}
         />
       )}
     </div>

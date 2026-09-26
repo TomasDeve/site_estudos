@@ -28,7 +28,7 @@ export function WeekStudyChart() {
       <CardHeader
         title="Tempo de estudo — últimos 7 dias"
         subtitle={
-          totalPeriodo > 0 ? `${fmtMinutos(totalPeriodo)} acumulados` : "Conclua blocos nas Metas para alimentar este gráfico"
+          totalPeriodo > 0 ? `${fmtMinutos(totalPeriodo)} acumulados` : "Marque blocos do plano como feitos para alimentar este gráfico"
         }
       />
       <CardBody>

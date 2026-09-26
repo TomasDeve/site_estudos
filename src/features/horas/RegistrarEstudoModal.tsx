@@ -301,7 +301,7 @@ export function RegistrarEstudoModal({ open, onClose, concurso, materiaIdPadrao,
               <Input
                 type="number"
                 min="1"
-                max="1440"
+                max="600"
                 value={String(minutos)}
                 onChange={(e) => setMinutos(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
                 className="!h-8 w-20 !text-xs"
