@@ -14,10 +14,14 @@ export function TextoReaderModal({ texto, onClose }: Props) {
       open
       onClose={onClose}
       width="max-w-3xl"
+      // No celular a leitura ocupa a tela toda (a folha de baixo deixava o texto
+      // numa janelinha de 58% da altura).
+      telaCheiaNoCelular
       title={<TituloTextoInput texto={texto} />}
     >
       <TextoReader
         texto={texto}
+        cheioNoCelular
         acoes={
           <a
             href={`/texto/${texto.id}`}
@@ -26,6 +30,7 @@ export function TextoReaderModal({ texto, onClose }: Props) {
             onClick={onClose}
             className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
             title="Abrir em tela cheia, numa nova aba"
+            aria-label="Abrir em tela cheia, numa nova aba"
           >
             <Maximize2 className="size-3.5" />
             <span className="max-sm:hidden">Tela cheia</span>

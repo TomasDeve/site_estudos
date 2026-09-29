@@ -53,20 +53,21 @@ export function HomePage() {
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-line/50 bg-navy-900/80">
+      <header className="border-b border-line/50 bg-navy-900/80 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5">
             <span className="text-2xl">🎯</span>
-            <div>
-              <p className="text-sm font-bold leading-tight">Meus Estudos</p>
-              <p className="text-[11px] text-mut">Todos os concursos</p>
+            <div className="min-w-0">
+              <p className="whitespace-nowrap text-sm font-bold leading-tight">Meus Estudos</p>
+              {/* No celular o subtítulo sai: espremido, virava 4 linhas */}
+              <p className="text-[11px] text-mut max-sm:hidden">Todos os concursos</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {atualId && (
               <Link to={`/concurso/${atualId}`}>
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="size-4" /> Voltar ao estudo
+                <Button variant="ghost" size="sm" className="whitespace-nowrap">
+                  <ArrowLeft className="size-4" /> Voltar<span className="max-sm:hidden"> ao estudo</span>
                 </Button>
               </Link>
             )}

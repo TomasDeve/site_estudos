@@ -25,7 +25,7 @@ export function CaixaImpressao({
       onClick={onToggle}
       title={marcada ? "Marcada para impressão — clique para desmarcar" : "Marcar para impressão"}
       aria-label={marcada ? "Desmarcar da impressão" : "Marcar para impressão"}
-      className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md p-1 transition-colors ${
+      className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md p-1 transition-colors max-sm:p-2 ${
         marcada ? "text-gold" : "text-mut/70 hover:text-dim"
       } ${className}`}
     >

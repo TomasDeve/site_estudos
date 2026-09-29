@@ -139,7 +139,7 @@ export function ResumoRapido({ topico }: Props) {
         <div
           className={`${
             aberto ? "flex" : "hidden"
-          } fixed bottom-[4.75rem] right-3 z-40 max-h-[min(70dvh,32rem)] w-[min(100vw-1.5rem,26rem)] flex-col overflow-hidden rounded-card border border-line bg-navy-800 shadow-2xl sm:bottom-[5.5rem] sm:right-6`}
+          } fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-3 z-40 max-h-[min(70dvh,32rem)] w-[min(100vw-1.5rem,26rem)] flex-col overflow-hidden rounded-card border border-line bg-navy-800 shadow-2xl sm:bottom-[5.5rem] sm:right-6`}
         >
           <div className="flex items-start gap-2 border-b border-line/40 px-3 py-2.5">
             <NotebookPen className="mt-0.5 size-4 shrink-0 text-gold" />
@@ -171,7 +171,7 @@ export function ResumoRapido({ topico }: Props) {
                 href={`/texto/${resumo.id}`}
                 target="_blank"
                 rel="noreferrer"
-                className="shrink-0 rounded-md p-1 text-mut transition-colors hover:bg-navy-700 hover:text-gold"
+                className="shrink-0 rounded-md p-1 text-mut transition-colors hover:bg-navy-700 hover:text-gold max-sm:p-2"
                 title="Abrir em tela cheia (nova aba)"
                 aria-label="Abrir resumo em tela cheia"
               >
@@ -180,7 +180,7 @@ export function ResumoRapido({ topico }: Props) {
             )}
             <button
               onClick={() => setAberto(false)}
-              className="shrink-0 cursor-pointer rounded-md p-1 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+              className="shrink-0 cursor-pointer rounded-md p-1 text-mut transition-colors hover:bg-navy-700 hover:text-txt max-sm:-my-1 max-sm:p-2"
               aria-label="Fechar resumo"
             >
               <X className="size-4" />
@@ -207,7 +207,7 @@ export function ResumoRapido({ topico }: Props) {
 
       <button
         onClick={alternar}
-        className="fixed bottom-4 right-3 z-40 flex size-12 cursor-pointer items-center justify-center rounded-full bg-gold text-navy-950 shadow-lg shadow-navy-950/50 transition-transform hover:scale-105 active:scale-95 sm:bottom-6 sm:right-6"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-3 z-40 flex size-12 cursor-pointer items-center justify-center rounded-full bg-gold text-navy-950 shadow-lg shadow-navy-950/50 transition-transform hover:scale-105 active:scale-95 sm:bottom-6 sm:right-6"
         title="Resumo rápido"
         aria-label={aberto ? "Fechar resumo rápido" : "Abrir resumo rápido"}
       >

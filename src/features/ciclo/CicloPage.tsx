@@ -312,7 +312,8 @@ export function CicloPage() {
       ) : (
         /* ===== Ciclo montado ===== */
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {/* No celular (2 colunas) o 3º cartão ocupa a linha toda em vez de ficar órfão */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
             <StatCard icon="🔁" label="Volta atual" value={voltaLabel} />
             <StatCard
               icon="📍"
@@ -427,7 +428,8 @@ export function CicloPage() {
                     >
                       Abrir matéria em Conteúdos
                     </Link>
-                    <div className="flex items-center gap-2">
+                    {/* No celular o "Concluir e avançar" desce e ocupa a linha (antes quebrava o texto) */}
+                    <div className="flex flex-wrap items-center gap-2 max-sm:w-full">
                       {ultimaConcluida && (
                         <Button
                           variant="secondary"
@@ -448,7 +450,11 @@ export function CicloPage() {
                           <Undo2 className="size-4" /> Tirar da reserva
                         </Button>
                       )}
-                      <Button onClick={() => setModalConcluir(true)} loading={setConcluido.isPending}>
+                      <Button
+                        className="whitespace-nowrap max-sm:flex-1"
+                        onClick={() => setModalConcluir(true)}
+                        loading={setConcluido.isPending}
+                      >
                         <Check className="size-4" /> Concluir e avançar
                       </Button>
                     </div>

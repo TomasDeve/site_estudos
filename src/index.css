@@ -105,6 +105,18 @@ textarea,
   touch-action: manipulation;
 }
 
+/* iPhone: ao tocar num campo com letra menor que 16px, o Safari amplia a página
+   (e ela fica ampliada depois). No celular os campos usam 16px, e o zoom some.
+   Fica fora das camadas do Tailwind, então vence o text-sm/text-xs dos campos. */
+@media (max-width: 639px) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea,
+  .conteudo-lei[contenteditable] {
+    font-size: 16px;
+  }
+}
+
 /* Barra de progresso com brilho animado */
 @keyframes shimmer {
   0% { background-position: -200% 0; }

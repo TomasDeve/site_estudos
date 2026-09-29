@@ -10,13 +10,14 @@ interface Props {
 
 export function StatCard({ icon, label, value, sub }: Props) {
   return (
-    <Card className="px-4 py-3.5">
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy-700 text-lg">
+    <Card className="px-3 py-3 sm:px-4 sm:py-3.5">
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-700 text-base sm:size-10 sm:rounded-xl sm:text-lg">
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[11px] font-medium uppercase tracking-wider text-mut">
+          {/* No celular o rótulo quebra em até 2 linhas em vez de virar "QUESTÕES H…" */}
+          <p className="line-clamp-2 text-[10px] font-medium uppercase leading-tight tracking-wide text-mut sm:text-[11px] sm:tracking-wider">
             {label}
           </p>
           <p className="text-lg font-bold leading-tight text-txt">{value}</p>

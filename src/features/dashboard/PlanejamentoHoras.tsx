@@ -212,11 +212,12 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
   return (
     <Card>
       <CardBody>
-        <div className="flex items-start justify-between gap-3">
+        {/* No celular o botão desce para a linha de baixo, em vez de cobrir o título */}
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <button
             type="button"
             onClick={() => setExpandido((v) => !v)}
-            className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-2 gap-y-1 text-left"
+            className="flex min-w-0 flex-[1_1_14rem] cursor-pointer flex-wrap items-center gap-x-2 gap-y-1 text-left"
           >
             <h2 className="flex items-center gap-2 text-sm font-semibold text-txt">
               <ChevronRight
@@ -245,8 +246,8 @@ export function PlanejamentoHoras({ concurso }: { concurso: Concurso }) {
               </p>
             )}
           </button>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button size="sm" onClick={() => setModalEstudo(true)}>
+          <div className="flex shrink-0 items-center gap-3 max-sm:w-full">
+            <Button size="sm" className="max-sm:h-10 max-sm:flex-1" onClick={() => setModalEstudo(true)}>
               <TimerReset className="size-3.5" /> Registrar estudo
             </Button>
             <Switch

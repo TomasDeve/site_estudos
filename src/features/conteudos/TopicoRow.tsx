@@ -11,6 +11,7 @@ import type { QuestaoResumo } from "@/api/topicoQuestoes";
 import { estaResolvida } from "./questaoModelo";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/Button";
+import { MenuMais } from "@/components/MenuMais";
 import { Input, Select } from "@/components/Field";
 import { HoraInput } from "@/components/HoraInput";
 import { horasRestantes } from "@/lib/horas";
@@ -311,7 +312,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
           {!editando && (
             <button
               onClick={abrirEdicao}
-              className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
+              className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-opacity hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100 max-sm:hidden"
               title="Renomear assunto"
               aria-label={`Renomear ${topico.titulo}`}
             >
@@ -443,7 +444,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
               onClick={() =>
                 setNucleo.mutate({ id: topico.id, nucleo_comum: !topico.nucleo_comum })
               }
-              className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors ${
+              className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors max-sm:hidden ${
                 topico.nucleo_comum
                   ? "text-gold hover:bg-gold/10"
                   : "text-mut opacity-0 hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
@@ -466,7 +467,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
             onClick={() =>
               setSeparador.mutate({ id: topico.id, separador_apos: !topico.separador_apos })
             }
-            className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors ${
+            className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors max-sm:hidden ${
               topico.separador_apos
                 ? "text-gold hover:bg-gold/10"
                 : "text-mut opacity-0 hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
@@ -487,7 +488,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
           {onToggleRiscar && (
             <button
               onClick={onToggleRiscar}
-              className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors ${
+              className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors max-sm:hidden ${
                 riscado
                   ? "text-red hover:bg-red/10"
                   : "text-mut opacity-0 hover:bg-navy-600 hover:text-red group-hover/topico:opacity-100 max-md:opacity-100"
@@ -505,11 +506,55 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
 
           <button
             onClick={() => setConfirmarExclusao(true)}
-            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/topico:opacity-100 max-md:opacity-100"
+            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/topico:opacity-100 max-md:opacity-100 max-sm:hidden"
             title="Excluir tópico"
           >
             <Trash2 className="size-3.5" />
           </button>
+
+          {/* No celular, as ações de organizar o assunto ficam num menu "⋯": sem elas
+              a faixa cabe numa linha só (antes a lixeira caía sozinha na 2ª). */}
+          <div className="ml-auto sm:hidden">
+            <MenuMais
+              aria={`Mais ações de ${topico.titulo}`}
+              itens={[
+                ...(!editando
+                  ? [{ icone: <Pencil className="size-3.5" />, label: "Renomear", onClick: abrirEdicao }]
+                  : []),
+                ...(mostrarNucleo
+                  ? [
+                      {
+                        icone: <Compass className="size-3.5" />,
+                        label: topico.nucleo_comum ? "Tirar do núcleo comum" : "Pôr no núcleo comum",
+                        onClick: () =>
+                          setNucleo.mutate({ id: topico.id, nucleo_comum: !topico.nucleo_comum }),
+                      },
+                    ]
+                  : []),
+                {
+                  icone: <SeparatorHorizontal className="size-3.5" />,
+                  label: topico.separador_apos ? "Tirar a linha divisória" : "Linha divisória depois",
+                  onClick: () =>
+                    setSeparador.mutate({ id: topico.id, separador_apos: !topico.separador_apos }),
+                },
+                ...(onToggleRiscar
+                  ? [
+                      {
+                        icone: <Ban className="size-3.5" />,
+                        label: riscado ? "Tirar o risco" : "Riscar (não vou estudar)",
+                        onClick: onToggleRiscar,
+                      },
+                    ]
+                  : []),
+                {
+                  icone: <Trash2 className="size-3.5" />,
+                  label: "Excluir assunto",
+                  onClick: () => setConfirmarExclusao(true),
+                  danger: true,
+                },
+              ]}
+            />
+          </div>
         </div>
       </div>
 

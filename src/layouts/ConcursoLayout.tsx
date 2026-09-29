@@ -127,54 +127,42 @@ export function ConcursoLayout() {
   const estiloAtivo = (isActive: boolean) =>
     isActive ? { background: `${cor}1f`, color: cor, boxShadow: `inset 2px 0 0 ${cor}` } : undefined;
 
-  const navLink = (mobile: boolean) =>
-    NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
-      if (novaAba) {
-        return (
-          <a
-            key={to}
-            href={to}
-            target="_blank"
-            rel="noreferrer"
-            className={
-              mobile
-                ? "flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[10px] font-medium leading-none tracking-tight text-dim transition-colors"
-                : "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-dim transition-colors hover:bg-navy-700/70 hover:text-txt"
-            }
-          >
-            <Icon className={mobile ? "size-5" : "size-4.5"} />
-            {label}
-          </a>
-        );
-      }
+  // Abas do celular: uma coluna por item, ícone em cima e rótulo curto embaixo.
+  const itemMobile =
+    "relative flex min-w-0 flex-col items-center justify-center gap-1 whitespace-nowrap pb-2 pt-2.5 text-[10px] font-medium leading-none tracking-tight transition-colors";
+  const abasMobile = NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
+    if (novaAba) {
       return (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          onClick={() => setSwitcherAberto(false)}
-          className={({ isActive }) =>
-            mobile
-              ? `flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[10px] font-medium leading-none tracking-tight transition-colors ${
-                  isActive ? "" : "text-dim"
-                }`
-              : `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive ? "" : "text-dim hover:bg-navy-700/70 hover:text-txt"
-                }`
-          }
-          style={({ isActive }) =>
-            isActive
-              ? mobile
-                ? { color: cor, boxShadow: `inset 0 2px 0 ${cor}` }
-                : { background: `${cor}1f`, color: cor }
-              : undefined
-          }
-        >
-          <Icon className={mobile ? "size-5" : "size-4.5"} />
+        <a key={to} href={to} target="_blank" rel="noreferrer" className={`${itemMobile} text-dim`}>
+          <span className="relative">
+            <Icon className="size-5" />
+            {/* Quantas questões esperam na Impressão, como no menu do computador */}
+            {to === "/impressao" && !!marcadasImpressao && (
+              <span className="absolute -right-2.5 -top-1.5 min-w-4 rounded-full bg-gold px-1 text-center text-[9px] font-bold leading-4 tabular-nums text-navy-950">
+                {marcadasImpressao > 99 ? "99+" : marcadasImpressao}
+              </span>
+            )}
+          </span>
           {label}
-        </NavLink>
+        </a>
       );
-    });
+    }
+    return (
+      <NavLink
+        key={to}
+        to={to}
+        end={end}
+        onClick={() => setSwitcherAberto(false)}
+        className={({ isActive }) => `${itemMobile} ${isActive ? "" : "text-dim"}`}
+        style={({ isActive }) =>
+          isActive ? { color: cor, boxShadow: `inset 0 2px 0 ${cor}` } : undefined
+        }
+      >
+        <Icon className="size-5" />
+        {label}
+      </NavLink>
+    );
+  });
 
   return (
     <div className="min-h-dvh md:flex">
@@ -420,11 +408,11 @@ export function ConcursoLayout() {
             )}
           </span>
         </Link>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
           <StreakBadge />
           <button
             onClick={() => supabase.auth.signOut()}
-            className="cursor-pointer p-1 text-mut hover:text-red"
+            className="-mr-2 cursor-pointer rounded-lg p-2 text-mut hover:text-red"
             aria-label="Sair"
           >
             <LogOut className="size-4" />
@@ -439,9 +427,12 @@ export function ConcursoLayout() {
         </div>
       </main>
 
-      {/* ===== Tab bar mobile ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-8 border-t border-line/50 bg-navy-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {navLink(true)}
+      {/* ===== Tab bar mobile — uma coluna por item (sem sobrar espaço vazio) ===== */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line/50 bg-navy-900/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        style={{ gridTemplateColumns: `repeat(${NAV.length}, minmax(0, 1fr))` }}
+      >
+        {abasMobile}
       </nav>
     </div>
   );

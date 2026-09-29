@@ -150,25 +150,28 @@ export function QuestoesPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-10 flex shrink-0 items-center gap-3 border-b border-line/50 bg-navy-900/90 px-4 py-3 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b border-line/50 bg-navy-900/90 px-2 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3">
         <button
           onClick={voltar}
-          className="shrink-0 cursor-pointer rounded-lg p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+          className="shrink-0 cursor-pointer rounded-lg p-2 text-mut transition-colors hover:bg-navy-700 hover:text-txt sm:p-1.5"
           title="Voltar"
           aria-label="Voltar"
         >
           <ArrowLeft className="size-4" />
         </button>
-        <Sparkles className="size-4 shrink-0 text-gold" />
-        <h1 className="min-w-0 truncate text-base font-semibold text-txt">
-          Questões por IA · {topico.titulo}
+        <Sparkles className="size-4 shrink-0 text-gold max-sm:hidden" />
+        {/* No celular vai só o nome do assunto, em até 2 linhas (o prefixo comia o espaço) */}
+        <h1 className="min-w-0 text-sm font-semibold leading-snug text-txt max-sm:line-clamp-2 sm:truncate sm:text-base">
+          <span className="max-sm:hidden">Questões por IA · </span>
+          {topico.titulo}
         </h1>
         <div className="ml-auto">
           <LinkImpressao />
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-3 py-4 sm:px-6 sm:py-6">
+      {/* Folga embaixo no celular: o fim da página não fica sob o botão do resumo rápido */}
+      <main className="mx-auto w-full max-w-3xl flex-1 px-3 pb-24 pt-4 sm:px-6 sm:py-6">
         <Caderno topico={topico} />
       </main>
 
@@ -501,8 +504,8 @@ function Caderno({ topico }: { topico: Topico }) {
               Dá para marcar várias ao mesmo tempo (o escopo vira a união delas);
               "Todas" limpa a seleção e junta tudo. */}
           {todas.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="mr-0.5 text-[11px] font-semibold uppercase tracking-wide text-mut">
+            <div className="flex flex-wrap items-center gap-1.5 [scrollbar-width:none] max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 [&::-webkit-scrollbar]:hidden">
+              <span className="mr-0.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-mut">
                 Tipo
               </span>
               <PillCategoria
@@ -807,7 +810,7 @@ function QuestaoCard({
           <CaixaImpressao className="ml-auto" marcada={!!q.imprimir_em} onToggle={onImprimir} />
           <button
             onClick={onExcluir}
-            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/q:opacity-100 max-md:opacity-100"
+            className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/q:opacity-100 max-md:opacity-100 max-sm:p-2"
             title="Apagar questão"
             aria-label={`Apagar questão ${numero}`}
           >

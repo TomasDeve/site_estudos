@@ -326,7 +326,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
                   type="button"
                   onClick={() => escolherQuantos(n)}
                   aria-pressed={quantos === n}
-                  className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                  className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold transition max-sm:py-1.5 ${
                     quantos === n ? "bg-gold text-navy-950 shadow-sm" : "text-dim hover:text-txt"
                   }`}
                 >
@@ -337,7 +337,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setInicio(somarDias(inicio, -quantos))}
-              className="cursor-pointer rounded-lg p-1.5 text-dim hover:bg-navy-700 hover:text-txt"
+              className="cursor-pointer rounded-lg p-1.5 text-dim hover:bg-navy-700 hover:text-txt max-sm:p-2"
               aria-label={`${quantos} dias anteriores`}
               title={`${quantos} dias anteriores`}
             >
@@ -353,7 +353,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
             )}
             <button
               onClick={() => setInicio(somarDias(inicio, quantos))}
-              className="cursor-pointer rounded-lg p-1.5 text-dim hover:bg-navy-700 hover:text-txt"
+              className="cursor-pointer rounded-lg p-1.5 text-dim hover:bg-navy-700 hover:text-txt max-sm:p-2"
               aria-label={`Próximos ${quantos} dias`}
               title={`Próximos ${quantos} dias`}
             >
@@ -449,6 +449,9 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           materias={ciclo.materias}
           contagem={ciclo.contagem}
           atividadePadrao={ultimaAtividade}
+          podeReplicar={
+            blocosQueDescem([...(porDia.get(editando.data)?.keys() ?? [])], editando.hora) !== null
+          }
           onSalvo={setUltimaAtividade}
           onErro={erro}
           onClose={() => setEditando(null)}
@@ -834,8 +837,9 @@ function LinhaPreenchida({
         }`}
         title={`${[materia?.nome, at.label, l.nota].filter(Boolean).join(" · ")} — clique no nome para abrir a matéria, no bloco para ver o que preencheu; arraste para mover`}
       >
+        {/* No celular a alça some (arrasta segurando o bloco) e o espaço vai pro nome */}
         <GripVertical
-          className="size-3 shrink-0 text-mut opacity-0 transition-opacity group-hover:opacity-70 max-md:opacity-40"
+          className="size-3 shrink-0 text-mut opacity-0 transition-opacity group-hover:opacity-70 max-md:hidden"
           aria-hidden
         />
         <span className={`w-1 self-stretch rounded-full ${at.barra}`} aria-hidden />
@@ -849,10 +853,12 @@ function LinhaPreenchida({
               {livre ? at.icone : (materia?.icone ?? at.icone)}
             </span>
             {irParaMateria ? (
+              // No celular o nome ocupa quase a linha toda: o toque abre o bloco (o
+              // "Abrir matéria" fica dentro dele). O link do nome vale no computador.
               <span
                 role="link"
                 onClick={irParaMateria}
-                className="cursor-pointer truncate decoration-gold/70 underline-offset-2 hover:text-gold hover:underline"
+                className="cursor-pointer truncate decoration-gold/70 underline-offset-2 hover:text-gold hover:underline max-md:pointer-events-none"
                 title={`Abrir ${principal}`}
               >
                 {principal}
@@ -873,8 +879,9 @@ function LinhaPreenchida({
           )}
         </span>
       </button>
-      {/* Ações rápidas, sem abrir o bloco: discretas, acendem ao passar o mouse */}
-      <span className="flex shrink-0 items-center opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100">
+      {/* Ações rápidas, sem abrir o bloco: discretas, acendem ao passar o mouse.
+          No celular ficam dentro do bloco (tocar abre) — aqui roubavam o nome. */}
+      <span className="flex shrink-0 items-center opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-md:hidden">
         <button
           onClick={onReplicar}
           disabled={!podeReplicar}
@@ -923,6 +930,7 @@ function EditarHoraModal({
   materias,
   contagem,
   atividadePadrao,
+  podeReplicar,
   onSalvo,
   onErro,
   onClose,
@@ -933,6 +941,8 @@ function EditarHoraModal({
   materias: Materia[];
   contagem: Map<string, ContagemCiclo>;
   atividadePadrao: AtividadeChave;
+  /** Falso quando o dia já está cheio (16 blocos) até embaixo. */
+  podeReplicar: boolean;
   onSalvo: (atividade: AtividadeChave) => void;
   onErro: (err: unknown) => void;
   onClose: () => void;
@@ -940,6 +950,9 @@ function EditarHoraModal({
   const { data, hora, linha } = edicao;
   const salvar = useSalvarHora();
   const limpar = useLimparHora();
+  const replicar = useReplicarHora();
+  const navigate = useNavigate();
+  const { concursoId } = useParams();
   // Atividade escolhida neste bloco; nula = vale a padrão (ou texto livre, quando
   // só há o texto). Bloco de texto livre abre sem atividade escolhida.
   const [escolhida, setEscolhida] = useState<AtividadeChave | null>(() => {
@@ -980,6 +993,33 @@ function EditarHoraModal({
     onClose();
   }
 
+  /** Copia o bloco (como está no modal) para logo abaixo; o que mudou aqui é salvo junto. */
+  function onReplicar() {
+    if (!linha || !podeSalvar) return;
+    const editado: PlanoHora = {
+      ...linha,
+      atividade,
+      materia_id: livre ? null : materiaId,
+      nota: nota.trim(),
+    };
+    const mudou =
+      editado.atividade !== linha.atividade ||
+      editado.materia_id !== linha.materia_id ||
+      editado.nota !== linha.nota;
+    if (mudou) onSalvar();
+    else onClose();
+    replicar.mutate(editado, { onError: onErro });
+  }
+
+  // A matéria que o bloco tem salva: dá para ir direto à página dela (no celular,
+  // é o caminho — lá o toque no nome abre o bloco, não a matéria).
+  const materiaSalva = linha?.materia_id ? materias.find((m) => m.id === linha.materia_id) : undefined;
+  function abrirMateria() {
+    if (!materiaSalva || !concursoId) return;
+    onClose();
+    navigate(`/concurso/${concursoId}/conteudos/${materiaSalva.id}`);
+  }
+
   return (
     <Modal
       open
@@ -995,21 +1035,33 @@ function EditarHoraModal({
         </>
       }
       footer={
-        <div className="flex w-full items-center gap-2">
+        <div className="flex w-full items-center gap-1 sm:gap-2">
           {linha && (
             <button
               type="button"
               onClick={onLimpar}
-              className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-sm text-red transition-colors hover:bg-red/10"
+              className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-sm text-red transition-colors hover:bg-red/10 sm:h-8"
             >
-              <Trash2 className="size-3.5" /> Liberar bloco
+              <Trash2 className="size-3.5" /> Liberar<span className="max-sm:hidden"> bloco</span>
+            </button>
+          )}
+          {linha && (
+            <button
+              type="button"
+              onClick={onReplicar}
+              disabled={!podeReplicar || !podeSalvar}
+              className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-sm text-dim transition-colors hover:bg-navy-700/60 hover:text-gold disabled:cursor-not-allowed disabled:opacity-40 sm:h-8"
+              title={podeReplicar ? "Copiar este bloco para logo abaixo" : "Dia cheio (16 blocos)"}
+            >
+              <CopyPlus className="size-3.5" /> Replicar<span className="max-sm:hidden"> abaixo</span>
             </button>
           )}
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            {/* No celular fecha pelo X ou tocando fora: sobra espaço para as ações do bloco */}
+            <Button variant="ghost" size="sm" className="max-sm:hidden" onClick={onClose}>
               Cancelar
             </Button>
-            <Button size="sm" onClick={onSalvar} disabled={!podeSalvar}>
+            <Button size="sm" className="max-sm:h-9 max-sm:px-5" onClick={onSalvar} disabled={!podeSalvar}>
               Salvar
             </Button>
           </div>
@@ -1078,9 +1130,20 @@ function EditarHoraModal({
         </section>
 
         <section>
-          <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
-            Matéria
-          </h3>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wide text-mut">Matéria</h3>
+            {materiaSalva && concursoId && (
+              <button
+                type="button"
+                onClick={abrirMateria}
+                className="-my-1 flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-gold transition-colors hover:bg-gold/10"
+                title={`Ir para a página de ${materiaSalva.nome}`}
+              >
+                <span className="truncate">Abrir {materiaSalva.nome}</span>
+                <ChevronRight className="size-3.5 shrink-0" />
+              </button>
+            )}
+          </div>
           {/* Igual ao ciclo: numeradas na ordem dele, descendo pela 1ª coluna e
               depois pela 2ª, com o rank de cada uma à direita (quem está atrás no
               ciclo salta aos olhos). No celular, uma coluna só. */}

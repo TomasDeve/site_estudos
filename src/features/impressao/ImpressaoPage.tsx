@@ -478,10 +478,10 @@ export function ImpressaoPage() {
     // da paginação (colunas em sequência contadas como uma só) e sobravam folhas em branco.
     <div className="flex min-h-dvh flex-col print:block print:min-h-0">
       <GrifosLayer />
-      <header className="sticky top-0 z-10 flex shrink-0 items-center gap-3 border-b border-line/50 bg-navy-900/90 px-4 py-3 backdrop-blur-sm print:hidden">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b border-line/50 bg-navy-900/90 px-2 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3 print:hidden">
         <button
           onClick={voltar}
-          className="shrink-0 cursor-pointer rounded-lg p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+          className="shrink-0 cursor-pointer rounded-lg p-2 text-mut transition-colors hover:bg-navy-700 hover:text-txt sm:p-1.5"
           title="Voltar"
           aria-label="Voltar"
         >
@@ -507,7 +507,7 @@ export function ImpressaoPage() {
       </header>
 
       <div className="flex-1">
-        <main className="mx-auto w-full max-w-3xl px-3 py-4 sm:px-6 sm:py-6 print:hidden">
+        <main className="mx-auto w-full max-w-3xl px-3 pb-24 pt-4 sm:px-6 sm:py-6 print:hidden">
           {marcadas.length === 0 ? (
             <EmptyState
               icon="🖨️"
@@ -578,10 +578,11 @@ export function ImpressaoPage() {
                 </div>
               </div>
 
-              {/* Filtro por matéria — várias ao mesmo tempo; "Todas" limpa */}
+              {/* Filtro por matéria — várias ao mesmo tempo; "Todas" limpa. No celular
+                  vira uma faixa que rola de lado (quebrando, eram várias linhas de pílulas). */}
               {materiasMarcadas.length > 1 && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="mr-0.5 text-[11px] font-semibold uppercase tracking-wide text-mut">
+                <div className="flex flex-wrap items-center gap-1.5 [scrollbar-width:none] max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 [&::-webkit-scrollbar]:hidden">
+                  <span className="mr-0.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-mut">
                     Matéria
                   </span>
                   <PillCategoria

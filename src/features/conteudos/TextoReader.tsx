@@ -108,6 +108,8 @@ interface TextoReaderProps {
   texto: TopicoTexto;
   /** Conteúdo ocupa toda a altura disponível (página dedicada). */
   paginaCheia?: boolean;
+  /** Só no celular o texto ocupa toda a altura (modal que vira tela cheia lá). */
+  cheioNoCelular?: boolean;
   /** Botões extras na barra de controles (ex.: abrir em tela cheia). */
   acoes?: ReactNode;
   /** Número do artigo a destacar e rolar até ele ao abrir (ex.: 4 para "art. 4º"). */
@@ -124,6 +126,7 @@ interface TextoReaderProps {
 export function TextoReader({
   texto,
   paginaCheia = false,
+  cheioNoCelular = false,
   acoes,
   artigoFoco = null,
   onArtigoFoco,
@@ -360,10 +363,13 @@ export function TextoReader({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2.5">
-      {/* Barra única de controles: marca-texto, fonte, leituras, marcador */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Barra de controles. No computador é uma faixa só; no celular, duas linhas —
+          leitura (fonte, leituras, parei aqui) em cima e edição embaixo, rolando de
+          lado se não couber (antes quebrava em 3 linhas e comia a tela). */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 [scrollbar-width:none] max-sm:order-2 sm:contents [&::-webkit-scrollbar]:hidden">
         <div
-          className="flex items-center gap-1.5 rounded-lg border border-line/60 bg-navy-900/60 px-2 py-1.5"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-line/60 bg-navy-900/60 px-2 py-1.5"
           title="Selecione um trecho do texto e toque numa cor"
         >
           <Highlighter className="size-3.5 text-mut" />
@@ -392,7 +398,7 @@ export function TextoReader({
         </div>
 
         {/* Desfazer/refazer (também no celular) */}
-        <div className="flex items-center gap-0.5 rounded-lg border border-line/60 bg-navy-900/60 px-1 py-1">
+        <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-line/60 bg-navy-900/60 px-1 py-1">
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -416,7 +422,7 @@ export function TextoReader({
         </div>
 
         {/* Formatação básica (também no celular) */}
-        <div className="flex items-center gap-0.5 rounded-lg border border-line/60 bg-navy-900/60 px-1 py-1">
+        <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-line/60 bg-navy-900/60 px-1 py-1">
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -505,7 +511,9 @@ export function TextoReader({
             )}
           </div>
         </div>
+        </div>
 
+        <div className="flex flex-wrap items-center gap-1.5 max-sm:order-1 sm:contents">
         <div className="flex items-center overflow-hidden rounded-lg border border-line">
           <button
             onClick={() => mudarFonte(-1)}
@@ -526,22 +534,35 @@ export function TextoReader({
           </button>
         </div>
 
-        <span className="flex items-center gap-1.5 rounded-lg bg-navy-900 px-2.5 py-1.5 text-xs text-dim">
+        <span className="flex items-center gap-1.5 rounded-lg bg-navy-900 px-2.5 py-1.5 text-xs text-dim max-sm:hidden">
           📖 <strong className="tabular-nums text-txt">{leiturasLocal}x</strong>
         </span>
         <button
           onClick={contarLeitura}
           className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
-          title="Registrar mais uma leitura completa"
+          title={`Registrar mais uma leitura completa (já leu ${leiturasLocal}x)`}
         >
           <Check className="size-3.5" /> Li +1
+          {/* No celular a contagem vem junto do botão (o selo 📖 some para caber) */}
+          <span className="font-normal tabular-nums text-mut sm:hidden">· {leiturasLocal}x</span>
         </button>
 
         {acoes}
 
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-[11px] text-mut" aria-live="polite">
-            {salvamento === "salvo" ? "Salvo ✓" : salvamento === "salvando" ? "Salvando…" : "Não salvo"}
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <span
+            className={`text-[11px] ${salvamento === "salvo" ? "text-mut max-sm:text-green" : "text-mut"}`}
+            aria-live="polite"
+          >
+            {salvamento === "salvo" ? (
+              <>
+                <span className="max-sm:hidden">Salvo </span>✓
+              </>
+            ) : salvamento === "salvando" ? (
+              "Salvando…"
+            ) : (
+              "Não salvo"
+            )}
           </span>
           <button
             onClick={marcarAqui}
@@ -560,6 +581,7 @@ export function TextoReader({
             </button>
           )}
         </div>
+        </div>
       </div>
 
       {/* Texto sempre editável: marque, apague, anote direto na leitura */}
@@ -568,8 +590,10 @@ export function TextoReader({
         onClick={(e) => {
           if (e.target === e.currentTarget) editorRef.current?.focus();
         }}
-        className={`relative overflow-y-auto rounded-lg border border-line/50 bg-navy-950/40 p-4 sm:p-6 ${
-          paginaCheia ? "min-h-0 flex-1" : "max-h-[58vh] min-h-[30vh]"
+        className={`relative overflow-y-auto rounded-lg border border-line/50 bg-navy-950/40 px-3.5 py-3 sm:p-6 ${
+          paginaCheia
+            ? "min-h-0 flex-1"
+            : `max-h-[58vh] min-h-[30vh] ${cheioNoCelular ? "max-sm:max-h-none max-sm:min-h-0 max-sm:flex-1" : ""}`
         }`}
       >
         <div

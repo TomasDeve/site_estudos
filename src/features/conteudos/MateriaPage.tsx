@@ -308,17 +308,19 @@ export function MateriaPage() {
       {/* Cabeçalho imersivo da matéria */}
       <Card>
         <CardBody>
-          <div className="flex items-start gap-4">
+          {/* No celular os botões descem para uma linha própria, abaixo do título
+              (lado a lado eles espremiam o nome e vazavam da tela). */}
+          <div className="flex flex-wrap items-start gap-x-4 gap-y-3.5">
             <span
-              className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-3xl"
+              className="flex size-11 shrink-0 items-center justify-center rounded-xl text-2xl sm:size-14 sm:rounded-2xl sm:text-3xl"
               style={{ background: `${concurso.cor}1a` }}
             >
               {materia.icone}
             </span>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-[1_1_12rem]">
               <div className="flex flex-wrap items-center gap-2">
                 <h1
-                  className={`text-xl font-bold tracking-tight sm:text-2xl ${
+                  className={`text-xl font-bold leading-tight tracking-tight sm:text-2xl ${
                     vinculo.riscada ? "text-mut line-through decoration-red/50" : "text-txt"
                   }`}
                 >
@@ -329,7 +331,7 @@ export function MateriaPage() {
                     Riscada
                   </span>
                 )}
-                <span className="rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-dim">
+                <span className="whitespace-nowrap rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-dim">
                   {nomeDaArea(concurso, vinculo.area)}
                 </span>
               </div>
@@ -363,9 +365,14 @@ export function MateriaPage() {
               </div>
             </div>
 
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <div className="flex flex-wrap items-center gap-2 max-sm:w-full sm:shrink-0 sm:justify-end">
               {concurso.sistema_horas && !ehRedacao && (
-                <Button size="sm" onClick={() => setModalEstudo(true)} title="Registrar tempo estudado e abater das horas dos assuntos">
+                <Button
+                  size="sm"
+                  className="max-sm:h-10 max-sm:flex-1"
+                  onClick={() => setModalEstudo(true)}
+                  title="Registrar tempo estudado e abater das horas dos assuntos"
+                >
                   <TimerReset className="size-3.5" /> Registrar estudo
                 </Button>
               )}
@@ -374,7 +381,7 @@ export function MateriaPage() {
                   href={`/questoes/materia/${materia.id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className={`inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition-colors ${
+                  className={`inline-flex h-8 shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-sm font-semibold transition-colors max-sm:h-10 max-sm:flex-1 ${
                     pendentesIA > 0
                       ? "border-gold/40 bg-gold/10 text-gold hover:border-gold/60 hover:bg-gold/15"
                       : "border-green/40 bg-green/10 text-green hover:bg-green/15"
@@ -382,7 +389,8 @@ export function MateriaPage() {
                   title="Abre um caderno com as questões da IA desta matéria, misturando todos os assuntos (nova aba)"
                 >
                   <Sparkles className="size-3.5" />
-                  Resolver Questões ({pendentesIA > 0 ? pendentesIA : questoesIA.length})
+                  <span className="max-sm:hidden">Resolver</span> Questões (
+                  {pendentesIA > 0 ? pendentesIA : questoesIA.length})
                 </a>
               )}
             </div>
