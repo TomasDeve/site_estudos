@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -25,6 +25,7 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react";
+import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import type { Materia, PlanoHora } from "@/types/db";
 import {
@@ -805,6 +806,18 @@ function LinhaPreenchida({
   const at = atividadeDe(l.atividade);
   const livre = l.atividade === "livre";
   const principal = tituloDoBloco(l, livre ? undefined : materia);
+  const navigate = useNavigate();
+  const { concursoId } = useParams();
+  // Clicar no NOME da matéria leva pra página dela; o resto do bloco abre a edição.
+  const irParaMateria =
+    !livre && materia && concursoId
+      ? (e: MouseEvent) => {
+          e.stopPropagation();
+          const url = `/concurso/${concursoId}/conteudos/${materia.id}`;
+          if (e.ctrlKey || e.metaKey) window.open(url, "_blank");
+          else navigate(url);
+        }
+      : undefined;
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({
     id: `b:${l.data}|${l.hora}`,
     data: { linha: l },
@@ -819,7 +832,7 @@ function LinhaPreenchida({
         className={`flex min-w-0 flex-1 cursor-grab touch-manipulation items-center gap-2 py-1.5 pl-1 pr-1 text-left transition-colors hover:bg-navy-700/40 active:cursor-grabbing ${
           isDragging ? "opacity-30" : ""
         }`}
-        title={`${[materia?.nome, at.label, l.nota].filter(Boolean).join(" · ")} — clique para editar, arraste para mover`}
+        title={`${[materia?.nome, at.label, l.nota].filter(Boolean).join(" · ")} — clique no nome para abrir a matéria, no bloco para ver o que preencheu; arraste para mover`}
       >
         <GripVertical
           className="size-3 shrink-0 text-mut opacity-0 transition-opacity group-hover:opacity-70 max-md:opacity-40"
@@ -835,7 +848,18 @@ function LinhaPreenchida({
             <span className="shrink-0 text-sm leading-none">
               {livre ? at.icone : (materia?.icone ?? at.icone)}
             </span>
-            <span className="truncate">{principal}</span>
+            {irParaMateria ? (
+              <span
+                role="link"
+                onClick={irParaMateria}
+                className="cursor-pointer truncate decoration-gold/70 underline-offset-2 hover:text-gold hover:underline"
+                title={`Abrir ${principal}`}
+              >
+                {principal}
+              </span>
+            ) : (
+              <span className="truncate">{principal}</span>
+            )}
           </span>
           {/* 2ª linha: a atividade (e o detalhe, quando há matéria). Sem matéria e
               sem texto, a atividade já é o título; texto livre não tem 2ª linha. */}
