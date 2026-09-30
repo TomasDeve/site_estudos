@@ -5,16 +5,14 @@ import { minutosDe } from "./planoDias";
 /**
  * Ciclo das matérias (Painel, abaixo do plano): o rank de cada matéria é o % de
  * acerto nas últimas 50 questões dela, como num jogo — Bronze I, II e III,
- * depois Prata, Ouro… até a Lenda (95% ou mais). Quantas vezes ela entrou no
+ * depois Prata, Ouro e Diamante (Diamante III = 95% ou mais). Quantas vezes ela entrou no
  * plano (1×, 2×…) é contado à parte.
  */
 export interface TierRank {
   nome: string;
   /** Cor do tier (hex): pinta a linha da matéria e a insígnia. */
   cor: string;
-  /** Tiers de elite: um rank só, insígnia em degradê e linha com brilho. */
-  degrade?: string;
-  icone: "medalha" | "escudo" | "gema" | "estrela" | "trofeu" | "coroa";
+  icone: "medalha" | "gema";
 }
 
 export interface Rank {
@@ -25,7 +23,7 @@ export interface Rank {
   nome: string;
   /** Nulo no "Sem rank". */
   tier: TierRank | null;
-  /** I, II ou III dentro do tier; 0 = sem divisões (sem rank e elite). */
+  /** I, II ou III dentro do tier; 0 = sem rank. */
   divisao: 0 | 1 | 2 | 3;
 }
 
@@ -33,36 +31,11 @@ const COM_DIVISOES: TierRank[] = [
   { nome: "Bronze", cor: "#c98552", icone: "medalha" },
   { nome: "Prata", cor: "#b8c4d4", icone: "medalha" },
   { nome: "Ouro", cor: "#e0a83e", icone: "medalha" },
-  { nome: "Platina", cor: "#45cbbd", icone: "escudo" },
-  { nome: "Esmeralda", cor: "#3fbf6f", icone: "gema" },
   { nome: "Diamante", cor: "#57a8f0", icone: "gema" },
-  { nome: "Ametista", cor: "#9f7aea", icone: "gema" },
-  { nome: "Rubi", cor: "#e8506e", icone: "gema" },
-];
-
-const ELITE: TierRank[] = [
-  {
-    nome: "Mestre",
-    cor: "#d946ef",
-    degrade: "linear-gradient(90deg, #9f7aea, #d946ef)",
-    icone: "estrela",
-  },
-  {
-    nome: "Grão-Mestre",
-    cor: "#f97316",
-    degrade: "linear-gradient(90deg, #e8506e, #f97316)",
-    icone: "trofeu",
-  },
-  {
-    nome: "Lenda",
-    cor: "#facc15",
-    degrade: "linear-gradient(90deg, #facc15, #f97316, #d946ef, #57a8f0)",
-    icone: "coroa",
-  },
 ];
 
 /** Os tiers, do mais baixo ao mais alto. */
-export const TIERS: readonly TierRank[] = [...COM_DIVISOES, ...ELITE];
+export const TIERS: readonly TierRank[] = COM_DIVISOES;
 
 const ROMANOS = ["I", "II", "III"] as const;
 
@@ -72,20 +45,19 @@ export const JANELA_RANK = 50;
 export const MINIMO_QUESTOES_RANK = 10;
 
 /**
- * % mínimo de cada rank com tier, do Bronze I à Lenda: 2 em 2 pontos do Bronze
- * II (42%) ao Rubi III (86%) — 50% é chute no C/E, então o grosso da escada fica
- * acima disso — e 3 em 3 na elite: Mestre 89%, Grão-Mestre 92%, Lenda 95%.
+ * % mínimo de cada rank, do Bronze I ao Diamante III: abaixo de 50% (chute no
+ * C/E) é Bronze I; de 5 em 5 pontos até o Ouro III (85%) e mais apertado no
+ * Diamante — 88%, 91% e 95%, o topo.
  */
-const MINIMOS = [0, ...Array.from({ length: 23 }, (_, i) => 42 + 2 * i), 89, 92, 95];
+const MINIMOS = [0, 50, 55, 60, 65, 70, 75, 80, 85, 88, 91, 95];
 
-/** A escada inteira: "Sem rank", 8 tiers com I, II e III e os 3 de elite — 27 ranks. */
+/** A escada inteira: "Sem rank" e 4 tiers com I, II e III — 12 ranks. */
 export const RANKS: readonly Rank[] = (
   [
     { nome: "Sem rank", tier: null, divisao: 0 },
     ...COM_DIVISOES.flatMap((tier) =>
       ROMANOS.map((r, i) => ({ nome: `${tier.nome} ${r}`, tier, divisao: (i + 1) as Rank["divisao"] }))
     ),
-    ...ELITE.map((tier) => ({ nome: tier.nome, tier, divisao: 0 })),
   ] as Omit<Rank, "nivel" | "minimo">[]
 ).map((r, nivel) => ({ ...r, nivel, minimo: nivel === 0 ? 0 : MINIMOS[nivel - 1] }));
 

@@ -43,26 +43,25 @@ describe("ciclo das matérias", () => {
     expect(c.get("port")?.blocos).toBe(2);
   });
 
-  it("tem 27 ranks, sem nome repetido, com o mínimo subindo", () => {
-    expect(RANKS.length - 1).toBe(27);
+  it("tem 12 ranks (Bronze, Prata, Ouro, Diamante), com o mínimo subindo", () => {
+    expect(RANKS.length - 1).toBe(12);
     expect(new Set(RANKS.map((r) => r.nome)).size).toBe(RANKS.length);
     for (let i = 2; i < RANKS.length; i++) expect(RANKS[i].minimo).toBeGreaterThan(RANKS[i - 1].minimo);
   });
 
-  it("o rank sai do % de acerto: Lenda a partir de 95%", () => {
+  it("o rank sai do % de acerto: Diamante III a partir de 95%", () => {
     expect(rankPorAcerto(null).nome).toBe("Sem rank");
     expect(rankPorAcerto(null).tier).toBeNull();
     expect(rankPorAcerto(0).nome).toBe("Bronze I");
-    expect(rankPorAcerto(41).nome).toBe("Bronze I");
-    expect(rankPorAcerto(42).nome).toBe("Bronze II");
-    expect(rankPorAcerto(46).nome).toBe("Prata I");
-    expect(rankPorAcerto(86).nome).toBe("Rubi III");
-    expect(rankPorAcerto(88).nome).toBe("Rubi III");
-    expect(rankPorAcerto(89).nome).toBe("Mestre");
-    expect(rankPorAcerto(92).nome).toBe("Grão-Mestre");
-    expect(rankPorAcerto(94).nome).toBe("Grão-Mestre");
-    expect(rankPorAcerto(95).nome).toBe("Lenda");
-    expect(rankPorAcerto(100).nome).toBe("Lenda");
+    expect(rankPorAcerto(49).nome).toBe("Bronze I");
+    expect(rankPorAcerto(50).nome).toBe("Bronze II");
+    expect(rankPorAcerto(60).nome).toBe("Prata I");
+    expect(rankPorAcerto(75).nome).toBe("Ouro I");
+    expect(rankPorAcerto(87).nome).toBe("Ouro III");
+    expect(rankPorAcerto(88).nome).toBe("Diamante I");
+    expect(rankPorAcerto(94).nome).toBe("Diamante II");
+    expect(rankPorAcerto(95).nome).toBe("Diamante III");
+    expect(rankPorAcerto(100).nome).toBe("Diamante III");
   });
 
   it("desempenho: últimas 50 da matéria, assunto conta pra matéria dele, mínimo de 10", () => {
@@ -79,7 +78,7 @@ describe("ciclo das matérias", () => {
     );
     // 30 + 10 recentes (39 acertos) + 10 das 40 antigas (0) = 39/50
     expect(d.get("port")).toMatchObject({ total: 50, acertos: 39, pct: 78 });
-    expect(d.get("port")?.rank.nome).toBe("Ametista II");
+    expect(d.get("port")?.rank.nome).toBe("Ouro I");
     expect(d.get("rlm")).toMatchObject({ total: 5, pct: null });
     expect(d.get("rlm")?.rank.nome).toBe("Sem rank");
   });

@@ -20,14 +20,10 @@ import {
   CalendarPlus,
   ChevronRight,
   CircleDashed,
-  Crown,
   Gem,
   GripVertical,
   Medal,
   RotateCcw,
-  Shield,
-  Star,
-  Trophy,
   Undo2,
   type LucideIcon,
 } from "lucide-react";
@@ -54,11 +50,7 @@ import type { CicloDoPlano } from "./useCicloDoPlano";
 
 const ICONES: Record<TierRank["icone"], LucideIcon> = {
   medalha: Medal,
-  escudo: Shield,
   gema: Gem,
-  estrela: Star,
-  trofeu: Trophy,
-  coroa: Crown,
 };
 
 /** Fundo e borda da linha por divisão (I, II, III), em alfa hex: o tom cresce. */
@@ -70,12 +62,6 @@ const TONS = [
 
 function estiloDaLinha({ tier, divisao }: Rank): CSSProperties | undefined {
   if (!tier) return undefined;
-  if (tier.degrade)
-    return {
-      backgroundColor: `${tier.cor}1f`,
-      borderColor: `${tier.cor}cc`,
-      boxShadow: `0 0 14px ${tier.cor}40`,
-    };
   const [fundo, borda] = TONS[divisao - 1];
   return { backgroundColor: `${tier.cor}${fundo}`, borderColor: `${tier.cor}${borda}` };
 }
@@ -94,8 +80,9 @@ function abertoSalvo(): boolean {
 /**
  * Ciclo das matérias, logo abaixo da grade do plano: as matérias do edital,
  * numeradas na ordem do ciclo (arraste pela alça para mudar), cada uma com o seu
- * rank — o % de acerto nas últimas 50 questões dela (Bronze I, II, III, Prata…
- * até a Lenda, 95%+) — e quantas vezes entrou no plano (1×, 2×…). Começa recolhido: a setinha abre e fecha. "Novo ciclo" zera a
+ * rank — o % de acerto nas últimas 50 questões dela (Bronze, Prata, Ouro e
+ * Diamante, I a III; Diamante III = 95%+) — e quantas vezes entrou no plano (1×,
+ * 2×…). Começa recolhido: a setinha abre e fecha. "Novo ciclo" zera a
  * contagem a partir de hoje ou de amanhã.
  */
 export function CicloDasMaterias({ ciclo }: { ciclo: CicloDoPlano }) {
@@ -288,7 +275,7 @@ export function CicloDasMaterias({ ciclo }: { ciclo: CicloDoPlano }) {
               <span key={t.nome} className="inline-flex items-center gap-1">
                 <span
                   className="size-2.5 shrink-0 rounded-full"
-                  style={{ background: t.degrade ?? t.cor }}
+                  style={{ background: t.cor }}
                   aria-hidden
                 />
                 {t.nome}
@@ -412,7 +399,7 @@ function Insignia({ rank }: { rank: Rank }) {
   return (
     <span
       className={`${base} border-transparent text-navy-950`}
-      style={{ background: rank.tier.degrade ?? rank.tier.cor }}
+      style={{ background: rank.tier.cor }}
     >
       <Icone className="size-3 shrink-0" strokeWidth={2.5} aria-hidden />
       <span className="truncate">{rank.nome}</span>
@@ -454,7 +441,7 @@ export function PontoDoRank({
       {rank.tier ? (
         <span
           className="size-2.5 rounded-full"
-          style={{ background: rank.tier.degrade ?? rank.tier.cor }}
+          style={{ background: rank.tier.cor }}
           aria-hidden
         />
       ) : (
