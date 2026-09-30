@@ -1,9 +1,12 @@
+import type { QuestaoLog } from "@/types/db";
+import { ultimasQuestoes } from "@/features/conteudos/metasTopico";
 import { minutosDe } from "./planoDias";
 
 /**
- * Ciclo das matérias (Painel, abaixo do plano): cada bloco de uma matéria que
- * entra no plano sobe ela um rank, como num jogo — Bronze I, II e III, depois
- * Prata, Ouro… até a Lenda.
+ * Ciclo das matérias (Painel, abaixo do plano): o rank de cada matéria é o % de
+ * acerto nas últimas 50 questões dela, como num jogo — Bronze I, II e III,
+ * depois Prata, Ouro… até a Lenda (95% ou mais). Quantas vezes ela entrou no
+ * plano (1×, 2×…) é contado à parte.
  */
 export interface TierRank {
   nome: string;
@@ -15,8 +18,10 @@ export interface TierRank {
 }
 
 export interface Rank {
-  /** 0 = sem rank; depois, um por bloco no plano. */
+  /** 0 = sem rank; depois, um degrau por faixa de acerto. */
   nivel: number;
+  /** % de acerto mínimo para chegar nele (0 no Bronze I e no "Sem rank"). */
+  minimo: number;
   nome: string;
   /** Nulo no "Sem rank". */
   tier: TierRank | null;
@@ -61,6 +66,18 @@ export const TIERS: readonly TierRank[] = [...COM_DIVISOES, ...ELITE];
 
 const ROMANOS = ["I", "II", "III"] as const;
 
+/** Janela do rank: as últimas N questões da matéria. */
+export const JANELA_RANK = 50;
+/** Abaixo disso a amostra é pequena demais: a matéria fica "Sem rank". */
+export const MINIMO_QUESTOES_RANK = 10;
+
+/**
+ * % mínimo de cada rank com tier, do Bronze I à Lenda: 2 em 2 pontos do Bronze
+ * II (42%) ao Rubi III (86%) — 50% é chute no C/E, então o grosso da escada fica
+ * acima disso — e 3 em 3 na elite: Mestre 89%, Grão-Mestre 92%, Lenda 95%.
+ */
+const MINIMOS = [0, ...Array.from({ length: 23 }, (_, i) => 42 + 2 * i), 89, 92, 95];
+
 /** A escada inteira: "Sem rank", 8 tiers com I, II e III e os 3 de elite — 27 ranks. */
 export const RANKS: readonly Rank[] = (
   [
@@ -69,12 +86,54 @@ export const RANKS: readonly Rank[] = (
       ROMANOS.map((r, i) => ({ nome: `${tier.nome} ${r}`, tier, divisao: (i + 1) as Rank["divisao"] }))
     ),
     ...ELITE.map((tier) => ({ nome: tier.nome, tier, divisao: 0 })),
-  ] as Omit<Rank, "nivel">[]
-).map((r, nivel) => ({ ...r, nivel }));
+  ] as Omit<Rank, "nivel" | "minimo">[]
+).map((r, nivel) => ({ ...r, nivel, minimo: nivel === 0 ? 0 : MINIMOS[nivel - 1] }));
 
-/** O rank de uma matéria que entrou `vezes` no plano; da Lenda em diante, fica nela. */
-export function rankDoCiclo(vezes: number): Rank {
-  return RANKS[Math.min(Math.max(vezes, 0), RANKS.length - 1)];
+/** % mínimo para entrar em cada tier (o do rank I dele). */
+export function minimoDoTier(tier: TierRank): number {
+  return RANKS.find((r) => r.tier === tier)!.minimo;
+}
+
+/** O rank de um % de acerto (0–100); `null` = sem questões suficientes. */
+export function rankPorAcerto(pct: number | null): Rank {
+  if (pct === null) return RANKS[0];
+  for (let i = RANKS.length - 1; i > 0; i--) if (pct >= RANKS[i].minimo) return RANKS[i];
+  return RANKS[1];
+}
+
+export interface DesempenhoCiclo {
+  /** Questões na janela (até 50). */
+  total: number;
+  acertos: number;
+  /** % de acerto na janela; nulo abaixo do mínimo de questões. */
+  pct: number | null;
+  rank: Rank;
+}
+
+/**
+ * O desempenho de cada matéria nas últimas 50 questões e o rank que ele dá.
+ * Registro de assunto conta para a matéria do assunto; registro avulso, para a
+ * matéria dele.
+ */
+export function desempenhoDoCiclo(
+  logs: readonly QuestaoLog[],
+  materiaDoTopico: ReadonlyMap<string, string>
+): Map<string, DesempenhoCiclo> {
+  const porMateria = new Map<string, QuestaoLog[]>();
+  for (const l of logs) {
+    const mid = (l.topico_id && materiaDoTopico.get(l.topico_id)) || l.materia_id;
+    if (!mid) continue;
+    const arr = porMateria.get(mid) ?? [];
+    arr.push(l);
+    porMateria.set(mid, arr);
+  }
+  const out = new Map<string, DesempenhoCiclo>();
+  for (const [mid, arr] of porMateria) {
+    const u = ultimasQuestoes(arr, JANELA_RANK);
+    const pct = u.total >= MINIMO_QUESTOES_RANK ? u.pct : null;
+    out.set(mid, { total: u.total, acertos: u.acertos, pct, rank: rankPorAcerto(pct) });
+  }
+  return out;
 }
 
 export interface ContagemCiclo {

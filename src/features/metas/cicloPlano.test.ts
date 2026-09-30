@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { RANKS, TIERS, contarCiclo, ordenarCiclo, rankDoCiclo, voltaDoCiclo } from "./cicloPlano";
+import type { QuestaoLog } from "@/types/db";
+import {
+  RANKS,
+  contarCiclo,
+  desempenhoDoCiclo,
+  ordenarCiclo,
+  rankPorAcerto,
+  voltaDoCiclo,
+} from "./cicloPlano";
 
 const bloco = (data: string, materia_id: string | null, feita = false, minutos?: number) => ({
   data,
@@ -35,26 +43,47 @@ describe("ciclo das matérias", () => {
     expect(c.get("port")?.blocos).toBe(2);
   });
 
-  it("tem pelo menos 25 ranks, sem nome repetido, um por bloco", () => {
-    expect(RANKS.length - 1).toBeGreaterThanOrEqual(25);
+  it("tem 27 ranks, sem nome repetido, com o mínimo subindo", () => {
+    expect(RANKS.length - 1).toBe(27);
     expect(new Set(RANKS.map((r) => r.nome)).size).toBe(RANKS.length);
-    RANKS.forEach((r, i) => expect(rankDoCiclo(i)).toBe(r));
+    for (let i = 2; i < RANKS.length; i++) expect(RANKS[i].minimo).toBeGreaterThan(RANKS[i - 1].minimo);
   });
 
-  it("sobe um rank por bloco: I, II e III em cada tier, até a Lenda", () => {
-    expect(rankDoCiclo(0).nome).toBe("Sem rank");
-    expect(rankDoCiclo(0).tier).toBeNull();
-    expect(rankDoCiclo(1).nome).toBe("Bronze I");
-    expect(rankDoCiclo(3).nome).toBe("Bronze III");
-    expect(rankDoCiclo(4).nome).toBe("Prata I");
-    expect(rankDoCiclo(8).nome).toBe("Ouro II");
-    expect(rankDoCiclo(24).nome).toBe("Rubi III");
-    expect(rankDoCiclo(25).nome).toBe("Mestre");
-    expect(rankDoCiclo(26).nome).toBe("Grão-Mestre");
-    expect(rankDoCiclo(27).nome).toBe("Lenda");
-    expect(rankDoCiclo(60)).toBe(rankDoCiclo(27));
-    expect(TIERS[TIERS.length - 1].nome).toBe("Lenda");
+  it("o rank sai do % de acerto: Lenda a partir de 95%", () => {
+    expect(rankPorAcerto(null).nome).toBe("Sem rank");
+    expect(rankPorAcerto(null).tier).toBeNull();
+    expect(rankPorAcerto(0).nome).toBe("Bronze I");
+    expect(rankPorAcerto(41).nome).toBe("Bronze I");
+    expect(rankPorAcerto(42).nome).toBe("Bronze II");
+    expect(rankPorAcerto(46).nome).toBe("Prata I");
+    expect(rankPorAcerto(86).nome).toBe("Rubi III");
+    expect(rankPorAcerto(88).nome).toBe("Rubi III");
+    expect(rankPorAcerto(89).nome).toBe("Mestre");
+    expect(rankPorAcerto(92).nome).toBe("Grão-Mestre");
+    expect(rankPorAcerto(94).nome).toBe("Grão-Mestre");
+    expect(rankPorAcerto(95).nome).toBe("Lenda");
+    expect(rankPorAcerto(100).nome).toBe("Lenda");
   });
+
+  it("desempenho: últimas 50 da matéria, assunto conta pra matéria dele, mínimo de 10", () => {
+    const log = (data: string, total: number, acertos: number, o: Partial<QuestaoLog>) =>
+      ({ data, total, acertos, created_at: data, topico_id: null, materia_id: null, ...o }) as QuestaoLog;
+    const d = desempenhoDoCiclo(
+      [
+        log("2026-09-01", 40, 0, { topico_id: "t1" }), // antigo: sai da janela em parte
+        log("2026-09-20", 30, 30, { topico_id: "t1" }),
+        log("2026-09-21", 10, 9, { materia_id: "port" }),
+        log("2026-09-21", 5, 5, { materia_id: "rlm" }),
+      ],
+      new Map([["t1", "port"]])
+    );
+    // 30 + 10 recentes (39 acertos) + 10 das 40 antigas (0) = 39/50
+    expect(d.get("port")).toMatchObject({ total: 50, acertos: 39, pct: 78 });
+    expect(d.get("port")?.rank.nome).toBe("Ametista II");
+    expect(d.get("rlm")).toMatchObject({ total: 5, pct: null });
+    expect(d.get("rlm")?.rank.nome).toBe("Sem rank");
+  });
+
 
   it("a volta fecha quando todas as matérias entraram; quem repete já conta na próxima", () => {
     expect(voltaDoCiclo([0, 0, 0])).toEqual({ completas: 0, atual: 1, naVolta: 0 });

@@ -39,11 +39,14 @@ import { hojeISO } from "@/lib/dates";
 import { MenuMais } from "@/components/MenuMais";
 import { fmtTempo, rotuloDoDia, somarDias } from "./planoDias";
 import {
+  JANELA_RANK,
+  MINIMO_QUESTOES_RANK,
   RANKS,
   TIERS,
-  rankDoCiclo,
+  minimoDoTier,
   voltaDoCiclo,
   type ContagemCiclo,
+  type DesempenhoCiclo,
   type Rank,
   type TierRank,
 } from "./cicloPlano";
@@ -91,12 +94,12 @@ function abertoSalvo(): boolean {
 /**
  * Ciclo das matérias, logo abaixo da grade do plano: as matérias do edital,
  * numeradas na ordem do ciclo (arraste pela alça para mudar), cada uma com o seu
- * rank — cada bloco dela no plano sobe um (Bronze I, II, III, Prata… até a Lenda,
- * 27 ranks). Começa recolhido: a setinha abre e fecha. "Novo ciclo" zera a
+ * rank — o % de acerto nas últimas 50 questões dela (Bronze I, II, III, Prata…
+ * até a Lenda, 95%+) — e quantas vezes entrou no plano (1×, 2×…). Começa recolhido: a setinha abre e fecha. "Novo ciclo" zera a
  * contagem a partir de hoje ou de amanhã.
  */
 export function CicloDasMaterias({ ciclo }: { ciclo: CicloDoPlano }) {
-  const { materias, contagem, desde, personalizada, reordenar } = ciclo;
+  const { materias, contagem, desempenho, desde, personalizada, reordenar } = ciclo;
   const concurso = useConcursoAtual();
   const hoje = hojeISO();
   const amanha = somarDias(hoje, 1);
@@ -269,6 +272,7 @@ export function CicloDasMaterias({ ciclo }: { ciclo: CicloDoPlano }) {
                     ordem={i + 1}
                     materia={m}
                     contagem={contagem.get(m.id)}
+                    desempenho={desempenho.get(m.id)}
                   />
                 ))}
               </ol>
@@ -277,7 +281,8 @@ export function CicloDasMaterias({ ciclo }: { ciclo: CicloDoPlano }) {
 
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-mut">
             <span>
-              {RANKS.length - 1} ranks — cada bloco no plano sobe um (I → II → III em cada cor):
+              {RANKS.length - 1} ranks pelo acerto nas últimas {JANELA_RANK} questões da matéria
+              (mín. {MINIMO_QUESTOES_RANK}); o 1×, 2×… é quantas vezes ela entrou no plano:
             </span>
             {TIERS.map((t) => (
               <span key={t.nome} className="inline-flex items-center gap-1">
@@ -287,6 +292,7 @@ export function CicloDasMaterias({ ciclo }: { ciclo: CicloDoPlano }) {
                   aria-hidden
                 />
                 {t.nome}
+                <span className="tabular-nums text-mut/70">{minimoDoTier(t)}%</span>
               </span>
             ))}
           </div>
@@ -300,18 +306,25 @@ function LinhaDoCiclo({
   ordem,
   materia,
   contagem,
+  desempenho,
 }: {
   ordem: number;
   materia: Materia;
   contagem: ContagemCiclo | undefined;
+  desempenho: DesempenhoCiclo | undefined;
 }) {
   const vezes = contagem?.blocos ?? 0;
-  const rank = rankDoCiclo(vezes);
+  const rank = desempenho?.rank ?? RANKS[0];
   const proximo = RANKS[rank.nivel + 1];
-  const detalhe = contagem
-    ? `${rank.nome} · ${vezes === 1 ? "1 bloco" : `${vezes} blocos`} no ciclo (${fmtTempo(contagem.minutos)})` +
+  const acerto = descreverAcerto(desempenho);
+  const plano = contagem
+    ? `${vezes === 1 ? "1 bloco" : `${vezes} blocos`} no ciclo (${fmtTempo(contagem.minutos)})` +
       (contagem.feitos ? ` · ${contagem.feitos} ${contagem.feitos === 1 ? "feito" : "feitos"}` : "")
     : "ainda não entrou no plano neste ciclo";
+  const detalhe =
+    `${rank.nome} · ${acerto}` +
+    (rank.tier && proximo ? ` · próximo: ${proximo.nome} (${proximo.minimo}%)` : "") +
+    ` — ${plano}`;
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: materia.id });
   const cor = estiloDaLinha(rank);
@@ -328,7 +341,7 @@ function LinhaDoCiclo({
   return (
     <li
       ref={setNodeRef}
-      title={`${materia.nome} — ${detalhe}${proximo ? ` · próximo: ${proximo.nome}` : ""}`}
+      title={`${materia.nome} — ${detalhe}`}
       className={`relative mb-1.5 flex break-inside-avoid items-center gap-1.5 rounded-lg border py-1.5 pl-1 pr-2.5 ${
         rank.tier ? "" : "border-dashed border-line/70 bg-navy-900/40"
       } ${isDragging ? "z-10 shadow-2xl shadow-navy-950/70 ring-1 ring-gold/50" : ""}`}
@@ -370,6 +383,9 @@ function LinhaDoCiclo({
           <span className="truncate">{materia.nome}</span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
+          <span className="w-8 text-right text-[11px] font-semibold tabular-nums text-dim">
+            {desempenho?.pct != null ? `${desempenho.pct}%` : ""}
+          </span>
           <Insignia rank={rank} />
           <span className="w-7 text-right text-[11px] font-semibold tabular-nums text-dim">
             {vezes > 0 ? `${vezes}×` : ""}
@@ -404,16 +420,36 @@ function Insignia({ rank }: { rank: Rank }) {
   );
 }
 
+/** "82% nas últimas 50 (41/50)", ou quantas questões faltam para ganhar rank. */
+function descreverAcerto(d: DesempenhoCiclo | undefined): string {
+  const total = d?.total ?? 0;
+  if (!d || d.pct === null) {
+    const faltam = MINIMO_QUESTOES_RANK - total;
+    return total === 0
+      ? `nenhuma questão registrada (rank a partir de ${MINIMO_QUESTOES_RANK})`
+      : `${total} ${total === 1 ? "questão" : "questões"} — faltam ${faltam} para ganhar rank`;
+  }
+  return `${d.pct}% nas últimas ${total} questões (${d.acertos}/${total})`;
+}
+
 /**
  * Bolinha do rank (cor do tier) + quantas vezes a matéria entrou no ciclo — a
  * versão compacta da insígnia, para listas apertadas como o modal do bloco.
  */
-export function PontoDoRank({ vezes }: { vezes: number }) {
-  const rank = rankDoCiclo(vezes);
+export function PontoDoRank({
+  vezes,
+  desempenho,
+}: {
+  vezes: number;
+  desempenho: DesempenhoCiclo | undefined;
+}) {
+  const rank = desempenho?.rank ?? RANKS[0];
   return (
     <span
       className="flex shrink-0 items-center gap-1 text-[10px] font-semibold tabular-nums text-mut"
-      title={`${rank.nome} no ciclo${vezes ? ` · ${vezes === 1 ? "1 bloco" : `${vezes} blocos`}` : ""}`}
+      title={`${rank.nome} · ${descreverAcerto(desempenho)}${
+        vezes ? ` · ${vezes === 1 ? "1 bloco" : `${vezes} blocos`} no ciclo` : ""
+      }`}
     >
       {rank.tier ? (
         <span

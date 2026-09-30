@@ -4,7 +4,15 @@ import type { Materia } from "@/types/db";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { useOrdemCicloPlano } from "@/api/concursos";
 import { usePlanoDesde } from "@/api/planoHoras";
-import { contarCiclo, ordenarCiclo, type ContagemCiclo } from "./cicloPlano";
+import { useQuestaoLogsTodos } from "@/api/questaoLogs";
+import { useTopicos } from "@/api/topicos";
+import {
+  contarCiclo,
+  desempenhoDoCiclo,
+  ordenarCiclo,
+  type ContagemCiclo,
+  type DesempenhoCiclo,
+} from "./cicloPlano";
 
 /** Cópia da ordem do ciclo neste navegador: vale enquanto a migração 0038 não roda. */
 const chaveOrdem = (concursoId: string) => `plano.cicloOrdem.${concursoId}`;
@@ -35,6 +43,8 @@ export interface CicloDoPlano {
   materias: Materia[];
   /** Blocos de cada matéria no plano desde o início do ciclo. */
   contagem: Map<string, ContagemCiclo>;
+  /** Acerto de cada matéria nas últimas 50 questões e o rank que ele dá. */
+  desempenho: Map<string, DesempenhoCiclo>;
   /** Início do ciclo ("Novo ciclo"); nulo = o plano inteiro. */
   desde: string | null;
   /** A ordem do ciclo é diferente da do edital. */
@@ -46,8 +56,9 @@ export interface CicloDoPlano {
 /**
  * O ciclo das matérias do Painel: a ordem (a que você arrastou, gravada no
  * concurso — ou, antes da migração 0038, neste navegador) e quantos blocos de
- * cada matéria já entraram no plano. Usado pela faixa do ciclo e pelo modal do
- * bloco, pra os dois mostrarem a mesma ordem.
+ * cada matéria já entraram no plano, e o rank de cada uma (acerto nas últimas
+ * 50 questões). Usado pela faixa do ciclo e pelo modal do bloco, pra os dois
+ * mostrarem a mesma ordem.
  */
 export function useCicloDoPlano(doEdital: Materia[]): CicloDoPlano {
   const concurso = useConcursoAtual();
@@ -55,6 +66,12 @@ export function useCicloDoPlano(doEdital: Materia[]): CicloDoPlano {
   const { data: linhas } = usePlanoDesde(desde);
   const contagem = useMemo(() => contarCiclo(linhas ?? [], desde), [linhas, desde]);
   const salvar = useOrdemCicloPlano();
+  const { data: logs } = useQuestaoLogsTodos();
+  const { data: topicos } = useTopicos();
+  const desempenho = useMemo(
+    () => desempenhoDoCiclo(logs ?? [], new Map((topicos ?? []).map((t) => [t.id, t.materia_id]))),
+    [logs, topicos]
+  );
 
   const [versaoLocal, setVersaoLocal] = useState(0);
   // `versaoLocal` só força reler depois de gravar.
@@ -88,5 +105,5 @@ export function useCicloDoPlano(doEdital: Materia[]): CicloDoPlano {
     );
   }
 
-  return { materias, contagem, desde, personalizada, reordenar };
+  return { materias, contagem, desempenho, desde, personalizada, reordenar };
 }

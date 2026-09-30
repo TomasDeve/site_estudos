@@ -56,7 +56,7 @@ import { Modal } from "@/components/Modal";
 import { Spinner } from "@/components/Spinner";
 import { celebrar } from "./celebration";
 import { CicloDasMaterias, PontoDoRank } from "./CicloDasMaterias";
-import type { ContagemCiclo } from "./cicloPlano";
+import type { ContagemCiclo, DesempenhoCiclo } from "./cicloPlano";
 import { useCicloDoPlano } from "./useCicloDoPlano";
 import {
   ATIVIDADES,
@@ -448,6 +448,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           hoje={hoje}
           materias={ciclo.materias}
           contagem={ciclo.contagem}
+          desempenho={ciclo.desempenho}
           atividadePadrao={ultimaAtividade}
           podeReplicar={
             blocosQueDescem([...(porDia.get(editando.data)?.keys() ?? [])], editando.hora) !== null
@@ -929,6 +930,7 @@ function EditarHoraModal({
   hoje,
   materias,
   contagem,
+  desempenho,
   atividadePadrao,
   podeReplicar,
   onSalvo,
@@ -940,6 +942,7 @@ function EditarHoraModal({
   /** As matérias do edital, na ordem do ciclo. */
   materias: Materia[];
   contagem: Map<string, ContagemCiclo>;
+  desempenho: Map<string, DesempenhoCiclo>;
   atividadePadrao: AtividadeChave;
   /** Falso quando o dia já está cheio (16 blocos) até embaixo. */
   podeReplicar: boolean;
@@ -1174,7 +1177,10 @@ function EditarHoraModal({
                   </span>
                   <span className="shrink-0 text-sm leading-none">{m.icone}</span>
                   <span className="min-w-0 flex-1 leading-snug">{m.nome}</span>
-                  <PontoDoRank vezes={contagem.get(m.id)?.blocos ?? 0} />
+                  <PontoDoRank
+                    vezes={contagem.get(m.id)?.blocos ?? 0}
+                    desempenho={desempenho.get(m.id)}
+                  />
                 </button>
               );
             })}
