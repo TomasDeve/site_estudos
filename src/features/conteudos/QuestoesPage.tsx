@@ -820,6 +820,22 @@ function QuestaoCard({
           )}
           <CaixaImpressao className="ml-auto" marcada={!!q.imprimir_em} onToggle={onImprimir} />
           <button
+            onClick={() =>
+              status === "arquivada"
+                ? onStatus(q, "ativa", "Questão desarquivada.")
+                : onStatus(q, "arquivada", "Questão arquivada.")
+            }
+            className="shrink-0 cursor-pointer rounded-md p-1 text-mut transition-colors hover:bg-navy-700 hover:text-txt max-sm:p-2"
+            title={status === "arquivada" ? "Desarquivar questão" : "Arquivar questão"}
+            aria-label={`${status === "arquivada" ? "Desarquivar" : "Arquivar"} questão ${numero}`}
+          >
+            {status === "arquivada" ? (
+              <ArchiveRestore className="size-3.5" />
+            ) : (
+              <Archive className="size-3.5" />
+            )}
+          </button>
+          <button
             onClick={onExcluir}
             className="shrink-0 cursor-pointer rounded-md p-1 text-mut opacity-0 transition-colors hover:bg-red/10 hover:text-red group-hover/q:opacity-100 max-md:opacity-100 max-sm:p-2"
             title="Apagar questão"
@@ -917,17 +933,6 @@ function QuestaoCard({
                   label: "Responder de novo",
                   onClick: () => onResponder(q, null),
                 },
-                status === "arquivada"
-                  ? {
-                      icone: <ArchiveRestore className="size-3.5" />,
-                      label: "Desarquivar",
-                      onClick: () => onStatus(q, "ativa", "Questão desarquivada."),
-                    }
-                  : {
-                      icone: <Archive className="size-3.5" />,
-                      label: "Arquivar",
-                      onClick: () => onStatus(q, "arquivada", "Questão arquivada."),
-                    },
               ]}
             />
           </div>
