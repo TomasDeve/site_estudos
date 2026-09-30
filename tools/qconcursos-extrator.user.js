@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         QConcursos → Banco de Questões (abrir comentários rápido)
 // @namespace    meus-estudos.pmal
-// @version      2.3.0
-// @description  Abre os comentários de TODAS as questões da página de uma vez (em paralelo, rápido) pra você dar Ctrl+A/Ctrl+C e colar no chat da IA. Também abre os "Textos associados" (o enunciado-base escondido no "+") e os inclui no texto limpo. Copia um "texto limpo" pronto. Marca na página as questões que JÁ estão no seu banco (checa no Supabase) e as EXCLUI do texto limpo, pra você não recopiar. NÃO responde nada nem revela gabarito — quem decide o gabarito pelos comentários é a IA, no chat.
+// @version      2.4.0
+// @description  Abre os comentários de TODAS as questões da página de uma vez (em paralelo, rápido) pra você dar Ctrl+A/Ctrl+C e colar no chat da IA. Também abre os "Textos associados" (o enunciado-base escondido no "+") e os inclui no texto limpo. Copia um "texto limpo" pronto. Marca na página as questões que JÁ estão no seu banco (checa no Supabase) e as EXCLUI do texto limpo, pra você não recopiar. Modo "Copiar várias páginas": junta N questões novas (ex.: 100) passando as páginas sozinho e copia tudo no fim. NÃO responde nada nem revela gabarito — quem decide o gabarito pelos comentários é a IA, no chat.
 // @match        https://www.qconcursos.com/questoes-de-concursos/questoes*
 // @match        https://www.qconcursos.com/questoes-de-concursos/*/questoes*
 // @match        https://www.qconcursos.com/questoes-de-concursos/*/questoes
@@ -35,6 +35,11 @@
  *    (Atenção: este caminho copia a página crua, NÃO filtra as repetidas — pra filtrar, use o texto limpo.)
  *  - "Copiar texto limpo": abre tudo, monta um texto enxuto (metadados + enunciado + alternativas +
  *    comentários), TIRA as que já estão no banco, e copia pro clipboard. É só colar (Ctrl+V). Recomendado.
+ *
+ * Várias páginas: "Questões novas (meta)" + "Copiar várias páginas" junta as questões novas página a página
+ * (clica sozinho em "Próxima página" e retoma na página seguinte — estado no sessionStorage da aba) até
+ * bater a meta ou acabar as páginas, e copia TUDO numa vez só, numerado em sequência. "Parar lote" encerra
+ * e copia o que já juntou; "Copiar último lote de novo" recopia se o clipboard se perder.
  *
  * Ajuste no painel: "Páginas de comentários" = rodadas de "Carregar mais" (padrão 0 = abre uma vez só) e
  * "Comentários (máx)" = quantos comentários mantém no texto limpo (padrão 5, os mais curtidos). Menos
@@ -267,13 +272,24 @@
   }
 
   // Texto enxuto e legível pra colar no chat (independe do Ctrl+A pegar tudo certo).
-  function montarTextoLimpo() {
+  // Monta os blocos das questões desta página. Serve pra página única e pro modo "várias páginas":
+  //  - numInicial: nº da 1ª questão (continua a numeração entre páginas);
+  //  - limite: máx. de questões a pegar desta página (pra parar exato em 100, p.ex.);
+  //  - vistosCtx: texto associado -> nº da 1ª questão que o trouxe (objeto, pra persistir entre páginas);
+  //  - jaPegos: IDs já capturados em páginas anteriores (não duplica se a lista mexer).
+  function montarBlocos({ numInicial = 1, limite = Infinity, vistosCtx = {}, jaPegos = new Set() } = {}) {
     const todos = Array.from(document.querySelectorAll(".js-question-item"));
-    // Pula as que já estão no seu banco (não recopiar → não gastar token à toa).
-    const items = todos.filter((item) => !existentes.has(String(idDaQuestao(item) || "")));
-    const puladas = todos.length - items.length;
-    const vistosCtx = new Map(); // texto associado -> nº da 1ª questão que o trouxe (pra não repetir a passagem)
-    const blocos = items.map((item, i) => {
+    // Pula as que já estão no seu banco (não recopiar → não gastar token à toa) e as já pegas antes.
+    const novos = todos.filter((item) => {
+      const id = String(idDaQuestao(item) || "");
+      return !existentes.has(id) && !jaPegos.has(id);
+    });
+    const puladas = todos.length - novos.length;
+    const items = novos.slice(0, limite);
+    const ids = [];
+    const blocos = items.map((item, idx) => {
+      const i = numInicial - 1 + idx;
+      if (idDaQuestao(item)) ids.push(String(idDaQuestao(item)));
       const q = extrairQuestao(item);
       const ct = q.fonte_id ? document.querySelector("#question-belt-" + q.fonte_id + "-comments-tab") : null;
       // Mantém só os mais curtidos (os que cravam o gabarito) — enxuga o texto colado no chat.
@@ -288,11 +304,12 @@
       if (q.assunto) L.push("Assunto: " + q.assunto);
       L.push("Tipo: " + (q.tipo === "multipla" ? "Múltipla escolha" : "Certo/Errado"));
       if (q.contexto) {
-        const jaVisto = vistosCtx.get(q.contexto);
+        const chaveCtx = hashTexto(q.contexto);
+        const jaVisto = vistosCtx[chaveCtx];
         if (jaVisto) {
           L.push("Texto associado: (igual ao da Questão " + jaVisto + ")");
         } else {
-          vistosCtx.set(q.contexto, i + 1);
+          vistosCtx[chaveCtx] = i + 1;
           L.push("Texto associado:");
           L.push(q.contexto);
         }
@@ -310,14 +327,108 @@
       }
       return L.join("\n");
     });
+    return { blocos, ids, puladas, total: todos.length };
+  }
+
+  const CAB_IA = "(A IA decide o gabarito pelos comentários; o gabarito NÃO aparece nesta página.)";
+  const SEPARADOR = "\n\n──────────\n\n";
+
+  // Texto enxuto e legível pra colar no chat (independe do Ctrl+A pegar tudo certo) — só esta página.
+  function montarTextoLimpo() {
+    const { blocos, puladas } = montarBlocos();
     const cab =
-      "Questões capturadas do QConcursos — " + location.href + "\n" +
-      "(A IA decide o gabarito pelos comentários; o gabarito NÃO aparece nesta página.)" +
+      "Questões capturadas do QConcursos — " + location.href + "\n" + CAB_IA +
       (puladas ? "\n(" + puladas + " questão(ões) já no banco foram excluídas — só vão as novas.)" : "");
-    if (!items.length) {
+    if (!blocos.length) {
       return cab + "\n\nTodas as questões desta página já estão no seu banco. Nada novo pra colar. 🎉";
     }
-    return cab + "\n\n" + blocos.join("\n\n──────────\n\n");
+    return cab + "\n\n" + blocos.join(SEPARADOR);
+  }
+
+  // hash curtinho (djb2) — chave do texto associado sem guardar a passagem inteira no storage
+  function hashTexto(t) {
+    let h = 5381;
+    for (let k = 0; k < t.length; k++) h = ((h << 5) + h + t.charCodeAt(k)) | 0;
+    return "h" + (h >>> 0).toString(36) + "_" + t.length;
+  }
+
+  // ---------- Modo "várias páginas" (ex.: 100 questões = 5 páginas de 20) ----------
+  // O estado vai no sessionStorage (vale só nesta aba e sobrevive à troca de página). A cada página:
+  // checa o banco → abre comentários/textos → junta os blocos novos → clica em "Próxima página".
+  // Na nova página o script retoma sozinho. Ao bater a meta (ou acabar as páginas) copia TUDO de uma vez.
+  const JOB_KEY = "qc-extrator-lote";
+  const MAX_PAGINAS_LOTE = 50; // trava de segurança
+
+  function lerJob() {
+    try { return JSON.parse(sessionStorage.getItem(JOB_KEY) || "null"); } catch (_) { return null; }
+  }
+  function salvarJob(job) {
+    try { sessionStorage.setItem(JOB_KEY, JSON.stringify(job)); return true; } catch (_) { return false; }
+  }
+  function apagarJob() {
+    try { sessionStorage.removeItem(JOB_KEY); } catch (_) {}
+  }
+
+  let pararPedido = false; // botão "Parar lote" — encerra ao fim da página atual
+
+  function linkProximaPagina() {
+    const a = document.querySelector("a.q-next[rel='next'], a.q-next");
+    if (!a || a.classList.contains("disabled") || a.getAttribute("aria-disabled") === "true") return null;
+    const href = a.getAttribute("href");
+    return href && href !== "#" ? new URL(href, location.href).href : null;
+  }
+
+  function textoDoJob(job) {
+    const cab =
+      "Questões capturadas do QConcursos — " + job.paginas.length + " página(s), " + job.blocos.length + " questão(ões) nova(s)\n" +
+      "Páginas: " + job.paginas.map((p) => p.url).join(" | ") + "\n" + CAB_IA +
+      (job.puladas ? "\n(" + job.puladas + " questão(ões) já no banco foram excluídas — só vão as novas.)" : "");
+    if (!job.blocos.length) return cab + "\n\nNenhuma questão nova nas páginas percorridas. 🎉";
+    return cab + "\n\n" + job.blocos.join(SEPARADOR);
+  }
+
+  function finalizarJob(job, motivo, setStatus) {
+    apagarJob();
+    mostrarParar(false);
+    const ok = copiar(textoDoJob(job));
+    try { sessionStorage.setItem(JOB_KEY + "-ultimo", JSON.stringify(job)); } catch (_) {} // pra "Copiar de novo"
+    setStatus((ok ? "✅ Copiado: " : "⚠️ Não consegui copiar — use \"Copiar último lote\": ") +
+      job.blocos.length + " questão(ões) de " + job.paginas.length + " página(s) (" + job.puladas +
+      " já no banco, excluídas). " + motivo + " Cole no chat (Ctrl+V).");
+  }
+
+  // Processa a página atual dentro do lote e decide: próxima página ou fim.
+  async function passoDoJob(job, setStatus) {
+    CONFIG.maxComentarios = job.maxComentarios;
+    await waitFor(() => document.querySelector(".js-question-item"), 8000);
+    const pg = job.paginas.length + 1;
+    const pre = "Lote " + job.blocos.length + "/" + job.meta + " · pág. " + pg + " — ";
+    const st = (t) => setStatus(pre + t);
+    await marcarExistentes(st);
+    await abrirComentarios(job.pagsComentarios, st);
+    await expandirTextosAssociados(st);
+    // espera um tiquinho pros comentários que ainda estão chegando (os mais lentos)
+    await sleep(job.esperaMs);
+    const falta = job.meta - job.blocos.length;
+    const res = montarBlocos({
+      numInicial: job.blocos.length + 1,
+      limite: falta,
+      vistosCtx: job.vistosCtx,
+      jaPegos: new Set(job.ids),
+    });
+    job.blocos.push(...res.blocos);
+    job.ids.push(...res.ids);
+    job.puladas += existentes.size;
+    job.paginas.push({ url: location.href, novas: res.blocos.length });
+
+    if (pararPedido) return finalizarJob(job, "Lote parado por você.", setStatus);
+    if (job.blocos.length >= job.meta) return finalizarJob(job, "Meta de " + job.meta + " atingida.", setStatus);
+    const prox = linkProximaPagina();
+    if (!prox) return finalizarJob(job, "Acabaram as páginas.", setStatus);
+    if (job.paginas.length >= MAX_PAGINAS_LOTE) return finalizarJob(job, "Parei no limite de " + MAX_PAGINAS_LOTE + " páginas.", setStatus);
+    if (!salvarJob(job)) return finalizarJob(job, "Storage cheio — copiei o que deu.", setStatus);
+    setStatus("Lote " + job.blocos.length + "/" + job.meta + " — indo pra página " + (pg + 1) + "…");
+    location.href = prox;
   }
 
   function copiar(texto) {
@@ -409,6 +520,16 @@
     'padding:9px;font-weight:700;cursor:pointer">Abrir comentários</button>' +
     '<button id="qc-copiar" style="width:100%;margin-top:6px;background:transparent;color:#e8a13a;' +
     'border:1px solid #33406b;border-radius:10px;padding:7px;cursor:pointer">Copiar texto limpo</button>' +
+    '<div style="margin-top:10px;padding-top:8px;border-top:1px solid #33406b;color:#aab6d6;font-weight:700">Várias páginas</div>' +
+    '<label style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;color:#aab6d6">' +
+    'Questões novas (meta) <input id="qc-meta" type="number" min="1" max="1000" value="100"' +
+    ' style="width:52px;background:#1b2547;border:1px solid #33406b;color:#e8edf7;border-radius:8px;padding:4px 6px"></label>' +
+    '<button id="qc-lote" style="width:100%;margin-top:6px;background:#3a8be8;color:#fff;border:0;border-radius:10px;' +
+    'padding:9px;font-weight:700;cursor:pointer">Copiar várias páginas</button>' +
+    '<button id="qc-parar" data-sempre="1" style="display:none;width:100%;margin-top:6px;background:transparent;color:#ffcf6b;' +
+    'border:1px solid #8a6a1f;border-radius:10px;padding:7px;cursor:pointer">Parar lote e copiar o que já tem</button>' +
+    '<button id="qc-ultimo" style="width:100%;margin-top:6px;background:transparent;color:#9cc4ff;' +
+    'border:1px solid #33406b;border-radius:10px;padding:7px;cursor:pointer">Copiar último lote de novo</button>' +
     '<button id="qc-checar" style="width:100%;margin-top:6px;background:transparent;color:#ff9db0;' +
     'border:1px solid #b3283f;border-radius:10px;padding:7px;cursor:pointer">Rechecar já importadas</button>' +
     '<div id="qc-status" style="margin-top:8px;color:#aab6d6;font-size:12px;min-height:16px"></div>';
@@ -423,7 +544,7 @@
   async function comLock(fn) {
     if (ocupado) return;
     ocupado = true;
-    const botoes = painel.querySelectorAll("button");
+    const botoes = painel.querySelectorAll("button:not([data-sempre])");
     botoes.forEach((b) => { b.disabled = true; b.style.opacity = ".6"; });
     try {
       await fn();
@@ -459,6 +580,49 @@
     await marcarExistentes(setStatus);
   }));
 
-  // Checa automaticamente ao abrir a página (marca as repetidas de vermelho, sem gastar token do chat).
-  comLock(async () => { await marcarExistentes(setStatus); });
+  const mostrarParar = (sim) => { $("#qc-parar").style.display = sim ? "block" : "none"; };
+
+  $("#qc-lote").addEventListener("click", () => comLock(async () => {
+    const meta = Math.max(1, Math.min(1000, parseInt($("#qc-meta").value, 10) || 100));
+    const job = {
+      meta,
+      pagsComentarios: lerPaginas(),
+      maxComentarios: lerMaxComentarios(),
+      esperaMs: 1500,
+      blocos: [], ids: [], vistosCtx: {}, paginas: [], puladas: 0,
+    };
+    pararPedido = false;
+    mostrarParar(true);
+    await passoDoJob(job, setStatus);
+  }));
+
+  $("#qc-parar").addEventListener("click", () => {
+    pararPedido = true;
+    if (!ocupado) { // entre páginas (nada rodando): encerra com o que está salvo
+      const job = lerJob();
+      if (job) finalizarJob(job, "Lote parado por você.", setStatus);
+      mostrarParar(false);
+    } else {
+      setStatus("Vou parar ao terminar esta página…");
+    }
+  });
+
+  $("#qc-ultimo").addEventListener("click", () => {
+    let job = null;
+    try { job = JSON.parse(sessionStorage.getItem(JOB_KEY + "-ultimo") || "null"); } catch (_) {}
+    if (!job) { setStatus("Nenhum lote feito nesta aba ainda."); return; }
+    const ok = copiar(textoDoJob(job));
+    setStatus(ok ? "✅ Último lote copiado de novo (" + job.blocos.length + " questões)." : "⚠️ Não consegui copiar.");
+  });
+
+  // Ao abrir a página: se tem lote em andamento, continua sozinho; senão só checa o banco
+  // (marca as repetidas de vermelho, sem gastar token do chat).
+  const jobPendente = lerJob();
+  if (jobPendente) {
+    $("#qc-meta").value = jobPendente.meta;
+    mostrarParar(true);
+    comLock(async () => { await passoDoJob(jobPendente, setStatus); });
+  } else {
+    comLock(async () => { await marcarExistentes(setStatus); });
+  }
 })();
