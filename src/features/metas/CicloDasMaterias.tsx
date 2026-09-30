@@ -27,6 +27,7 @@ import {
   Undo2,
   type LucideIcon,
 } from "lucide-react";
+import { Link, useParams } from "react-router";
 import { toast } from "sonner";
 import type { Materia } from "@/types/db";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
@@ -312,6 +313,7 @@ function LinhaDoCiclo({
     `${rank.nome} · ${acerto}` +
     (rank.tier && proximo ? ` · próximo: ${proximo.nome} (${proximo.minimo}%)` : "") +
     ` — ${plano}`;
+  const { concursoId } = useParams();
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: materia.id });
   const cor = estiloDaLinha(rank);
@@ -328,7 +330,7 @@ function LinhaDoCiclo({
   return (
     <li
       ref={setNodeRef}
-      title={`${materia.nome} — ${detalhe}`}
+      title={`${materia.nome} — ${detalhe} · clique para abrir a matéria`}
       className={`relative mb-1.5 flex break-inside-avoid items-center gap-1.5 rounded-lg border py-1.5 pl-1 pr-2.5 ${
         rank.tier ? "" : "border-dashed border-line/70 bg-navy-900/40"
       } ${isDragging ? "z-10 shadow-2xl shadow-navy-950/70 ring-1 ring-gold/50" : ""}`}
@@ -354,8 +356,11 @@ function LinhaDoCiclo({
       <span className="w-5 shrink-0 self-start text-[11px] font-semibold leading-5 tabular-nums text-mut">
         {String(ordem).padStart(2, "0")}
       </span>
-      {/* Estreito (celular): a insígnia desce para baixo do nome */}
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+      {/* Clicar leva à página da matéria. Estreito (celular): a insígnia desce para baixo do nome */}
+      <Link
+        to={`/concurso/${concursoId}/conteudos/${materia.id}`}
+        className="-my-1 flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 rounded-md py-1 pl-0.5 transition-colors hover:bg-navy-700/40 [&:hover_.nome]:underline"
+      >
         <span
           className={`flex min-w-0 flex-[1_1_12rem] items-center gap-1.5 text-xs font-semibold leading-5 ${
             rank.tier ? "text-txt" : "text-dim"
@@ -367,7 +372,7 @@ function LinhaDoCiclo({
           >
             {materia.icone}
           </span>
-          <span className="truncate">{materia.nome}</span>
+          <span className="nome truncate underline-offset-2">{materia.nome}</span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
           <span className="w-8 text-right text-[11px] font-semibold tabular-nums text-dim">
@@ -378,7 +383,7 @@ function LinhaDoCiclo({
             {vezes > 0 ? `${vezes}×` : ""}
           </span>
         </span>
-      </div>
+      </Link>
     </li>
   );
 }
