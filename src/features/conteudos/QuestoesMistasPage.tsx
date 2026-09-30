@@ -51,7 +51,14 @@ import { BotaoRefazer, OrigemReformulada } from "./refazer";
 import { CATEGORIAS_FILTRO } from "./categorias";
 import { FiltroMateriaAssunto, type GrupoFiltro } from "./FiltroMateriaAssunto";
 import { chaveFiltro, compilarFiltro, FILTRO_VAZIO, type FiltroQuestoes } from "./filtroQuestoes";
-import { ehFonteQC, FonteQuestao, PillCategoria } from "./QuestoesPage";
+import {
+  ehFonteQC,
+  FiltroFormato,
+  FonteQuestao,
+  passaFormato,
+  PillCategoria,
+  type FormatoQuestao,
+} from "./QuestoesPage";
 import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
@@ -133,6 +140,8 @@ export function QuestoesMistasPage() {
   const [cats, setCats] = useState<ReadonlySet<QuestaoCategoria>>(new Set());
   // Filtro por matéria e assunto (estilo QConcursos). Sempre abre sem filtro.
   const [filtro, setFiltro] = useState<FiltroQuestoes>(FILTRO_VAZIO);
+  // Formato em foco (Certo/Errado × múltipla escolha) — recorta antes de tudo.
+  const [formato, setFormato] = useState<FormatoQuestao>("todos");
 
   /** Liga/desliga uma origem no filtro — várias podem ficar ativas ao mesmo tempo. */
   function alternarCategoria(chave: QuestaoCategoria) {
@@ -209,7 +218,7 @@ export function QuestoesMistasPage() {
 
   // Questões vivas no escopo da página (a matéria ou o edital inteiro), antes do
   // filtro por origem — alimenta as contagens das pílulas e o total de "Todas".
-  const base = useMemo(
+  const vivas = useMemo(
     () =>
       (questoes ?? []).filter((q) => {
         if (q.status === "arquivada") return false;
@@ -221,6 +230,8 @@ export function QuestoesMistasPage() {
       }),
     [questoes, materiaId, topicoPorId, idsDoEdital]
   );
+  // Recorte por formato (C/E × múltipla): daqui em diante tudo conta em cima dele.
+  const base = useMemo(() => vivas.filter((q) => passaFormato(q, formato)), [vivas, formato]);
 
   const materiaDe = (q: TopicoQuestao) => topicoPorId.get(q.topico_id)?.materia_id;
   const passaCat = (q: TopicoQuestao) =>
@@ -334,7 +345,10 @@ export function QuestoesMistasPage() {
   // Chave estável do conjunto (ordenada). Modo bloquinhos: resolve de 5 em 5;
   // trocar de origem, aba ou embaralhar recomeça do 1º bloco.
   const catsKey = [...cats].sort().join(",");
-  const bloco = useBloquinhos(lista, `${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`);
+  const bloco = useBloquinhos(
+    lista,
+    `${formato}-${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`
+  );
 
   if (
     carregandoQuestoes ||
@@ -440,7 +454,7 @@ export function QuestoesMistasPage() {
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-3 pb-24 pt-4 sm:px-6 sm:py-6">
-        {base.length === 0 ? (
+        {vivas.length === 0 ? (
           <EmptyState
             icon="🎲"
             title={materiaEscopo ? "Nenhuma questão nesta matéria ainda" : "Nenhuma questão no site ainda"}
@@ -481,6 +495,8 @@ export function QuestoesMistasPage() {
               contar={contarFiltro}
               materiaFixa={materiaId}
             />
+
+            <FiltroFormato questoes={vivas} formato={formato} onMudar={setFormato} />
 
             {/* Filtro por origem — as mesmas pílulas do caderno do assunto. Dá para
                 marcar várias (o escopo vira a união); "Todas" limpa e junta tudo. */}
@@ -529,7 +545,9 @@ export function QuestoesMistasPage() {
                 {misturadas.length === 0
                   ? cats.size > 0
                     ? `Nenhuma questão em “${catsLabel}”${filtro.length ? " neste filtro" : ""} ainda.`
-                    : "Nenhuma questão neste filtro ainda."
+                    : formato !== "todos"
+                      ? "Nenhuma questão neste formato ainda."
+                      : "Nenhuma questão neste filtro ainda."
                   : aba === "responder"
                     ? "Tudo resolvido 🎉 Use “Responder de novo” nas resolvidas para revisar."
                     : "Nenhuma questão resolvida ainda."}

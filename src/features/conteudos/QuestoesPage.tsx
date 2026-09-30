@@ -67,7 +67,7 @@ import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
 import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
-import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
+import { acertou as questaoAcertou, ehMultipla, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
 import {
   CaixaImpressao,
@@ -206,6 +206,8 @@ function Caderno({ topico }: { topico: Topico }) {
   // escopo mostra a união das categorias marcadas. `catImport` é o destino ao importar.
   const [cats, setCats] = useState<ReadonlySet<QuestaoCategoria>>(new Set());
   const [catImport, setCatImport] = useState<QuestaoCategoria>(CATEGORIA_PADRAO);
+  // Formato em foco (Certo/Errado × múltipla escolha) — recorta antes da origem.
+  const [formato, setFormato] = useState<FormatoQuestao>("todos");
 
   /** Liga/desliga uma origem no filtro — várias podem ficar ativas ao mesmo tempo. */
   function alternarCategoria(chave: QuestaoCategoria) {
@@ -290,14 +292,17 @@ function Caderno({ topico }: { topico: Topico }) {
     });
   }
 
+  // Recorte por formato (C/E × múltipla): alimenta as pílulas de origem e o placar.
+  const doFormato = useMemo(() => todas.filter((q) => passaFormato(q, formato)), [todas, formato]);
+
   // Recorte por origem: a base é a união das categorias marcadas (placar, abas e
   // numeração escopados). Conjunto vazio = "Todas" (junta tudo).
   const escopoBase = useMemo(
     () =>
       cats.size === 0
-        ? todas
-        : todas.filter((q) => cats.has(q.categoria as QuestaoCategoria)),
-    [todas, cats]
+        ? doFormato
+        : doFormato.filter((q) => cats.has(q.categoria as QuestaoCategoria)),
+    [doFormato, cats]
   );
 
   // Ordem de exibição: a do caderno (natural) ou embaralhada por uma semente.
@@ -316,12 +321,12 @@ function Caderno({ topico }: { topico: Topico }) {
       QuestaoCategoria,
       number
     >;
-    for (const q of todas) {
+    for (const q of doFormato) {
       const k = q.categoria as QuestaoCategoria;
       if (k in c) c[k]++;
     }
     return c;
-  }, [todas]);
+  }, [doFormato]);
 
   // Histórico deste assunto (questao_logs) para a janela das últimas 30 questões.
   const logsDoTopico = useMemo(
@@ -361,7 +366,7 @@ function Caderno({ topico }: { topico: Topico }) {
     .join(", ");
   // Chave estável do conjunto (ordenada) para o modo bloquinhos: resolve de 5 em 5.
   const catsKey = [...cats].sort().join(",");
-  const bloco = useBloquinhos(lista, `${catsKey}:${filtro}:${semente ?? "orig"}`);
+  const bloco = useBloquinhos(lista, `${formato}:${catsKey}:${filtro}:${semente ?? "orig"}`);
 
   /**
    * `valor: null` é o "refazer": limpa a resposta e devolve a questão ao início.
@@ -455,7 +460,7 @@ function Caderno({ topico }: { topico: Topico }) {
               <span className="text-xs text-dim">
                 Resolvidas{" "}
                 <strong className="tabular-nums text-txt">
-                  {placar.respondidas}/{todas.length}
+                  {placar.respondidas}/{doFormato.length}
                 </strong>
               </span>
               {placar.pct !== null && cor && (
@@ -500,6 +505,10 @@ function Caderno({ topico }: { topico: Topico }) {
             </div>
           )}
 
+          {todas.length > 0 && (
+            <FiltroFormato questoes={todas} formato={formato} onMudar={setFormato} />
+          )}
+
           {/* Filtro por origem — pílulas, distintas das abas de status (sublinhado).
               Dá para marcar várias ao mesmo tempo (o escopo vira a união delas);
               "Todas" limpa a seleção e junta tudo. */}
@@ -512,7 +521,7 @@ function Caderno({ topico }: { topico: Topico }) {
                 ativo={cats.size === 0}
                 onClick={() => setCats(new Set())}
                 label="Todas"
-                contagem={todas.length}
+                contagem={doFormato.length}
               />
               {CATEGORIAS_FILTRO.map((c) => (
                 <PillCategoria
@@ -550,7 +559,9 @@ function Caderno({ topico }: { topico: Topico }) {
               {todas.length === 0
                 ? "Nenhuma questão ainda. Peça as questões à IA a partir do PDF ou do conteúdo deste assunto e importe o JSON abaixo."
                 : escopo.length === 0
+                  ? cats.size > 0
                   ? `Nenhuma questão em “${catsLabel}” ainda. Ajuste o filtro por tipo ou importe mais questões abaixo.`
+                  : "Nenhuma questão neste formato ainda."
                   : filtro === "responder"
                     ? "Tudo respondido 🎉 As já resolvidas ficam na aba “Resolvidas”."
                     : filtro === "resolvidas"
@@ -981,5 +992,57 @@ export function PillCategoria({
       {label}
       {contagem !== undefined && <span className="tabular-nums opacity-70">{contagem}</span>}
     </button>
+  );
+}
+
+/** Formato de resposta em foco: todos, só Certo/Errado ou só múltipla escolha. */
+export type FormatoQuestao = "todos" | "ce" | "multipla";
+
+/** A questão passa no filtro de formato? */
+export function passaFormato(q: Pick<TopicoQuestao, "tipo">, formato: FormatoQuestao): boolean {
+  if (formato === "todos") return true;
+  return formato === "multipla" ? ehMultipla(q) : !ehMultipla(q);
+}
+
+/**
+ * Pílulas de formato (Certo/Errado × Múltipla escolha), escolha única. Some
+ * quando o escopo só tem um formato e nada está filtrado — não há o que escolher.
+ */
+export function FiltroFormato({
+  questoes,
+  formato,
+  onMudar,
+}: {
+  questoes: readonly Pick<TopicoQuestao, "tipo">[];
+  formato: FormatoQuestao;
+  onMudar: (f: FormatoQuestao) => void;
+}) {
+  const multipla = questoes.filter((q) => ehMultipla(q)).length;
+  const ce = questoes.length - multipla;
+  if (formato === "todos" && (ce === 0 || multipla === 0)) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 [scrollbar-width:none] max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 [&::-webkit-scrollbar]:hidden">
+      <span className="mr-0.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-mut">
+        Formato
+      </span>
+      <PillCategoria
+        ativo={formato === "todos"}
+        onClick={() => onMudar("todos")}
+        label="Todos"
+        contagem={questoes.length}
+      />
+      <PillCategoria
+        ativo={formato === "ce"}
+        onClick={() => onMudar("ce")}
+        label="Certo ou Errado"
+        contagem={ce}
+      />
+      <PillCategoria
+        ativo={formato === "multipla"}
+        onClick={() => onMudar("multipla")}
+        label="Múltipla escolha"
+        contagem={multipla}
+      />
+    </div>
   );
 }
