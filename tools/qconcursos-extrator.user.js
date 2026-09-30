@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         QConcursos → Banco de Questões (abrir comentários rápido)
 // @namespace    meus-estudos.pmal
-// @version      2.4.0
+// @version      2.5.0
 // @description  Abre os comentários de TODAS as questões da página de uma vez (em paralelo, rápido) pra você dar Ctrl+A/Ctrl+C e colar no chat da IA. Também abre os "Textos associados" (o enunciado-base escondido no "+") e os inclui no texto limpo. Copia um "texto limpo" pronto. Marca na página as questões que JÁ estão no seu banco (checa no Supabase) e as EXCLUI do texto limpo, pra você não recopiar. Modo "Copiar várias páginas": junta N questões novas (ex.: 100) passando as páginas sozinho e copia tudo no fim. NÃO responde nada nem revela gabarito — quem decide o gabarito pelos comentários é a IA, no chat.
 // @match        https://www.qconcursos.com/questoes-de-concursos/questoes*
 // @match        https://www.qconcursos.com/questoes-de-concursos/*/questoes*
@@ -51,6 +51,8 @@
   const CONFIG = {
     paginasComentarios: 0, // rodadas de "Carregar mais" (0 = abre uma vez só, sem carregar mais)
     maxComentarios: 5,     // no texto limpo, mantém só os N comentários mais curtidos por questão
+    porVez: 3,             // quantas questões abre de uma vez (mais que isso o site começa a dar erro)
+    pausaMs: 1500,         // pausa entre uma leva e outra (e entre páginas, no modo várias páginas)
   };
 
   // Supabase do site de estudos — só a URL + a chave PUBLICÁVEL (a mesma que já vai no bundle do site,
@@ -214,48 +216,73 @@
       });
   }
 
+  // Container de comentários já respondeu? (tem comentário, botão "carregar mais", ou o texto mudou em
+  // relação a antes do clique — tipo "nenhum comentário"). Serve pra não esperar o timeout inteiro nas
+  // questões sem comentário. O texto de antes fica guardado em data-qc-base.
+  const textoCt = (ct) => (ct.textContent || "").replace(/\s+/g, " ").trim();
+  const carregou = (ct) =>
+    !!(ct.querySelector(".q-question-comment") || ct.querySelector(".js-load-more-btn") ||
+      (ct.dataset.qcBase !== undefined && textoCt(ct) !== ct.dataset.qcBase && textoCt(ct).length > 10));
+
   /**
-   * O coração da versão rápida: abre a aba de comentários de TODAS as questões de uma vez e
-   * carrega N páginas em rodadas paralelas. Não espera questão por questão.
+   * Abre a aba de comentários das questões EM LEVAS (CONFIG.porVez de cada vez, com CONFIG.pausaMs entre
+   * elas). Abrir as 20 de uma vez faz o QConcursos responder "Ocorreu um erro, tente novamente." (limite de
+   * pedidos). No fim, as que ficaram vazias ganham uma 2ª tentativa, uma de cada vez.
    */
   async function abrirComentarios(maxPaginas, onStatus) {
     const items = Array.from(document.querySelectorAll(".js-question-item"));
     if (!items.length) return { total: 0, comComentarios: 0 };
 
-    // 1) Abre a aba "Comentários" de cada questão (dispara o carregamento de todas em paralelo).
-    const containers = [];
+    const alvos = []; // { link, ct }
     for (const item of items) {
       const qid = idDaQuestao(item);
       if (!qid) continue;
       const link = item.querySelector('a[href="#question-belt-' + qid + '-comments-tab"]');
-      if (link) link.click();
       const ct = document.querySelector("#question-belt-" + qid + "-comments-tab");
-      if (ct) containers.push(ct);
+      if (!ct) continue;
+      if (ct.dataset.qcBase === undefined) ct.dataset.qcBase = textoCt(ct); // "foto" de antes do 1º clique
+      alvos.push({ link, ct });
     }
-    if (onStatus) onStatus("Abrindo comentários…");
-    // espera a 1ª leva aparecer em pelo menos uma questão (ou o botão de carregar mais surgir)
-    await waitFor(() =>
-      containers.some((ct) => ct.querySelector(".q-question-comment") || ct.querySelector(".js-load-more-btn"))
-    );
+    const containers = alvos.map((a) => a.ct);
+    const porVez = Math.max(1, CONFIG.porVez);
 
-    // 2) "Carregar mais" em rodadas: a cada rodada, clica em todos os botões visíveis de uma vez.
+    // 1) Abre a aba "Comentários" em levas pequenas.
+    for (let i = 0; i < alvos.length; i += porVez) {
+      const leva = alvos.slice(i, i + porVez).filter((a) => !carregou(a.ct));
+      if (!leva.length) continue;
+      if (onStatus) onStatus("Abrindo comentários… " + Math.min(i + porVez, alvos.length) + "/" + alvos.length);
+      leva.forEach((a) => a.link && a.link.click());
+      await waitFor(() => leva.every((a) => carregou(a.ct)), 6000);
+      await sleep(CONFIG.pausaMs);
+    }
+
+    // 2) 2ª tentativa pras que ficaram vazias (provável erro do site), uma por vez e com calma.
+    const vazias = alvos.filter((a) => !carregou(a.ct));
+    for (let k = 0; k < vazias.length; k++) {
+      if (onStatus) onStatus("Tentando de novo as que falharam… " + (k + 1) + "/" + vazias.length);
+      await sleep(CONFIG.pausaMs);
+      if (vazias[k].link) vazias[k].link.click();
+      await waitFor(() => carregou(vazias[k].ct), 6000);
+    }
+
+    // 3) "Carregar mais" em rodadas, também em levas.
     for (let p = 0; p < maxPaginas; p++) {
       const botoes = containers
         .map((ct) => ct.querySelector(".js-load-more-btn"))
         .filter((b) => b && b.offsetParent !== null);
       if (!botoes.length) break;
-      if (onStatus) onStatus("Carregando mais comentários… (" + (p + 1) + "/" + maxPaginas + ")");
-      const antes = containers.map((ct) => ct.querySelectorAll(".q-question-comment").length);
-      botoes.forEach((b) => b.click());
-      // segue quando crescer em algum container ou quando não sobrar botão visível
-      await waitFor(() =>
-        containers.some((ct, i) => ct.querySelectorAll(".q-question-comment").length > antes[i]) ||
-        containers.every((ct) => { const b = ct.querySelector(".js-load-more-btn"); return !b || b.offsetParent === null; })
-      );
+      for (let i = 0; i < botoes.length; i += porVez) {
+        if (onStatus) onStatus("Carregando mais comentários… (" + (p + 1) + "/" + maxPaginas + ") " +
+          Math.min(i + porVez, botoes.length) + "/" + botoes.length);
+        const leva = botoes.slice(i, i + porVez);
+        leva.forEach((b) => b.click());
+        await waitFor(() => leva.every((b) => b.offsetParent === null || !b.isConnected), 6000);
+        await sleep(CONFIG.pausaMs);
+      }
     }
 
     const comComentarios = containers.filter((ct) => ct.querySelector(".q-question-comment")).length;
-    return { total: items.length, comComentarios };
+    return { total: items.length, comComentarios, semResposta: alvos.filter((a) => !carregou(a.ct)).length };
   }
 
   // Seleciona só a região das questões (com os comentários abertos) — pro Ctrl+C sair limpo,
@@ -394,21 +421,28 @@
     try { sessionStorage.setItem(JOB_KEY + "-ultimo", JSON.stringify(job)); } catch (_) {} // pra "Copiar de novo"
     setStatus((ok ? "✅ Copiado: " : "⚠️ Não consegui copiar — use \"Copiar último lote\": ") +
       job.blocos.length + " questão(ões) de " + job.paginas.length + " página(s) (" + job.puladas +
-      " já no banco, excluídas). " + motivo + " Cole no chat (Ctrl+V).");
+      " já no banco, excluídas). " + motivo +
+      (job.semResposta ? " ⚠ " + job.semResposta + " questão(ões) ficaram sem comentários (o site falhou) — se forem muitas, diminua \"Questões por vez\" ou aumente a pausa." : "") +
+      " Cole no chat (Ctrl+V).");
   }
 
   // Processa a página atual dentro do lote e decide: próxima página ou fim.
   async function passoDoJob(job, setStatus) {
     CONFIG.maxComentarios = job.maxComentarios;
+    CONFIG.porVez = job.porVez ?? CONFIG.porVez;
+    CONFIG.pausaMs = job.pausaMs ?? CONFIG.pausaMs;
     await waitFor(() => document.querySelector(".js-question-item"), 8000);
     const pg = job.paginas.length + 1;
     const pre = "Lote " + job.blocos.length + "/" + job.meta + " · pág. " + pg + " — ";
     const st = (t) => setStatus(pre + t);
+    // página nova acabou de carregar (o site já fez vários pedidos) → respira antes de abrir comentários
+    if (job.paginas.length) { st("Esperando a página assentar…"); await sleep(CONFIG.pausaMs * 2); }
     await marcarExistentes(st);
-    await abrirComentarios(job.pagsComentarios, st);
+    const ab = await abrirComentarios(job.pagsComentarios, st);
+    job.semResposta = (job.semResposta || 0) + (ab.semResposta || 0);
     await expandirTextosAssociados(st);
     // espera um tiquinho pros comentários que ainda estão chegando (os mais lentos)
-    await sleep(job.esperaMs);
+    await sleep(CONFIG.pausaMs);
     const falta = job.meta - job.blocos.length;
     const res = montarBlocos({
       numInicial: job.blocos.length + 1,
@@ -516,6 +550,12 @@
     '<label style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;color:#aab6d6">' +
     'Comentários (máx) <input id="qc-maxc" type="number" min="1" max="20" value="' + CONFIG.maxComentarios +
     '" style="width:52px;background:#1b2547;border:1px solid #33406b;color:#e8edf7;border-radius:8px;padding:4px 6px"></label>' +
+    '<label title="Mais que 3 de uma vez o site começa a dar &quot;Ocorreu um erro&quot;" style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;color:#aab6d6">' +
+    'Questões por vez <input id="qc-porvez" type="number" min="1" max="20" value="' + CONFIG.porVez +
+    '" style="width:52px;background:#1b2547;border:1px solid #33406b;color:#e8edf7;border-radius:8px;padding:4px 6px"></label>' +
+    '<label title="Pausa entre uma leva e outra" style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;color:#aab6d6">' +
+    'Pausa (s) <input id="qc-pausa" type="number" min="0" max="30" step="0.5" value="' + CONFIG.pausaMs / 1000 +
+    '" style="width:52px;background:#1b2547;border:1px solid #33406b;color:#e8edf7;border-radius:8px;padding:4px 6px"></label>' +
     '<button id="qc-abrir" style="width:100%;margin-top:6px;background:#e8a13a;color:#241a05;border:0;border-radius:10px;' +
     'padding:9px;font-weight:700;cursor:pointer">Abrir comentários</button>' +
     '<button id="qc-copiar" style="width:100%;margin-top:6px;background:transparent;color:#e8a13a;' +
@@ -538,6 +578,18 @@
   const $ = (id) => painel.querySelector(id);
   const setStatus = (t) => { $("#qc-status").textContent = t; };
   const lerPaginas = () => Math.max(0, Math.min(10, parseInt($("#qc-pags").value, 10) || 0));
+  // Ritmo (questões por vez + pausa): aplica no CONFIG e lembra neste navegador pra próxima vez.
+  const RITMO_KEY = "qc-extrator-ritmo";
+  function lerRitmo() {
+    CONFIG.porVez = Math.max(1, Math.min(20, parseInt($("#qc-porvez").value, 10) || 3));
+    const p = parseFloat(String($("#qc-pausa").value).replace(",", "."));
+    CONFIG.pausaMs = Math.round(Math.max(0, Math.min(30, isNaN(p) ? 1.5 : p)) * 1000);
+    try { localStorage.setItem(RITMO_KEY, JSON.stringify({ porVez: CONFIG.porVez, pausaMs: CONFIG.pausaMs })); } catch (_) {}
+  }
+  try {
+    const r = JSON.parse(localStorage.getItem(RITMO_KEY) || "null");
+    if (r) { $("#qc-porvez").value = r.porVez; $("#qc-pausa").value = r.pausaMs / 1000; }
+  } catch (_) {}
   const lerMaxComentarios = () => Math.max(1, Math.min(20, parseInt($("#qc-maxc").value, 10) || CONFIG.maxComentarios));
 
   let ocupado = false;
@@ -557,15 +609,18 @@
   }
 
   $("#qc-abrir").addEventListener("click", () => comLock(async () => {
+    lerRitmo();
     const r = await abrirComentarios(lerPaginas(), setStatus);
     if (!r.total) { setStatus("Nenhuma questão encontrada nesta página."); return; }
     await expandirTextosAssociados(setStatus); // deixa as passagens visíveis pra entrarem no Ctrl+C
     selecionarQuestoes();
-    setStatus("✅ " + r.total + " questões abertas (" + r.comComentarios + " c/ comentários) e já selecionadas. Ctrl+C e cole no chat — ou Ctrl+A pra pegar tudo.");
+    setStatus("✅ " + r.total + " questões abertas (" + r.comComentarios + " c/ comentários" +
+      (r.semResposta ? ", " + r.semResposta + " sem resposta do site" : "") + ") e já selecionadas. Ctrl+C e cole no chat — ou Ctrl+A pra pegar tudo.");
   }));
 
   $("#qc-copiar").addEventListener("click", () => comLock(async () => {
     CONFIG.maxComentarios = lerMaxComentarios();
+    lerRitmo();
     if (!existentes.size) await marcarExistentes(setStatus); // garante o filtro antes de copiar
     const r = await abrirComentarios(lerPaginas(), setStatus);
     if (!r.total) { setStatus("Nenhuma questão encontrada nesta página."); return; }
@@ -588,7 +643,8 @@
       meta,
       pagsComentarios: lerPaginas(),
       maxComentarios: lerMaxComentarios(),
-      esperaMs: 1500,
+      porVez: (lerRitmo(), CONFIG.porVez),
+      pausaMs: CONFIG.pausaMs,
       blocos: [], ids: [], vistosCtx: {}, paginas: [], puladas: 0,
     };
     pararPedido = false;
@@ -620,6 +676,8 @@
   const jobPendente = lerJob();
   if (jobPendente) {
     $("#qc-meta").value = jobPendente.meta;
+    if (jobPendente.porVez) $("#qc-porvez").value = jobPendente.porVez;
+    if (jobPendente.pausaMs !== undefined) $("#qc-pausa").value = jobPendente.pausaMs / 1000;
     mostrarParar(true);
     comLock(async () => { await passoDoJob(jobPendente, setStatus); });
   } else {
