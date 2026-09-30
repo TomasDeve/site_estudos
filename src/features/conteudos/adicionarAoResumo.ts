@@ -5,7 +5,7 @@ import { useAnexarResumoQuestoes } from "@/api/topicoTextos";
 import { anexarAoResumoAberto, chaveDestinoResumo } from "./ResumoRapido";
 import { envolverBlocoQuestao } from "./resumoBlocos";
 import { cabecalhoFonte } from "./fonteQuestao";
-import { alternativasRiscadas } from "./grifos";
+import { alternativasRiscadas, partesDeTexto } from "./grifos";
 import { alternativasDe, ehMultipla, gabaritoLabel } from "./questaoModelo";
 
 const esc = (s: string) =>
@@ -37,10 +37,28 @@ function divsDeTexto(texto: string, em = false): string[] {
 }
 
 /**
+ * Texto associado (a passagem-base) em HTML: o texto vira `<div>` por linha e os
+ * marcadores "[imagem: URL]" viram a imagem de fato.
+ */
+function divsDoTextoAssociado(texto: string): string[] {
+  const out: string[] = [];
+  for (const p of partesDeTexto(texto)) {
+    if (p.tipo === "img") {
+      if (!/^https?:\/\//i.test(p.url)) continue;
+      out.push(`<div><img src="${esc(p.url).replace(/"/g, "&quot;")}" alt="imagem do texto" style="max-width:100%"></div>`);
+    } else {
+      out.push(...divsDeTexto(p.texto));
+    }
+  }
+  return out;
+}
+
+/**
  * Monta o bloco do resumo copiando a QUESTÃO como ela é — sem passar pela IA. A
- * ordem reproduz o card: cabeçalho (Q… · ano (BANCA) - cargo), comando/contexto,
- * enunciado, a "Dúvida" (na múltipla escolha, as alternativas que o aluno NÃO
- * riscou — as que ficaram em aberto) e, por fim, a RESPOSTA (o comentário-resposta).
+ * ordem reproduz o card: cabeçalho (Q… · ano (BANCA) - cargo), texto associado (se
+ * houver), comando/contexto, enunciado, a "Dúvida" (na múltipla escolha, as
+ * alternativas que o aluno NÃO riscou — mais a CERTA, se ele a tiver riscado) e, por
+ * fim, a RESPOSTA (o comentário-resposta).
  * Abre com `<hr>` separando este bloco do anterior.
  */
 function montarBlocoQuestao(q: TopicoQuestao): string {
@@ -51,6 +69,14 @@ function montarBlocoQuestao(q: TopicoQuestao): string {
 
   if (q.fonte?.trim()) {
     partes.push(`<div><strong>${esc(cabecalhoFonte(q.fonte))}</strong></div>`);
+  }
+
+  if (q.texto_associado?.trim()) {
+    const texto = divsDoTextoAssociado(q.texto_associado);
+    if (texto.length) {
+      respiro();
+      partes.push("<div><strong>Texto:</strong></div>", ...texto);
+    }
   }
 
   if (q.contexto?.trim()) {
@@ -65,18 +91,21 @@ function montarBlocoQuestao(q: TopicoQuestao): string {
 
   // Múltipla escolha: entra a "Dúvida" — as alternativas que o aluno NÃO riscou
   // (as que sobraram em aberto), para a questão ir ao resumo/Anki já focada no que
-  // ele hesitou. Se não riscou nada (ou riscou tudo), cai para todas as alternativas.
+  // ele hesitou. Se ele riscou justo a CERTA, ela entra também (marcada), porque foi
+  // exatamente o erro dele. Se não riscou nada (ou riscou tudo), cai para todas.
   if (ehMultipla(q)) {
     const alts = alternativasDe(q);
     const riscadas = new Set(alternativasRiscadas(q.grifos));
-    const emDuvida = alts.filter((a) => !riscadas.has(a.letra));
-    const mostrar = emDuvida.length ? emDuvida : alts;
+    const certa = q.gabarito_letra ?? null;
+    const emDuvida = alts.filter((a) => !riscadas.has(a.letra) || a.letra === certa);
+    const mostrar = emDuvida.length && emDuvida.length < alts.length ? emDuvida : alts;
     if (mostrar.length) {
       respiro();
       partes.push("<div><strong>Dúvida:</strong></div>", "<div><br></div>");
       mostrar.forEach((a, i) => {
         if (i > 0) partes.push("<div><br></div>");
-        partes.push(`<div>${esc(a.letra)}) ${esc(a.texto)}</div>`);
+        const marca = a.letra === certa && riscadas.has(a.letra) ? " <em>(riscada por mim — era a certa)</em>" : "";
+        partes.push(`<div>${esc(a.letra)}) ${esc(a.texto)}${marca}</div>`);
       });
     }
   }
