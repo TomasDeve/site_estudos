@@ -42,11 +42,13 @@ export function etiquetaDoProprioConcurso(tag: string, slugConcurso: string): bo
 
 /**
  * Texto de ajuda da etiqueta: "COMUM PCAL" → "…edital da PC-AL"; "COMUM PPPE" →
- * "…edital da Polícia Penal-PE"; "COMUM PMPE" → "…edital da PM-PE".
+ * "…edital da Polícia Penal-PE"; "COMUM PMPE" → "…edital da PM-PE";
+ * "COMUM CBPE" → "…edital do CBM-PE".
  */
 export function ajudaDaEtiqueta(tag: string): string {
   const alvo = alvoDaEtiqueta(tag);
   if (!alvo) return tag;
+  if (/^CB[A-Z]{2}$/.test(alvo)) return `Este assunto também cai no edital do CBM-${alvo.slice(2)}`;
   const nome = /^PC[A-Z]{2}$/.test(alvo)
     ? `PC-${alvo.slice(2)}`
     : /^PP[A-Z]{2}$/.test(alvo)
