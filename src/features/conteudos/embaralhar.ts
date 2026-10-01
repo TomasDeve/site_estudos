@@ -63,3 +63,50 @@ export function agruparPorChave<T>(itens: T[], chaveDe: (item: T) => string | nu
   }
   return out;
 }
+
+/** Anos distintos (decrescente) → posição: o mais recente é 0, o seguinte 1… */
+function rankDosAnos(anos: (number | null)[]): Map<number, number> {
+  const distintos = [...new Set(anos.filter((a): a is number => a !== null))].sort((a, b) => b - a);
+  return new Map(distintos.map((a, i) => [a, i]));
+}
+
+/**
+ * Ordem do caderno por ano: mais recentes primeiro. Estável (dentro do mesmo ano
+ * mantém a ordem recebida) e as sem ano (IA, doutrina…) vão para o fim.
+ */
+export function ordenarPorAno<T>(itens: T[], anoDe: (item: T) => number | null): T[] {
+  return itens
+    .map((item, i) => ({ item, i, ano: anoDe(item) }))
+    .sort((a, b) => {
+      if (a.ano === b.ano) return a.i - b.i;
+      if (a.ano === null) return 1;
+      if (b.ano === null) return -1;
+      return b.ano - a.ano;
+    })
+    .map((x) => x.item);
+}
+
+/**
+ * Embaralha mantendo uma ordem aproximada por ano (mais recentes primeiro): cada
+ * questão ganha uma chave = posição do seu ano + sorteio em [0, 2). Assim um ano só
+ * se mistura com o ano vizinho (2026 com 2025, 2025 com 2024…), nunca com um mais
+ * distante. As sem ano ficam espalhadas pela lista toda. Determinístico pela semente.
+ */
+export function embaralharPorAno<T>(
+  itens: T[],
+  semente: number,
+  anoDe: (item: T) => number | null
+): T[] {
+  const anos = itens.map(anoDe);
+  const rank = rankDosAnos(anos);
+  const rnd = mulberry32(semente);
+  const faixa = rank.size + 1;
+  return itens
+    .map((item, i) => {
+      const a = anos[i];
+      const chave = a === null ? rnd() * faixa : rank.get(a)! + rnd() * 2;
+      return { item, chave };
+    })
+    .sort((x, y) => x.chave - y.chave)
+    .map((x) => x.item);
+}

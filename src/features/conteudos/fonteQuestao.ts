@@ -48,3 +48,10 @@ export function cabecalhoFonte(fonte: string): string {
   const meta = [cabecalho || null, cargo].filter(Boolean).join(" - "); // "2026 (BANCA) - Cargo"
   return meta ? `${codigo} · ${meta}` : codigo;
 }
+
+/** Ano da questão tirado da fonte ("… 2026 (BANCA) …"); `null` se não houver. */
+export function anoDaFonte(fonte: string | null | undefined): number | null {
+  if (!fonte) return null;
+  const { ano } = parseFonteQC(fonte);
+  return ano ? Number(ano) : null;
+}

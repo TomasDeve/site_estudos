@@ -60,13 +60,13 @@ import {
 } from "./grifos";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
-import { parseFonteQC } from "./fonteQuestao";
+import { anoDaFonte, parseFonteQC } from "./fonteQuestao";
 import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
-import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
+import { agruparPorChave, embaralharPorAno, gerarSemente, ordenarPorAno } from "./embaralhar";
 import { acertou as questaoAcertou, ehMultipla, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
 import {
@@ -312,13 +312,18 @@ function Caderno({ topico }: { topico: Topico }) {
     [doFormato, cats]
   );
 
-  // Ordem de exibição: a do caderno (natural) ou embaralhada por uma semente.
-  // Com semente, ordena por id antes de embaralhar para a mesma semente reproduzir
-  // a mesma ordem mesmo após os refetches disparados ao responder. Alimenta o resto.
+  // Ordem de exibição: a do caderno por ano (mais recentes primeiro) ou embaralhada
+  // por uma semente — misturando só anos vizinhos (2026 com 2025…). Com semente,
+  // ordena por id antes para a mesma semente reproduzir a mesma ordem mesmo após os
+  // refetches disparados ao responder. Alimenta o resto.
   const escopo = useMemo(() => {
-    if (semente === null) return escopoBase;
+    if (semente === null) return ordenarPorAno(escopoBase, (q) => anoDaFonte(q.fonte));
     // Ao misturar, junta as questões do mesmo "Texto associado" (sem desfazer o embaralho).
-    const arr = embaralhar([...escopoBase].sort((a, b) => a.id.localeCompare(b.id)), semente);
+    const arr = embaralharPorAno(
+      [...escopoBase].sort((a, b) => a.id.localeCompare(b.id)),
+      semente,
+      (q) => anoDaFonte(q.fonte)
+    );
     return agruparPorChave(arr, (q) => q.texto_associado);
   }, [escopoBase, semente]);
 

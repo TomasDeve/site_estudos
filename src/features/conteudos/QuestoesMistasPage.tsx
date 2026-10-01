@@ -61,7 +61,8 @@ import {
   PillCategoria,
   type FormatoQuestao,
 } from "./QuestoesPage";
-import { agruparPorChave, embaralhar, gerarSemente } from "./embaralhar";
+import { agruparPorChave, embaralharPorAno, gerarSemente } from "./embaralhar";
+import { anoDaFonte } from "./fonteQuestao";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
 import {
@@ -311,9 +312,11 @@ export function QuestoesMistasPage() {
         ? noFiltro
         : noFiltro.filter((q) => cats.has(q.categoria as QuestaoCategoria));
     const arr = [...vivas].sort((a, b) => a.id.localeCompare(b.id));
-    // Embaralha e depois junta as que compartilham o mesmo "Texto associado" (sem
-    // desfazer o embaralho): você lê o texto uma vez e responde todas em sequência.
-    return agruparPorChave(embaralhar(arr, semente), (q) => q.texto_associado);
+    // Embaralha por faixa de ano (mais recentes primeiro, só misturando anos vizinhos)
+    // e depois junta as que compartilham o mesmo "Texto associado" (sem desfazer o
+    // embaralho): você lê o texto uma vez e responde todas em sequência.
+    const porAno = embaralharPorAno(arr, semente, (q) => anoDaFonte(q.fonte));
+    return agruparPorChave(porAno, (q) => q.texto_associado);
   }, [noFiltro, cats, semente]);
 
   // Histórico (questao_logs) no escopo da página — a matéria escolhida ou o site
