@@ -53,8 +53,10 @@ import { FiltroMateriaAssunto, type GrupoFiltro } from "./FiltroMateriaAssunto";
 import { chaveFiltro, compilarFiltro, FILTRO_VAZIO, type FiltroQuestoes } from "./filtroQuestoes";
 import {
   ehFonteQC,
+  FiltroBanca,
   FiltroFormato,
   FonteQuestao,
+  passaBanca,
   passaFormato,
   PillCategoria,
   type FormatoQuestao,
@@ -142,6 +144,8 @@ export function QuestoesMistasPage() {
   const [filtro, setFiltro] = useState<FiltroQuestoes>(FILTRO_VAZIO);
   // Formato em foco (Certo/Errado × múltipla escolha) — recorta antes de tudo.
   const [formato, setFormato] = useState<FormatoQuestao>("todos");
+  // Bancas em foco (multi-seleção; vazio = todas) — recorta junto com o formato.
+  const [bancas, setBancas] = useState<ReadonlySet<string>>(new Set());
 
   /** Liga/desliga uma origem no filtro — várias podem ficar ativas ao mesmo tempo. */
   function alternarCategoria(chave: QuestaoCategoria) {
@@ -231,7 +235,14 @@ export function QuestoesMistasPage() {
     [questoes, materiaId, topicoPorId, idsDoEdital]
   );
   // Recorte por formato (C/E × múltipla): daqui em diante tudo conta em cima dele.
-  const base = useMemo(() => vivas.filter((q) => passaFormato(q, formato)), [vivas, formato]);
+  const soFormato = useMemo(() => vivas.filter((q) => passaFormato(q, formato)), [vivas, formato]);
+  // ...e por banca.
+  const base = useMemo(() => soFormato.filter((q) => passaBanca(q, bancas)), [soFormato, bancas]);
+  // As pílulas de banca contam em cima do formato + matéria/assunto filtrados.
+  const paraBanca = useMemo(() => {
+    const passa = compilarFiltro(filtro);
+    return soFormato.filter((q) => passa(topicoPorId.get(q.topico_id)?.materia_id, q.topico_id));
+  }, [soFormato, filtro, topicoPorId]);
 
   const materiaDe = (q: TopicoQuestao) => topicoPorId.get(q.topico_id)?.materia_id;
   const passaCat = (q: TopicoQuestao) =>
@@ -347,7 +358,7 @@ export function QuestoesMistasPage() {
   const catsKey = [...cats].sort().join(",");
   const bloco = useBloquinhos(
     lista,
-    `${formato}-${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`
+    `${formato}-${[...bancas].sort().join(",")}-${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`
   );
 
   if (
@@ -498,6 +509,8 @@ export function QuestoesMistasPage() {
 
             <FiltroFormato questoes={vivas} formato={formato} onMudar={setFormato} />
 
+            <FiltroBanca questoes={paraBanca} bancas={bancas} onMudar={setBancas} />
+
             {/* Filtro por origem — as mesmas pílulas do caderno do assunto. Dá para
                 marcar várias (o escopo vira a união); "Todas" limpa e junta tudo. */}
             <div className="flex flex-wrap items-center gap-1.5 [scrollbar-width:none] max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 [&::-webkit-scrollbar]:hidden">
@@ -545,8 +558,8 @@ export function QuestoesMistasPage() {
                 {misturadas.length === 0
                   ? cats.size > 0
                     ? `Nenhuma questão em “${catsLabel}”${filtro.length ? " neste filtro" : ""} ainda.`
-                    : formato !== "todos"
-                      ? "Nenhuma questão neste formato ainda."
+                    : formato !== "todos" || bancas.size > 0
+                      ? "Nenhuma questão neste formato/banca ainda."
                       : "Nenhuma questão neste filtro ainda."
                   : aba === "responder"
                     ? "Tudo resolvido 🎉 Use “Responder de novo” nas resolvidas para revisar."

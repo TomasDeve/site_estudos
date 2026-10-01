@@ -208,6 +208,8 @@ function Caderno({ topico }: { topico: Topico }) {
   const [catImport, setCatImport] = useState<QuestaoCategoria>(CATEGORIA_PADRAO);
   // Formato em foco (Certo/Errado × múltipla escolha) — recorta antes da origem.
   const [formato, setFormato] = useState<FormatoQuestao>("todos");
+  // Bancas em foco (multi-seleção; vazio = todas) — recorta junto com o formato.
+  const [bancas, setBancas] = useState<ReadonlySet<string>>(new Set());
 
   /** Liga/desliga uma origem no filtro — várias podem ficar ativas ao mesmo tempo. */
   function alternarCategoria(chave: QuestaoCategoria) {
@@ -293,7 +295,12 @@ function Caderno({ topico }: { topico: Topico }) {
   }
 
   // Recorte por formato (C/E × múltipla): alimenta as pílulas de origem e o placar.
-  const doFormato = useMemo(() => todas.filter((q) => passaFormato(q, formato)), [todas, formato]);
+  const soFormato = useMemo(() => todas.filter((q) => passaFormato(q, formato)), [todas, formato]);
+  // ...e por banca: daqui em diante (origem, placar, abas) tudo conta em cima dos dois.
+  const doFormato = useMemo(
+    () => soFormato.filter((q) => passaBanca(q, bancas)),
+    [soFormato, bancas]
+  );
 
   // Recorte por origem: a base é a união das categorias marcadas (placar, abas e
   // numeração escopados). Conjunto vazio = "Todas" (junta tudo).
@@ -366,7 +373,8 @@ function Caderno({ topico }: { topico: Topico }) {
     .join(", ");
   // Chave estável do conjunto (ordenada) para o modo bloquinhos: resolve de 5 em 5.
   const catsKey = [...cats].sort().join(",");
-  const bloco = useBloquinhos(lista, `${formato}:${catsKey}:${filtro}:${semente ?? "orig"}`);
+  const bancasKey = [...bancas].sort().join(",");
+  const bloco = useBloquinhos(lista, `${formato}:${bancasKey}:${catsKey}:${filtro}:${semente ?? "orig"}`);
 
   /**
    * `valor: null` é o "refazer": limpa a resposta e devolve a questão ao início.
@@ -507,6 +515,10 @@ function Caderno({ topico }: { topico: Topico }) {
 
           {todas.length > 0 && (
             <FiltroFormato questoes={todas} formato={formato} onMudar={setFormato} />
+          )}
+
+          {todas.length > 0 && (
+            <FiltroBanca questoes={soFormato} bancas={bancas} onMudar={setBancas} />
           )}
 
           {/* Filtro por origem — pílulas, distintas das abas de status (sublinhado).
@@ -1048,6 +1060,112 @@ export function FiltroFormato({
         label="Múltipla escolha"
         contagem={multipla}
       />
+    </div>
+  );
+}
+
+/** Banca da questão, tirada da fonte do QConcursos ("Q123 (BANCA) · ano · cargo"); `null` se não houver. */
+export function bancaDe(q: Pick<TopicoQuestao, "fonte">): string | null {
+  const fonte = q.fonte ?? "";
+  if (!/Q\d+/.test(fonte)) return null;
+  // Aceita um nível de parêntese dentro do nome: "(FUNDEP (Gestão de Concursos))".
+  const m = fonte.match(/\(((?:[^()]|\([^()]*\))+)\)/);
+  const banca = m ? m[1].trim() : parseFonteQC(fonte).banca;
+  return banca ? (BANCA_ALIAS[banca.toUpperCase()] ?? banca) : null;
+}
+
+/** Grafias da mesma banca no QConcursos, juntadas numa só pílula. */
+const BANCA_ALIAS: Record<string, string> = {
+  CEBRASPE: "CESPE / CEBRASPE",
+  CESPE: "CESPE / CEBRASPE",
+  "INSTITUTO CONSULPLAN": "CONSULPLAN",
+};
+
+/** Quantas bancas aparecem antes do "+N" (as mais frequentes). */
+const BANCAS_VISIVEIS = 8;
+
+/** Chave usada no filtro para as questões sem banca (simulados, IA, doutrina...). */
+export const SEM_BANCA = "";
+
+/** A questão passa no filtro de banca? Conjunto vazio = todas. */
+export function passaBanca(q: Pick<TopicoQuestao, "fonte">, bancas: ReadonlySet<string>): boolean {
+  return bancas.size === 0 || bancas.has(bancaDe(q) ?? SEM_BANCA);
+}
+
+/**
+ * Pílulas de banca, multi-seleção (o escopo vira a união das marcadas), da mais
+ * frequente para a menos. Some quando só há uma banca e nada está filtrado.
+ */
+export function FiltroBanca({
+  questoes,
+  bancas,
+  onMudar,
+}: {
+  questoes: readonly Pick<TopicoQuestao, "fonte">[];
+  bancas: ReadonlySet<string>;
+  onMudar: (b: ReadonlySet<string>) => void;
+}) {
+  const [todasVisiveis, setTodasVisiveis] = useState(false);
+  const contagem = new Map<string, number>();
+  for (const q of questoes) {
+    const b = bancaDe(q) ?? SEM_BANCA;
+    contagem.set(b, (contagem.get(b) ?? 0) + 1);
+  }
+  // Uma banca marcada que sumiu do escopo (ex.: trocou o formato) segue visível, com 0.
+  for (const b of bancas) if (!contagem.has(b)) contagem.set(b, 0);
+  if (bancas.size === 0 && contagem.size < 2) return null;
+  const ordem = [...contagem.entries()].sort(
+    (a, b) =>
+      Number(a[0] === SEM_BANCA) - Number(b[0] === SEM_BANCA) ||
+      b[1] - a[1] ||
+      a[0].localeCompare(b[0])
+  );
+
+  // Mostra as mais frequentes (e sempre as marcadas); o resto fica atrás do "+N".
+  // "Sem banca" também fica sempre à mostra (no fim).
+  const recolhidas = ordem.filter(
+    ([b], i) => i < BANCAS_VISIVEIS || bancas.has(b) || b === SEM_BANCA
+  );
+  const visiveis = todasVisiveis ? ordem : recolhidas;
+  const ocultas = ordem.length - recolhidas.length;
+
+  function alternar(b: string) {
+    const proximo = new Set(bancas);
+    if (proximo.has(b)) proximo.delete(b);
+    else proximo.add(b);
+    onMudar(proximo);
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 [scrollbar-width:none] max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 [&::-webkit-scrollbar]:hidden">
+      <span className="mr-0.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-mut">
+        Banca
+      </span>
+      <PillCategoria
+        ativo={bancas.size === 0}
+        onClick={() => onMudar(new Set())}
+        label="Todas"
+        contagem={questoes.length}
+      />
+      {visiveis.map(([b, n]) => (
+        <PillCategoria
+          key={b || "sem-banca"}
+          ativo={bancas.has(b)}
+          onClick={() => alternar(b)}
+          label={b || "Sem banca"}
+          title={b ? undefined : "Simulados, questões da IA e outras sem banca na fonte"}
+          contagem={n}
+        />
+      ))}
+      {ocultas > 0 && (
+        <button
+          type="button"
+          onClick={() => setTodasVisiveis((v) => !v)}
+          className="shrink-0 cursor-pointer rounded-full px-2 py-1 text-[11px] font-semibold text-mut transition-colors hover:text-dim"
+        >
+          {todasVisiveis ? "menos" : `+${ocultas} bancas`}
+        </button>
+      )}
     </div>
   );
 }
