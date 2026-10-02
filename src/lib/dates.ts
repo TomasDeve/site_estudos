@@ -5,6 +5,9 @@ import {
   formatDistanceToNow,
   startOfWeek,
   addDays,
+  addMonths,
+  differenceInMonths,
+  startOfDay,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -41,6 +44,29 @@ export function fmtDesdeAgora(iso: string): string {
 /** Dias de hoje até a data (negativo se já passou). */
 export function diasAte(iso: string): number {
   return differenceInCalendarDays(parseISO(iso), new Date());
+}
+
+/**
+ * Contagem regressiva em meses e em semanas até a data:
+ * "5 meses e 5 dias · 22 semanas e 2 dias". Vazio se a data já passou.
+ */
+export function fmtMesesSemanasAte(iso: string, agora: Date = new Date()): string {
+  const hoje = startOfDay(agora);
+  const alvo = parseISO(iso);
+  const dias = differenceInCalendarDays(alvo, hoje);
+  if (dias <= 0) return "";
+  const meses = differenceInMonths(alvo, hoje);
+  const sobraMes = differenceInCalendarDays(alvo, addMonths(hoje, meses));
+  const semanas = Math.floor(dias / 7);
+  const sobraSemana = dias % 7;
+  const parte = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+  const junta = (n: number, um: string, varios: string, sobra: number) =>
+    n === 0
+      ? parte(sobra, "dia", "dias")
+      : sobra === 0
+        ? parte(n, um, varios)
+        : `${parte(n, um, varios)} e ${parte(sobra, "dia", "dias")}`;
+  return `${junta(meses, "mês", "meses", sobraMes)} · ${junta(semanas, "semana", "semanas", sobraSemana)}`;
 }
 
 /** Dias de "a" até "b" (positivo quando b vem depois). */

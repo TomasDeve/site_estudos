@@ -23,7 +23,7 @@ import { useTopicos } from "@/api/topicos";
 import { useContagemImpressao } from "@/api/topicoQuestoes";
 import { supabase } from "@/lib/supabase";
 import { setConcursoAtual } from "@/lib/currentConcurso";
-import { diasAte, fmtData } from "@/lib/dates";
+import { diasAte, fmtData, fmtMesesSemanasAte } from "@/lib/dates";
 import { progressoMateria, topicosDoConcurso } from "@/lib/progresso";
 import { ProgressBar } from "@/components/ProgressBar";
 import { FullScreenSpinner } from "@/components/Spinner";
@@ -210,6 +210,19 @@ export function ConcursoLayout() {
                     "prova realizada"
                   )}
                   <span className="text-mut"> · {fmtData(concurso.data_prova)}</span>
+                </p>
+              )}
+              {dias !== null && dias > 0 && (
+                // quebra no "·" (nunca no meio de "22 semanas e 2 dias")
+                <p className="flex flex-wrap gap-x-1 text-[11px] leading-tight text-mut">
+                  {fmtMesesSemanasAte(concurso.data_prova!)
+                    .split(" · ")
+                    .map((parte, i) => (
+                      <span key={parte} className="whitespace-nowrap">
+                        {i > 0 && "· "}
+                        {parte}
+                      </span>
+                    ))}
                 </p>
               )}
             </div>
