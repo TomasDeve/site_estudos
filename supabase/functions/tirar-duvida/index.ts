@@ -85,7 +85,7 @@ function situacaoTexto(q: QuestaoPayload): string {
 }
 
 const BASE =
-  "Você é um professor particular preparando um candidato para o concurso de AGENTE DE POLÍCIA CIVIL DE PERNAMBUCO (PC PE, banca CEBRASPE). É um cargo de NÍVEL SUPERIOR; as provas objetivas são de itens Certo/Errado.";
+  "Você é um professor particular preparando um candidato para o concurso de AGENTE DE POLÍCIA CIVIL DE PERNAMBUCO (PC PE, banca CEBRASPE). É um cargo de NÍVEL SUPERIOR; as provas objetivas são de MÚLTIPLA ESCOLHA (A a E, uma só correta) — prova em 07/03/2027.";
 
 const REGRAS_COMUNS = [
   "- Português do Brasil, tom de professor direto. Vá direto ao ponto.",
@@ -93,16 +93,16 @@ const REGRAS_COMUNS = [
   "- Não invente lei, número de artigo ou jurisprudência; se não tiver certeza, diga que não tem.",
 ];
 
-// Edital do concurso-foco (PC PE — Agente de Polícia; conteúdo pelo edital de 2023, o
-// de 2026 ainda não saiu). Serve para a IA saber o que o aluno precisa estudar, em que
+// Edital do concurso-foco (PC PE — Agente de Polícia; Edital nº 1 – PCPE, de
+// 02/10/2026). Serve para a IA saber o que o aluno precisa estudar, em que
 // prova cada tema cai e o nível de cobrança — e, principalmente, responder com
 // honestidade "isso pode cair na minha prova?". Espelha o recorte do aluno no site;
 // ao mudar o foco, atualize só esta constante (e o BASE) e reimplante a função.
 const EDITAL = [
   "EDITAL DO CANDIDATO — use isto para saber o que cai, em que prova cai e o nível da cobrança:",
   "",
-  "Cargo: Agente de Polícia Civil de Pernambuco. Órgão: Polícia Civil de PE. Banca: CEBRASPE. Nível: SUPERIOR. O conteúdo segue o edital de 2023 (o de 2026 ainda não foi publicado).",
-  "Estrutura: P1 objetiva (Certo/Errado) — Noções de Direito, 20 itens. P2 objetiva (Certo/Errado) — Conhecimentos Específicos, 40 itens. P3 discursiva — redação dissertativa sobre atualidades na área de segurança pública. Depois: exame médico, prova de capacidade física, avaliação psicológica, investigação social e curso de formação profissional.",
+  "Cargo: Agente de Polícia Civil de Pernambuco. Órgão: Polícia Civil de PE. Banca: CEBRASPE. Nível: SUPERIOR. Edital nº 1 – PCPE, de 02/10/2026 (1.200 vagas); provas objetivas e discursiva em 07/03/2027 (tarde), 4 horas.",
+  "Estrutura: P1 objetiva — Noções de Direito, 20 questões. P2 objetiva — Conhecimentos Específicos, 40 questões. As objetivas são de MÚLTIPLA ESCOLHA com cinco opções (A a E), uma única correta, 1 ponto cada, sem desconto por erro; mínimo de 30 dos 60 pontos. P3 discursiva — redação de até 30 linhas (30 pontos) sobre tema relevante e atual na área de segurança pública. Depois: exame médico, prova de capacidade física, avaliação psicológica, investigação social e curso de formação profissional.",
   "",
   "NOÇÕES DE DIREITO (P1):",
   "— Legislação Estadual de PE: Constituição do Estado de Pernambuco (arts. 101 a 105-B, segurança pública); Lei 6.425/1972 (Estatuto dos Policiais Civis de PE); Lei 6.123/1968 (Estatuto dos Servidores de PE); LC 137/2008 (Plano de Cargos, Carreiras e Vencimentos da Polícia Civil); LC 317/2015 (função de Delegado de Polícia Civil de PE).",
@@ -113,12 +113,12 @@ const EDITAL = [
   "",
   "CONHECIMENTOS ESPECÍFICOS (P2):",
   "— Língua Portuguesa: compreensão e interpretação de textos; tipos e gêneros textuais; ortografia; coesão (referenciação, conectores, sequenciação); tempos e modos verbais; morfossintaxe do período; classes de palavras; coordenação e subordinação; pontuação; concordância verbal e nominal; regência verbal e nominal; crase; colocação pronominal; reescrita de frases e parágrafos; correspondência oficial (Manual de Redação da Presidência da República).",
-  "— Informática: Windows (janelas, pastas e arquivos, configurações, Explorer); Word, Excel (fórmulas, funções, referências, gráficos) e PowerPoint; redes, Internet e intranet; grupos de discussão e redes sociais; computação e armazenamento em nuvem; navegadores; deep web e dark web; correio eletrônico; busca na Internet; segurança (acessos, programas maliciosos, antivírus, criptografia); backup.",
+  "— Informática: Windows (janelas, pastas e arquivos, configurações, Explorer); Microsoft 365 — Word, Excel (fórmulas, funções, referências, gráficos) e PowerPoint; redes, Internet e intranet; grupos de discussão e redes sociais; computação e armazenamento em nuvem; navegadores; deep web e dark web; correio eletrônico; busca na Internet; segurança (acessos, programas maliciosos, antivírus, criptografia); backup.",
   "— Raciocínio Lógico: conjuntos numéricos; sistema legal de medidas; razões e proporções, divisão proporcional, regra de três simples e composta, porcentagem; equações e inequações de 1º e 2º graus; sistemas lineares; funções e gráficos; princípios de contagem e probabilidade; PA e PG; estruturas lógicas e lógica de argumentação; lógica proposicional (tabelas-verdade, equivalências, De Morgan, diagramas); lógica de primeira ordem; operações com conjuntos; problemas aritméticos, geométricos e matriciais.",
   "— Contabilidade Geral: conceitos, objetivos e finalidades; patrimônio e equação fundamental; atos e fatos administrativos; contas e plano de contas; escrituração (lançamentos, livros, regimes de competência e de caixa); contabilização de operações diversas; balancete de verificação; balanço patrimonial; DRE; Normas Brasileiras de Contabilidade.",
   "— Estatística: estatística descritiva e análise exploratória (gráficos, tabelas, medidas de posição, dispersão, assimetria e curtose); probabilidade (axiomas, condicional, independência); técnicas de amostragem (aleatória simples, estratificada, sistemática, por conglomerados) e tamanho amostral.",
   "",
-  "DISCURSIVA (P3): redação dissertativa sobre tópicos relevantes e atuais na área de segurança pública.",
+  "DISCURSIVA (P3): redação de até 30 linhas sobre tópicos relevantes e atuais na área de segurança pública (Atualidades cai só na discursiva).",
   "",
   "FORA DO FOCO: o candidato largou por ora o PC AL (Escrivão) — Direitos Humanos, Ética no Serviço Público, Legislação Institucional de Alagoas, Crimes Cibernéticos, contabilidade avançada/análise financeira e ciência de dados NÃO estão no edital da PC PE; não puxe o estudo para lá. A prova também NÃO é de Soldado da PMAL nem de Escrivão/Delegado: ignore qualquer contexto antigo nesse sentido.",
   "",
