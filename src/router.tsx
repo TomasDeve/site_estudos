@@ -19,6 +19,7 @@ const MetricasPage = lazy(() => import("@/features/metricas/MetricasPage").then(
 const ImportarPage = lazy(() => import("@/features/importar/ImportarPage").then((m) => ({ default: m.ImportarPage })));
 const AudiosPage = lazy(() => import("@/features/audios/AudiosPage").then((m) => ({ default: m.AudiosPage })));
 const BancoQuestoesPage = lazy(() => import("@/features/banco/BancoQuestoesPage").then((m) => ({ default: m.BancoQuestoesPage })));
+const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
 const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
 
 function pagina(node: ReactNode) {
@@ -60,6 +61,8 @@ export const router = createBrowserRouter([
           { path: "metricas", element: pagina(<MetricasPage />) },
           { path: "metricas/importar", element: pagina(<ImportarPage />) },
           { path: "audios", element: pagina(<AudiosPage />) },
+          // ficha do edital: vagas, datas, divisão da prova, TAF, requisitos
+          { path: "informacoes", element: pagina(<InformacoesPage />) },
         ],
       },
     ],

@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Headphones,
+  Info,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
@@ -38,7 +39,8 @@ export function useConcursoAtual(): Concurso {
   return useOutletContext<Ctx>().concurso;
 }
 
-const NAV: { to: string; label: string; icon: LucideIcon; end: boolean; novaAba?: boolean }[] = [
+// `curto`: rótulo da aba do celular quando o nome inteiro não cabe na coluna.
+const NAV: { to: string; label: string; curto?: string; icon: LucideIcon; end: boolean; novaAba?: boolean }[] = [
   { to: ".", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
   // modo misturado: todas as questões do site, em aba própria como o caderno
@@ -48,6 +50,7 @@ const NAV: { to: string; label: string; icon: LucideIcon; end: boolean; novaAba?
   { to: "ciclo", label: "Ciclo", icon: Repeat, end: false },
   { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
   { to: "audios", label: "Áudios", icon: Headphones, end: false },
+  { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
 ];
 
 export function ConcursoLayout() {
@@ -130,7 +133,7 @@ export function ConcursoLayout() {
   // Abas do celular: uma coluna por item, ícone em cima e rótulo curto embaixo.
   const itemMobile =
     "relative flex min-w-0 flex-col items-center justify-center gap-1 whitespace-nowrap pb-2 pt-2.5 text-[10px] font-medium leading-none tracking-tight transition-colors";
-  const abasMobile = NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
+  const abasMobile = NAV.map(({ to, label, curto, icon: Icon, end, novaAba }) => {
     if (novaAba) {
       return (
         <a key={to} href={to} target="_blank" rel="noreferrer" className={`${itemMobile} text-dim`}>
@@ -159,7 +162,7 @@ export function ConcursoLayout() {
         }
       >
         <Icon className="size-5" />
-        {label}
+        {curto ?? label}
       </NavLink>
     );
   });
