@@ -10,7 +10,15 @@ import type {
 /** Colunas leves o bastante para carregar as questões de todos os assuntos de uma vez. */
 export type QuestaoResumo = Pick<
   TopicoQuestao,
-  "id" | "topico_id" | "status" | "resposta" | "resposta_letra" | "tipo"
+  | "id"
+  | "topico_id"
+  | "status"
+  | "resposta"
+  | "resposta_letra"
+  | "tipo"
+  | "gabarito"
+  | "gabarito_letra"
+  | "respondida_em"
 >;
 
 /** Contadores por assunto na lista do edital — sem trazer enunciado nem comentário. */
@@ -21,7 +29,7 @@ export function useQuestoesResumo() {
       fetchAll<QuestaoResumo>((f, t) =>
         supabase
           .from("topico_questoes")
-          .select("id,topico_id,status,resposta,resposta_letra,tipo")
+          .select("id,topico_id,status,resposta,resposta_letra,tipo,gabarito,gabarito_letra,respondida_em")
           .order("topico_id")
           .range(f, t)
       ),

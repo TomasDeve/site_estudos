@@ -66,6 +66,7 @@ import { RedacoesPanel } from "./RedacoesPanel";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho, desempenhoGeral, desempenhoRecente } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
+import { placar24h, Ultimas24hChip } from "./Ultimas24hChip";
 
 export function MateriaPage() {
   const concurso = useConcursoAtual();
@@ -217,6 +218,9 @@ export function MateriaPage() {
   // vazia quando não há desempenho recente com o que comparar.
   const recente = desempenhoRecente(logsDaMateria);
   const temChipRecente = recente.vale && recente.pct !== null;
+  // Questões do site dos assuntos desta matéria — base do chip "Últimas 24h".
+  const questoesDaMateria = meusTopicos.flatMap((t) => questoesPorTopico.get(t.id) ?? []);
+  const tem24h = placar24h(questoesDaMateria).total > 0;
 
   // Questões por IA da matéria inteira (todos os assuntos) — alimentam o modo
   // misturado, do jeito que caem na prova. Só contam as ainda não arquivadas.
@@ -346,7 +350,7 @@ export function MateriaPage() {
                 </div>
 
                 {/* Desempenho em questões: geral + tendência recente, lado a lado */}
-                {(desempenho.pct !== null || temChipRecente) && (
+                {(desempenho.pct !== null || temChipRecente || tem24h) && (
                   <div className="flex flex-wrap items-center gap-2">
                     {desempenho.pct !== null && cor && (
                       <span
@@ -360,6 +364,7 @@ export function MateriaPage() {
                       </span>
                     )}
                     <DesempenhoRecenteChip logs={logsDaMateria} />
+                    <Ultimas24hChip questoes={questoesDaMateria} />
                   </div>
                 )}
               </div>
