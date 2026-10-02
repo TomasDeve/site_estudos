@@ -176,7 +176,7 @@ const PC_PE: InfoConcurso = {
         "Visão medida COM óculos/lente: 20/20 num olho e 20/30 no outro, ou 20/40 nos dois. Usar óculos não reprova; cirurgia refrativa é aceita.",
         "Daltonismo total elimina; deficiência parcial de cores é aceita com laudo.",
         "Escoliose: só elimina com ângulo de Cobb acima de 20° (estruturada) ou 10° (descompensada), com margem de 3° e repercussão funcional. Escoliose congênita elimina.",
-        "Exame toxicológico de cabelo ou pelo, feito nos 90 dias antes do envio. Os demais exames valem por 180 dias.",
+        "Toxicológico de cabelo, pelo ou unha, com janela de detecção de no mínimo 90 dias (maconha, cocaína, anfetaminas, opiáceos, PCP). O edital se contradiz no prazo (90 dias antes do envio × 60 dias antes da avaliação): colete dentro dos 60 dias. Os demais exames valem por 180 dias.",
         "Tatuagem só elimina se expressar violência, crime, preconceito ou ideias contrárias à democracia.",
       ],
     },
