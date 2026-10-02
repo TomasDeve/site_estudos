@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
+  Archive,
   ArrowLeft,
   BookOpen,
   Check,
@@ -15,6 +16,7 @@ import {
   useMarcarRefazer,
   useResponderQuestao,
   useSalvarGrifos,
+  useSetQuestaoStatus,
   useTodasQuestoes,
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
@@ -101,6 +103,7 @@ export function QuestoesMistasPage() {
 
   const responder = useResponderQuestao();
   const marcarRefazer = useMarcarRefazer();
+  const setStatus = useSetQuestaoStatus();
   const clique = useRegistrarClique();
   const { data: todosLogs } = useQuestaoLogsTodos();
   const salvarGrifos = useSalvarGrifos();
@@ -425,6 +428,30 @@ export function QuestoesMistasPage() {
     }
   }
 
+  // Arquivada some do misturado (só entram as vivas) — o aviso traz o "Desfazer".
+  function arquivar(q: TopicoQuestao) {
+    setStatus.mutate(
+      { id: q.id, status: "arquivada" },
+      {
+        onSuccess: () =>
+          toast.success("Questão arquivada.", {
+            action: {
+              label: "Desfazer",
+              onClick: () =>
+                setStatus.mutate(
+                  { id: q.id, status: "ativa" },
+                  {
+                    onError: (err) =>
+                      toast.error(err instanceof Error ? err.message : String(err)),
+                  }
+                ),
+            },
+          }),
+        onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+      }
+    );
+  }
+
   function mudarRefazer(q: TopicoQuestao, marcar: boolean) {
     marcarRefazer.mutate(
       { id: q.id, refazer: marcar },
@@ -583,6 +610,7 @@ export function QuestoesMistasPage() {
                       onToggleRisco={(letra) => aoRiscar(q, letra)}
                       onRefazer={mudarRefazer}
                       onImprimir={() => alternarImpressao(q)}
+                      onArquivar={() => arquivar(q)}
                       origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
                       onDuvida={() => setDuvida(q)}
                       onConferirLei={comLei?.has(q.topico_id) ? () => setNaLei(q) : undefined}
@@ -661,6 +689,8 @@ interface CardProps {
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
   /** Marca/desmarca a questão para a seção "Impressão" (a caixinha do topo do card). */
   onImprimir: () => void;
+  /** Arquiva a questão (o botão ao lado da impressora). */
+  onArquivar: () => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
   origem?: TopicoQuestao;
   onDuvida: () => void;
@@ -684,6 +714,7 @@ function QuestaoMistaCard({
   onToggleRisco,
   onRefazer,
   onImprimir,
+  onArquivar,
   origem,
   onDuvida,
   onConferirLei,
@@ -714,6 +745,14 @@ function QuestaoMistaCard({
           {fonteQC && <FonteQuestao fonte={fonteQC} />}
         </div>
         <CaixaImpressao marcada={!!q.imprimir_em} onToggle={onImprimir} />
+        <button
+          onClick={onArquivar}
+          className="shrink-0 cursor-pointer rounded-md p-1 text-mut transition-colors hover:bg-navy-700 hover:text-txt max-sm:p-2"
+          title="Arquivar questão"
+          aria-label="Arquivar questão"
+        >
+          <Archive className="size-3.5" />
+        </button>
       </div>
 
       <TextoAssociado
