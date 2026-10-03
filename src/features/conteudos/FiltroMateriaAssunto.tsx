@@ -36,8 +36,8 @@ const MAX_CHIPS_POR_MATERIA = 3;
 /**
  * Filtro de questões no estilo do QConcursos: escolhe a(s) matéria(s) e,
  * dentro delas, os assuntos. Matéria sem assunto marcado traz todos os dela.
- * Monta num rascunho e só vale ao clicar em "Filtrar"; a página sempre abre sem
- * filtro.
+ * Monta num rascunho e só vale ao clicar em "Filtrar"; a página abre sem filtro
+ * ou com o filtro padrão do concurso.
  */
 export function FiltroMateriaAssunto({ grupos, aplicado, onAplicar, contar, materiaFixa }: Props) {
   const [aberto, setAberto] = useState(false);

@@ -286,6 +286,7 @@ export type Database = {
           banca: string | null
           ciclo_plano_inicio: string | null
           ciclo_plano_ordem: string[] | null
+          questoes_filtro_padrao: Json | null
           cor: string
           created_at: string
           data_prova: string | null
@@ -311,6 +312,7 @@ export type Database = {
           banca?: string | null
           ciclo_plano_inicio?: string | null
           ciclo_plano_ordem?: string[] | null
+          questoes_filtro_padrao?: Json | null
           cor?: string
           created_at?: string
           data_prova?: string | null
@@ -336,6 +338,7 @@ export type Database = {
           banca?: string | null
           ciclo_plano_inicio?: string | null
           ciclo_plano_ordem?: string[] | null
+          questoes_filtro_padrao?: Json | null
           cor?: string
           created_at?: string
           data_prova?: string | null

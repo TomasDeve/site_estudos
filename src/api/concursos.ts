@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { Concurso, TablesInsert, TablesUpdate } from "@/types/db";
+import type { Concurso, Json, TablesInsert, TablesUpdate } from "@/types/db";
 
 export function useConcursos() {
   return useQuery({
@@ -212,4 +212,33 @@ export function slugify(nome: string): string {
     .replace(/^_+|_+$/g, "")
     .slice(0, 40);
   return `${base || "concurso"}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/**
+ * Grava o filtro padrão da página de questões no concurso (`null` = abrir sem
+ * filtro). Otimista: o selo "filtro padrão" já muda na hora.
+ */
+export function useFiltroPadraoQuestoes() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, padrao }: { id: string; padrao: Json | null }) => {
+      const { error } = await supabase
+        .from("concursos")
+        .update({ questoes_filtro_padrao: padrao })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, padrao }) => {
+      await qc.cancelQueries({ queryKey: ["concursos"] });
+      const prev = qc.getQueryData<Concurso[]>(["concursos"]);
+      qc.setQueryData<Concurso[]>(["concursos"], (old) =>
+        old?.map((c) => (c.id === id ? { ...c, questoes_filtro_padrao: padrao } : c))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concursos"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concursos"] }),
+  });
 }

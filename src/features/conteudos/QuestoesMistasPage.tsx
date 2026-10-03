@@ -23,7 +23,7 @@ import {
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
 import { useMaterias, useConcursoMaterias } from "@/api/materias";
-import { useConcursos, concursoDeEstudo } from "@/api/concursos";
+import { useConcursos, concursoDeEstudo, useFiltroPadraoQuestoes } from "@/api/concursos";
 import { ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
 import { useResumosDeQuestoes, useTopicosComLei } from "@/api/topicoTextos";
 import { useQuestaoLogsTodos, useRegistrarClique } from "@/api/questaoLogs";
@@ -35,6 +35,7 @@ import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { ResumoRapido } from "./ResumoRapido";
 import { RelogioQuestoes } from "./RelogioQuestoes";
+import { BarraFiltroPadrao, ehVazio, lerFiltroPadrao, type FiltroPadrao } from "./filtroPadrao";
 import { TextoAssociado } from "./TextoAssociado";
 import {
   Grifavel,
@@ -90,7 +91,8 @@ type Aba = (typeof ABAS)[number]["chave"];
  * na prova. Só entram os assuntos que caem no edital do concurso em estudo (o
  * recorte de `topicos_incluidos`), pra não misturar questões de outros editais.
  * Sem `:materiaId` na rota, traz todas as matérias desse edital; com ele, só as
- * da matéria escolhida (ainda respeitando o recorte). Sempre abre sem filtro;
+ * da matéria escolhida (ainda respeitando o recorte). Abre com o filtro padrão do
+ * concurso (se houver; só na de todas as matérias), senão sem filtro;
  * dá para recortar por matéria e assunto (estilo QConcursos — matéria sem
  * assunto marcado traz todos os dela) e por origem. Abre em aba própria,
  * como o caderno de um assunto. Não revela o assunto (nem o número da questão),
@@ -152,7 +154,7 @@ export function QuestoesMistasPage() {
   // Filtro por origem (mesmas pílulas do caderno do assunto), com multi-seleção.
   // Conjunto vazio = "Todas" (sem filtro); o escopo vira a união das marcadas.
   const [cats, setCats] = useState<ReadonlySet<QuestaoCategoria>>(new Set());
-  // Filtro por matéria e assunto (estilo QConcursos). Sempre abre sem filtro.
+  // Filtro por matéria e assunto (estilo QConcursos). Abre sem filtro ou com o padrão.
   const [filtro, setFiltro] = useState<FiltroQuestoes>(FILTRO_VAZIO);
   // Formato em foco (Certo/Errado × múltipla escolha) — recorta antes de tudo.
   const [formato, setFormato] = useState<FormatoQuestao>("todos");
@@ -218,6 +220,36 @@ export function QuestoesMistasPage() {
   // menos as matérias e assuntos riscados nele ("não vou estudar" — saem daqui como
   // saem do progresso/horas/ciclo). `null` quando só há concursos arquivados: não filtra.
   const concursoAtivo = useMemo(() => concursoDeEstudo(concursos ?? []), [concursos]);
+
+  // Filtro padrão do concurso (só na página de todas as matérias): a página já abre
+  // com ele. Aplicado durante o render, uma vez por concurso — assim a 1ª pintura e
+  // a 1ª busca de conteúdo já saem filtradas, sem piscar a lista inteira.
+  const salvarPadrao = useFiltroPadraoQuestoes();
+  const padrao = materiaId ? null : lerFiltroPadrao(concursoAtivo?.questoes_filtro_padrao);
+  const [padraoAplicadoEm, setPadraoAplicadoEm] = useState<string | null>(null);
+  function aplicarPadrao(p: FiltroPadrao) {
+    setFiltro(p.filtro);
+    setFormato(p.formato);
+    setBancas(new Set(p.bancas));
+    setCats(new Set(p.cats));
+  }
+  const padraoPendente = !materiaId && !!concursoAtivo && padraoAplicadoEm !== concursoAtivo.id;
+  if (padraoPendente) {
+    setPadraoAplicadoEm(concursoAtivo.id);
+    if (padrao) aplicarPadrao(padrao);
+  }
+  const filtroAtual: FiltroPadrao = { filtro, formato, bancas: [...bancas], cats: [...cats] };
+  function gravarPadrao(p: FiltroPadrao | null) {
+    if (!concursoAtivo) return;
+    salvarPadrao.mutate(
+      { id: concursoAtivo.id, padrao: p && !ehVazio(p) ? { ...p } : null },
+      {
+        onSuccess: () =>
+          toast.success(p && !ehVazio(p) ? "Filtro padrão salvo — a página vai abrir assim." : "A página volta a abrir sem filtro."),
+        onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+      }
+    );
+  }
   const idsDoEdital = useMemo(() => {
     if (!concursoAtivo || !vinculos || !topicos) return null;
     const meus = vinculos.filter((v) => v.concurso_id === concursoAtivo.id);
@@ -561,7 +593,7 @@ export function QuestoesMistasPage() {
               <BotaoBloquinhos b={bloco} className="ml-auto" />
             </div>
 
-            {/* Filtro por matéria e assunto (estilo QConcursos) — abre sem filtro;
+            {/* Filtro por matéria e assunto (estilo QConcursos) — abre sem filtro ou com o padrão;
                 matéria sem assunto marcado traz todos os assuntos dela. */}
             <FiltroMateriaAssunto
               grupos={gruposFiltro}
@@ -598,6 +630,17 @@ export function QuestoesMistasPage() {
                 />
               ))}
             </div>
+
+            {!materiaId && concursoAtivo && (
+              <BarraFiltroPadrao
+                atual={filtroAtual}
+                padrao={padrao}
+                salvando={salvarPadrao.isPending}
+                onSalvar={() => gravarPadrao(filtroAtual)}
+                onVoltar={() => padrao && aplicarPadrao(padrao)}
+                onRemover={() => gravarPadrao(null)}
+              />
+            )}
 
             {/* Abas — rolam na horizontal em telas estreitas */}
             <div className="flex gap-1 overflow-x-auto border-b border-line/40 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
