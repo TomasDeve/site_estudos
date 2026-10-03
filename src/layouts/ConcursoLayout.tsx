@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, NavLink, Outlet, useLocation, useOutletContext, useParams } from "react-router";
 import {
-  BarChart3,
   BookOpen,
   Check,
   ChevronRight,
@@ -12,7 +11,6 @@ import {
   LayoutGrid,
   LogOut,
   Printer,
-  Repeat,
   Shuffle,
   type LucideIcon,
 } from "lucide-react";
@@ -47,8 +45,6 @@ const NAV: { to: string; label: string; curto?: string; icon: LucideIcon; end: b
   { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },
   // questões marcadas (a caixinha 🖨 do card): folha para imprimir + correção, em aba própria
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
-  { to: "ciclo", label: "Ciclo", icon: Repeat, end: false },
-  { to: "metricas", label: "Métricas", icon: BarChart3, end: false },
   { to: "audios", label: "Áudios", icon: Headphones, end: false },
   { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
 ];

@@ -59,41 +59,12 @@ export function useQuestaoLogsPorMateria(materiaId: string | undefined) {
   });
 }
 
-/** Logs numa janela de datas (gráficos, "hoje"). */
-export function useQuestaoLogsJanela(inicioISO: string, fimISO: string) {
-  return useQuery({
-    queryKey: ["questao_logs", "janela", inicioISO, fimISO],
-    queryFn: async (): Promise<QuestaoLog[]> => {
-      const { data, error } = await supabase
-        .from("questao_logs")
-        .select("*")
-        .gte("data", inicioISO)
-        .lte("data", fimISO)
-        .order("data");
-      if (error) throw error;
-      return data;
-    },
-  });
-}
-
 export function useCriarQuestaoLog() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: TablesInsert<"questao_logs">) => {
       const { error } = await supabase.from("questao_logs").insert(input);
       if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["questao_logs"] }),
-  });
-}
-
-export function useCriarQuestaoLogsEmLote() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (inputs: TablesInsert<"questao_logs">[]) => {
-      const { error } = await supabase.from("questao_logs").insert(inputs);
-      if (error) throw error;
-      return inputs.length;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["questao_logs"] }),
   });

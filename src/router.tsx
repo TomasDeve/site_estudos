@@ -6,7 +6,7 @@ import { ConcursoLayout } from "@/layouts/ConcursoLayout";
 import { EntryRedirect } from "@/features/home/EntryRedirect";
 import { FullScreenSpinner } from "@/components/Spinner";
 
-// páginas em chunks separados: recharts (Painel/Métricas) só baixa quando abre
+// páginas em chunks separados: recharts (Painel) só baixa quando abre
 const HomePage = lazy(() => import("@/features/home/HomePage").then((m) => ({ default: m.HomePage })));
 const DashboardPage = lazy(() => import("@/features/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const ConteudosPage = lazy(() => import("@/features/conteudos/ConteudosPage").then((m) => ({ default: m.ConteudosPage })));
@@ -14,9 +14,6 @@ const MateriaPage = lazy(() => import("@/features/conteudos/MateriaPage").then((
 const TextoLeiPage = lazy(() => import("@/features/conteudos/TextoLeiPage").then((m) => ({ default: m.TextoLeiPage })));
 const QuestoesPage = lazy(() => import("@/features/conteudos/QuestoesPage").then((m) => ({ default: m.QuestoesPage })));
 const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMistasPage").then((m) => ({ default: m.QuestoesMistasPage })));
-const CicloPage = lazy(() => import("@/features/ciclo/CicloPage").then((m) => ({ default: m.CicloPage })));
-const MetricasPage = lazy(() => import("@/features/metricas/MetricasPage").then((m) => ({ default: m.MetricasPage })));
-const ImportarPage = lazy(() => import("@/features/importar/ImportarPage").then((m) => ({ default: m.ImportarPage })));
 const AudiosPage = lazy(() => import("@/features/audios/AudiosPage").then((m) => ({ default: m.AudiosPage })));
 const BancoQuestoesPage = lazy(() => import("@/features/banco/BancoQuestoesPage").then((m) => ({ default: m.BancoQuestoesPage })));
 const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
@@ -55,11 +52,10 @@ export const router = createBrowserRouter([
           { index: true, element: pagina(<DashboardPage />) },
           { path: "conteudos", element: pagina(<ConteudosPage />) },
           { path: "conteudos/:materiaId", element: pagina(<MateriaPage />) },
-          { path: "ciclo", element: pagina(<CicloPage />) },
-          // a antiga seção Metas virou o plano do Painel: link salvo cai lá
+          // seções removidas (Metas virou o plano do Painel; Ciclo e Métricas saíram): link salvo cai no Painel
           { path: "metas", element: <Navigate to=".." replace /> },
-          { path: "metricas", element: pagina(<MetricasPage />) },
-          { path: "metricas/importar", element: pagina(<ImportarPage />) },
+          { path: "ciclo", element: <Navigate to=".." replace /> },
+          { path: "metricas/*", element: <Navigate to=".." replace /> },
           { path: "audios", element: pagina(<AudiosPage />) },
           // ficha do edital: vagas, datas, divisão da prova, TAF, requisitos
           { path: "informacoes", element: pagina(<InformacoesPage />) },
