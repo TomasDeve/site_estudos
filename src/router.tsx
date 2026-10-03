@@ -17,6 +17,7 @@ const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMista
 const AudiosPage = lazy(() => import("@/features/audios/AudiosPage").then((m) => ({ default: m.AudiosPage })));
 const BancoQuestoesPage = lazy(() => import("@/features/banco/BancoQuestoesPage").then((m) => ({ default: m.BancoQuestoesPage })));
 const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
+const RotinaPage = lazy(() => import("@/features/rotina/RotinaPage").then((m) => ({ default: m.RotinaPage })));
 const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
 
 function pagina(node: ReactNode) {
@@ -57,6 +58,8 @@ export const router = createBrowserRouter([
           { path: "ciclo", element: <Navigate to=".." replace /> },
           { path: "metricas/*", element: <Navigate to=".." replace /> },
           { path: "audios", element: pagina(<AudiosPage />) },
+          // rotina diária: os horários fixos (acordar, estudar, parar, academia, dormir)
+          { path: "rotina", element: pagina(<RotinaPage />) },
           // ficha do edital: vagas, datas, divisão da prova, TAF, requisitos
           { path: "informacoes", element: pagina(<InformacoesPage />) },
         ],

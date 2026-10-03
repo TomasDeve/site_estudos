@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, NavLink, Outlet, useLocation, useOutletContext, useParams } from "react-router";
 import {
   BookOpen,
+  CalendarClock,
   Check,
   ChevronRight,
   ChevronsUpDown,
@@ -40,6 +41,8 @@ export function useConcursoAtual(): Concurso {
 // `curto`: rótulo da aba do celular quando o nome inteiro não cabe na coluna.
 const NAV: { to: string; label: string; curto?: string; icon: LucideIcon; end: boolean; novaAba?: boolean }[] = [
   { to: ".", label: "Painel", icon: LayoutDashboard, end: true },
+  // horários fixos do dia: acordar, estudar, intervalos, academia, dormir
+  { to: "rotina", label: "Rotina", icon: CalendarClock, end: false },
   { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
   // modo misturado: todas as questões do site, em aba própria como o caderno
   { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },

@@ -644,6 +644,39 @@ export type Database = {
           },
         ]
       }
+      rotina_blocos: {
+        Row: {
+          created_at: string
+          dias: number[]
+          fim: number
+          id: string
+          inicio: number
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dias?: number[]
+          fim: number
+          id?: string
+          inicio: number
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          dias?: number[]
+          fim?: number
+          id?: string
+          inicio?: number
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       questao_logs: {
         Row: {
           acertos: number
@@ -1417,6 +1450,7 @@ export type AudioGrupo = Tables<"audio_grupos">
 export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
 export type PlanoHora = Tables<"plano_horas">
+export type RotinaBloco = Tables<"rotina_blocos">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "arquivada"
