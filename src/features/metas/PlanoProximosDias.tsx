@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -15,8 +15,10 @@ import {
 import {
   Check,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Copy,
   CopyPlus,
   GripVertical,
@@ -163,7 +165,8 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
     setArrastando(null);
     const origem = e.active.data.current?.linha as PlanoHora | undefined;
     const destino = e.over?.data.current as { data: string; hora: number } | undefined;
-    if (!origem || !destino) return;
+    // Soltou em cima de uma seta de rolagem (não é linha): não move nada.
+    if (!origem || !destino || typeof destino.hora !== "number") return;
     if (origem.data === destino.data && origem.hora === destino.hora) return;
     moverHora.mutate(
       { origem: { data: origem.data, hora: origem.hora }, destino },
@@ -541,6 +544,13 @@ function CaixaDia({
   const podeTirar = visiveis > BLOCOS_INICIAIS && visiveis > maiorPreenchido;
   // Concluir só vale para hoje e dias passados, e com algo planejado.
   const podeConcluir = data <= hoje && preenchidas > 0;
+  // A caixinha mostra no máximo 6 blocos; passou disso, as setas rolam a janela
+  // (em vez de a caixinha crescer e desalinhar o layout).
+  const janela = Math.min(visiveis, BLOCOS_INICIAIS);
+  const maxInicio = visiveis - janela;
+  const [inicioEscolhido, setInicio] = useState(0);
+  const inicio = Math.min(inicioEscolhido, maxInicio);
+  const rolar = (passo: number) => setInicio(Math.max(0, Math.min(maxInicio, inicio + passo)));
 
   return (
     <div
@@ -596,7 +606,7 @@ function CaixaDia({
       {/* Os blocos de meia hora do dia, como linhas de planilha. A 1ª coluna
           traz a duração de cada um (30min), igual em todas as linhas. */}
       <ol className="border-t border-line/50">
-        {Array.from({ length: visiveis }, (_, i) => i + 1).map((h) => {
+        {Array.from({ length: janela }, (_, i) => inicio + i + 1).map((h) => {
           const l = horas?.get(h);
           return (
             <Celula key={h} data={data} hora={h} feita={!!l?.feita}>
@@ -633,10 +643,35 @@ function CaixaDia({
         })}
       </ol>
 
+      {/* Rolagem da janela de 6 blocos (só aparece quando o dia tem mais de 6) */}
+      {maxInicio > 0 && (
+        <div className="flex items-center border-b border-line/30">
+          <SetaRolagem
+            id={`rolar:${data}:cima`}
+            direcao="cima"
+            desabilitada={inicio === 0}
+            onRolar={() => rolar(-1)}
+          />
+          <span className="flex-1 text-center text-[10px] font-semibold tabular-nums text-mut">
+            {inicio + 1}–{inicio + janela} de {visiveis}
+          </span>
+          <SetaRolagem
+            id={`rolar:${data}:baixo`}
+            direcao="baixo"
+            desabilitada={inicio >= maxInicio}
+            onRolar={() => rolar(1)}
+          />
+        </div>
+      )}
+
       {/* Acrescentar/tirar blocos de meia hora */}
       <div className="mt-auto flex items-center">
         <button
-          onClick={() => onExtras(visiveis + 1 - BLOCOS_INICIAIS)}
+          onClick={() => {
+            onExtras(visiveis + 1 - BLOCOS_INICIAIS);
+            // Leva a janela pro fim, onde o bloco novo aparece.
+            setInicio(visiveis + 1 - BLOCOS_INICIAIS);
+          }}
           disabled={visiveis >= MAX_BLOCOS}
           className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 py-2 text-[11px] font-semibold text-dim transition-colors hover:bg-navy-700/40 hover:text-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-dim"
           title={visiveis >= MAX_BLOCOS ? "Máximo de 16 blocos (8h) por dia" : undefined}
@@ -741,6 +776,44 @@ function TempoDoBloco({ minutos, onSalvar }: { minutos: number; onSalvar: (m: nu
 }
 
 /** Uma linha do dia: também é onde se solta um bloco arrastado (acende em dourado). */
+/**
+ * Seta que rola a janela de blocos da caixinha. Também é alvo do arraste: segurando
+ * um bloco em cima dela, a janela anda sozinha até a linha escondida aparecer.
+ */
+function SetaRolagem({
+  id,
+  direcao,
+  desabilitada,
+  onRolar,
+}: {
+  id: string;
+  direcao: "cima" | "baixo";
+  desabilitada: boolean;
+  onRolar: () => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id, disabled: desabilitada });
+  useEffect(() => {
+    if (!isOver || desabilitada) return;
+    const t = setInterval(onRolar, 350);
+    return () => clearInterval(t);
+  }, [isOver, desabilitada, onRolar]);
+  const Icone = direcao === "cima" ? ChevronUp : ChevronDown;
+  return (
+    <button
+      ref={setNodeRef}
+      onClick={onRolar}
+      disabled={desabilitada}
+      className={`flex cursor-pointer items-center justify-center px-4 py-1 text-dim transition-colors hover:bg-navy-700/40 hover:text-gold disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-dim ${
+        isOver ? "bg-gold/10 text-gold" : ""
+      }`}
+      aria-label={direcao === "cima" ? "Mostrar os blocos de cima" : "Mostrar os blocos de baixo"}
+      title={direcao === "cima" ? "Blocos de cima" : "Blocos de baixo"}
+    >
+      <Icone className="size-4" />
+    </button>
+  );
+}
+
 function Celula({
   data,
   hora,
