@@ -793,11 +793,16 @@ export type Database = {
       redacoes: {
         Row: {
           concurso_id: string
+          correcao: string
           created_at: string
           data: string
+          erros: number | null
+          fotos: string[]
           id: string
+          linhas: number | null
           materia_id: string | null
           nota: number | null
+          nota_conteudo: number | null
           nota_max: number | null
           numero: number
           observacoes: string
@@ -806,11 +811,16 @@ export type Database = {
         }
         Insert: {
           concurso_id: string
+          correcao?: string
           created_at?: string
           data?: string
+          erros?: number | null
+          fotos?: string[]
           id?: string
+          linhas?: number | null
           materia_id?: string | null
           nota?: number | null
+          nota_conteudo?: number | null
           nota_max?: number | null
           numero?: number
           observacoes?: string
@@ -819,11 +829,16 @@ export type Database = {
         }
         Update: {
           concurso_id?: string
+          correcao?: string
           created_at?: string
           data?: string
+          erros?: number | null
+          fotos?: string[]
           id?: string
+          linhas?: number | null
           materia_id?: string | null
           nota?: number | null
+          nota_conteudo?: number | null
           nota_max?: number | null
           numero?: number
           observacoes?: string

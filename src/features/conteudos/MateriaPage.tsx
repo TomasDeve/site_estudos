@@ -63,6 +63,7 @@ import { RegistroQuestoes } from "./RegistroQuestoes";
 import { MateriaResumos } from "./MateriaResumos";
 import { ResumosDaMateriaModal } from "./ResumosDaMateriaModal";
 import { RedacoesPanel } from "./RedacoesPanel";
+import { INFO_CONCURSOS } from "@/features/informacoes/infoConcursos";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho, desempenhoGeral, desempenhoRecente } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
@@ -415,6 +416,7 @@ export function MateriaPage() {
           cor={concurso.cor}
           vinculo={vinculo}
           redacoes={redacoesDaMateria}
+          regra={INFO_CONCURSOS[concurso.slug]?.redacao}
         />
       ) : (
         <Card>

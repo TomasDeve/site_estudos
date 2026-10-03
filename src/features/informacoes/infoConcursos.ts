@@ -41,6 +41,19 @@ export interface Etapa {
   detalhe: string;
 }
 
+/** Como a redação do concurso é corrigida — usado pelo painel de redações. */
+export interface RegraRedacao {
+  notaMax: number;
+  /** Nota mínima para não ser eliminado. */
+  minimo: number;
+  /** Máximo de linhas da folha. */
+  linhas: number;
+  /** Nota = NC − 6 × NE ÷ TL (Cebraspe). */
+  formulaCebraspe: boolean;
+  /** Tipo de texto e assunto, para o pedido de correção à IA. */
+  descricao: string;
+}
+
 export interface InfoConcurso {
   edital: string;
   site: string;
@@ -54,6 +67,7 @@ export interface InfoConcurso {
   etapas: Etapa[];
   vagas: { rotulo: string; n: number }[];
   requisitos: string[];
+  redacao?: RegraRedacao;
   /** Blocos extras (exames médicos, isenção, desempate…). */
   extras: { titulo: string; icone: string; itens: string[] }[];
 }
@@ -113,6 +127,14 @@ const PC_PE: InfoConcurso = {
       ],
     },
   ],
+  redacao: {
+    notaMax: 30,
+    minimo: 15,
+    linhas: 30,
+    formulaCebraspe: true,
+    descricao:
+      "Redação dissertativa de até 30 linhas sobre tema relevante e atual na área de segurança pública (Agente de Polícia Civil de PE, Cebraspe)",
+  },
   discursiva:
     "P3 — Redação de até 30 linhas sobre tema relevante e atual na área de segurança pública. Vale 30 pontos; precisa de 15 para passar.",
   regrasProva: [
