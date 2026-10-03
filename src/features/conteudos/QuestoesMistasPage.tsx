@@ -63,7 +63,7 @@ import {
   PillCategoria,
   type FormatoQuestao,
 } from "./QuestoesPage";
-import { agruparPorChave, embaralharPorAno, gerarSemente } from "./embaralhar";
+import { agruparPorChave, embaralharPorAno, espalharPorChave, gerarSemente } from "./embaralhar";
 import { anoDaFonte } from "./fonteQuestao";
 import { acertou as questaoAcertou, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
@@ -315,12 +315,14 @@ export function QuestoesMistasPage() {
         ? noFiltro
         : noFiltro.filter((q) => cats.has(q.categoria as QuestaoCategoria));
     const arr = [...vivas].sort((a, b) => a.id.localeCompare(b.id));
-    // Embaralha por faixa de ano (mais recentes primeiro, só misturando anos vizinhos)
-    // e depois junta as que compartilham o mesmo "Texto associado" (sem desfazer o
-    // embaralho): você lê o texto uma vez e responde todas em sequência.
+    // Embaralha por faixa de ano (mais recentes primeiro, só misturando anos vizinhos),
+    // espalha as matérias pela lista (senão a matéria com mais questões recentes domina
+    // o começo) e depois junta as que compartilham o mesmo "Texto associado" (sem desfazer
+    // o embaralho): você lê o texto uma vez e responde todas em sequência.
     const porAno = embaralharPorAno(arr, semente, (q) => anoDaFonte(q.fonte));
-    return agruparPorChave(porAno, (q) => q.texto_associado);
-  }, [noFiltro, cats, semente]);
+    const espalhadas = espalharPorChave(porAno, semente, (q) => topicoPorId.get(q.topico_id)?.materia_id);
+    return agruparPorChave(espalhadas, (q) => q.texto_associado);
+  }, [noFiltro, cats, semente, topicoPorId]);
 
   // Histórico (questao_logs) no escopo da página — a matéria escolhida ou o site
   // todo, recortado pelo filtro de matéria/assunto — para a janela das últimas 30.

@@ -64,6 +64,35 @@ export function agruparPorChave<T>(itens: T[], chaveDe: (item: T) => string | nu
   return out;
 }
 
+/**
+ * Espalha os grupos (ex.: matérias) proporcionalmente pela lista toda, preservando a
+ * ordem recebida DENTRO de cada grupo. Cada item ganha a chave (posição no grupo +
+ * sorteio) ÷ tamanho do grupo — assim uma matéria com muitas questões não domina o
+ * começo, e uma com poucas não fica toda no fim. Determinístico pela semente.
+ */
+export function espalharPorChave<T>(
+  itens: T[],
+  semente: number,
+  chaveDe: (item: T) => string | null | undefined
+): T[] {
+  const total = new Map<string, number>();
+  for (const item of itens) {
+    const k = chaveDe(item) ?? "";
+    total.set(k, (total.get(k) ?? 0) + 1);
+  }
+  const visto = new Map<string, number>();
+  const rnd = mulberry32(semente ^ 0x9e3779b9);
+  return itens
+    .map((item) => {
+      const k = chaveDe(item) ?? "";
+      const pos = visto.get(k) ?? 0;
+      visto.set(k, pos + 1);
+      return { item, chave: (pos + rnd()) / total.get(k)! };
+    })
+    .sort((x, y) => x.chave - y.chave)
+    .map((x) => x.item);
+}
+
 /** Anos distintos (decrescente) → posição: o mais recente é 0, o seguinte 1… */
 function rankDosAnos(anos: (number | null)[]): Map<number, number> {
   const distintos = [...new Set(anos.filter((a): a is number => a !== null))].sort((a, b) => b - a);
