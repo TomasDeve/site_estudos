@@ -826,6 +826,30 @@ export type Database = {
           },
         ]
       }
+      questoes_relogio: {
+        Row: {
+          atualizado_em: string
+          base_ms: number
+          inicio_ms: number | null
+          pausa_auto: boolean
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          base_ms?: number
+          inicio_ms?: number | null
+          pausa_auto?: boolean
+          user_id?: string
+        }
+        Update: {
+          atualizado_em?: string
+          base_ms?: number
+          inicio_ms?: number | null
+          pausa_auto?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       redacoes: {
         Row: {
           concurso_id: string
@@ -1279,6 +1303,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      relogio_questoes: {
+        Args: { acao?: string }
+        Returns: Json
+      }
       registrar_clique_questao: {
         Args: {
           p_data: string
