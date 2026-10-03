@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   Archive,
@@ -17,7 +17,9 @@ import {
   useResponderQuestao,
   useSalvarGrifos,
   useSetQuestaoStatus,
-  useTodasQuestoes,
+  useConteudoQuestoes,
+  useQuestoesIndice,
+  type QuestaoIndice,
 } from "@/api/topicoQuestoes";
 import { useTopicos } from "@/api/topicos";
 import { useMaterias, useConcursoMaterias } from "@/api/materias";
@@ -73,6 +75,9 @@ import {
   useAlternarImpressao,
 } from "@/features/impressao/CaixaImpressao";
 
+/** Quantas questões aparecem (e têm o conteúdo baixado) por vez fora dos bloquinhos. */
+const POR_VEZ = 20;
+
 const ABAS = [
   { chave: "responder", label: "Para responder" },
   { chave: "resolvidas", label: "Resolvidas" },
@@ -95,7 +100,7 @@ type Aba = (typeof ABAS)[number]["chave"];
 export function QuestoesMistasPage() {
   const navigate = useNavigate();
   const { materiaId } = useParams();
-  const { data: questoes, isLoading: carregandoQuestoes } = useTodasQuestoes();
+  const { data: questoes, isLoading: carregandoQuestoes } = useQuestoesIndice();
   const { data: topicos, isLoading: carregandoTopicos } = useTopicos();
   const { data: materias, isLoading: carregandoMaterias } = useMaterias();
   const { data: concursos, isLoading: carregandoConcursos } = useConcursos();
@@ -113,8 +118,10 @@ export function QuestoesMistasPage() {
   // com o texto idêntico — aplica em todas (mantendo o enunciado de cada uma), pra a
   // marcação aparecer em toda questão que usa aquele texto.
   function aoGrifar(q: TopicoQuestao, campo: CampoGrifavel, novos: Grifo[]) {
-    if (campo === "texto_associado" && q.texto_associado) {
-      const irmas = (questoes ?? []).filter((x) => x.texto_associado === q.texto_associado);
+    if (campo === "texto_associado" && q.texto_associado_hash) {
+      const irmas = (questoes ?? []).filter(
+        (x) => x.texto_associado_hash === q.texto_associado_hash
+      );
       salvarGrifos.mutate({
         updates: (irmas.length ? irmas : [q]).map((x) => ({
           id: x.id,
@@ -205,8 +212,6 @@ export function QuestoesMistasPage() {
 
   const topicoPorId = useMemo(() => new Map((topicos ?? []).map((t) => [t.id, t])), [topicos]);
   const materiaPorId = useMemo(() => new Map((materias ?? []).map((m) => [m.id, m])), [materias]);
-  // Índice por id — acha a questão original de uma reformulada (revelado só após responder).
-  const porId = useMemo(() => new Map((questoes ?? []).map((x) => [x.id, x])), [questoes]);
 
   // Assuntos que caem no edital do concurso em estudo (recorte `topicos_incluidos`),
   // menos as matérias e assuntos riscados nele ("não vou estudar" — saem daqui como
@@ -248,8 +253,8 @@ export function QuestoesMistasPage() {
     return soFormato.filter((q) => passa(topicoPorId.get(q.topico_id)?.materia_id, q.topico_id));
   }, [soFormato, filtro, topicoPorId]);
 
-  const materiaDe = (q: TopicoQuestao) => topicoPorId.get(q.topico_id)?.materia_id;
-  const passaCat = (q: TopicoQuestao) =>
+  const materiaDe = (q: QuestaoIndice) => topicoPorId.get(q.topico_id)?.materia_id;
+  const passaCat = (q: QuestaoIndice) =>
     cats.size === 0 || cats.has(q.categoria as QuestaoCategoria);
 
   // Recorte por matéria/assunto. As pílulas de origem contam em cima dele, e o
@@ -321,7 +326,7 @@ export function QuestoesMistasPage() {
     // o embaralho): você lê o texto uma vez e responde todas em sequência.
     const porAno = embaralharPorAno(arr, semente, (q) => anoDaFonte(q.fonte));
     const espalhadas = espalharPorChave(porAno, semente, (q) => topicoPorId.get(q.topico_id)?.materia_id);
-    return agruparPorChave(espalhadas, (q) => q.texto_associado);
+    return agruparPorChave(espalhadas, (q) => q.texto_associado_hash);
   }, [noFiltro, cats, semente, topicoPorId]);
 
   // Histórico (questao_logs) no escopo da página — a matéria escolhida ou o site
@@ -364,10 +369,28 @@ export function QuestoesMistasPage() {
   // Chave estável do conjunto (ordenada). Modo bloquinhos: resolve de 5 em 5;
   // trocar de origem, aba ou embaralhar recomeça do 1º bloco.
   const catsKey = [...cats].sort().join(",");
-  const bloco = useBloquinhos(
-    lista,
-    `${formato}-${[...bancas].sort().join(",")}-${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`
-  );
+  const chaveReset = `${formato}-${[...bancas].sort().join(",")}-${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`;
+  const bloco = useBloquinhos(lista, chaveReset);
+
+  // Sem bloquinhos, a lista aparece de POR_VEZ em POR_VEZ (chegar ao fim traz mais):
+  // renderizar centenas de cards de uma vez pesava a página.
+  const [limite, setLimite] = useState(POR_VEZ);
+  useEffect(() => {
+    setLimite(POR_VEZ);
+  }, [chaveReset, bloco.ativo]);
+  const naTela = bloco.ativo ? bloco.lista : bloco.lista.slice(0, limite);
+
+  // Conteúdo completo (enunciado, alternativas, comentário…) só do que está na tela,
+  // das próximas POR_VEZ (já chegam prontas ao avançar) e das originais das
+  // reformuladas na tela (o "ver a questão original"). O resto fica só no índice.
+  const inicioNaTela = naTela.length ? lista.indexOf(naTela[0]) : 0;
+  const fimNaTela = inicioNaTela + naTela.length;
+  const idsConteudo = [
+    ...naTela.map((q) => q.id),
+    ...lista.slice(fimNaTela, fimNaTela + POR_VEZ).map((q) => q.id),
+    ...naTela.flatMap((q) => (q.reformulada_de ? [q.reformulada_de] : [])),
+  ];
+  const { conteudo, erro: erroConteudo } = useConteudoQuestoes(idsConteudo);
 
   if (
     carregandoQuestoes ||
@@ -601,7 +624,14 @@ export function QuestoesMistasPage() {
               <div className="space-y-3">
                 <CabecalhoBloco b={bloco} />
                 <ul className="space-y-3">
-                  {bloco.lista.map((q) => (
+                  {naTela.map((qi) => {
+                    const completa = conteudo.get(qi.id);
+                    if (!completa) {
+                      return <CardCarregando key={qi.id} erro={!!erroConteudo} />;
+                    }
+                    // O índice manda no estado (resposta, grifos, marcas — patch otimista lá).
+                    const q: TopicoQuestao = { ...completa, ...qi };
+                    return (
                     <QuestaoMistaCard
                       key={q.id}
                       questao={q}
@@ -613,7 +643,7 @@ export function QuestoesMistasPage() {
                       onRefazer={mudarRefazer}
                       onImprimir={() => alternarImpressao(q)}
                       onArquivar={() => arquivar(q)}
-                      origem={q.reformulada_de ? porId.get(q.reformulada_de) : undefined}
+                      origem={q.reformulada_de ? conteudo.get(q.reformulada_de) : undefined}
                       onDuvida={() => setDuvida(q)}
                       onConferirLei={comLei?.has(q.topico_id) ? () => setNaLei(q) : undefined}
                       onAdicionarResumo={() => {
@@ -631,8 +661,15 @@ export function QuestoesMistasPage() {
                       naResumo={idsNoBanco.has(q.id) || adicionadas.has(q.id)}
                       onVerResumo={() => setVerResumoDe(q)}
                     />
-                  ))}
+                    );
+                  })}
                 </ul>
+                {!bloco.ativo && lista.length > limite && (
+                  <MostrarMais
+                    restantes={lista.length - limite}
+                    onMais={() => setLimite((l) => l + POR_VEZ)}
+                  />
+                )}
                 <RodapeBloco b={bloco} logs={logsEscopo} />
               </div>
             )}
@@ -675,6 +712,44 @@ export function QuestoesMistasPage() {
           );
         })()}
     </div>
+  );
+}
+
+/** Placeholder do card enquanto o conteúdo da questão ainda está chegando. */
+function CardCarregando({ erro }: { erro: boolean }) {
+  return (
+    <li className="flex min-h-32 items-center justify-center rounded-xl border border-line/40 bg-navy-800/40 text-xs text-mut">
+      {erro ? "Não foi possível carregar esta questão — tente rolar ou embaralhar de novo." : <Spinner />}
+    </li>
+  );
+}
+
+/**
+ * Fim da parte visível da lista: mostra mais POR_VEZ sozinho quando chega à tela
+ * (rolagem contínua), com o botão de reserva caso o observador não dispare.
+ */
+function MostrarMais({ restantes, onMais }: { restantes: number; onMais: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entradas) => {
+        if (entradas.some((e) => e.isIntersecting)) onMais();
+      },
+      { rootMargin: "400px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [onMais, restantes]);
+  return (
+    <button
+      ref={ref}
+      onClick={onMais}
+      className="w-full cursor-pointer rounded-xl border border-line/50 py-3 text-xs font-semibold text-dim transition-colors hover:border-line hover:bg-navy-700/60 hover:text-txt"
+    >
+      Mostrar mais {Math.min(restantes, POR_VEZ)} (faltam {restantes})
+    </button>
   );
 }
 

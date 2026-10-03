@@ -1054,6 +1054,7 @@ export type Database = {
           resposta_letra: string | null
           status: string
           texto_associado: string | null
+          texto_associado_hash: string | null
           tipo: string
           topico_id: string
           user_id: string
@@ -1081,6 +1082,7 @@ export type Database = {
           resposta_letra?: string | null
           status?: string
           texto_associado?: string | null
+          texto_associado_hash?: never
           tipo?: string
           topico_id: string
           user_id?: string
@@ -1108,6 +1110,7 @@ export type Database = {
           resposta_letra?: string | null
           status?: string
           texto_associado?: string | null
+          texto_associado_hash?: never
           tipo?: string
           topico_id?: string
           user_id?: string

@@ -10,9 +10,15 @@ import { acertou, estaResolvida } from "./questaoModelo";
 const TAMANHO = 5;
 const CHAVE = "questoes_bloquinhos";
 
-export interface Bloquinho {
+/** O mínimo que o bloquinho lê de cada questão (basta o índice leve, sem o enunciado). */
+export type QuestaoDoBloco = Pick<
+  TopicoQuestao,
+  "id" | "tipo" | "resposta" | "resposta_letra" | "gabarito" | "gabarito_letra"
+>;
+
+export interface Bloquinho<T extends QuestaoDoBloco = QuestaoDoBloco> {
   /** O que renderizar: o bloco da vez ou, com o modo desligado, a lista inteira. */
-  lista: TopicoQuestao[];
+  lista: T[];
   ativo: boolean;
   alternar: () => void;
   indice: number;
@@ -33,7 +39,7 @@ export interface Bloquinho {
  *
  * `reset` é a chave que devolve ao primeiro bloco (trocar de aba, embaralhar…).
  */
-export function useBloquinhos(lista: TopicoQuestao[], reset: string): Bloquinho {
+export function useBloquinhos<T extends QuestaoDoBloco>(lista: T[], reset: string): Bloquinho<T> {
   // A preferência fica lembrada entre visitas; o bloco em que você parou, não —
   // ao voltar, "Para responder" já começa nas próximas 5 em aberto.
   const [ativo, setAtivo] = useState(() => localStorage.getItem(CHAVE) === "1");

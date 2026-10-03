@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
@@ -36,15 +37,113 @@ export function useQuestoesResumo() {
   });
 }
 
-/** Todas as questões de todos os assuntos — alimentam o modo misturado. */
-export function useTodasQuestoes() {
+/**
+ * Índice leve de TODAS as questões — o modo misturado filtra, conta e embaralha em
+ * cima dele, sem baixar enunciado, alternativas, comentário nem texto associado
+ * (eram ~8 MB de uma vez). O conteúdo vem sob demanda por `useConteudoQuestoes`.
+ * `texto_associado_hash` (coluna gerada, md5 do texto) mantém juntas as irmãs do texto.
+ */
+const COLUNAS_INDICE =
+  "id,topico_id,status,categoria,tipo,fonte,resposta,resposta_letra,gabarito,gabarito_letra,respondida_em,reformulada_de,grifos,imprimir_em,impressao_numero,refazer,texto_associado_hash";
+
+export type QuestaoIndice = Pick<
+  TopicoQuestao,
+  | "id"
+  | "topico_id"
+  | "status"
+  | "categoria"
+  | "tipo"
+  | "fonte"
+  | "resposta"
+  | "resposta_letra"
+  | "gabarito"
+  | "gabarito_letra"
+  | "respondida_em"
+  | "reformulada_de"
+  | "grifos"
+  | "imprimir_em"
+  | "impressao_numero"
+  | "refazer"
+  | "texto_associado_hash"
+>;
+
+export function useQuestoesIndice() {
   return useQuery({
-    queryKey: ["topico_questoes", "todas"],
-    queryFn: () =>
-      fetchAll<TopicoQuestao>((f, t) =>
-        supabase.from("topico_questoes").select("*").order("id").range(f, t)
-      ),
+    queryKey: ["topico_questoes", "indice"],
+    queryFn: async () => {
+      // Arquivadas não entram no misturado. As páginas de 1000 (teto do PostgREST) vão
+      // em paralelo: a 1ª traz a contagem e as demais saem juntas, sem fila.
+      const pagina = (de: number, ate: number, contar = false) =>
+        supabase
+          .from("topico_questoes")
+          .select(COLUNAS_INDICE, contar ? { count: "exact" } : undefined)
+          .neq("status", "arquivada")
+          .order("id")
+          .range(de, ate);
+      const PAG = 1000;
+      const primeira = await pagina(0, PAG - 1, true);
+      if (primeira.error) throw primeira.error;
+      const total = primeira.count ?? 0;
+      const resto = await Promise.all(
+        Array.from({ length: Math.max(Math.ceil(total / PAG) - 1, 0) }, (_, i) =>
+          pagina((i + 1) * PAG, (i + 2) * PAG - 1)
+        )
+      );
+      const out: QuestaoIndice[] = [...(primeira.data ?? [])];
+      for (const r of resto) {
+        if (r.error) throw r.error;
+        out.push(...(r.data ?? []));
+      }
+      return out;
+    },
   });
+}
+
+/** Quantos ids vão por requisição ao buscar conteúdo (a lista entra na URL). */
+const LOTE_CONTEUDO = 60;
+
+/**
+ * Conteúdo completo (select *) só das questões pedidas — as que estão na tela e as
+ * próximas. Guarda o que já veio: avançar de bloco ou rolar só busca as que faltam.
+ * O estado que muda ao responder/grifar/marcar vem do índice (patch otimista lá),
+ * então quem usa mescla `{ ...conteudo, ...indice }`.
+ */
+export function useConteudoQuestoes(ids: readonly string[]) {
+  const [cache, setCache] = useState<ReadonlyMap<string, TopicoQuestao>>(new Map());
+  const [erro, setErro] = useState<Error | null>(null);
+  const pedidos = useRef(new Set<string>());
+  const chave = ids.join(",");
+
+  useEffect(() => {
+    const faltam = ids.filter((id) => !cache.has(id) && !pedidos.current.has(id));
+    if (faltam.length === 0) return;
+    faltam.forEach((id) => pedidos.current.add(id));
+    (async () => {
+      const linhas: TopicoQuestao[] = [];
+      for (let i = 0; i < faltam.length; i += LOTE_CONTEUDO) {
+        const { data, error } = await supabase
+          .from("topico_questoes")
+          .select("*")
+          .in("id", faltam.slice(i, i + LOTE_CONTEUDO));
+        if (error) throw error;
+        linhas.push(...(data as TopicoQuestao[]));
+      }
+      setErro(null);
+      setCache((prev) => {
+        const novo = new Map(prev);
+        for (const l of linhas) novo.set(l.id, l);
+        return novo;
+      });
+    })().catch((err) => {
+      // Libera os ids para uma nova tentativa na próxima mudança da lista.
+      faltam.forEach((id) => pedidos.current.delete(id));
+      setErro(err instanceof Error ? err : new Error(String(err)));
+    });
+    // `chave` resume `ids`; o cache entra para reavaliar o que ainda falta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chave, cache]);
+
+  return { conteudo: cache, erro };
 }
 
 /** Questões completas de um assunto — só busca quando o painel está aberto. */
