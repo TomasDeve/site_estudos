@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, WandSparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { RotinaBloco } from "@/types/db";
-import { useCriarBlocos, useRotina } from "@/api/rotina";
+import { buscarRotina, useAplicarRotina, useCriarBlocos, useRotina, type BlocoNovo } from "@/api/rotina";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { fmtMinutos } from "@/lib/dates";
 import { BlocoModal, type Rascunho } from "./BlocoModal";
+import { ResumoDia } from "./ResumoDia";
+import { RotinaIAModal } from "./RotinaIAModal";
 import {
   MODELO,
   TIPOS,
@@ -17,7 +19,6 @@ import {
   duracao,
   fmtHora,
   passaDaMeiaNoite,
-  resumoDoDia,
   tipoDe,
   tituloDe,
   vindoDeOntem,
@@ -51,10 +52,12 @@ type Editor = { bloco?: RotinaBloco; inicial: Rascunho } | null;
 export function RotinaPage() {
   const { data: blocos, isLoading } = useRotina();
   const criarModelo = useCriarBlocos();
+  const aplicarRotina = useAplicarRotina();
   const agora = useAgora();
   // Rotina única (a mesma todo dia): a linha do tempo é a de hoje.
   const dia = agora.getDay();
   const [editor, setEditor] = useState<Editor>(null);
+  const [comIA, setComIA] = useState(false);
 
   const lista = useMemo(() => blocos ?? [], [blocos]);
   const status = useMemo(() => agoraNaRotina(lista, agora), [lista, agora]);
@@ -80,6 +83,26 @@ export function RotinaPage() {
     });
   }
 
+  /** Grava a rotina que a IA propôs, com "Desfazer" (volta a de antes). */
+  async function aplicarIA(nova: (BlocoNovo & { id?: string })[]) {
+    const antes = lista;
+    await aplicarRotina.mutateAsync({ atual: antes, nova });
+    toast.success("Rotina atualizada.", {
+      duration: 10_000,
+      action: { label: "Desfazer", onClick: () => void desfazer(antes) },
+    });
+  }
+
+  async function desfazer(antes: RotinaBloco[]) {
+    try {
+      // Lê do banco: os blocos que a IA criou já têm id de verdade.
+      await aplicarRotina.mutateAsync({ atual: await buscarRotina(), nova: antes });
+      toast.success("A rotina anterior voltou.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader
@@ -87,10 +110,16 @@ export function RotinaPage() {
         subtitle="Seus horários fixos: acordar, estudar, parar, treinar e dormir."
         action={
           lista.length > 0 && (
-            <Button size="sm" onClick={novoNoFim}>
-              <Plus className="size-4" />
-              Bloco
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setComIA(true)}>
+                <WandSparkles className="size-4 text-gold" />
+                Ajustar com IA
+              </Button>
+              <Button size="sm" onClick={novoNoFim}>
+                <Plus className="size-4" />
+                Bloco
+              </Button>
+            </div>
           )
         }
       />
@@ -101,14 +130,19 @@ export function RotinaPage() {
           <h2 className="mt-3 text-base font-semibold text-txt">Monte sua rotina</h2>
           <p className="mx-auto mt-1.5 max-w-sm text-sm text-dim">
             Uma rotina só, para seguir todos os dias. Comece por um modelo pronto (sono, 3h de
-            estudo com intervalo, refeições e academia) e ajuste o que quiser — ou monte do zero.
+            estudo com intervalo, refeições e academia), descreva o seu dia para a IA montar — ou
+            monte do zero.
           </p>
           <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
             <Button onClick={usarModelo} loading={criarModelo.isPending}>
               <Sparkles className="size-4" />
               Montar com um modelo
             </Button>
-            <Button variant="secondary" onClick={() => novo(22 * 60 + 30, 6 * 60, "sono")}>
+            <Button variant="secondary" onClick={() => setComIA(true)}>
+              <WandSparkles className="size-4 text-gold" />
+              Descrever para a IA
+            </Button>
+            <Button variant="ghost" onClick={() => novo(22 * 60 + 30, 6 * 60, "sono")}>
               Começar do zero
             </Button>
           </div>
@@ -127,13 +161,22 @@ export function RotinaPage() {
             onNovo={novo}
           />
 
-          <button
-            onClick={novoNoFim}
-            className="flex min-h-12 w-full cursor-pointer touch-manipulation items-center justify-center gap-2 rounded-xl border border-dashed border-line/70 text-sm font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
-          >
-            <Plus className="size-4" />
-            Adicionar bloco
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={novoNoFim}
+              className="flex min-h-12 cursor-pointer touch-manipulation items-center justify-center gap-2 rounded-xl border border-dashed border-line/70 text-sm font-semibold text-dim transition-colors hover:border-gold/50 hover:text-gold"
+            >
+              <Plus className="size-4" />
+              Adicionar bloco
+            </button>
+            <button
+              onClick={() => setComIA(true)}
+              className="flex min-h-12 cursor-pointer touch-manipulation items-center justify-center gap-2 rounded-xl border border-dashed border-gold/40 text-sm font-semibold text-gold/90 transition-colors hover:border-gold hover:bg-gold/5 hover:text-gold"
+            >
+              <WandSparkles className="size-4" />
+              Ajustar com IA
+            </button>
+          </div>
         </div>
       )}
 
@@ -145,6 +188,8 @@ export function RotinaPage() {
           onClose={() => setEditor(null)}
         />
       )}
+
+      {comIA && <RotinaIAModal blocos={lista} onAplicar={aplicarIA} onClose={() => setComIA(false)} />}
     </div>
   );
 }
@@ -213,29 +258,6 @@ function AgoraCard({
         </div>
       )}
     </Card>
-  );
-}
-
-/** Acorda/dorme/sono e quanto do dia vai para estudo, academia… */
-function ResumoDia({ blocos, dia }: { blocos: RotinaBloco[]; dia: number }) {
-  const r = resumoDoDia(blocos, dia);
-  const chips: string[] = [];
-  if (r.acorda !== null) chips.push(`☀️ Acorda ${fmtHora(r.acorda)}`);
-  if (r.dorme !== null) chips.push(`🌙 Dorme ${fmtHora(r.dorme)}`);
-  if (r.sono !== null) chips.push(`😴 ${fmtMinutos(r.sono)} de sono`);
-  for (const t of ["estudo", "academia", "intervalo"] as const) {
-    const m = r.porTipo.get(t);
-    if (m) chips.push(`${TIPOS[t].emoji} ${fmtMinutos(m)} de ${TIPOS[t].label.toLowerCase()}`);
-  }
-  if (!chips.length) return null;
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {chips.map((c) => (
-        <span key={c} className="rounded-full border border-line/50 bg-navy-900/60 px-2.5 py-1 text-[11px] text-dim">
-          {c}
-        </span>
-      ))}
-    </div>
   );
 }
 

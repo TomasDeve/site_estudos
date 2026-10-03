@@ -185,3 +185,60 @@ export const MODELO: BlocoNovo[] = [
   { tipo: "refeicao", titulo: "Jantar", inicio: 19 * 60 + 30, fim: 20 * 60 },
   { tipo: "outro", titulo: "Desligar as telas", inicio: 22 * 60, fim: 22 * 60 + 30 },
 ].map((b) => ({ ...b, dias: TODOS_OS_DIAS }));
+
+type BlocoComId = BlocoNovo & { id?: string };
+
+const camposDe = (b: BlocoNovo): BlocoNovo => ({
+  tipo: b.tipo,
+  titulo: b.titulo ?? "",
+  inicio: b.inicio,
+  fim: b.fim,
+  dias: b.dias ?? TODOS_OS_DIAS,
+});
+
+/** O bloco mudou (tipo, nome, horário ou dias)? */
+export function blocoMudou(antes: Pick<RotinaBloco, "tipo" | "titulo" | "inicio" | "fim" | "dias">, depois: BlocoNovo) {
+  const d = camposDe(depois);
+  return (
+    antes.tipo !== d.tipo ||
+    antes.titulo.trim() !== (d.titulo ?? "").trim() ||
+    antes.inicio !== d.inicio ||
+    antes.fim !== d.fim ||
+    [...antes.dias].sort().join() !== [...(d.dias ?? [])].sort().join()
+  );
+}
+
+/**
+ * O que gravar para a rotina `atual` virar a `nova` (a da IA, ou a de antes no
+ * "Desfazer"): bloco com `id` que ainda existe é atualizado (se mudou), o resto
+ * entra como novo e o que sumiu da lista é apagado. Um mesmo `id` repetido só
+ * aproveita a linha uma vez — a cópia entra como bloco novo.
+ */
+export function diffRotina(atual: RotinaBloco[], nova: BlocoComId[]) {
+  const porId = new Map(atual.map((b) => [b.id, b]));
+  const usados = new Set<string>();
+  const inserir: BlocoNovo[] = [];
+  const atualizar: (BlocoNovo & { id: string })[] = [];
+  for (const b of nova) {
+    const antigo = b.id ? porId.get(b.id) : undefined;
+    if (antigo && !usados.has(antigo.id)) {
+      usados.add(antigo.id);
+      if (blocoMudou(antigo, b)) atualizar.push({ ...camposDe(b), id: antigo.id });
+    } else {
+      inserir.push(camposDe(b));
+    }
+  }
+  const excluir = atual.filter((b) => !usados.has(b.id)).map((b) => b.id);
+  return { inserir, atualizar, excluir };
+}
+
+/**
+ * Ordem de leitura de uma rotina: do acordar (fim do sono) em diante, para o sono
+ * da noite ficar no fim e um bloco de madrugada não ir parar no topo.
+ */
+export function ordenarPeloDia<T extends Pick<RotinaBloco, "tipo" | "inicio" | "fim">>(blocos: T[]): T[] {
+  const sono = blocos.find((b) => tipoDe(b) === "sono" && passaDaMeiaNoite(b));
+  const acorda = sono ? sono.fim : 0;
+  const pos = (b: T) => (b.inicio - acorda + DIA_MIN) % DIA_MIN;
+  return [...blocos].sort((a, b) => pos(a) - pos(b) || duracao(b) - duracao(a));
+}
