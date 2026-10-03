@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Bot, Camera, ClipboardCopy, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Camera, ChevronRight, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { ConcursoMateria, Redacao } from "@/types/db";
 import {
@@ -21,7 +21,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { StatCard } from "@/components/StatCard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { RegraRedacao } from "@/features/informacoes/infoConcursos";
-import { notaCebraspe, promptCorrecao } from "./redacaoNota";
+import { notaCebraspe } from "./redacaoNota";
 
 const META_PADRAO = 7;
 
@@ -55,7 +55,7 @@ export function RedacoesPanel({ concursoId, materiaId, cor, vinculo, redacoes, r
 
   // Antes da migração 0039 as colunas novas não vêm do banco: assume vazio.
   const lista = redacoes
-    .map((r) => ({ ...r, fotos: r.fotos ?? [], correcao: r.correcao ?? "" }))
+    .map((r) => ({ ...r, fotos: r.fotos ?? [] }))
     .sort((a, b) => a.numero - b.numero);
   const vendo = lista.find((r) => r.id === vendoId) ?? null;
   const feitas = lista.length;
@@ -155,7 +155,7 @@ export function RedacoesPanel({ concursoId, materiaId, cor, vinculo, redacoes, r
         {lista.length === 0 ? (
           <p className="rounded-xl border border-dashed border-line/60 bg-navy-900/40 px-4 py-6 text-center text-sm text-mut">
             Nenhuma redação lançada ainda. Toque em <strong className="text-dim">Nova redação</strong> para
-            enviar a foto da folha, colar a correção da IA e registrar a nota.
+            registrar o tema, a nota e, se quiser, a foto da folha.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -177,11 +177,6 @@ export function RedacoesPanel({ concursoId, materiaId, cor, vinculo, redacoes, r
                       {r.fotos.length > 0 && (
                         <span className="inline-flex items-center gap-0.5">
                           <Camera className="size-3" /> {r.fotos.length}
-                        </span>
-                      )}
-                      {r.correcao.trim() && (
-                        <span className="inline-flex items-center gap-0.5">
-                          <Bot className="size-3" /> corrigida
                         </span>
                       )}
                     </p>
@@ -397,17 +392,6 @@ function DetalheModal({ redacao: r, cor, regra, onClose, onEditar, onExcluir }: 
           </p>
         )}
 
-        {r.correcao.trim() && (
-          <section>
-            <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-mut">
-              <Bot className="size-3.5" /> Correção
-            </p>
-            <div className="whitespace-pre-wrap rounded-xl border border-line/50 bg-navy-900/50 px-3.5 py-3 text-sm leading-relaxed text-dim">
-              {r.correcao}
-            </div>
-          </section>
-        )}
-
         {r.observacoes.trim() && (
           <section>
             <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-mut">O que treinar</p>
@@ -466,16 +450,17 @@ function RedacaoFormModal({ concursoId, materiaId, proximoNumero, redacao, regra
   const [notaMax, setNotaMax] = useState(
     redacao?.nota_max != null ? String(redacao.nota_max) : String(regra?.notaMax ?? 10)
   );
-  const [correcao, setCorrecao] = useState(redacao?.correcao ?? "");
   const [obs, setObs] = useState(redacao?.observacoes ?? "");
   const [salvando, setSalvando] = useState(false);
+  // Os campos da fórmula ficam recolhidos, salvo se a redação já os tem.
+  const [detalhar, setDetalhar] = useState(redacao?.nota_conteudo != null);
 
   // Prévia das fotos ainda não enviadas (URLs locais, liberadas ao trocar/fechar).
   const previas = useMemo(() => fotosNovas.map((f) => URL.createObjectURL(f)), [fotosNovas]);
   useEffect(() => () => previas.forEach((u) => URL.revokeObjectURL(u)), [previas]);
 
   // Com NC, NE e TL preenchidos, a nota sai da fórmula do Cebraspe.
-  const notaFormula = regra?.formulaCebraspe
+  const notaFormula = regra?.formulaCebraspe && detalhar
     ? notaCebraspe(parseNum(nc), parseNum(ne), parseNum(tl), regra.notaMax)
     : null;
 
@@ -483,15 +468,6 @@ function RedacaoFormModal({ concursoId, materiaId, proximoNumero, redacao, regra
     if (!lista?.length) return;
     setFotosNovas((atual) => [...atual, ...Array.from(lista)]);
     if (inputFotos.current) inputFotos.current.value = "";
-  }
-
-  async function copiarPrompt() {
-    try {
-      await navigator.clipboard.writeText(promptCorrecao(tema, regra));
-      toast.success("Pedido de correção copiado — cole na IA junto com a foto.");
-    } catch {
-      toast.error("Não consegui copiar.");
-    }
   }
 
   async function onSubmit(e: FormEvent) {
@@ -503,10 +479,10 @@ function RedacaoFormModal({ concursoId, materiaId, proximoNumero, redacao, regra
       data,
       nota: notaFormula ?? parseNum(nota),
       nota_max: parseNum(notaMax),
-      nota_conteudo: parseNum(nc),
-      erros: parseNum(ne) != null ? Math.round(parseNum(ne)!) : null,
-      linhas: parseNum(tl) != null ? Math.round(parseNum(tl)!) : null,
-      correcao: correcao.trim(),
+      // com o detalhamento recolhido, a nota é a digitada e a fórmula não é guardada
+      nota_conteudo: detalhar ? parseNum(nc) : null,
+      erros: detalhar && parseNum(ne) != null ? Math.round(parseNum(ne)!) : null,
+      linhas: detalhar && parseNum(tl) != null ? Math.round(parseNum(tl)!) : null,
       observacoes: obs.trim(),
     };
     try {
@@ -574,7 +550,7 @@ function RedacaoFormModal({ concursoId, materiaId, proximoNumero, redacao, regra
           </Field>
         </div>
 
-        <Field label="Fotos da folha" hint="Pode mandar mais de uma (frente e verso, folhas)">
+        <Field label="Fotos da folha (opcional)" hint="Pode mandar mais de uma (frente e verso, folhas)">
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {fotosMantidas.map((f) => (
               <FotoPrevia key={f} src={urlFotoRedacao(f)} onRemover={() => setFotosMantidas((l) => l.filter((x) => x !== f))} />
@@ -607,41 +583,9 @@ function RedacaoFormModal({ concursoId, materiaId, proximoNumero, redacao, regra
         </Field>
 
         <section className="space-y-3 rounded-xl border border-line/50 bg-navy-900/40 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold text-txt">Correção</p>
-            <Button type="button" size="sm" variant="ghost" onClick={copiarPrompt}>
-              <ClipboardCopy className="size-4" /> Copiar pedido de correção p/ IA
-            </Button>
-          </div>
-          <Textarea
-            rows={7}
-            value={correcao}
-            onChange={(e) => setCorrecao(e.target.value)}
-            placeholder="Cole aqui a correção que a IA fez (comentários, erros apontados, sugestões)…"
-          />
-
-          {regra?.formulaCebraspe && (
-            <div>
-              <p className="mb-1.5 text-xs text-dim">
-                Nota pela fórmula do Cebraspe: <strong className="text-txt">NC − 6 × NE ÷ TL</strong>
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                <Field label={`Conteúdo (0–${regra.notaMax})`}>
-                  <Input type="number" step="0.25" min={0} max={regra.notaMax} inputMode="decimal" value={nc} onChange={(e) => setNc(e.target.value)} />
-                </Field>
-                <Field label="Erros">
-                  <Input type="number" step="1" min={0} inputMode="numeric" value={ne} onChange={(e) => setNe(e.target.value)} />
-                </Field>
-                <Field label={`Linhas (até ${regra.linhas})`}>
-                  <Input type="number" step="1" min={1} max={regra.linhas} inputMode="numeric" value={tl} onChange={(e) => setTl(e.target.value)} />
-                </Field>
-              </div>
-            </div>
-          )}
-
           <div className="grid grid-cols-2 gap-3">
             <Field
-              label="Nota final"
+              label="Nota"
               hint={notaFormula != null ? "Calculada pela fórmula" : "Deixe em branco se ainda não corrigiu"}
             >
               <Input
@@ -664,9 +608,36 @@ function RedacaoFormModal({ concursoId, materiaId, proximoNumero, redacao, regra
               />
             </Field>
           </div>
+
+          {regra?.formulaCebraspe && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setDetalhar((v) => !v)}
+                className="flex cursor-pointer items-center gap-1 text-xs text-dim hover:text-txt"
+                aria-expanded={detalhar}
+              >
+                <ChevronRight className={`size-3.5 transition-transform ${detalhar ? "rotate-90" : ""}`} />
+                Detalhar pela fórmula do Cebraspe (opcional): NC − 6 × NE ÷ TL
+              </button>
+              {detalhar && (
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  <Field label={`Conteúdo (0–${regra.notaMax})`}>
+                    <Input type="number" step="0.25" min={0} max={regra.notaMax} inputMode="decimal" value={nc} onChange={(e) => setNc(e.target.value)} />
+                  </Field>
+                  <Field label="Erros">
+                    <Input type="number" step="1" min={0} inputMode="numeric" value={ne} onChange={(e) => setNe(e.target.value)} />
+                  </Field>
+                  <Field label={`Linhas (até ${regra.linhas})`}>
+                    <Input type="number" step="1" min={1} max={regra.linhas} inputMode="numeric" value={tl} onChange={(e) => setTl(e.target.value)} />
+                  </Field>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
-        <Field label="O que treinar na próxima" hint="Seus lembretes a partir da correção">
+        <Field label="O que treinar na próxima" hint="Opcional">
           <Textarea
             rows={3}
             value={obs}

@@ -50,8 +50,6 @@ export interface RegraRedacao {
   linhas: number;
   /** Nota = NC − 6 × NE ÷ TL (Cebraspe). */
   formulaCebraspe: boolean;
-  /** Tipo de texto e assunto, para o pedido de correção à IA. */
-  descricao: string;
 }
 
 export interface InfoConcurso {
@@ -132,8 +130,6 @@ const PC_PE: InfoConcurso = {
     minimo: 15,
     linhas: 30,
     formulaCebraspe: true,
-    descricao:
-      "Redação dissertativa de até 30 linhas sobre tema relevante e atual na área de segurança pública (Agente de Polícia Civil de PE, Cebraspe)",
   },
   discursiva:
     "P3 — Redação de até 30 linhas sobre tema relevante e atual na área de segurança pública. Vale 30 pontos; precisa de 15 para passar.",
