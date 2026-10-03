@@ -34,6 +34,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { ResumoRapido } from "./ResumoRapido";
+import { RelogioQuestoes } from "./RelogioQuestoes";
 import { TextoAssociado } from "./TextoAssociado";
 import {
   Grifavel,
@@ -501,12 +502,20 @@ export function QuestoesMistasPage() {
         {materiaEscopo ? (
           <span className="shrink-0 text-base leading-none">{materiaEscopo.icone}</span>
         ) : (
-          <Shuffle className="size-4 shrink-0 text-gold" />
+          <Shuffle className="size-4 shrink-0 text-gold max-sm:hidden" />
         )}
         <h1 className="min-w-0 text-sm font-semibold leading-snug text-txt max-sm:line-clamp-2 sm:truncate sm:text-base">
-          {titulo}
+          {materiaEscopo ? (
+            titulo
+          ) : (
+            <>
+              {/* No celular o "Todas as matérias" sai: o espaço vai para o relógio. */}
+              Questões<span className="max-sm:hidden"> · Todas as matérias</span>
+            </>
+          )}
         </h1>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <RelogioQuestoes />
           <LinkImpressao />
           <button
             onClick={reembaralhar}
