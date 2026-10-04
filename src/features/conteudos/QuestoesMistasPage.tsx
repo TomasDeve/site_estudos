@@ -76,6 +76,7 @@ import {
   LinkImpressao,
   useAlternarImpressao,
 } from "@/features/impressao/CaixaImpressao";
+import { TemporizadorQuestao } from "./TemporizadorQuestao";
 
 /** Quantas questões aparecem (e têm o conteúdo baixado) por vez fora dos bloquinhos. */
 const POR_VEZ = 20;
@@ -873,6 +874,7 @@ function QuestaoMistaCard({
           )}
           {fonteQC && <FonteQuestao fonte={fonteQC} />}
         </div>
+        <TemporizadorQuestao respondida={resolvida} />
         <CaixaImpressao marcada={!!q.imprimir_em} onToggle={onImprimir} />
         <button
           onClick={onArquivar}

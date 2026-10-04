@@ -74,6 +74,7 @@ import {
   LinkImpressao,
   useAlternarImpressao,
 } from "@/features/impressao/CaixaImpressao";
+import { TemporizadorQuestao } from "./TemporizadorQuestao";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
@@ -835,7 +836,8 @@ function QuestaoCard({
               Arquivada
             </span>
           )}
-          <CaixaImpressao className="ml-auto" marcada={!!q.imprimir_em} onToggle={onImprimir} />
+          <TemporizadorQuestao className="ml-auto" respondida={resolvida} />
+          <CaixaImpressao marcada={!!q.imprimir_em} onToggle={onImprimir} />
           <button
             onClick={() =>
               status === "arquivada"
