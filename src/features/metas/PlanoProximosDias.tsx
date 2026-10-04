@@ -203,9 +203,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
     return mapa;
   }, [linhas]);
 
-  // Totais em minutos: cada bloco conta o tempo dele (30 por padrão).
-  const planejadas = (linhas ?? []).reduce((s, l) => s + minutosDe(l), 0);
-  const feitas = (linhas ?? []).filter((l) => l.feita).reduce((s, l) => s + minutosDe(l), 0);
+  const vazio = (linhas ?? []).length === 0;
   const ehJanelaDeHoje = inicio === hoje;
   const titulo = ehJanelaDeHoje
     ? `Próximos ${quantos} dias`
@@ -305,16 +303,12 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-txt">{titulo}</h2>
-            <p className="mt-0.5 text-xs text-mut">
-              {planejadas === 0 ? (
-                "Blocos de 30 min — toque num bloco para escolher o que fazer nele."
-              ) : (
-                <>
-                  <strong className="text-dim">{fmtTempo(planejadas)}</strong> planejadas ·{" "}
-                  <strong className="text-green">{fmtTempo(feitas)}</strong> feitas
-                </>
-              )}
-            </p>
+            {/* As horas ficam só na caixinha de cada dia; aqui, só a dica quando está vazio. */}
+            {vazio && (
+              <p className="mt-0.5 text-xs text-mut">
+                Blocos de 30 min — toque num bloco para escolher o que fazer nele.
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {/* Quantos dias mostrar: 3 (uma linha), 6 ou 9 */}
