@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Timer } from "lucide-react";
+import { Hourglass, RotateCcw, Timer } from "lucide-react";
 
 /** Tempo-alvo por questão: treino de responder em no máximo 3 minutos. */
 const LIMITE_MS = 3 * 60 * 1000;
+
+/** Evento que as páginas disparam ao responder uma questão → o cronômetro pausa. */
+const EVENTO_RESPONDIDA = "questao-respondida";
+
+export function avisarQuestaoRespondida() {
+  window.dispatchEvent(new Event(EVENTO_RESPONDIDA));
+}
 
 const mmss = (ms: number) => {
   const s = Math.floor(Math.abs(ms) / 1000);
@@ -28,23 +35,18 @@ function bipar() {
 }
 
 /**
- * Cronômetro regressivo de 3 minutos no canto da questão. Clique para começar;
- * zerou, bipa e passa a contar o estouro em vermelho (+0:15). Ao responder a
- * questão, congela mostrando quanto tempo levou. Clique de novo para zerar.
+ * Cronômetro regressivo de 3 minutos no topo da página de questões, ao lado do
+ * relógio. 1º clique começa; o 2º pausa; o 3º zera e já recomeça do 3:00.
+ * Zerou, bipa e conta o estouro em vermelho (+0:15). Responder uma questão
+ * com ele rodando também pausa (mostra quanto você levou).
  */
-export function TemporizadorQuestao({
-  respondida,
-  className = "",
-}: {
-  respondida: boolean;
-  className?: string;
-}) {
+export function TemporizadorQuestao() {
   const [inicio, setInicio] = useState<number | null>(null);
-  const [fim, setFim] = useState<number | null>(null);
+  const [pausadoEm, setPausadoEm] = useState<number | null>(null);
   const [agora, setAgora] = useState(() => Date.now());
   const bipou = useRef(false);
 
-  const rodando = inicio !== null && fim === null;
+  const rodando = inicio !== null && pausadoEm === null;
 
   useEffect(() => {
     if (!rodando) return;
@@ -52,14 +54,14 @@ export function TemporizadorQuestao({
     return () => clearInterval(id);
   }, [rodando]);
 
-  // Acabou de responder com o relógio rodando → congela o tempo gasto.
-  const respondidaAntes = useRef(respondida);
   useEffect(() => {
-    if (respondida && !respondidaAntes.current && rodando) setFim(Date.now());
-    respondidaAntes.current = respondida;
-  }, [respondida, rodando]);
+    if (!rodando) return;
+    const pausar = () => setPausadoEm(Date.now());
+    window.addEventListener(EVENTO_RESPONDIDA, pausar);
+    return () => window.removeEventListener(EVENTO_RESPONDIDA, pausar);
+  }, [rodando]);
 
-  const gasto = inicio === null ? 0 : (fim ?? agora) - inicio;
+  const gasto = inicio === null ? 0 : (pausadoEm ?? agora) - inicio;
   const restante = LIMITE_MS - gasto;
   const estourou = restante <= 0;
 
@@ -71,33 +73,37 @@ export function TemporizadorQuestao({
   }, [rodando, estourou]);
 
   const clicar = () => {
-    if (inicio === null) {
-      bipou.current = false;
-      setAgora(Date.now());
-      setInicio(Date.now());
-    } else {
-      setInicio(null);
-      setFim(null);
+    if (rodando) {
+      setPausadoEm(Date.now());
+      return;
     }
+    // parado ou pausado → começa (de novo) do 3:00
+    bipou.current = false;
+    setPausadoEm(null);
+    setAgora(Date.now());
+    setInicio(Date.now());
   };
 
-  const cor =
-    inicio === null
-      ? "text-mut/70 hover:text-dim"
-      : estourou
-        ? `text-red ${rodando ? "animate-pulse" : ""}`
-        : fim !== null
-          ? "text-green"
-          : restante <= 30_000
-            ? "text-gold"
-            : "text-txt";
+  const ocioso = inicio === null;
+  const pausado = inicio !== null && pausadoEm !== null;
 
-  const titulo =
-    inicio === null
-      ? "Cronômetro de 3 minutos — clique para começar"
-      : fim !== null
-        ? `Respondida em ${mmss(gasto)}${estourou ? " (passou dos 3 min)" : ""} — clique para zerar`
-        : "Clique para parar e zerar";
+  const cor = ocioso
+    ? "border-line/60 text-dim hover:border-line hover:bg-navy-700/60 hover:text-txt"
+    : estourou
+      ? `border-red/40 bg-red/10 text-red ${rodando ? "animate-pulse" : ""}`
+      : pausado
+        ? "border-green/40 bg-green/10 text-green"
+        : restante <= 30_000
+          ? "border-gold/40 bg-gold/10 text-gold"
+          : "border-line text-txt";
+
+  const titulo = ocioso
+    ? "Cronômetro de 3 minutos por questão — clique para começar"
+    : rodando
+      ? "Clique para pausar"
+      : `Pausado em ${mmss(gasto)}${estourou ? " (passou dos 3 min)" : ""} — clique para zerar e começar de novo`;
+
+  const Icone = ocioso ? Timer : rodando ? Hourglass : RotateCcw;
 
   return (
     <button
@@ -105,11 +111,16 @@ export function TemporizadorQuestao({
       onClick={clicar}
       title={titulo}
       aria-label={titulo}
-      className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md p-1 text-xs font-semibold tabular-nums transition-colors max-sm:p-2 ${cor} ${className}`}
+      className={`flex min-h-9 shrink-0 cursor-pointer touch-manipulation select-none items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold tabular-nums transition-colors ${cor}`}
     >
-      <Timer className="size-3.5" />
-      {inicio !== null && (
-        <span>{fim !== null ? mmss(gasto) : estourou ? `+${mmss(restante)}` : mmss(restante)}</span>
+      <Icone className="size-3.5" />
+      {ocioso ? (
+        <span>
+          3<span className="max-sm:hidden"> min</span>
+          <span className="sm:hidden">:00</span>
+        </span>
+      ) : (
+        <span>{estourou ? `+${mmss(restante)}` : mmss(restante)}</span>
       )}
     </button>
   );

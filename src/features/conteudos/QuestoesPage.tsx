@@ -74,7 +74,7 @@ import {
   LinkImpressao,
   useAlternarImpressao,
 } from "@/features/impressao/CaixaImpressao";
-import { TemporizadorQuestao } from "./TemporizadorQuestao";
+import { avisarQuestaoRespondida, TemporizadorQuestao } from "./TemporizadorQuestao";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
@@ -166,7 +166,8 @@ export function QuestoesPage() {
           <span className="max-sm:hidden">Questões por IA · </span>
           {topico.titulo}
         </h1>
-        <div className="ml-auto">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <TemporizadorQuestao />
           <LinkImpressao />
         </div>
       </header>
@@ -388,6 +389,7 @@ function Caderno({ topico }: { topico: Topico }) {
    */
   async function onResponder(q: TopicoQuestao, valor: boolean | string | null) {
     const estreia = valor !== null && !estaResolvida(q);
+    if (estreia) avisarQuestaoRespondida();
     // Marca "respondida nesta sessão" já, junto com o resultado otimista, pra a
     // questão não piscar pra fora de "Para responder" enquanto a gravação viaja.
     setRespondidasAgora((s) => {
@@ -836,8 +838,7 @@ function QuestaoCard({
               Arquivada
             </span>
           )}
-          <TemporizadorQuestao className="ml-auto" respondida={resolvida} />
-          <CaixaImpressao marcada={!!q.imprimir_em} onToggle={onImprimir} />
+          <CaixaImpressao className="ml-auto" marcada={!!q.imprimir_em} onToggle={onImprimir} />
           <button
             onClick={() =>
               status === "arquivada"

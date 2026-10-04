@@ -76,7 +76,7 @@ import {
   LinkImpressao,
   useAlternarImpressao,
 } from "@/features/impressao/CaixaImpressao";
-import { TemporizadorQuestao } from "./TemporizadorQuestao";
+import { avisarQuestaoRespondida, TemporizadorQuestao } from "./TemporizadorQuestao";
 
 /** Quantas questões aparecem (e têm o conteúdo baixado) por vez fora dos bloquinhos. */
 const POR_VEZ = 20;
@@ -454,6 +454,7 @@ export function QuestoesMistasPage() {
    */
   async function onResponder(q: TopicoQuestao, valor: boolean | string | null) {
     const estreia = valor !== null && !estaResolvida(q);
+    if (estreia) avisarQuestaoRespondida();
     // Marca "respondida nesta sessão" já, junto com o resultado otimista, pra a
     // questão não piscar pra fora de "Para responder" enquanto a gravação viaja.
     if (valor !== null) {
@@ -549,6 +550,7 @@ export function QuestoesMistasPage() {
         </h1>
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
           <RelogioQuestoes />
+          <TemporizadorQuestao />
           <LinkImpressao />
           <button
             onClick={reembaralhar}
@@ -874,7 +876,6 @@ function QuestaoMistaCard({
           )}
           {fonteQC && <FonteQuestao fonte={fonteQC} />}
         </div>
-        <TemporizadorQuestao respondida={resolvida} />
         <CaixaImpressao marcada={!!q.imprimir_em} onToggle={onImprimir} />
         <button
           onClick={onArquivar}
