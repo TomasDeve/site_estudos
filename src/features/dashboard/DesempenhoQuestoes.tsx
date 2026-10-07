@@ -5,10 +5,11 @@ import { diasAtrasISO, hojeISO } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
 import { Spinner } from "@/components/Spinner";
 
-type Periodo = "hoje" | "7d" | "30d" | "sempre";
+type Periodo = "hoje" | "ontem" | "7d" | "30d" | "sempre";
 
 const OPCOES: { id: Periodo; rotulo: string; descricao: string }[] = [
   { id: "hoje", rotulo: "Hoje", descricao: "Suas resoluções de hoje" },
+  { id: "ontem", rotulo: "Ontem", descricao: "Suas resoluções de ontem" },
   { id: "7d", rotulo: "7 dias", descricao: "Resoluções dos últimos 7 dias" },
   { id: "30d", rotulo: "30 dias", descricao: "Resoluções dos últimos 30 dias" },
   { id: "sempre", rotulo: "Sempre", descricao: "Todo o seu histórico" },
@@ -29,6 +30,10 @@ export function DesempenhoQuestoes() {
 
   const placar = useMemo(() => {
     const todos = logs ?? [];
+    if (periodo === "ontem") {
+      const ontem = diasAtrasISO(1);
+      return desempenhoGeral(todos.filter((l) => l.data === ontem));
+    }
     const desde =
       periodo === "hoje"
         ? hojeISO()
@@ -61,7 +66,7 @@ export function DesempenhoQuestoes() {
               type="button"
               onClick={() => setPeriodo(o.id)}
               aria-pressed={periodo === o.id}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition sm:px-3 ${
                 periodo === o.id
                   ? "bg-gold text-navy-950 shadow-sm"
                   : "text-dim hover:text-txt"
