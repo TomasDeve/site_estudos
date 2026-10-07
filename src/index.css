@@ -338,6 +338,17 @@ textarea,
   color: #333;
 }
 
+/* "Dividir por matéria": cada caderno começa em página nova (na prévia, uma separação). */
+.folha-caderno + .folha-caderno {
+  break-before: page;
+}
+@media screen {
+  .folha-caderno + .folha-caderno {
+    margin-top: 10mm;
+    border-top: 1pt dashed #9a9a9a;
+    padding-top: 8mm;
+  }
+}
 .folha-materia + .folha-materia {
   margin-top: 7mm;
 }

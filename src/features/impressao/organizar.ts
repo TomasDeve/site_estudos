@@ -111,6 +111,25 @@ export function numerarImpressao(
 }
 
 /**
+ * "Dividir por matéria": junta todas as questões de cada matéria num bloco só, na ordem
+ * de prova das matérias, mantendo dentro dela a ordem dos números (impressões de dias
+ * diferentes da mesma matéria ficam juntas, em vez de a matéria reaparecer mais adiante).
+ */
+export function juntarPorMateria(
+  questoes: TopicoQuestao[],
+  ordemProva: TopicoQuestao[],
+  topicos: Topico[]
+): TopicoQuestao[] {
+  const topicoPorId = new Map(topicos.map((t) => [t.id, t]));
+  const materia = (q: TopicoQuestao) => topicoPorId.get(q.topico_id)?.materia_id ?? "";
+  const posicao = new Map<string, number>();
+  for (const q of ordemProva) if (!posicao.has(materia(q))) posicao.set(materia(q), posicao.size);
+  const pos = (q: TopicoQuestao) => posicao.get(materia(q)) ?? posicao.size;
+  // sort estável: dentro da matéria, segue a ordem recebida (a dos números)
+  return [...questoes].sort((a, b) => pos(a) - pos(b));
+}
+
+/**
  * Agrupa uma sequência de questões em matérias e assuntos para os títulos da tela e da
  * folha, juntando só os vizinhos: numa lista com impressões de dias diferentes, a mesma
  * matéria pode aparecer de novo mais adiante (a folha segue a numeração).

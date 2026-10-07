@@ -3,6 +3,7 @@ import type { ConcursoMateria, Materia, Topico, TopicoQuestao } from "@/types/db
 import {
   agruparEmSequencia,
   blocosPorTexto,
+  juntarPorMateria,
   listaNumeros,
   numerarImpressao,
   ordenarParaImpressao,
@@ -134,5 +135,20 @@ describe("listaNumeros", () => {
     expect(listaNumeros([5, 6, 9, 10])).toBe("5, 6, 9 e 10");
     expect(listaNumeros([5, 6, 7, 12])).toBe("5 a 7 e 12");
     expect(listaNumeros([])).toBe("");
+  });
+});
+
+describe("juntarPorMateria (dividir por matéria)", () => {
+  it("junta cada matéria num bloco, na ordem de prova, mantendo a ordem dos números", () => {
+    // impressões de dias diferentes: Português (1, 2), Penal (3), Português de novo (4)
+    const folha = [
+      questao("a", "t1", 0, null, 1),
+      questao("b", "t2", 0, null, 2),
+      questao("c", "p1", 0, null, 3),
+      questao("d", "t1", 1, null, 4),
+    ];
+    const prova = ordenarParaImpressao(folha, topicos, materias, vinculos);
+    expect(ids(juntarPorMateria(folha, prova, topicos))).toEqual(["a", "b", "d", "c"]);
+    expect(agruparEmSequencia(juntarPorMateria(folha, prova, topicos), topicos, materias)).toHaveLength(2);
   });
 });

@@ -62,6 +62,7 @@ import { FolhaImpressao } from "./FolhaImpressao";
 import { useOpcoesFolha, type OpcoesFolha, type TamanhoLetra } from "./opcoes";
 import {
   agruparEmSequencia,
+  juntarPorMateria,
   numerarImpressao,
   ordenarParaImpressao,
   type MateriaImpressao,
@@ -239,15 +240,20 @@ export function ImpressaoPage() {
   }, [base, ordemProva, aba, respondidasAgora]);
 
   // Na tela, as já impressas vêm primeiro; as ainda não impressas, separadas logo abaixo.
+  // "Dividir por matéria" junta cada matéria num bloco só (na folha, um caderno por matéria).
   const grupos = useMemo(() => {
     const agrupar = (lista: TopicoQuestao[]) =>
-      agruparEmSequencia(lista, topicos ?? [], materias ?? []);
+      agruparEmSequencia(
+        opcoes.dividir ? juntarPorMateria(lista, ordemProva, topicos ?? []) : lista,
+        topicos ?? [],
+        materias ?? []
+      );
     return {
       folha: agrupar(visiveis),
       impressas: agrupar(visiveis.filter((q) => q.impressao_numero != null)),
       novas: agrupar(visiveis.filter((q) => q.impressao_numero == null)),
     };
-  }, [visiveis, topicos, materias]);
+  }, [visiveis, ordemProva, opcoes.dividir, topicos, materias]);
 
   // Placar da correção: tudo que já foi respondido no recorte, em qualquer aba.
   const placar = useMemo(() => {
@@ -662,6 +668,7 @@ export function ImpressaoPage() {
             materias={grupos.folha}
             numeroDe={numeroDe}
             opcoes={opcoes}
+            dividir={opcoes.dividir && grupos.folha.length > 1}
             concurso={concursoAtivo?.nome_curto ?? concursoAtivo?.nome}
           />
         </div>
@@ -708,7 +715,7 @@ export function ImpressaoPage() {
   );
 }
 
-/** Opções da folha (colunas e tamanho da letra) e a prévia. Só as questões vão ao papel. */
+/** Opções da folha (colunas, tamanho da letra, divisão por matéria) e a prévia. Só as questões vão ao papel. */
 function PainelFolha({
   opcoes,
   onMudar,
@@ -747,6 +754,21 @@ function PainelFolha({
               onClick={() => onMudar({ colunas: n })}
               label={n === 1 ? "1 coluna" : "2 colunas"}
               title={n === 2 ? "Duas colunas por página — economiza papel" : "Uma coluna, leitura corrida"}
+            />
+          ))}
+        </Opcao>
+        <Opcao rotulo="Matérias">
+          {([false, true] as const).map((d) => (
+            <PillCategoria
+              key={String(d)}
+              ativo={opcoes.dividir === d}
+              onClick={() => onMudar({ dividir: d })}
+              label={d ? "Divididas" : "Juntas"}
+              title={
+                d
+                  ? "Cada matéria num caderno próprio, começando em página nova — dá para separar as folhas"
+                  : "Todas as matérias seguidas, no mesmo caderno"
+              }
             />
           ))}
         </Opcao>

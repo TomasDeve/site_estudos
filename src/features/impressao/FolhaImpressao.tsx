@@ -12,6 +12,8 @@ interface Props {
   materias: MateriaImpressao[];
   numeroDe: Map<string, number>;
   opcoes: OpcoesFolha;
+  /** Um caderno por matéria (cabeçalho próprio, começando em página nova). */
+  dividir?: boolean;
   /** Nome do concurso no cabeçalho (ex.: "PC AL"). */
   concurso?: string;
 }
@@ -23,7 +25,7 @@ interface Props {
  * comentário, grifos, riscos ou respostas dadas. A correção é no site, pela mesma
  * numeração. Os estilos ficam em `index.css` (bloco "Folha de impressão"), em pt/mm.
  */
-export function FolhaImpressao({ materias, numeroDe, opcoes, concurso }: Props) {
+export function FolhaImpressao({ materias, numeroDe, opcoes, dividir, concurso }: Props) {
   const questoes = useMemo(
     () => materias.flatMap((m) => m.assuntos.flatMap((a) => a.questoes)),
     [materias]
@@ -42,12 +44,44 @@ export function FolhaImpressao({ materias, numeroDe, opcoes, concurso }: Props) 
   }, [questoes, numeroDe]);
 
   if (questoes.length === 0) return null;
-  const num = (q: TopicoQuestao) => numeroDe.get(q.id) ?? 0;
-  const total = questoes.length;
-  const nomes = [...new Set(materias.map((m) => m.nome))].join(" · ");
+  const cadernos = dividir ? materias.map((m) => [m]) : [materias];
 
   return (
     <div className="folha" data-letra={opcoes.letra} data-colunas={opcoes.colunas}>
+      {cadernos.map((lista, i) => (
+        <Caderno
+          key={`${lista[0].materiaId}-${i}`}
+          materias={lista}
+          numeroDe={numeroDe}
+          numerosDoTexto={numerosDoTexto}
+          concurso={concurso}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Um caderno: cabeçalho, campos de data/hora e as matérias num fluxo só de colunas. */
+function Caderno({
+  materias,
+  numeroDe,
+  numerosDoTexto,
+  concurso,
+}: {
+  materias: MateriaImpressao[];
+  numeroDe: Map<string, number>;
+  numerosDoTexto: Map<string, number[]>;
+  concurso?: string;
+}) {
+  const num = (q: TopicoQuestao) => numeroDe.get(q.id) ?? 0;
+  const total = materias.reduce(
+    (s, m) => s + m.assuntos.reduce((t, a) => t + a.questoes.length, 0),
+    0
+  );
+  const nomes = [...new Set(materias.map((m) => m.nome))].join(" · ");
+
+  return (
+    <div className="folha-caderno">
       <header className="folha-cabecalho">
         <div>
           <h1>Caderno de questões</h1>
@@ -65,7 +99,7 @@ export function FolhaImpressao({ materias, numeroDe, opcoes, concurso }: Props) 
         <span>Fim: ____:____</span>
       </p>
 
-      {/* Um fluxo só de colunas para a folha inteira (os títulos de matéria vão dentro
+      {/* Um fluxo só de colunas para o caderno inteiro (os títulos de matéria vão dentro
           dele, como no caderno da prova): a 1ª coluna enche até o fim da página antes
           de a 2ª começar — inclusive na última página. */}
       <div className="folha-colunas">

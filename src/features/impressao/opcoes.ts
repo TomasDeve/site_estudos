@@ -6,11 +6,13 @@ export type TamanhoLetra = "p" | "m" | "g";
 export interface OpcoesFolha {
   colunas: 1 | 2;
   letra: TamanhoLetra;
+  /** Cada matéria num caderno próprio, começando em página nova (dá para separar as folhas). */
+  dividir: boolean;
 }
 
 const CHAVE = "impressao-opcoes";
 // Duas colunas por padrão: é como o aluno pediu a folha (e como vem o caderno da prova).
-const PADRAO: OpcoesFolha = { colunas: 2, letra: "m" };
+const PADRAO: OpcoesFolha = { colunas: 2, letra: "m", dividir: false };
 
 function ler(): OpcoesFolha {
   try {
@@ -19,6 +21,7 @@ function ler(): OpcoesFolha {
       return {
         colunas: salvo.colunas === 1 ? 1 : 2,
         letra: salvo.letra === "p" || salvo.letra === "g" ? salvo.letra : "m",
+        dividir: salvo.dividir === true,
       };
     }
   } catch {
@@ -27,7 +30,7 @@ function ler(): OpcoesFolha {
   return PADRAO;
 }
 
-/** Preferências da folha (colunas e letra) — preferência de exibição, lembrada no aparelho. */
+/** Preferências da folha (colunas, letra e divisão por matéria) — preferência de exibição, lembrada no aparelho. */
 export function useOpcoesFolha(): [OpcoesFolha, (mudanca: Partial<OpcoesFolha>) => void] {
   const [opcoes, setOpcoes] = useState(ler);
   function mudar(mudanca: Partial<OpcoesFolha>) {
