@@ -1,5 +1,7 @@
 import { type MouseEvent, useMemo, useRef, useState } from "react";
 import { useQuestaoLogsTodos } from "@/api/questaoLogs";
+import { useMaterias } from "@/api/materias";
+import { useTopicos } from "@/api/topicos";
 import { desempenhoGeral } from "@/features/conteudos/desempenho";
 import { diasAtrasISO, hojeISO } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
@@ -28,11 +30,14 @@ export function DesempenhoQuestoes() {
   const [periodo, setPeriodo] = useState<Periodo>("hoje");
   const { data: logs, isLoading } = useQuestaoLogsTodos();
 
-  const placar = useMemo(() => {
+  const { data: materias } = useMaterias();
+  const { data: topicos } = useTopicos();
+
+  const janela = useMemo(() => {
     const todos = logs ?? [];
     if (periodo === "ontem") {
       const ontem = diasAtrasISO(1);
-      return desempenhoGeral(todos.filter((l) => l.data === ontem));
+      return todos.filter((l) => l.data === ontem);
     }
     const desde =
       periodo === "hoje"
@@ -43,13 +48,36 @@ export function DesempenhoQuestoes() {
             ? diasAtrasISO(29)
             : null;
     // `data` é "YYYY-MM-DD": comparação de string já é cronológica.
-    const janela = desde ? todos.filter((l) => l.data >= desde) : todos;
-    return desempenhoGeral(janela);
+    return desde ? todos.filter((l) => l.data >= desde) : todos;
   }, [logs, periodo]);
 
-  const { total, acertos } = placar;
+  const { total, acertos } = useMemo(() => desempenhoGeral(janela), [janela]);
   const erros = total - acertos;
   const opcao = OPCOES.find((o) => o.id === periodo)!;
+
+  // Placar por matéria: a matéria vem do tópico (quando o registro tem) ou do
+  // próprio registro; o que não casa com nenhuma fica pelo texto importado.
+  const porMateria = useMemo(() => {
+    const materiaDoTopico = new Map((topicos ?? []).map((t) => [t.id, t.materia_id]));
+    const materiaPorId = new Map((materias ?? []).map((m) => [m.id, m]));
+    const grupos = new Map<string, LinhaMateria>();
+    for (const l of janela) {
+      const mid = (l.topico_id && materiaDoTopico.get(l.topico_id)) || l.materia_id;
+      const m = mid ? materiaPorId.get(mid) : undefined;
+      const chave = m?.id ?? l.materia_texto ?? "—";
+      const g = grupos.get(chave) ?? {
+        chave,
+        nome: m?.nome ?? l.materia_texto ?? "Sem matéria",
+        icone: m?.icone ?? "📘",
+        total: 0,
+        acertos: 0,
+      };
+      g.total += l.total;
+      g.acertos += l.acertos;
+      grupos.set(chave, g);
+    }
+    return [...grupos.values()].filter((g) => g.total > 0).sort((a, b) => b.total - a.total);
+  }, [janela, materias, topicos]);
 
   return (
     <Card>
@@ -84,20 +112,39 @@ export function DesempenhoQuestoes() {
             <Spinner className="size-8" />
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
-            <Anel acertos={acertos} erros={erros} />
-            <div className="grid w-full flex-1 grid-cols-3 gap-2">
-              <Stat n={total} label="Resoluções de questões" />
-              <Stat n={acertos} label="Resoluções corretas" cor={VERDE} />
-              <Stat n={erros} label="Resoluções erradas" cor={VERMELHO} />
+          <div className="grid gap-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-8">
+            {/* Geral: anel + os três números empilhados ao lado */}
+            <div className="flex items-center justify-center gap-6 lg:justify-start">
+              <Anel acertos={acertos} erros={erros} />
+              <div className="flex flex-col gap-3">
+                <Stat n={total} label="Resoluções" />
+                <Stat n={acertos} label="Corretas" cor={VERDE} />
+                <Stat n={erros} label="Erradas" cor={VERMELHO} />
+              </div>
+            </div>
+
+            {/* Por matéria — altura fixa, rola quando há muitas */}
+            <div className="min-w-0 lg:border-l lg:border-line/40 lg:pl-8">
+              <div className="mb-2 grid grid-cols-[minmax(0,1fr)_2.5rem_2.5rem_2.5rem_3rem] items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-wider text-mut">
+                <span className="col-span-5 sm:col-span-1">Por matéria</span>
+                <span className="col-start-2 text-right sm:col-start-auto" title="Questões resolvidas">Qtd</span>
+                <span className="text-right" style={{ color: VERDE }} title="Certas">✓</span>
+                <span className="text-right" style={{ color: VERMELHO }} title="Erradas">✗</span>
+                <span className="text-right" title="Acerto">%</span>
+              </div>
+              {porMateria.length === 0 ? (
+                <p className="py-8 text-center text-xs text-mut">
+                  Nenhuma questão resolvida neste período.
+                </p>
+              ) : (
+                <ul className="max-h-[220px] space-y-1 overflow-y-auto pr-1 sm:max-h-[150px]">
+                  {porMateria.map((g) => (
+                    <LinhaPorMateria key={g.chave} g={g} />
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
-        )}
-        {!isLoading && total === 0 && (
-          <p className="mt-4 text-center text-xs text-mut">
-            Nenhuma questão resolvida neste período — resolva questões nos Conteúdos para
-            alimentar seu desempenho.
-          </p>
         )}
       </CardBody>
     </Card>
@@ -218,14 +265,57 @@ function Anel({ acertos, erros }: { acertos: number; erros: number }) {
 
 function Stat({ n, label, cor }: { n: number; label: string; cor?: string }) {
   return (
-    <div className="text-center">
-      <div className="text-3xl font-black tabular-nums text-txt" style={cor ? { color: cor } : undefined}>
+    <div className="flex items-baseline gap-2">
+      <span
+        className="min-w-[2.5ch] text-2xl font-black tabular-nums leading-none text-txt"
+        style={cor ? { color: cor } : undefined}
+      >
         {n}
-      </div>
-      <div className="mt-1 flex items-center justify-center gap-1.5 text-[11px] font-medium leading-tight text-dim">
+      </span>
+      <span className="flex items-center gap-1.5 text-[11px] font-medium text-dim">
         {cor && <span className="size-2 shrink-0 rounded-full" style={{ background: cor }} />}
         {label}
-      </div>
+      </span>
     </div>
+  );
+}
+
+interface LinhaMateria {
+  chave: string;
+  nome: string;
+  icone: string;
+  total: number;
+  acertos: number;
+}
+
+/** Uma matéria: nome + barrinha de acerto embaixo; total, certas, erradas e %. */
+function LinhaPorMateria({ g }: { g: LinhaMateria }) {
+  const erradas = g.total - g.acertos;
+  const pct = Math.round((g.acertos / g.total) * 100);
+  const corPct = pct >= 70 ? VERDE : pct >= 50 ? "#e0a83e" : VERMELHO;
+  return (
+    <li className="grid grid-cols-[minmax(0,1fr)_2.5rem_2.5rem_2.5rem_3rem] items-center gap-x-2 gap-y-1 rounded-lg px-1 py-1 text-xs hover:bg-navy-800/60">
+      <div className="col-span-5 min-w-0 sm:col-span-1">
+        <div className="flex items-center gap-1.5">
+          <span className="shrink-0 text-sm leading-none">{g.icone}</span>
+          <span className="truncate font-medium text-txt" title={g.nome}>
+            {g.nome}
+          </span>
+        </div>
+        <div className="mt-1 h-1 overflow-hidden rounded-full bg-navy-600">
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: corPct }} />
+        </div>
+      </div>
+      <span className="col-start-2 text-right tabular-nums text-txt sm:col-start-auto">{g.total}</span>
+      <span className="text-right tabular-nums" style={{ color: VERDE }}>
+        {g.acertos}
+      </span>
+      <span className="text-right tabular-nums" style={{ color: VERMELHO }}>
+        {erradas}
+      </span>
+      <span className="text-right font-bold tabular-nums" style={{ color: corPct }}>
+        {pct}%
+      </span>
+    </li>
   );
 }
