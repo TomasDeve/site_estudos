@@ -13,6 +13,8 @@ export interface FiltroPadrao {
   formato: FormatoQuestao;
   bancas: string[];
   cats: QuestaoCategoria[];
+  /** Só as questões dos assuntos marcados como Concluído (bolinha verde). */
+  soConcluidos: boolean;
 }
 
 const FORMATOS: readonly FormatoQuestao[] = ["todos", "ce", "multipla"];
@@ -40,16 +42,27 @@ export function lerFiltroPadrao(json: Json | null | undefined): FiltroPadrao | n
     formato,
     bancas: strings(o.bancas),
     cats: strings(o.cats) as QuestaoCategoria[],
+    soConcluidos: o.soConcluidos === true,
   };
 }
 
 /** Chave estável (independe da ordem) — para saber se o que está na tela é o padrão. */
 export function chaveFiltroPadrao(p: FiltroPadrao): string {
-  return [chaveFiltro(p.filtro), p.formato, [...p.bancas].sort().join(","), [...p.cats].sort().join(",")].join("#");
+  return [
+    chaveFiltro(p.filtro),
+    p.formato,
+    [...p.bancas].sort().join(","),
+    [...p.cats].sort().join(","),
+    p.soConcluidos ? "concluidos" : "",
+  ].join("#");
 }
 
 export const ehVazio = (p: FiltroPadrao) =>
-  p.filtro.length === 0 && p.formato === "todos" && p.bancas.length === 0 && p.cats.length === 0;
+  p.filtro.length === 0 &&
+  p.formato === "todos" &&
+  p.bancas.length === 0 &&
+  p.cats.length === 0 &&
+  !p.soConcluidos;
 
 /**
  * Linha do filtro padrão, abaixo das pílulas: salvar o filtro da tela como padrão,

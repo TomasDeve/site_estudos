@@ -161,6 +161,8 @@ export function QuestoesMistasPage() {
   const [formato, setFormato] = useState<FormatoQuestao>("todos");
   // Bancas em foco (multi-seleção; vazio = todas) — recorta junto com o formato.
   const [bancas, setBancas] = useState<ReadonlySet<string>>(new Set());
+  // Só os assuntos marcados como Concluído (bolinha verde) — treinar o que já foi estudado.
+  const [soConcluidos, setSoConcluidos] = useState(false);
 
   /** Liga/desliga uma origem no filtro — várias podem ficar ativas ao mesmo tempo. */
   function alternarCategoria(chave: QuestaoCategoria) {
@@ -233,13 +235,20 @@ export function QuestoesMistasPage() {
     setFormato(p.formato);
     setBancas(new Set(p.bancas));
     setCats(new Set(p.cats));
+    setSoConcluidos(p.soConcluidos);
   }
   const padraoPendente = !materiaId && !!concursoAtivo && padraoAplicadoEm !== concursoAtivo.id;
   if (padraoPendente) {
     setPadraoAplicadoEm(concursoAtivo.id);
     if (padrao) aplicarPadrao(padrao);
   }
-  const filtroAtual: FiltroPadrao = { filtro, formato, bancas: [...bancas], cats: [...cats] };
+  const filtroAtual: FiltroPadrao = {
+    filtro,
+    formato,
+    bancas: [...bancas],
+    cats: [...cats],
+    soConcluidos,
+  };
   function gravarPadrao(p: FiltroPadrao | null) {
     if (!concursoAtivo) return;
     salvarPadrao.mutate(
@@ -277,8 +286,19 @@ export function QuestoesMistasPage() {
       }),
     [questoes, materiaId, topicoPorId, idsDoEdital]
   );
-  // Recorte por formato (C/E × múltipla): daqui em diante tudo conta em cima dele.
-  const soFormato = useMemo(() => vivas.filter((q) => passaFormato(q, formato)), [vivas, formato]);
+  // Assuntos marcados como Concluído (bolinha verde) — o recorte "Só concluídos".
+  const concluidos = useMemo(
+    () => new Set((topicos ?? []).filter((t) => t.status === "concluido").map((t) => t.id)),
+    [topicos]
+  );
+  const vivasConcluidas = useMemo(
+    () => vivas.filter((q) => concluidos.has(q.topico_id)),
+    [vivas, concluidos]
+  );
+  // Recorte pelos concluídos (se ligado) e por formato (C/E × múltipla): daqui em
+  // diante tudo conta em cima deles — inclusive os assuntos oferecidos no filtro.
+  const emFoco = soConcluidos ? vivasConcluidas : vivas;
+  const soFormato = useMemo(() => emFoco.filter((q) => passaFormato(q, formato)), [emFoco, formato]);
   // ...e por banca.
   const base = useMemo(() => soFormato.filter((q) => passaBanca(q, bancas)), [soFormato, bancas]);
   // As pílulas de banca contam em cima do formato + matéria/assunto filtrados.
@@ -369,9 +389,12 @@ export function QuestoesMistasPage() {
     const todos = todosLogs ?? [];
     const passa = compilarFiltro(filtro);
     return todos.filter(
-      (l) => (!materiaId || l.materia_id === materiaId) && passa(l.materia_id, l.topico_id)
+      (l) =>
+        (!materiaId || l.materia_id === materiaId) &&
+        (!soConcluidos || (!!l.topico_id && concluidos.has(l.topico_id))) &&
+        passa(l.materia_id, l.topico_id)
     );
-  }, [todosLogs, materiaId, filtro]);
+  }, [todosLogs, materiaId, filtro, soConcluidos, concluidos]);
 
   // Placar de tudo que já foi respondido, em qualquer aba.
   const placar = useMemo(() => {
@@ -403,7 +426,7 @@ export function QuestoesMistasPage() {
   // Chave estável do conjunto (ordenada). Modo bloquinhos: resolve de 5 em 5;
   // trocar de origem, aba ou embaralhar recomeça do 1º bloco.
   const catsKey = [...cats].sort().join(",");
-  const chaveReset = `${formato}-${[...bancas].sort().join(",")}-${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`;
+  const chaveReset = `${soConcluidos}-${formato}-${[...bancas].sort().join(",")}-${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`;
   const bloco = useBloquinhos(lista, chaveReset);
 
   // Sem bloquinhos, a lista aparece de POR_VEZ em POR_VEZ (chegar ao fim traz mais):
@@ -606,7 +629,15 @@ export function QuestoesMistasPage() {
               materiaFixa={materiaId}
             />
 
-            <FiltroFormato questoes={vivas} formato={formato} onMudar={setFormato} />
+            <FiltroConcluidos
+              ativo={soConcluidos}
+              onMudar={setSoConcluidos}
+              total={vivas.length}
+              concluidas={vivasConcluidas.length}
+              assuntos={new Set(vivasConcluidas.map((q) => q.topico_id)).size}
+            />
+
+            <FiltroFormato questoes={emFoco} formato={formato} onMudar={setFormato} />
 
             <FiltroBanca questoes={paraBanca} bancas={bancas} onMudar={setBancas} />
 
@@ -666,7 +697,9 @@ export function QuestoesMistasPage() {
             {lista.length === 0 ? (
               <p className="py-8 text-center text-sm text-mut">
                 {misturadas.length === 0
-                  ? cats.size > 0
+                  ? soConcluidos && vivasConcluidas.length === 0
+                    ? "Nenhum assunto concluído com questões ainda — marque a bolinha verde nos assuntos que já estudou."
+                    : cats.size > 0
                     ? `Nenhuma questão em “${catsLabel}”${filtro.length ? " neste filtro" : ""} ainda.`
                     : formato !== "todos" || bancas.size > 0
                       ? "Nenhuma questão neste formato/banca ainda."
@@ -766,6 +799,40 @@ export function QuestoesMistasPage() {
             />
           );
         })()}
+    </div>
+  );
+}
+
+/**
+ * Recorte pelos assuntos já estudados: "Todos" ou "Só concluídos" (os de bolinha
+ * verde no edital). A contagem do segundo diz quantas questões e de quantos assuntos.
+ */
+function FiltroConcluidos({
+  ativo,
+  onMudar,
+  total,
+  concluidas,
+  assuntos,
+}: {
+  ativo: boolean;
+  onMudar: (v: boolean) => void;
+  total: number;
+  concluidas: number;
+  assuntos: number;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 [scrollbar-width:none] max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 [&::-webkit-scrollbar]:hidden">
+      <span className="mr-0.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-mut">
+        Assuntos
+      </span>
+      <PillCategoria ativo={!ativo} onClick={() => onMudar(false)} label="Todos" contagem={total} />
+      <PillCategoria
+        ativo={ativo}
+        onClick={() => onMudar(true)}
+        label="Só concluídos"
+        title={`Só as questões dos assuntos marcados como Concluído (${assuntos} ${assuntos === 1 ? "assunto" : "assuntos"})`}
+        contagem={concluidas}
+      />
     </div>
   );
 }
