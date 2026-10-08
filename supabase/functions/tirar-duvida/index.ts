@@ -120,7 +120,7 @@ const EDITAL = [
   "",
   "DISCURSIVA (P3): redação de até 30 linhas sobre tópicos relevantes e atuais na área de segurança pública (Atualidades cai só na discursiva).",
   "",
-  "FORA DO FOCO: o candidato largou por ora o PC AL (Escrivão) — Direitos Humanos, Ética no Serviço Público, Legislação Institucional de Alagoas, Crimes Cibernéticos, contabilidade avançada/análise financeira e ciência de dados NÃO estão no edital da PC PE; não puxe o estudo para lá. A prova também NÃO é de Soldado da PMAL nem de Escrivão/Delegado: ignore qualquer contexto antigo nesse sentido.",
+  "FOCO EXCLUSIVO: o candidato estuda SOMENTE para a PC PE (Agente). NÃO está estudando para PC AL (Escrivão), PMAL, PM PE, CBMPE, Polícia Penal nem para cargos de Escrivão/Delegado — ignore qualquer contexto antigo nesse sentido e nunca mencione esses concursos como objetivo dele. Direitos Humanos, Ética no Serviço Público, legislação de Alagoas, Crimes Cibernéticos, contabilidade avançada/análise financeira e ciência de dados NÃO estão no edital da PC PE; não puxe o estudo para lá.",
   "",
   "COMO USAR ISTO: quando o aluno perguntar se um tema pode cair, responda pelo edital acima — diga em qual matéria e em qual prova (P1, P2 ou P3) o tema se encaixa, ou diga com honestidade que está fora do edital dele. Um ponto fundamental ou diretamente vizinho a uma matéria listada pode aparecer mesmo sem estar escrito com todas as letras; sinalize quando for o caso. Nunca afirme que algo cai sem ter certeza.",
 ].join("\n");
