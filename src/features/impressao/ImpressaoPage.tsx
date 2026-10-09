@@ -67,6 +67,7 @@ import {
   ordenarParaImpressao,
   type MateriaImpressao,
 } from "./organizar";
+import { ComentarioTexto } from "@/features/conteudos/ComentarioTexto";
 
 type Aba = "todas" | "novas" | "corrigir" | "corrigidas";
 
@@ -919,7 +920,7 @@ function QuestaoImpressaoCard({
               <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-gold">
                 Comentário
               </p>
-              <p className="text-xs leading-relaxed text-dim">{q.comentario}</p>
+              <ComentarioTexto texto={q.comentario} />
             </div>
           )}
 

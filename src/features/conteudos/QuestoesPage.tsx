@@ -75,6 +75,7 @@ import {
   useAlternarImpressao,
 } from "@/features/impressao/CaixaImpressao";
 import { avisarQuestaoRespondida, TemporizadorQuestao } from "./TemporizadorQuestao";
+import { ComentarioTexto } from "./ComentarioTexto";
 
 // "Para responder" e "Resolvidas" dividem as questões ativas pela resposta:
 // o que você acabou de responder segue à mostra (para ler o comentário), mas
@@ -904,7 +905,7 @@ function QuestaoCard({
               <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-gold">
                 Comentário
               </p>
-              <p className="text-xs leading-relaxed text-dim">{q.comentario}</p>
+              <ComentarioTexto texto={q.comentario} />
             </div>
           )}
 
