@@ -117,7 +117,7 @@ const PC_PE: InfoConcurso = {
       area: "Conhecimentos Específicos",
       questoes: 40,
       materias: [
-        "Língua Portuguesa",
+        "Língua Portuguesa + Manual de Redação da Presidência",
         "Informática",
         "Raciocínio Lógico",
         "Contabilidade Geral",
