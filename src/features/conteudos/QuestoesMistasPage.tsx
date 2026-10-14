@@ -49,7 +49,12 @@ import {
 } from "./grifos";
 import { DuvidaIAModal } from "./DuvidaIAModal";
 import { useAdicionarQuestaoAoResumo } from "./adicionarAoResumo";
-import { BotaoBloquinhos, CabecalhoBloco, RodapeBloco, useBloquinhos } from "./bloquinhos";
+import {
+  BotaoBloquinhos,
+  CabecalhoBloco,
+  RodapeBloco,
+  useBloquinhosPorMateria,
+} from "./bloquinhos";
 import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
@@ -424,11 +429,22 @@ export function QuestoesMistasPage() {
   const catsLabel = CATEGORIAS_FILTRO.filter((c) => cats.has(c.chave))
     .map((c) => c.curto)
     .join(", ");
-  // Chave estável do conjunto (ordenada). Modo bloquinhos: resolve de 5 em 5;
-  // trocar de origem, aba ou embaralhar recomeça do 1º bloco.
+  // Chave estável do conjunto (ordenada). Modo bloquinhos: resolve de 5 em 5, cada
+  // bloco de uma matéria, revezando as do filtro (a pulada volta num próximo bloco
+  // da matéria dela); trocar de origem, aba ou embaralhar recomeça do 1º bloco.
   const catsKey = [...cats].sort().join(",");
   const chaveReset = `${soConcluidos}-${formato}-${[...bancas].sort().join(",")}-${catsKey}-${chaveFiltro(filtro)}-${aba}-${semente}`;
-  const bloco = useBloquinhos(lista, chaveReset);
+  const bloco = useBloquinhosPorMateria(lista, chaveReset, {
+    grupoDe: (q) => materiaDe(q) ?? "",
+    // O mesmo "Texto associado" não é partido entre dois blocos.
+    juntoDe: (q) => q.texto_associado_hash,
+    // Em "Para responder", as já respondidas (nesta sessão) não entram em bloco novo.
+    descartar: aba === "responder" ? estaResolvida : undefined,
+  });
+  const rotuloMateria = (id: string | undefined) => {
+    const m = id !== undefined && !materiaId ? materiaPorId.get(id) : undefined;
+    return m ? `${m.icone} ${m.nome}` : undefined;
+  };
 
   // Sem bloquinhos, a lista aparece de POR_VEZ em POR_VEZ (chegar ao fim traz mais):
   // renderizar centenas de cards de uma vez pesava a página.
@@ -439,13 +455,15 @@ export function QuestoesMistasPage() {
   const naTela = bloco.ativo ? bloco.lista : bloco.lista.slice(0, limite);
 
   // Conteúdo completo (enunciado, alternativas, comentário…) só do que está na tela,
-  // das próximas POR_VEZ (já chegam prontas ao avançar) e das originais das
-  // reformuladas na tela (o "ver a questão original"). O resto fica só no índice.
+  // das seguintes (o próximo bloco, ou as próximas POR_VEZ — já chegam prontas ao
+  // avançar) e das originais das reformuladas na tela (o "ver a questão original").
+  // O resto fica só no índice.
   const inicioNaTela = naTela.length ? lista.indexOf(naTela[0]) : 0;
   const fimNaTela = inicioNaTela + naTela.length;
+  const seguintes = bloco.ativo ? bloco.proximos : lista.slice(fimNaTela, fimNaTela + POR_VEZ);
   const idsConteudo = [
     ...naTela.map((q) => q.id),
-    ...lista.slice(fimNaTela, fimNaTela + POR_VEZ).map((q) => q.id),
+    ...seguintes.map((q) => q.id),
     ...naTela.flatMap((q) => (q.reformulada_de ? [q.reformulada_de] : [])),
   ];
   const { conteudo, erro: erroConteudo } = useConteudoQuestoes(idsConteudo);
@@ -711,7 +729,7 @@ export function QuestoesMistasPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                <CabecalhoBloco b={bloco} />
+                <CabecalhoBloco b={bloco} rotulo={rotuloMateria(bloco.grupo)} />
                 <ul className="space-y-3">
                   {naTela.map((qi) => {
                     const completa = conteudo.get(qi.id);
@@ -759,7 +777,11 @@ export function QuestoesMistasPage() {
                     onMais={() => setLimite((l) => l + POR_VEZ)}
                   />
                 )}
-                <RodapeBloco b={bloco} logs={logsEscopo} />
+                <RodapeBloco
+                  b={bloco}
+                  logs={logsEscopo}
+                  proximo={rotuloMateria(bloco.proximoGrupo)}
+                />
               </div>
             )}
           </div>

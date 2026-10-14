@@ -1,13 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronLeft, ChevronRight, Layers } from "lucide-react";
 import type { QuestaoLog, TopicoQuestao } from "@/types/db";
 import { Button } from "@/components/Button";
 import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { acertou, estaResolvida } from "./questaoModelo";
+import {
+  blocosRestantes,
+  montarProximoBloco,
+  TAMANHO_BLOCO as TAMANHO,
+  type BlocoMontado,
+  type RegrasDoBloco,
+} from "./blocosPorMateria";
 
-/** Série curta: 5 questões por vez, para a resolução ter começo, meio e fim. */
-const TAMANHO = 5;
 const CHAVE = "questoes_bloquinhos";
 
 /** O mínimo que o bloquinho lê de cada questão (basta o índice leve, sem o enunciado). */
@@ -28,6 +33,33 @@ export interface Bloquinho<T extends QuestaoDoBloco = QuestaoDoBloco> {
   pct: number | null;
   completo: boolean;
   ir: (indice: number) => void;
+  /** As do bloco seguinte — para já buscar o conteúdo delas. */
+  proximos: T[];
+  /** Só nos bloquinhos por matéria: a matéria do bloco da vez e a do seguinte. */
+  grupo?: string;
+  proximoGrupo?: string;
+}
+
+/** A preferência do modo fica lembrada entre visitas (vale para os dois tipos de bloquinho). */
+function usePreferencia() {
+  const [ativo, setAtivo] = useState(() => localStorage.getItem(CHAVE) === "1");
+  function alternar() {
+    localStorage.setItem(CHAVE, ativo ? "0" : "1");
+    setAtivo(!ativo);
+  }
+  return [ativo, alternar] as const;
+}
+
+/** Placar do bloco da vez (só do momento — nada é gravado por bloco). */
+function placarDo<T extends QuestaoDoBloco>(doBloco: T[]) {
+  const respondidas = doBloco.filter((q) => estaResolvida(q));
+  const acertos = respondidas.filter((q) => acertou(q)).length;
+  return {
+    respondidas: respondidas.length,
+    acertos,
+    pct: respondidas.length ? Math.round((acertos / respondidas.length) * 100) : null,
+    completo: doBloco.length > 0 && respondidas.length === doBloco.length,
+  };
 }
 
 /**
@@ -40,9 +72,9 @@ export interface Bloquinho<T extends QuestaoDoBloco = QuestaoDoBloco> {
  * `reset` é a chave que devolve ao primeiro bloco (trocar de aba, embaralhar…).
  */
 export function useBloquinhos<T extends QuestaoDoBloco>(lista: T[], reset: string): Bloquinho<T> {
-  // A preferência fica lembrada entre visitas; o bloco em que você parou, não —
-  // ao voltar, "Para responder" já começa nas próximas 5 em aberto.
-  const [ativo, setAtivo] = useState(() => localStorage.getItem(CHAVE) === "1");
+  // O bloco em que você parou não fica lembrado — ao voltar, "Para responder" já
+  // começa nas próximas 5 em aberto.
+  const [ativo, alternar] = usePreferencia();
   const [indice, setIndice] = useState(0);
 
   useEffect(() => {
@@ -55,26 +87,96 @@ export function useBloquinhos<T extends QuestaoDoBloco>(lista: T[], reset: strin
   const atual = Math.min(indice, Math.max(total - 1, 0));
   const doBloco = ativo ? lista.slice(atual * TAMANHO, atual * TAMANHO + TAMANHO) : lista;
 
-  const respondidas = doBloco.filter((q) => estaResolvida(q));
-  const acertos = respondidas.filter((q) => acertou(q)).length;
-
   return {
     lista: doBloco,
     ativo,
-    alternar() {
-      localStorage.setItem(CHAVE, ativo ? "0" : "1");
-      setAtivo(!ativo);
-    },
+    alternar,
     indice: atual,
     total,
-    respondidas: respondidas.length,
-    acertos,
-    pct: respondidas.length ? Math.round((acertos / respondidas.length) * 100) : null,
-    completo: doBloco.length > 0 && respondidas.length === doBloco.length,
+    ...placarDo(doBloco),
     ir(i) {
       setIndice(Math.min(Math.max(i, 0), Math.max(total - 1, 0)));
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
+    proximos: ativo ? lista.slice((atual + 1) * TAMANHO, (atual + 2) * TAMANHO) : [],
+  };
+}
+
+/**
+ * Bloquinhos por matéria (modo misturado): cada bloco de 5 é de uma matéria só e as
+ * matérias da lista se revezam; a questão pulada volta num próximo bloco da matéria
+ * dela (regras em `blocosPorMateria`). O bloco é montado e congelado ao chegar nele —
+ * responder não remexe o que está na tela — e o seguinte só na hora de avançar, pois
+ * depende do que ficou sem resposta.
+ *
+ * `reset` é a chave que recomeça do primeiro bloco (filtro, aba, embaralhar…).
+ */
+export function useBloquinhosPorMateria<T extends QuestaoDoBloco>(
+  lista: T[],
+  reset: string,
+  regras: Omit<RegrasDoBloco<T>, "resolvida">
+): Bloquinho<T> {
+  const [ativo, alternar] = usePreferencia();
+  const chave = `${reset}|${ativo}`;
+  const r: RegrasDoBloco<T> = { ...regras, resolvida: estaResolvida };
+  const [salvo, setSalvo] = useState<{ chave: string; blocos: BlocoMontado[]; indice: number }>({
+    chave,
+    blocos: [],
+    indice: 0,
+  });
+
+  // Ajuste durante o render (sem efeito, para não pintar o bloco errado): mudou a
+  // chave → recomeça; chegou a um bloco ainda não montado → monta e congela.
+  let st = salvo.chave === chave ? salvo : { chave, blocos: [], indice: 0 };
+  if (ativo && st.indice >= st.blocos.length) {
+    const novo = montarProximoBloco(lista, st.blocos, r);
+    if (novo) st = { ...st, blocos: [...st.blocos, novo] };
+  }
+  if (st !== salvo) setSalvo(st);
+
+  if (!ativo) {
+    return {
+      lista,
+      ativo,
+      alternar,
+      indice: 0,
+      total: 0,
+      ...placarDo(lista),
+      ir() {},
+      proximos: [],
+    };
+  }
+
+  const porId = new Map(lista.map((q) => [q.id, q]));
+  // Arquivada no meio do caminho sai da lista — e do bloco.
+  const itens = (b: BlocoMontado | null | undefined) =>
+    (b?.ids ?? []).flatMap((id) => porId.get(id) ?? []);
+
+  const { blocos } = st;
+  const total = blocos.length + blocosRestantes(lista, blocos, r);
+  const atual = Math.min(st.indice, Math.max(blocos.length - 1, 0));
+  const seguinte =
+    atual < blocos.length - 1
+      ? blocos[atual + 1]
+      : atual + 1 < total
+        ? montarProximoBloco(lista, blocos, r)
+        : null;
+  const doBloco = itens(blocos[atual]);
+
+  return {
+    lista: doBloco,
+    ativo,
+    alternar,
+    indice: atual,
+    total,
+    ...placarDo(doBloco),
+    ir(i) {
+      setSalvo({ ...st, indice: Math.min(Math.max(i, 0), Math.max(total - 1, 0)) });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    proximos: itens(seguinte),
+    grupo: blocos[atual]?.grupo,
+    proximoGrupo: seguinte?.grupo,
   };
 }
 
@@ -100,8 +202,11 @@ export function BotaoBloquinhos({ b, className = "" }: { b: Bloquinho; className
   );
 }
 
-/** Placar do bloco da vez: uma bolinha por questão, verde/vermelha conforme a resposta. */
-export function CabecalhoBloco({ b }: { b: Bloquinho }) {
+/**
+ * Placar do bloco da vez: uma bolinha por questão, verde/vermelha conforme a resposta.
+ * `rotulo` (ex.: a matéria do bloco) aparece junto do número.
+ */
+export function CabecalhoBloco({ b, rotulo }: { b: Bloquinho; rotulo?: ReactNode }) {
   if (!b.ativo || b.total === 0) return null;
   const cor = b.pct !== null ? corDesempenho(b.pct) : null;
 
@@ -110,6 +215,8 @@ export function CabecalhoBloco({ b }: { b: Bloquinho }) {
       <span className="text-xs font-semibold text-gold">
         Bloco {b.indice + 1} <span className="font-normal text-dim">de {b.total}</span>
       </span>
+
+      {rotulo && <span className="min-w-0 truncate text-xs font-medium text-txt">{rotulo}</span>}
 
       <span className="flex items-center gap-1">
         {b.lista.map((q) => (
@@ -140,9 +247,18 @@ export function CabecalhoBloco({ b }: { b: Bloquinho }) {
  * pular uma questão travada); assim que as 5 são respondidas, vira o painel de
  * bloco concluído, com o desempenho e o salto rápido para o próximo.
  */
-export function RodapeBloco({ b, logs }: { b: Bloquinho; logs?: QuestaoLog[] }) {
+export function RodapeBloco({
+  b,
+  logs,
+  proximo,
+}: {
+  b: Bloquinho;
+  logs?: QuestaoLog[];
+  /** O que vem no bloco seguinte (ex.: a matéria dele). */
+  proximo?: ReactNode;
+}) {
   if (!b.ativo || b.total === 0) return null;
-  if (b.completo) return <BlocoConcluido b={b} logs={logs} />;
+  if (b.completo) return <BlocoConcluido b={b} logs={logs} proximo={proximo} />;
 
   const ultimo = b.indice >= b.total - 1;
   const faltam = b.lista.length - b.respondidas;
@@ -164,7 +280,16 @@ export function RodapeBloco({ b, logs }: { b: Bloquinho; logs?: QuestaoLog[] }) 
       ) : (
         // Segue clicável antes de completar: pular uma questão travada é melhor
         // do que ficar preso no bloco.
-        <Button size="sm" variant="secondary" onClick={() => b.ir(b.indice + 1)}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => b.ir(b.indice + 1)}
+          title={
+            b.grupo !== undefined
+              ? "As que ficarem sem resposta voltam num próximo bloco desta matéria"
+              : undefined
+          }
+        >
           Pular para o próximo (faltam {faltam})
           <ChevronRight className="size-4" />
         </Button>
@@ -178,7 +303,15 @@ export function RodapeBloco({ b, logs }: { b: Bloquinho; logs?: QuestaoLog[] }) 
  * já com o "Próximo bloco" em foco — dá para emendar o próximo só apertando
  * Enter, sem tirar a mão do teclado nem procurar o botão.
  */
-function BlocoConcluido({ b, logs }: { b: Bloquinho; logs?: QuestaoLog[] }) {
+function BlocoConcluido({
+  b,
+  logs,
+  proximo,
+}: {
+  b: Bloquinho;
+  logs?: QuestaoLog[];
+  proximo?: ReactNode;
+}) {
   const ultimo = b.indice >= b.total - 1;
   const cor = b.pct !== null ? corDesempenho(b.pct) : null;
   const painelRef = useRef<HTMLDivElement>(null);
@@ -209,7 +342,10 @@ function BlocoConcluido({ b, logs }: { b: Bloquinho; logs?: QuestaoLog[] }) {
 
       {logs && <DesempenhoRecenteChip logs={logs} />}
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex min-w-0 items-center gap-2">
+        {!ultimo && proximo && (
+          <span className="min-w-0 truncate text-[11px] text-mut">A seguir: {proximo}</span>
+        )}
         <Button
           size="sm"
           variant="ghost"
