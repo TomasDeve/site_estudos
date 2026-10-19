@@ -6,7 +6,6 @@ import {
   Check,
   ChevronRight,
   ChevronsUpDown,
-  Headphones,
   Info,
   LayoutDashboard,
   LayoutGrid,
@@ -48,7 +47,6 @@ const NAV: { to: string; label: string; curto?: string; icon: LucideIcon; end: b
   { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },
   // questões marcadas (a caixinha 🖨 do card): folha para imprimir + correção, em aba própria
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
-  { to: "audios", label: "Áudios", icon: Headphones, end: false },
   { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
 ];
 
@@ -95,7 +93,7 @@ export function ConcursoLayout() {
   }, [concurso?.id, concurso?.status]);
 
   if (isLoading) return <FullScreenSpinner />;
-  // Concurso arquivado não é estudável: manda para o concurso de estudo (PC AL).
+  // Concurso arquivado não é estudável: manda para o concurso de estudo (o ativo).
   if (concurso && concurso.status === "arquivado") {
     const destino = concursoDeEstudo(concursos ?? []);
     return <Navigate to={destino ? `/concurso/${destino.id}` : "/concursos"} replace />;

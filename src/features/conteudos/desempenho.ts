@@ -1,5 +1,4 @@
 import type { QuestaoLog } from "@/types/db";
-import { ultimasQuestoes } from "./metasTopico";
 
 /** Classe de cor da taxa de acerto: ciano excelente, verde forte, amarelo mediano, vermelho fraco. */
 export function corDesempenho(pct: number) {
@@ -9,7 +8,31 @@ export function corDesempenho(pct: number) {
   return { texto: "text-red", fundo: "bg-red/10 hover:bg-red/20" };
 }
 
-/** Janela móvel das "questões recentes" — o mesmo 30 do alvo do plano padrão. */
+/**
+ * As N questões mais recentes (do registro mais novo para o mais antigo).
+ *
+ * Os registros são diários (um por dia/assunto), então quando o dia mais antigo
+ * estoura a janela ele entra proporcional — 20 de um dia de 30 questões com 24
+ * acertos contam como 16 acertos. Aproximação consciente: sem guardar questão a
+ * questão, é o mais perto que dá da "janela móvel" de verdade.
+ */
+export function ultimasQuestoes(logs: QuestaoLog[], n: number) {
+  const recentes = [...logs].sort(
+    (a, b) => b.data.localeCompare(a.data) || b.created_at.localeCompare(a.created_at)
+  );
+  let total = 0;
+  let acertos = 0;
+  for (const l of recentes) {
+    if (total >= n) break;
+    if (l.total <= 0) continue;
+    const cabe = Math.min(l.total, n - total);
+    acertos += cabe === l.total ? l.acertos : Math.round(l.acertos * (cabe / l.total));
+    total += cabe;
+  }
+  return { total, acertos, pct: total === 0 ? 0 : Math.round((acertos / total) * 100) };
+}
+
+/** Janela móvel das "questões recentes": as últimas 30. */
 export const JANELA_RECENTE = 30;
 
 export interface Placar {

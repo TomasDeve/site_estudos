@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { ArrowLeft, Library, LogOut, Plus } from "lucide-react";
+import { ArrowLeft, LogOut, Plus } from "lucide-react";
 import type { Concurso } from "@/types/db";
 import { useConcursos } from "@/api/concursos";
 import { useConcursoMaterias } from "@/api/materias";
@@ -11,9 +11,9 @@ import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
 import { FullScreenSpinner } from "@/components/Spinner";
+import { EmptyState } from "@/components/EmptyState";
 import { ConcursoCard } from "./ConcursoCard";
 import { ConcursoFormModal } from "./ConcursoFormModal";
-import { SeedCard } from "./SeedCard";
 
 /** Hub de gerenciamento em /concursos: escolher, criar, editar e arquivar concursos. */
 export function HomePage() {
@@ -44,7 +44,11 @@ export function HomePage() {
   if (l1 || l2 || l3) return <FullScreenSpinner />;
 
   const ativos = (concursos ?? []).filter((c) => c.status !== "arquivado");
-  const arquivados = (concursos ?? []).filter((c) => c.status === "arquivado");
+
+  function novoConcurso() {
+    setEditando(null);
+    setModalAberto(true);
+  }
 
   function abrirEdicao(c: Concurso) {
     setEditando(c);
@@ -86,26 +90,18 @@ export function HomePage() {
           title="Meus concursos"
           subtitle="Escolha um concurso para mergulhar no estudo dele"
           action={
-            <div className="flex flex-wrap gap-2">
-              <Link to="/banco">
-                <Button variant="secondary">
-                  <Library className="size-4" /> Banco de questões
-                </Button>
-              </Link>
-              <Button
-                onClick={() => {
-                  setEditando(null);
-                  setModalAberto(true);
-                }}
-              >
-                <Plus className="size-4" /> Novo concurso
-              </Button>
-            </div>
+            <Button onClick={novoConcurso}>
+              <Plus className="size-4" /> Novo concurso
+            </Button>
           }
         />
 
-        {ativos.length === 0 && arquivados.length === 0 ? (
-          <SeedCard />
+        {ativos.length === 0 ? (
+          <EmptyState
+            icon="🎯"
+            title="Nenhum concurso em andamento"
+            message="Crie um concurso para montar o edital e começar a estudar."
+          />
         ) : (
           // Concursos arquivados (PMAL, Indefinido) ficam FORA do hub de
           // propósito — o estudo é concentrado no concurso ativo (PC PE). Os

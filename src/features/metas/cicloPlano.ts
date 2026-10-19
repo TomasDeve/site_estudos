@@ -1,5 +1,5 @@
 import type { QuestaoLog } from "@/types/db";
-import { ultimasQuestoes } from "@/features/conteudos/metasTopico";
+import { ultimasQuestoes } from "@/features/conteudos/desempenho";
 import { minutosDe } from "./planoDias";
 
 /**

@@ -58,65 +58,6 @@ export function useAtualizarConcurso() {
 }
 
 /**
- * Grava as horas de planejamento do concurso (conteúdo/revisão). Otimista: o
- * "restante" e o total precisam reagir na hora enquanto se digita.
- */
-export function useAtualizarHorasConcurso() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      ...patch
-    }: {
-      id: string;
-      horas_conteudo?: number;
-      horas_revisao?: number;
-    }) => {
-      const { error } = await supabase.from("concursos").update(patch).eq("id", id);
-      if (error) throw error;
-    },
-    onMutate: async ({ id, ...patch }) => {
-      await qc.cancelQueries({ queryKey: ["concursos"] });
-      const prev = qc.getQueryData<Concurso[]>(["concursos"]);
-      qc.setQueryData<Concurso[]>(["concursos"], (old) =>
-        old?.map((c) => (c.id === id ? { ...c, ...patch } : c))
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["concursos"], ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["concursos"] }),
-  });
-}
-
-/** Liga/desliga a camada de horas do concurso (o "sistema de horas"), otimista. */
-export function useToggleSistemaHoras() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, sistema_horas }: { id: string; sistema_horas: boolean }) => {
-      const { error } = await supabase
-        .from("concursos")
-        .update({ sistema_horas })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onMutate: async ({ id, sistema_horas }) => {
-      await qc.cancelQueries({ queryKey: ["concursos"] });
-      const prev = qc.getQueryData<Concurso[]>(["concursos"]);
-      qc.setQueryData<Concurso[]>(["concursos"], (old) =>
-        old?.map((c) => (c.id === id ? { ...c, sistema_horas } : c))
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["concursos"], ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["concursos"] }),
-  });
-}
-
-/**
  * Recomeça o "Ciclo das matérias" do Painel: a contagem passa a valer a partir
  * de `ciclo_plano_inicio` (nulo = o plano inteiro). Otimista: as cores mudam na
  * hora do clique.

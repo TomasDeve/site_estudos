@@ -86,43 +86,6 @@ export function useDesvincularMateria() {
   });
 }
 
-interface PatchMateria {
-  id: string;
-  nome?: string;
-  icone?: string;
-  tipo?: string;
-  /** Blocos que a página da matéria mostra (Configurações da matéria). */
-  mostrar_questoes_geral?: boolean;
-  mostrar_resumos_geral?: boolean;
-}
-
-/**
- * O cache é atualizado antes da ida ao servidor: as configurações são caixas de
- * marcação controladas pelo próprio cache, e esperar a resposta faria a marca
- * voltar sozinha por um instante antes de assentar. Dando erro, desfaz.
- */
-export function useAtualizarMateria() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, ...patch }: PatchMateria) => {
-      const { error } = await supabase.from("materias").update(patch).eq("id", id);
-      if (error) throw error;
-    },
-    onMutate: async ({ id, ...patch }: PatchMateria) => {
-      await qc.cancelQueries({ queryKey: ["materias"] });
-      const anteriores = qc.getQueryData<Materia[]>(["materias"]);
-      qc.setQueryData<Materia[]>(["materias"], (antigas) =>
-        antigas?.map((m) => (m.id === id ? { ...m, ...patch } : m))
-      );
-      return { anteriores };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.anteriores) qc.setQueryData(["materias"], ctx.anteriores);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["materias"] }),
-  });
-}
-
 /**
  * Grava o espaço "Estudo" da matéria (como estou estudando / o que fazer agora)
  * e carimba a data. Escreve direto no cache em vez de invalidar: o editor salva
@@ -281,66 +244,5 @@ export function useAtualizarConcursoMateria() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
-  });
-}
-
-/** Grava as horas alocadas para uma matéria do concurso, otimista. */
-export function useAtualizarHorasMateria() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, horas_alvo }: { id: string; horas_alvo: number }) => {
-      const { error } = await supabase
-        .from("concurso_materias")
-        .update({ horas_alvo })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onMutate: async ({ id, horas_alvo }) => {
-      await qc.cancelQueries({ queryKey: ["concurso_materias"] });
-      const prev = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]);
-      qc.setQueryData<ConcursoMateria[]>(["concurso_materias"], (old) =>
-        old?.map((v) => (v.id === id ? { ...v, horas_alvo } : v))
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["concurso_materias"], ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
-  });
-}
-
-/** Grava as horas de vários vínculos de uma vez (botão Distribuir), otimista. */
-export function useDistribuirHorasMaterias() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (itens: { id: string; horas_alvo: number }[]) => {
-      if (itens.length === 0) return;
-      // upsert em lote pela PK: reaproveita a linha do cache trocando só as horas.
-      const atuais = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]) ?? [];
-      const porId = new Map(atuais.map((v) => [v.id, v]));
-      const linhas = itens
-        .map((it) => {
-          const base = porId.get(it.id);
-          return base ? { ...base, horas_alvo: it.horas_alvo } : null;
-        })
-        .filter((x): x is ConcursoMateria => x !== null);
-      if (linhas.length === 0) return;
-      const { error } = await supabase.from("concurso_materias").upsert(linhas);
-      if (error) throw error;
-    },
-    onMutate: async (itens) => {
-      await qc.cancelQueries({ queryKey: ["concurso_materias"] });
-      const prev = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]);
-      const mapa = new Map(itens.map((it) => [it.id, it.horas_alvo]));
-      qc.setQueryData<ConcursoMateria[]>(["concurso_materias"], (old) =>
-        old?.map((v) => (mapa.has(v.id) ? { ...v, horas_alvo: mapa.get(v.id)! } : v))
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["concurso_materias"], ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
   });
 }

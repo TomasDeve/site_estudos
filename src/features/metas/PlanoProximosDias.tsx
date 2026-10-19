@@ -31,7 +31,6 @@ import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import type { Materia, PlanoHora } from "@/types/db";
 import {
-  tabelaFaltando,
   useCopiarDiaPlano,
   useLimparDiaPlano,
   useLimparHora,
@@ -210,30 +209,6 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
     : `${rotuloDoDia(inicio, hoje).data} a ${rotuloDoDia(fim, hoje).data}`;
 
   function erro(err: unknown) {
-    // Bloco além do 5º antes de rodar a 0034: o CHECK antigo (1 a 5) recusa.
-    const e = err as { code?: string; message?: string } | null;
-    // Tempo do bloco antes de rodar a 0035: a coluna `minutos` ainda não existe.
-    if (e?.message?.includes("minutos")) {
-      toast.error(
-        "Falta rodar a migração 0035 (tempo de cada bloco) no Supabase → SQL Editor.",
-        { duration: 8000 }
-      );
-      return;
-    }
-    if (e?.message?.includes("plano_horas_atividade_check")) {
-      toast.error(
-        "Falta rodar a migração 0036 (texto livre) no Supabase → SQL Editor.",
-        { duration: 8000 }
-      );
-      return;
-    }
-    if (e?.code === "23514" || e?.message?.includes("plano_horas_hora_check")) {
-      toast.error(
-        "Falta rodar a migração 0034 (blocos de meia hora) no Supabase → SQL Editor.",
-        { duration: 8000 }
-      );
-      return;
-    }
     toast.error(err instanceof Error ? err.message : String(err));
   }
 
@@ -360,18 +335,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           </div>
         </div>
 
-        {error && tabelaFaltando(error) ? (
-          <div className="rounded-xl border border-dashed border-gold/40 bg-gold/5 p-4 text-xs leading-relaxed text-dim">
-            <p className="font-semibold text-gold">Falta criar a tabela do plano no banco.</p>
-            <p className="mt-1">
-              Abra o Supabase → <strong className="text-txt">SQL Editor</strong>, cole o conteúdo de{" "}
-              <code className="rounded bg-navy-900 px-1 py-0.5 text-txt">
-                supabase/migrations/0033_plano_horas.sql
-              </code>{" "}
-              e clique em <strong className="text-txt">Run</strong>. Depois recarregue a página.
-            </p>
-          </div>
-        ) : error ? (
+        {error ? (
           <p className="text-xs text-red">
             Não deu para carregar o plano: {error instanceof Error ? error.message : String(error)}
           </p>

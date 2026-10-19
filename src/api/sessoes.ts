@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { SessaoEstudo, TablesInsert } from "@/types/db";
+import type { SessaoEstudo } from "@/types/db";
 
 /** Sessões numa janela de datas (sempre consultar por janela — cap de 1000 do PostgREST). */
 export function useSessoesJanela(inicioISO: string, fimISO: string) {
@@ -25,15 +25,4 @@ export function minutosPorDia(sessoes: SessaoEstudo[] | undefined): Map<string, 
     mapa.set(s.data, (mapa.get(s.data) ?? 0) + s.minutos);
   }
   return mapa;
-}
-
-export function useRegistrarSessao() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: TablesInsert<"sessoes_estudo">) => {
-      const { error } = await supabase.from("sessoes_estudo").insert(input);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["sessoes"] }),
-  });
 }

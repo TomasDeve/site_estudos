@@ -14,8 +14,6 @@ const MateriaPage = lazy(() => import("@/features/conteudos/MateriaPage").then((
 const TextoLeiPage = lazy(() => import("@/features/conteudos/TextoLeiPage").then((m) => ({ default: m.TextoLeiPage })));
 const QuestoesPage = lazy(() => import("@/features/conteudos/QuestoesPage").then((m) => ({ default: m.QuestoesPage })));
 const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMistasPage").then((m) => ({ default: m.QuestoesMistasPage })));
-const AudiosPage = lazy(() => import("@/features/audios/AudiosPage").then((m) => ({ default: m.AudiosPage })));
-const BancoQuestoesPage = lazy(() => import("@/features/banco/BancoQuestoesPage").then((m) => ({ default: m.BancoQuestoesPage })));
 const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
 const RotinaPage = lazy(() => import("@/features/rotina/RotinaPage").then((m) => ({ default: m.RotinaPage })));
 const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
@@ -41,8 +39,8 @@ export const router = createBrowserRouter([
       { path: "questoes/materia/:materiaId", element: pagina(<QuestoesMistasPage />) },
       // caderno de questões por IA de um assunto (abre em aba própria, sem sidebar)
       { path: "questoes/:topicoId", element: pagina(<QuestoesPage />) },
-      // banco de questões reais: capturar do QConcursos, tratar e mapear ao edital
-      { path: "banco", element: pagina(<BancoQuestoesPage />) },
+      // o Banco de questões saiu (a importação do QConcursos grava direto no caderno): link salvo vai para o estudo
+      { path: "banco", element: <Navigate to="/" replace /> },
       // questões marcadas para impressão: folha pronta + correção (aba própria, sem sidebar)
       { path: "impressao", element: pagina(<ImpressaoPage />) },
       // tudo abaixo vive dentro do concurso ativo
@@ -53,11 +51,11 @@ export const router = createBrowserRouter([
           { index: true, element: pagina(<DashboardPage />) },
           { path: "conteudos", element: pagina(<ConteudosPage />) },
           { path: "conteudos/:materiaId", element: pagina(<MateriaPage />) },
-          // seções removidas (Metas virou o plano do Painel; Ciclo e Métricas saíram): link salvo cai no Painel
+          // seções removidas (Metas virou o plano do Painel; Ciclo, Métricas e Áudios saíram): link salvo cai no Painel
           { path: "metas", element: <Navigate to=".." replace /> },
           { path: "ciclo", element: <Navigate to=".." replace /> },
           { path: "metricas/*", element: <Navigate to=".." replace /> },
-          { path: "audios", element: pagina(<AudiosPage />) },
+          { path: "audios", element: <Navigate to=".." replace /> },
           // rotina diária: os horários fixos (acordar, estudar, parar, academia, dormir)
           { path: "rotina", element: pagina(<RotinaPage />) },
           // ficha do edital: vagas, datas, divisão da prova, TAF, requisitos

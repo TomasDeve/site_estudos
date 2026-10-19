@@ -11,7 +11,6 @@ import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { PlanoProximosDias } from "@/features/metas/PlanoProximosDias";
 import { DesempenhoQuestoes } from "./DesempenhoQuestoes";
-import { PlanejamentoHoras } from "./PlanejamentoHoras";
 import { WeekStudyChart } from "./WeekStudyChart";
 
 export function DashboardPage() {
@@ -88,9 +87,6 @@ export function DashboardPage() {
           <WeekStudyChart />
         </div>
       </div>
-
-      {/* Planejamento de horas: orçamento de tempo até a prova */}
-      <PlanejamentoHoras concurso={concurso} />
     </div>
   );
 }

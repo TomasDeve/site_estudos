@@ -1,30 +1,24 @@
 import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, ListChecks, Compass, Ban } from "lucide-react";
+import { GripVertical, Link2, Trash2, ExternalLink, Plus, Target, X, Pencil, BookOpen, SeparatorHorizontal, Check, FileUp, Sparkles, Ban } from "lucide-react";
 import { toast } from "sonner";
-import type { QuestaoLog, Topico, TopicoLink, TopicoMeta, TopicoTexto, TopicoStatus } from "@/types/db";
-import { CICLO_STATUS, useAtualizarHorasTopico, useAtualizarTopico, useExcluirTopico, useSetTopicoNucleo, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
+import type { QuestaoLog, Topico, TopicoLink, TopicoStatus } from "@/types/db";
+import { CICLO_STATUS, useAtualizarTopico, useExcluirTopico, useSetTopicoSeparador, useSetTopicoStatus } from "@/api/topicos";
 import { useAnexarPdf, useAtualizarTopicoLink, useCriarTopicoLink, useExcluirTopicoLink, removerArquivosPdf } from "@/api/topicoLinks";
-import { useCriarTopicoTexto, useExcluirTopicoTexto } from "@/api/topicoTextos";
+import { useCriarTopicoTexto, useExcluirTopicoTexto, type TextoMeta } from "@/api/topicoTextos";
 import type { QuestaoResumo } from "@/api/topicoQuestoes";
 import { estaResolvida } from "./questaoModelo";
 import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/Button";
 import { MenuMais } from "@/components/MenuMais";
 import { Input, Select } from "@/components/Field";
-import { HoraInput } from "@/components/HoraInput";
-import { horasRestantes } from "@/lib/horas";
-import { BarraHoras } from "@/features/horas/BarraHoras";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { STATUS_INFO } from "./statusInfo";
 import { corDesempenho } from "./desempenho";
-import { RegistroQuestoes } from "./RegistroQuestoes";
 import { TextoReaderModal } from "./TextoReaderModal";
-import { MetasAssunto } from "./MetasAssunto";
 import { ObservacaoAssunto } from "./ObservacaoAssunto";
-import { placarAssunto } from "./metasTopico";
-import { ajudaDaEtiqueta, etiquetaDoProprioConcurso } from "@/lib/concursoInfo";
+import { ajudaDaEtiqueta } from "@/lib/concursoInfo";
 
 const TIPO_LINK: Record<string, string> = {
   questoes: "✍️",
@@ -34,37 +28,28 @@ const TIPO_LINK: Record<string, string> = {
   outro: "🔗",
 };
 
-type Painel = null | "links" | "questoes" | "textos" | "metas";
+type Painel = null | "links" | "textos";
 
 interface Props {
   topico: Topico;
   links: TopicoLink[];
   logs: QuestaoLog[];
-  textos: TopicoTexto[];
+  textos: TextoMeta[];
   questoes: QuestaoResumo[];
-  metas: TopicoMeta[];
   /** Último tópico da lista: não mostra linha divisória "solta" no fim. */
   isLast?: boolean;
-  /** Mostra o botão de marcar/desmarcar o assunto como núcleo comum (Concurso Indefinido). */
-  mostrarNucleo?: boolean;
-  /** Sistema de horas ligado: mostra o campo de horas e o saldo estudado do assunto. */
-  sistemaHoras?: boolean;
   /** Assunto riscado neste concurso: aparece riscado e não conta no edital. */
   riscado?: boolean;
   /** Alterna o risco do assunto. Sem o callback, o botão de riscar não aparece. */
   onToggleRiscar?: () => void;
-  /** Slug do concurso aberto: a etiqueta "COMUM <ele mesmo>" fica escondida. */
-  slugConcurso?: string;
+  /** Quais etiquetas mostrar ("COMUM <o próprio concurso>" e as de concurso parado somem). */
+  etiquetaVisivel?: (tag: string) => boolean;
 }
 
-export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast, mostrarNucleo, sistemaHoras, riscado, onToggleRiscar, slugConcurso }: Props) {
-  const etiquetas = (topico.tags ?? []).filter(
-    (tag) => !slugConcurso || !etiquetaDoProprioConcurso(tag, slugConcurso)
-  );
+export function TopicoRow({ topico, links, logs, textos, questoes, isLast, riscado, onToggleRiscar, etiquetaVisivel }: Props) {
+  const etiquetas = (topico.tags ?? []).filter((tag) => !etiquetaVisivel || etiquetaVisivel(tag));
   const setStatus = useSetTopicoStatus();
   const setSeparador = useSetTopicoSeparador();
-  const setNucleo = useSetTopicoNucleo();
-  const setHoras = useAtualizarHorasTopico();
   const atualizar = useAtualizarTopico();
   const excluirTopico = useExcluirTopico();
   const criarLink = useCriarTopicoLink();
@@ -92,7 +77,8 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   const [editando, setEditando] = useState(false);
   const [tituloEdit, setTituloEdit] = useState(topico.titulo);
-  const [textoAberto, setTextoAberto] = useState<TopicoTexto | null>(null);
+  // Id do texto aberto no leitor (o conteúdo é baixado só ao abrir).
+  const [textoAberto, setTextoAberto] = useState<string | null>(null);
 
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novaUrl, setNovaUrl] = useState("");
@@ -103,7 +89,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
   const info = STATUS_INFO[status];
   const temObs = (topico.observacao ?? "").trim().length > 0;
 
-  // Desempenho acumulado do assunto (todos os registros).
+  // Desempenho acumulado do assunto: cada questão respondida no site entra aqui.
   const resumo = useMemo(() => {
     const t = logs.reduce((s, l) => s + l.total, 0);
     const a = logs.reduce((s, l) => s + l.acertos, 0);
@@ -118,9 +104,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
       pendentes: emJogo.filter((q) => !estaResolvida(q)).length,
     };
   }, [questoes]);
-
-  // Placar das metas: quantas das metas do assunto já fecharam.
-  const placar = useMemo(() => placarAssunto(metas, logs), [metas, logs]);
 
   function alternar(p: Painel) {
     setPainel((atual) => (atual === p ? null : p));
@@ -219,7 +202,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
         titulo: "Novo texto",
         ordem: textos.length,
       });
-      setTextoAberto(novo);
+      setTextoAberto(novo.id);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     }
@@ -293,16 +276,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
               {topico.titulo}
             </span>
           )}
-          {sistemaHoras && (
-            // Contador regressivo: mostra as horas que FALTAM (plano − estudado) e
-            // desce a cada estudo. Editar redefine o plano como estudado + digitado.
-            <HoraInput
-              value={horasRestantes(topico.horas_alvo, topico.horas_estudadas)}
-              onCommit={(h) => setHoras.mutate({ id: topico.id, horas_alvo: topico.horas_estudadas + h })}
-              ariaLabel={`Horas restantes de ${topico.titulo}`}
-              className="!h-8 shrink-0"
-            />
-          )}
         </div>
 
         {/* ações do assunto: no celular quebram em linhas (sem estourar pro lado);
@@ -320,55 +293,20 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
             </button>
           )}
 
-          {/* metas do assunto: o placar diz o quanto falta para poder concluir.
+          {/* desempenho: a taxa de acerto das questões respondidas no site (só leitura).
               Slot de largura fixa (desktop) para os chips alinharem em coluna. */}
-          <div className="flex shrink-0 sm:w-[60px]">
-            <button
-              onClick={() => alternar("metas")}
-              className={`flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
-                placar.total === 0
-                  ? "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-                  : placar.fechado
-                    ? "text-green hover:bg-green/10"
-                    : "text-dim hover:bg-navy-600"
-              } ${painel === "metas" ? "ring-1 ring-line" : ""}`}
-              title={
-                placar.total === 0
-                  ? "Metas deste assunto"
-                  : `Metas: ${placar.feitas} de ${placar.total} fechadas`
-              }
-            >
-              <ListChecks className="size-3.5 shrink-0" />
-              {placar.total > 0 && (
-                <span className="tabular-nums">
-                  {placar.feitas}/{placar.total}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* desempenho: mostra a taxa de acerto, ou convida a registrar */}
           <div className="flex shrink-0 sm:w-[104px]">
-            <button
-              onClick={() => alternar("questoes")}
-              className={`flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold transition-colors ${
-                cor
-                  ? `${cor.texto} ${cor.fundo}`
-                  : "text-mut opacity-0 hover:bg-navy-600 group-hover/topico:opacity-100 max-md:opacity-100"
-              } ${painel === "questoes" ? "ring-1 ring-line" : ""}`}
-              title={
-                resumo.pct !== null
-                  ? `${resumo.acertos}/${resumo.total} questões · ${resumo.pct}% de acerto`
-                  : "Registrar questões deste assunto"
-              }
-            >
-              <Target className="size-3.5 shrink-0" />
-              {resumo.pct !== null && (
+            {resumo.pct !== null && cor && (
+              <span
+                className={`flex min-w-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold ${cor.texto} ${cor.fundo}`}
+                title={`${resumo.acertos}/${resumo.total} questões · ${resumo.pct}% de acerto`}
+              >
+                <Target className="size-3.5 shrink-0" />
                 <span className="tabular-nums">
                   {resumo.total}Q · {resumo.pct}%
                 </span>
-              )}
-            </button>
+              </span>
+            )}
           </div>
 
           {/* questões geradas por IA — caderno em aba própria, com espaço para resolver */}
@@ -438,30 +376,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
             </button>
           </div>
 
-          {/* núcleo comum: se o assunto entra no Concurso Indefinido (cai nos dois editais) */}
-          {mostrarNucleo && (
-            <button
-              onClick={() =>
-                setNucleo.mutate({ id: topico.id, nucleo_comum: !topico.nucleo_comum })
-              }
-              className={`flex shrink-0 cursor-pointer items-center rounded-md p-1 transition-colors max-sm:hidden ${
-                topico.nucleo_comum
-                  ? "text-gold hover:bg-gold/10"
-                  : "text-mut opacity-0 hover:bg-navy-600 hover:text-dim group-hover/topico:opacity-100 max-md:opacity-100"
-              }`}
-              title={
-                topico.nucleo_comum
-                  ? "No núcleo comum — aparece no Concurso Indefinido (clique para tirar)"
-                  : "Fora do núcleo comum — clique para incluir no Concurso Indefinido"
-              }
-              aria-label={
-                topico.nucleo_comum ? "Remover do núcleo comum" : "Adicionar ao núcleo comum"
-              }
-            >
-              <Compass className="size-3.5" />
-            </button>
-          )}
-
           {/* linha divisória após o assunto: agrupa assuntos estudados juntos */}
           <button
             onClick={() =>
@@ -521,16 +435,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
                 ...(!editando
                   ? [{ icone: <Pencil className="size-3.5" />, label: "Renomear", onClick: abrirEdicao }]
                   : []),
-                ...(mostrarNucleo
-                  ? [
-                      {
-                        icone: <Compass className="size-3.5" />,
-                        label: topico.nucleo_comum ? "Tirar do núcleo comum" : "Pôr no núcleo comum",
-                        onClick: () =>
-                          setNucleo.mutate({ id: topico.id, nucleo_comum: !topico.nucleo_comum }),
-                      },
-                    ]
-                  : []),
                 {
                   icone: <SeparatorHorizontal className="size-3.5" />,
                   label: topico.separador_apos ? "Tirar a linha divisória" : "Linha divisória depois",
@@ -558,9 +462,9 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
         </div>
       </div>
 
-      {/* Etiquetas do assunto (ex.: "COMUM PCAL" = também cai no edital da PC-AL).
-          Em linha própria, abaixo do nome, para não espremer o título. A que aponta
-          para o próprio concurso aberto ("COMUM PCPE" vendo a PC PE) fica escondida. */}
+      {/* Etiquetas do assunto (ex.: "COMUM PPPE" = também cai no edital da Polícia
+          Penal-PE). Em linha própria, abaixo do nome, para não espremer o título. A do
+          próprio concurso aberto e as de concurso parado ficam escondidas. */}
       {etiquetas.length ? (
         <div className="mb-1.5 ml-15 flex flex-wrap items-center gap-1.5">
           {etiquetas.map((tag) => (
@@ -574,13 +478,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
           ))}
         </div>
       ) : null}
-
-      {/* Saldo de horas do assunto: o "resta" desce a cada estudo registrado. */}
-      {sistemaHoras && (topico.horas_alvo > 0 || topico.horas_estudadas > 0) && (
-        <div className="mb-1.5 ml-15 max-w-xs">
-          <BarraHoras alvo={topico.horas_alvo} estudado={topico.horas_estudadas} size="sm" />
-        </div>
-      )}
 
       {/* Chips dos links — sempre visíveis, abrem direto. */}
       {links.length > 0 && (
@@ -623,20 +520,6 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
         </div>
       )}
 
-      {/* Painel: metas que fecham o assunto. */}
-      {painel === "metas" && (
-        <div className="mb-2 ml-15 rounded-lg border border-line/50 bg-navy-900/60 p-3">
-          <MetasAssunto topico={topico} metas={metas} logs={logs} />
-        </div>
-      )}
-
-      {/* Painel: registrar/ver desempenho do assunto. */}
-      {painel === "questoes" && (
-        <div className="mb-2 ml-15 rounded-lg border border-line/50 bg-navy-900/60 p-3">
-          <RegistroQuestoes materiaId={topico.materia_id} topicoId={topico.id} logs={logs} />
-        </div>
-      )}
-
       {/* Painel: textos e resumos do assunto. */}
       {painel === "textos" && (
         <div className="mb-2 ml-15 space-y-3 rounded-lg border border-line/50 bg-navy-900/60 p-3">
@@ -654,7 +537,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
               {textos.map((t) => (
                 <li key={t.id} className="group/txt flex items-center gap-1">
                   <button
-                    onClick={() => setTextoAberto(t)}
+                    onClick={() => setTextoAberto(t.id)}
                     className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-txt transition-colors hover:bg-navy-700/50"
                   >
                     <BookOpen className="size-3.5 shrink-0 text-gold" />
@@ -779,7 +662,7 @@ export function TopicoRow({ topico, links, logs, textos, questoes, metas, isLast
       )}
 
       {textoAberto && (
-        <TextoReaderModal texto={textoAberto} onClose={() => setTextoAberto(null)} />
+        <TextoReaderModal textoId={textoAberto} onClose={() => setTextoAberto(null)} />
       )}
 
       <ConfirmDialog

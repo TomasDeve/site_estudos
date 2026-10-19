@@ -3,15 +3,48 @@ import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
 import type { TablesInsert, TopicoTexto } from "@/types/db";
 
+/** Um texto sem o conteúdo: o que as listas mostram (título, leituras, onde parei). */
+export type TextoMeta = Omit<TopicoTexto, "conteudo">;
+
+const COLUNAS_META =
+  "id, user_id, topico_id, materia_id, titulo, leituras, marcador, ordem, created_at, atualizado_em";
+
+/**
+ * Todos os textos e resumos, SEM o conteúdo — é o que a página da matéria lista
+ * por assunto. O conteúdo vem só do texto que abrir (`useTexto`): com as leis
+ * inteiras dentro, a lista passava de 3 MB e era baixada de novo a cada
+ * salvamento automático do leitor.
+ */
 export function useTopicoTextos() {
   return useQuery({
     queryKey: ["topico_textos"],
+    queryFn: () =>
+      fetchAll<TextoMeta>((f, t) =>
+        supabase
+          .from("topico_textos")
+          .select(COLUNAS_META)
+          .order("topico_id")
+          .order("ordem")
+          .order("created_at")
+          .range(f, t)
+      ),
+  });
+}
+
+/**
+ * Os textos completos (com o conteúdo) de alguns assuntos — o painel "Resumos
+ * dos assuntos" da matéria, baixado só enquanto ele está aberto.
+ */
+export function useTextosDosTopicos(topicoIds: string[], ativo: boolean) {
+  return useQuery({
+    queryKey: ["topico_textos", "conteudo", topicoIds],
+    enabled: ativo && topicoIds.length > 0,
     queryFn: () =>
       fetchAll<TopicoTexto>((f, t) =>
         supabase
           .from("topico_textos")
           .select("*")
-          .order("topico_id")
+          .in("topico_id", topicoIds)
           .order("ordem")
           .order("created_at")
           .range(f, t)

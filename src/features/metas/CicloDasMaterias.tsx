@@ -126,14 +126,6 @@ export function CicloDasMaterias({ ciclo }: { ciclo: CicloDoPlano }) {
   }
 
   function erro(err: unknown) {
-    const e = err as { message?: string } | null;
-    if (e?.message?.includes("ciclo_plano_inicio")) {
-      toast.error(
-        "Falta rodar a migração 0037 (ciclo das matérias) no Supabase → SQL Editor.",
-        { duration: 8000 }
-      );
-      return;
-    }
     toast.error(err instanceof Error ? err.message : String(err));
   }
 

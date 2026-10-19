@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
-import type { QuestaoLog, TablesInsert } from "@/types/db";
+import type { QuestaoLog } from "@/types/db";
 
 /** Todos os registros vinculados a um tópico (assunto) — para o desempenho no edital. */
 export function useQuestaoLogsPorTopico() {
@@ -59,17 +59,6 @@ export function useQuestaoLogsPorMateria(materiaId: string | undefined) {
   });
 }
 
-export function useCriarQuestaoLog() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: TablesInsert<"questao_logs">) => {
-      const { error } = await supabase.from("questao_logs").insert(input);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["questao_logs"] }),
-  });
-}
-
 /**
  * Registra UMA questão por clique (+Acerto / +Erro) somando tudo num único
  * registro do dia (origem 'clique'), por assunto (topico_id) ou por matéria
@@ -93,17 +82,6 @@ export function useRegistrarClique() {
       });
       if (error) throw error;
       return data as QuestaoLog;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["questao_logs"] }),
-  });
-}
-
-export function useExcluirQuestaoLog() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("questao_logs").delete().eq("id", id);
-      if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["questao_logs"] }),
   });

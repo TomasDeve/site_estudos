@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { QuestaoLog } from "@/types/db";
-import { corDesempenho, desempenhoGeral, desempenhoRecente } from "./desempenho";
+import { corDesempenho, desempenhoGeral, desempenhoRecente, ultimasQuestoes } from "./desempenho";
 
 /** Um registro de questões do dia. */
 function log(data: string, total: number, acertos: number): QuestaoLog {
@@ -66,6 +66,23 @@ describe("desempenhoRecente", () => {
     expect(desempenhoRecente([log("2026-07-20", 30, 24)]).vale).toBe(false);
     const r = desempenhoRecente([log("2026-07-01", 100, 60), log("2026-07-20", 30, 27)]);
     expect(r).toMatchObject({ total: 30, pct: 90, anteriorPct: 60, tendencia: 30, vale: true });
+  });
+});
+
+describe("ultimasQuestoes", () => {
+  it("pega as mais recentes primeiro", () => {
+    const logs = [log("2026-07-10", 10, 5), log("2026-07-20", 10, 9)];
+    expect(ultimasQuestoes(logs, 10)).toMatchObject({ total: 10, acertos: 9, pct: 90 });
+  });
+
+  it("corta o dia mais antigo proporcionalmente", () => {
+    // 20 da janela: 10 de 20/07 (9 acertos) + 10 dos 30 de 10/07 (24 acertos → 8)
+    const logs = [log("2026-07-10", 30, 24), log("2026-07-20", 10, 9)];
+    expect(ultimasQuestoes(logs, 20)).toMatchObject({ total: 20, acertos: 17, pct: 85 });
+  });
+
+  it("devolve o que tem quando a janela não fecha", () => {
+    expect(ultimasQuestoes([log("2026-07-20", 6, 6)], 20)).toMatchObject({ total: 6, pct: 100 });
   });
 });
 

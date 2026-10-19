@@ -1,20 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, ChevronRight, Maximize2, Sparkles, Target } from "lucide-react";
 import type { Topico, TopicoTexto } from "@/types/db";
-import { TITULO_RESUMO_QUESTOES } from "@/api/topicoTextos";
+import { TITULO_RESUMO_QUESTOES, useTextosDosTopicos } from "@/api/topicoTextos";
 import { idsNoResumo } from "./resumoBlocos";
 import { Modal } from "@/components/Modal";
 import { EmptyState } from "@/components/EmptyState";
+import { Spinner } from "@/components/Spinner";
 import { STATUS_INFO } from "./statusInfo";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   materiaNome: string;
-  /** Assuntos da matéria, já na ordem do edital. */
+  /** Assuntos da matéria que têm algum texto, já na ordem do edital. */
   topicos: Topico[];
-  /** Todos os textos/resumos da matéria, indexados pelo id do assunto. */
-  textosPorTopico: Map<string, TopicoTexto[]>;
 }
 
 interface TextoView {
@@ -39,15 +38,23 @@ interface Grupo {
  * Os "Resumo das questões" já abrem expandidos (são curtos); os demais textos —
  * como leis inteiras — começam recolhidos para não pesar a tela.
  */
-export function ResumosDaMateriaModal({
-  open,
-  onClose,
-  materiaNome,
-  topicos,
-  textosPorTopico,
-}: Props) {
+export function ResumosDaMateriaModal({ open, onClose, materiaNome, topicos }: Props) {
   const [soResumos, setSoResumos] = useState(false);
   const [abertos, setAbertos] = useState<ReadonlySet<string>>(new Set());
+
+  // O conteúdo dos textos só desce enquanto o painel está aberto.
+  const ids = useMemo(() => topicos.map((t) => t.id), [topicos]);
+  const { data: textos, isLoading } = useTextosDosTopicos(ids, open);
+  const textosPorTopico = useMemo(() => {
+    const mapa = new Map<string, TopicoTexto[]>();
+    for (const t of textos ?? []) {
+      if (!t.topico_id) continue;
+      const arr = mapa.get(t.topico_id) ?? [];
+      arr.push(t);
+      mapa.set(t.topico_id, arr);
+    }
+    return mapa;
+  }, [textos]);
 
   // Monta os grupos (assunto → seus textos) na ordem do edital, contando as
   // questões de cada "Resumo das questões".
@@ -94,13 +101,18 @@ export function ResumosDaMateriaModal({
     return s;
   }, [grupos]);
 
-  // Só reinicia o estado de aberto/recolhido quando o modal ABRE — não a cada
-  // recarga dos dados, para não desfazer o que o usuário expandiu/recolheu.
-  const estavaAberto = useRef(false);
+  // Só reinicia o estado de aberto/recolhido quando o modal ABRE (assim que os
+  // textos chegam) — não a cada recarga, para não desfazer o que você mexeu.
+  const iniciado = useRef(false);
   useEffect(() => {
-    if (open && !estavaAberto.current) setAbertos(autoAbertos);
-    estavaAberto.current = open;
-  }, [open, autoAbertos]);
+    if (!open) {
+      iniciado.current = false;
+      return;
+    }
+    if (iniciado.current || !textos) return;
+    setAbertos(autoAbertos);
+    iniciado.current = true;
+  }, [open, textos, autoAbertos]);
 
   function alternar(id: string) {
     setAbertos((s) => {
@@ -133,7 +145,11 @@ export function ResumosDaMateriaModal({
         </span>
       }
     >
-      {grupos.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center py-10">
+          <Spinner />
+        </div>
+      ) : grupos.length === 0 ? (
         <EmptyState
           icon="📝"
           title="Nenhum resumo ainda"

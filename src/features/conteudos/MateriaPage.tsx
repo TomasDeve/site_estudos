@@ -16,21 +16,11 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  ArrowLeft,
-  BookOpen,
-  ChevronRight,
-  GripVertical,
-  ListChecks,
-  Plus,
-  Sparkles,
-  Target,
-  TimerReset,
-  Unlink,
-} from "lucide-react";
+import { ArrowLeft, BookOpen, GripVertical, Plus, Sparkles, Target, Unlink } from "lucide-react";
 import { toast } from "sonner";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
-import { nomeDaArea } from "@/lib/concursoInfo";
+import { etiquetaDeConcursoParado, etiquetaDoProprioConcurso, nomeDaArea } from "@/lib/concursoInfo";
+import { useConcursos } from "@/api/concursos";
 import {
   useConcursoMaterias,
   useDesvincularMateria,
@@ -40,14 +30,13 @@ import {
 } from "@/api/materias";
 import { useCriarTopico, useReordenarTopicos, useTopicos } from "@/api/topicos";
 import { useTopicoLinks } from "@/api/topicoLinks";
-import { useTopicoTextos } from "@/api/topicoTextos";
+import { useTopicoTextos, type TextoMeta } from "@/api/topicoTextos";
 import { useQuestoesResumo, type QuestaoResumo } from "@/api/topicoQuestoes";
 import { estaResolvida } from "./questaoModelo";
-import { metasPorTopico, useAplicarPlanoPadrao, useTopicoMetas } from "@/api/topicoMetas";
 import { useQuestaoLogsPorMateria, useQuestaoLogsPorTopico } from "@/api/questaoLogs";
 import { useRedacoes } from "@/api/redacoes";
 import { ordenarTopicosDoVinculo, topicosDoConcurso } from "@/lib/progresso";
-import type { QuestaoLog, TopicoLink, TopicoTexto } from "@/types/db";
+import type { QuestaoLog, TopicoLink } from "@/types/db";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/Button";
@@ -57,10 +46,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TopicoRow } from "./TopicoRow";
 import { MateriaEstudo } from "./MateriaEstudo";
-import { HorasMateriaBarra, HorasMateriaControles } from "./DistribuicaoHorasMateria";
-import { RegistrarEstudoModal } from "@/features/horas/RegistrarEstudoModal";
-import { RegistroQuestoes } from "./RegistroQuestoes";
-import { MateriaResumos } from "./MateriaResumos";
 import { ResumosDaMateriaModal } from "./ResumosDaMateriaModal";
 import { RedacoesPanel } from "./RedacoesPanel";
 import { INFO_CONCURSOS } from "@/features/informacoes/infoConcursos";
@@ -79,17 +64,15 @@ export function MateriaPage() {
   const { data: topicos, isLoading: l3 } = useTopicos();
   const { data: links, isLoading: l4 } = useTopicoLinks();
   const { data: textos } = useTopicoTextos();
-  const { data: questoes } = useQuestoesResumo();
-  const { data: metas } = useTopicoMetas();
   const { data: logs } = useQuestaoLogsPorTopico();
   const { data: logsMateria } = useQuestaoLogsPorMateria(materiaId);
   const { data: redacoes } = useRedacoes();
+  const { data: concursos } = useConcursos();
 
   const criarTopico = useCriarTopico();
   const reordenarTopicos = useReordenarTopicos();
   const setTopicosIncluidos = useSetTopicosIncluidos();
   const desvincular = useDesvincularMateria();
-  const aplicarPlano = useAplicarPlanoPadrao();
   const riscarTopico = useRiscarTopico();
 
   const sensors = useSensors(
@@ -101,8 +84,6 @@ export function MateriaPage() {
   const [novoTopico, setNovoTopico] = useState("");
   const [adicionando, setAdicionando] = useState(false);
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
-  const [abrirQuestoes, setAbrirQuestoes] = useState(false);
-  const [modalEstudo, setModalEstudo] = useState(false);
   const [modalResumos, setModalResumos] = useState(false);
 
   const irPara = `/concurso/${concurso.id}/conteudos`;
@@ -126,6 +107,9 @@ export function MateriaPage() {
     );
     return ordenarTopicosDoVinculo(doConcurso, vinculo?.topicos_incluidos);
   }, [topicos, materiaId, concurso, vinculos, vinculo?.topicos_incluidos]);
+  // Questões (só as colunas leves) dos assuntos desta matéria.
+  const idsDosTopicos = useMemo(() => meusTopicos.map((t) => t.id), [meusTopicos]);
+  const { data: questoes } = useQuestoesResumo(idsDosTopicos);
   const temRecorte = !!vinculo?.topicos_incluidos;
   const linksPorTopico = useMemo(() => {
     const mapa = new Map<string, TopicoLink[]>();
@@ -137,7 +121,7 @@ export function MateriaPage() {
     return mapa;
   }, [links]);
   const textosPorTopico = useMemo(() => {
-    const mapa = new Map<string, TopicoTexto[]>();
+    const mapa = new Map<string, TextoMeta[]>();
     for (const t of textos ?? []) {
       if (!t.topico_id) continue; // textos gerais da matéria não entram por tópico
       const arr = mapa.get(t.topico_id) ?? [];
@@ -155,7 +139,6 @@ export function MateriaPage() {
     }
     return mapa;
   }, [questoes]);
-  const metasDoTopico = useMemo(() => metasPorTopico(metas), [metas]);
   const logsPorTopico = useMemo(() => {
     const mapa = new Map<string, QuestaoLog[]>();
     for (const l of logs ?? []) {
@@ -167,12 +150,9 @@ export function MateriaPage() {
     return mapa;
   }, [logs]);
 
-  // Registros avulsos da matéria (sem tópico), somados no dia via +Acerto/+Erro
-  // ou registrados em bateria direto na matéria.
-  const geral = useMemo(() => desempenhoGeral(logsMateria ?? []), [logsMateria]);
-
-  // Todos os registros da matéria: avulsos + os dos seus assuntos. Base do
-  // desempenho acumulado e da janela das últimas questões.
+  // Todos os registros da matéria: os avulsos (sem assunto, do antigo registro
+  // manual) + os dos seus assuntos. Base do desempenho acumulado e da janela das
+  // últimas questões.
   const logsDaMateria = useMemo(() => {
     const ids = new Set(meusTopicos.map((t) => t.id));
     const dosTopicos = (logs ?? []).filter((l) => l.topico_id && ids.has(l.topico_id));
@@ -210,8 +190,6 @@ export function MateriaPage() {
     (t) => (textosPorTopico.get(t.id) ?? []).length > 0
   ).length;
 
-  // Assuntos que ainda não têm metas: dá para aplicar o plano padrão de uma vez.
-  const semMetas = meusTopicos.filter((t) => (metasDoTopico.get(t.id) ?? []).length === 0);
   const concluidos = contaveis.filter((t) => t.status === "concluido").length;
   const pct = contaveis.length === 0 ? 0 : Math.round((concluidos / contaveis.length) * 100);
   const cor = desempenho.pct !== null ? corDesempenho(desempenho.pct) : null;
@@ -231,8 +209,11 @@ export function MateriaPage() {
   );
   const pendentesIA = questoesIA.filter((q) => !estaResolvida(q)).length;
 
+  // Etiquetas "COMUM X": some a do próprio concurso e a de concurso pausado/arquivado.
+  const etiquetaVisivel = (tag: string) =>
+    !etiquetaDoProprioConcurso(tag, concurso.slug) && !etiquetaDeConcursoParado(tag, concursos ?? []);
+
   const ehRedacao = materia.tipo === "redacao";
-  const textosDaMateria = (textos ?? []).filter((t) => t.materia_id === materia.id);
   const redacoesDaMateria = (redacoes ?? []).filter(
     (r) => r.materia_id === materia.id && r.concurso_id === concurso.id
   );
@@ -278,14 +259,9 @@ export function MateriaPage() {
     }
   }
 
-  // Matéria com sistema de horas: ganha a barra de progresso do tempo. Nesse
-  // caso a legenda de status desce para a mesma linha da barra.
-  const mostrarHoras = !ehRedacao && concurso.sistema_horas;
-
-  // Legenda dos status dos assuntos — usada no cabeçalho, ao lado da barra de
-  // horas (ou do título, quando não há barra).
+  // Legenda dos status dos assuntos, na linha do título "Tópicos do edital".
   const legendaStatus = (
-    <div className="flex shrink-0 items-center gap-2.5 text-[11px] text-mut">
+    <div className="ml-auto flex shrink-0 items-center gap-2.5 text-[11px] text-mut">
       {Object.entries(STATUS_INFO).map(([k, v]) => (
         <span key={k} className="flex items-center gap-1.5">
           <span
@@ -372,16 +348,6 @@ export function MateriaPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 max-sm:w-full sm:shrink-0 sm:justify-end">
-              {concurso.sistema_horas && !ehRedacao && (
-                <Button
-                  size="sm"
-                  className="max-sm:h-10 max-sm:flex-1"
-                  onClick={() => setModalEstudo(true)}
-                  title="Registrar tempo estudado e abater das horas dos assuntos"
-                >
-                  <TimerReset className="size-3.5" /> Registrar estudo
-                </Button>
-              )}
               {!ehRedacao && questoesIA.length > 0 && (
                 <a
                   href={`/questoes/materia/${materia.id}`}
@@ -407,9 +373,8 @@ export function MateriaPage() {
       {/* Recado de estudo da matéria: primeira coisa que se lê ao abrir */}
       <MateriaEstudo materia={materia} />
 
-      {/* Redação: notas dos treinos. Demais matérias: questões gerais.
-          Some junto quando a matéria desliga o bloco nas configurações. */}
-      {!materia.mostrar_questoes_geral ? null : ehRedacao ? (
+      {/* Redação: as notas dos treinos */}
+      {ehRedacao && (
         <RedacoesPanel
           concursoId={concurso.id}
           materiaId={materia.id}
@@ -418,52 +383,13 @@ export function MateriaPage() {
           redacoes={redacoesDaMateria}
           regra={INFO_CONCURSOS[concurso.slug]?.redacao}
         />
-      ) : (
-        <Card>
-          <CardBody>
-            <button
-              onClick={() => setAbrirQuestoes((v) => !v)}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 text-left"
-            >
-              <span className="flex items-center gap-2 text-sm font-semibold text-txt">
-                <Target className="size-4 text-gold" /> Questões da matéria (geral)
-              </span>
-              <span className="flex items-center gap-2 text-xs text-mut">
-                {geral.pct !== null
-                  ? `${geral.acertos}/${geral.total} · ${geral.pct}%`
-                  : "registrar"}
-                <ChevronRight
-                  className={`size-4 transition-transform ${abrirQuestoes ? "rotate-90" : ""}`}
-                />
-              </span>
-            </button>
-
-            {abrirQuestoes && (
-              <div className="mt-3 border-t border-line/30 pt-3">
-                <p className="mb-3 text-xs text-mut">
-                  Resolveu questões misturando vários assuntos no filtro? Registre direto aqui, sem
-                  escolher um tópico.
-                </p>
-                <RegistroQuestoes materiaId={materia.id} topicoId={null} logs={logsMateria ?? []} />
-              </div>
-            )}
-          </CardBody>
-        </Card>
-      )}
-
-      {/* Resumos gerais da matéria (não presos a um assunto) */}
-      {materia.mostrar_resumos_geral && (
-        <MateriaResumos materiaId={materia.id} textos={textosDaMateria} />
       )}
 
       {/* Tópicos da matéria */}
       <Card>
         <CardBody>
-          {/* Cabeçalho dos tópicos. Com sistema de horas: linha 1 traz o título,
-              "Ver resumos" e os controles de horas; linha 2 alinha a barra de
-              horas com a legenda de status na mesma altura. Sem horas, a legenda
-              fica na própria linha do título. */}
-          <div className="mb-3 space-y-2 border-b border-line/30 pb-3">
+          {/* Cabeçalho dos tópicos: título, "Ver resumos" e a legenda de status */}
+          <div className="mb-3 border-b border-line/30 pb-3">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-txt">Tópicos do edital</h2>
@@ -482,24 +408,8 @@ export function MateriaPage() {
                 )}
               </div>
 
-              {mostrarHoras ? (
-                <div className="ml-auto">
-                  <HorasMateriaControles vinculo={vinculo} topicos={meusTopicos} />
-                </div>
-              ) : (
-                <div className="ml-auto">{legendaStatus}</div>
-              )}
+              {legendaStatus}
             </div>
-
-            {/* Barra de horas e legenda de status na mesma altura */}
-            {mostrarHoras && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <div className="min-w-0 flex-1">
-                  <HorasMateriaBarra vinculo={vinculo} topicos={meusTopicos} cor={concurso.cor} />
-                </div>
-                {legendaStatus}
-              </div>
-            )}
           </div>
 
           {meusTopicos.length === 0 ? (
@@ -533,11 +443,8 @@ export function MateriaPage() {
                         logs={logsPorTopico.get(t.id) ?? []}
                         textos={textosPorTopico.get(t.id) ?? []}
                         questoes={questoesPorTopico.get(t.id) ?? []}
-                        metas={metasDoTopico.get(t.id) ?? []}
                         isLast={i === meusTopicos.length - 1}
-                        mostrarNucleo
-                        sistemaHoras={concurso.sistema_horas}
-                        slugConcurso={concurso.slug}
+                        etiquetaVisivel={etiquetaVisivel}
                         riscado={topicosRiscados.has(t.id)}
                         onToggleRiscar={() =>
                           riscarTopico.mutate({
@@ -554,7 +461,7 @@ export function MateriaPage() {
             </>
           )}
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-line/30 pt-3">
+          <div className="mt-3 border-t border-line/30 pt-3">
             {adicionando ? (
               <form onSubmit={onAddTopico} className="flex items-center gap-2">
                 <Input
@@ -579,28 +486,6 @@ export function MateriaPage() {
                 <Plus className="size-3.5" /> Novo tópico
               </button>
             )}
-
-            {semMetas.length > 0 && (
-              <button
-                onClick={() =>
-                  aplicarPlano.mutate(
-                    semMetas.map((t) => t.id),
-                    {
-                      onSuccess: (n) =>
-                        toast.success(`Plano padrão aplicado em ${n} ${n === 1 ? "assunto" : "assuntos"}.`),
-                      onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
-                    }
-                  )
-                }
-                disabled={aplicarPlano.isPending}
-                className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-dim transition-colors hover:text-gold disabled:opacity-50"
-                title="Cria as 4 metas padrão nos assuntos que ainda não têm"
-              >
-                <ListChecks className="size-3.5" />
-                Aplicar metas em {semMetas.length}{" "}
-                {semMetas.length === 1 ? "assunto" : "assuntos"}
-              </button>
-            )}
           </div>
         </CardBody>
       </Card>
@@ -620,18 +505,8 @@ export function MateriaPage() {
         open={modalResumos}
         onClose={() => setModalResumos(false)}
         materiaNome={materia.nome}
-        topicos={meusTopicos}
-        textosPorTopico={textosPorTopico}
+        topicos={meusTopicos.filter((t) => (textosPorTopico.get(t.id) ?? []).length > 0)}
       />
-
-      {concurso.sistema_horas && (
-        <RegistrarEstudoModal
-          open={modalEstudo}
-          onClose={() => setModalEstudo(false)}
-          concurso={concurso}
-          materiaIdPadrao={materia.id}
-        />
-      )}
 
       <ConfirmDialog
         open={confirmarRemocao}

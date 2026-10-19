@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ajudaDaEtiqueta, etiquetaDoProprioConcurso, nomeDaArea } from "./concursoInfo";
+import {
+  ajudaDaEtiqueta,
+  etiquetaDeConcursoParado,
+  etiquetaDoProprioConcurso,
+  nomeDaArea,
+} from "./concursoInfo";
 
 describe("nomeDaArea", () => {
   const pcpe = {
@@ -36,6 +41,23 @@ describe("etiquetas COMUM", () => {
   it("outro cargo do mesmo edital também esconde a etiqueta", () => {
     expect(etiquetaDoProprioConcurso("COMUM PCPE", "pc_pe_escrivao")).toBe(true);
     expect(etiquetaDoProprioConcurso("COMUM PPPE", "pc_pe_escrivao")).toBe(false);
+  });
+
+  it("esconde a etiqueta de concurso parado (futuro/arquivado) e mostra a de ativo", () => {
+    const concursos = [
+      { slug: "pc_pe", status: "ativo" },
+      { slug: "pc_pe_escrivao", status: "ativo" },
+      { slug: "pp_pe", status: "futuro" },
+      { slug: "pm_pe", status: "futuro" },
+      { slug: "pmal_soldado", status: "arquivado" },
+    ];
+    expect(etiquetaDeConcursoParado("COMUM PPPE", concursos)).toBe(true);
+    expect(etiquetaDeConcursoParado("COMUM PMPE", concursos)).toBe(true);
+    expect(etiquetaDeConcursoParado("COMUM PMAL", concursos)).toBe(true);
+    expect(etiquetaDeConcursoParado("COMUM PCPE", concursos)).toBe(false);
+    // concurso não cadastrado: a etiqueta continua
+    expect(etiquetaDeConcursoParado("COMUM PCAL", concursos)).toBe(false);
+    expect(etiquetaDeConcursoParado("REVISAR", concursos)).toBe(false);
   });
 
   it("explica a etiqueta com o nome do outro concurso", () => {

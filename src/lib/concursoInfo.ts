@@ -24,10 +24,15 @@ export function nomeDaArea(concurso: { estrutura: Json } | undefined, area: stri
   return AREA_PADRAO[area] ?? area;
 }
 
+/** "pc_pe_escrivao" → "PCPEESCRIVAO": só letras e números, em maiúsculas. */
+function normalizar(s: string): string {
+  return s.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
 /** "COMUM PCPE" → "PCPE"; outras etiquetas → null. */
 function alvoDaEtiqueta(tag: string): string | null {
   const m = tag.trim().toUpperCase().match(/^COMUM\s+(.+)$/);
-  return m ? m[1].replace(/[^A-Z0-9]/g, "") : null;
+  return m ? normalizar(m[1]) : null;
 }
 
 /**
@@ -38,7 +43,23 @@ function alvoDaEtiqueta(tag: string): string | null {
  */
 export function etiquetaDoProprioConcurso(tag: string, slugConcurso: string): boolean {
   const alvo = alvoDaEtiqueta(tag);
-  return alvo !== null && slugConcurso.toUpperCase().replace(/[^A-Z0-9]/g, "").startsWith(alvo);
+  return alvo !== null && normalizar(slugConcurso).startsWith(alvo);
+}
+
+/**
+ * A etiqueta "COMUM X" aponta só para concurso parado (futuro ou arquivado)?
+ * Enquanto o foco é outro ela só polui a lista de assuntos — fica escondida e
+ * volta sozinha quando o concurso for reativado. Etiqueta de um concurso que nem
+ * está cadastrado continua aparecendo.
+ */
+export function etiquetaDeConcursoParado(
+  tag: string,
+  concursos: { slug: string; status: string }[]
+): boolean {
+  const alvo = alvoDaEtiqueta(tag);
+  if (!alvo) return false;
+  const doAlvo = concursos.filter((c) => normalizar(c.slug).startsWith(alvo));
+  return doAlvo.length > 0 && doAlvo.every((c) => c.status !== "ativo");
 }
 
 /**

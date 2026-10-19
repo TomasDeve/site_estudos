@@ -120,30 +120,6 @@ export function useCriarTopico() {
   });
 }
 
-/** Marca/desmarca o assunto como núcleo comum (o que aparece no Concurso Indefinido). */
-export function useSetTopicoNucleo() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, nucleo_comum }: { id: string; nucleo_comum: boolean }) => {
-      const { error } = await supabase.from("topicos").update({ nucleo_comum }).eq("id", id);
-      if (error) throw error;
-    },
-    // update otimista: a marca acende/apaga na hora
-    onMutate: async ({ id, nucleo_comum }) => {
-      await qc.cancelQueries({ queryKey: ["topicos"] });
-      const prev = qc.getQueryData<Topico[]>(["topicos"]);
-      qc.setQueryData<Topico[]>(["topicos"], (old) =>
-        old?.map((t) => (t.id === id ? { ...t, nucleo_comum } : t))
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["topicos"], ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
-  });
-}
-
 export function useAtualizarTopico() {
   const qc = useQueryClient();
   return useMutation({
@@ -182,63 +158,6 @@ export function useSalvarObservacaoTopico() {
       const prev = qc.getQueryData<Topico[]>(["topicos"]);
       qc.setQueryData<Topico[]>(["topicos"], (old) =>
         old?.map((t) => (t.id === id ? { ...t, observacao } : t))
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["topicos"], ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
-  });
-}
-
-/** Grava as horas alocadas para um assunto, otimista. */
-export function useAtualizarHorasTopico() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, horas_alvo }: { id: string; horas_alvo: number }) => {
-      const { error } = await supabase.from("topicos").update({ horas_alvo }).eq("id", id);
-      if (error) throw error;
-    },
-    onMutate: async ({ id, horas_alvo }) => {
-      await qc.cancelQueries({ queryKey: ["topicos"] });
-      const prev = qc.getQueryData<Topico[]>(["topicos"]);
-      qc.setQueryData<Topico[]>(["topicos"], (old) =>
-        old?.map((t) => (t.id === id ? { ...t, horas_alvo } : t))
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["topicos"], ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["topicos"] }),
-  });
-}
-
-/** Grava as horas de vários assuntos de uma vez (botão Distribuir), otimista. */
-export function useDistribuirHorasTopicos() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (itens: { id: string; horas_alvo: number }[]) => {
-      if (itens.length === 0) return;
-      const atuais = qc.getQueryData<Topico[]>(["topicos"]) ?? [];
-      const porId = new Map(atuais.map((t) => [t.id, t]));
-      const linhas = itens
-        .map((it) => {
-          const base = porId.get(it.id);
-          return base ? { ...base, horas_alvo: it.horas_alvo } : null;
-        })
-        .filter((x): x is Topico => x !== null);
-      if (linhas.length === 0) return;
-      const { error } = await supabase.from("topicos").upsert(linhas);
-      if (error) throw error;
-    },
-    onMutate: async (itens) => {
-      await qc.cancelQueries({ queryKey: ["topicos"] });
-      const prev = qc.getQueryData<Topico[]>(["topicos"]);
-      const mapa = new Map(itens.map((it) => [it.id, it.horas_alvo]));
-      qc.setQueryData<Topico[]>(["topicos"], (old) =>
-        old?.map((t) => (mapa.has(t.id) ? { ...t, horas_alvo: mapa.get(t.id)! } : t))
       );
       return { prev };
     },

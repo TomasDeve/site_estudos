@@ -1,6 +1,7 @@
 # Dependências e build
 node_modules/
 dist/
+*.tsbuildinfo
 
 # Ambiente (chaves locais)
 .env

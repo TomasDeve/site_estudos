@@ -22,16 +22,24 @@ export type QuestaoResumo = Pick<
   | "respondida_em"
 >;
 
-/** Contadores por assunto na lista do edital — sem trazer enunciado nem comentário. */
-export function useQuestoesResumo() {
+/**
+ * Contadores por assunto na lista do edital — só dos assuntos da matéria aberta
+ * e sem trazer enunciado nem comentário (as 7 mil questões do site inteiro eram
+ * 8 idas ao banco a cada matéria aberta). O `id` desempata a ordem para a
+ * paginação não pular nem repetir linha.
+ */
+export function useQuestoesResumo(topicoIds: string[]) {
   return useQuery({
-    queryKey: ["topico_questoes", "resumo"],
+    queryKey: ["topico_questoes", "resumo", topicoIds],
+    enabled: topicoIds.length > 0,
     queryFn: () =>
       fetchAll<QuestaoResumo>((f, t) =>
         supabase
           .from("topico_questoes")
           .select("id,topico_id,status,resposta,resposta_letra,tipo,gabarito,gabarito_letra,respondida_em")
+          .in("topico_id", topicoIds)
           .order("topico_id")
+          .order("id")
           .range(f, t)
       ),
   });

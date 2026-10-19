@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ArrowLeft, BookOpen } from "lucide-react";
-import { useTopicoTextos } from "@/api/topicoTextos";
+import { useTexto } from "@/api/topicoTextos";
 import { FullScreenSpinner } from "@/components/Spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { TextoReader, TituloTextoInput } from "./TextoReader";
@@ -10,9 +10,8 @@ import { TextoReader, TituloTextoInput } from "./TextoReader";
 export function TextoLeiPage() {
   const { textoId } = useParams();
   const navigate = useNavigate();
-  const { data: textos, isLoading } = useTopicoTextos();
-
-  const texto = (textos ?? []).find((t) => t.id === textoId);
+  // Só este texto (com o conteúdo) — nada da lista inteira.
+  const { data: texto, isLoading } = useTexto(textoId);
 
   // Nome do texto na aba do navegador, já que a página vive em aba própria.
   useEffect(() => {
