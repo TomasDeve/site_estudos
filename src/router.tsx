@@ -15,7 +15,6 @@ const TextoLeiPage = lazy(() => import("@/features/conteudos/TextoLeiPage").then
 const QuestoesPage = lazy(() => import("@/features/conteudos/QuestoesPage").then((m) => ({ default: m.QuestoesPage })));
 const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMistasPage").then((m) => ({ default: m.QuestoesMistasPage })));
 const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
-const RotinaPage = lazy(() => import("@/features/rotina/RotinaPage").then((m) => ({ default: m.RotinaPage })));
 const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
 
 function pagina(node: ReactNode) {
@@ -51,13 +50,12 @@ export const router = createBrowserRouter([
           { index: true, element: pagina(<DashboardPage />) },
           { path: "conteudos", element: pagina(<ConteudosPage />) },
           { path: "conteudos/:materiaId", element: pagina(<MateriaPage />) },
-          // seções removidas (Metas virou o plano do Painel; Ciclo, Métricas e Áudios saíram): link salvo cai no Painel
+          // seções removidas (Metas virou o plano do Painel; Ciclo, Métricas, Áudios e Rotina saíram): link salvo cai no Painel
           { path: "metas", element: <Navigate to=".." replace /> },
           { path: "ciclo", element: <Navigate to=".." replace /> },
           { path: "metricas/*", element: <Navigate to=".." replace /> },
           { path: "audios", element: <Navigate to=".." replace /> },
-          // rotina diária: os horários fixos (acordar, estudar, parar, academia, dormir)
-          { path: "rotina", element: pagina(<RotinaPage />) },
+          { path: "rotina", element: <Navigate to=".." replace /> },
           // ficha do edital: vagas, datas, divisão da prova, TAF, requisitos
           { path: "informacoes", element: pagina(<InformacoesPage />) },
         ],

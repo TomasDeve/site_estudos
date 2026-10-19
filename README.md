@@ -8,7 +8,6 @@ verticalizado; o foco atual é a **PC PE 2026** (Agente e Escrivão).
 - **Painel** — status do edital, plano dos próximos dias em blocos de 30 min (com
   "Concluir dia" e sequência 🔥), ciclo das matérias, desempenho em questões e o
   tempo estudado nos últimos 7 dias (vem dos blocos marcados como feitos).
-- **Rotina** — os horários fixos do dia.
 - **Conteúdos** — matérias e assuntos do edital: status de cada assunto, caderno
   de questões, textos/resumos (leitor com marca-texto), links e PDFs.
 - **Questões** — todas as questões misturadas, com filtro padrão (aba própria).
@@ -37,8 +36,8 @@ Scripts: `npm run dev` · `npm run build` (typecheck + bundle) · `npm test` (vi
 - Regra de ouro: consultas a tabelas de série temporal sempre por janela de datas
   (PostgREST corta em 1000 linhas — ver `src/lib/fetchAll.ts`). Listas grandes trazem
   só as colunas leves; conteúdo pesado (texto de lei, enunciado) vem sob demanda.
-- Seções que saíram do site (Metas, Ciclo, Métricas, Áudios, Banco de questões, metas
-  por assunto, sistema de horas) deixaram as tabelas intactas no banco.
+- Seções que saíram do site (Metas, Ciclo, Métricas, Áudios, Rotina, Banco de questões,
+  metas por assunto, sistema de horas) deixaram as tabelas intactas no banco.
 
 ## Deploy (Easypanel)
 
