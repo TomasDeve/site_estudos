@@ -222,6 +222,73 @@ const PC_PE: InfoConcurso = {
   ],
 };
 
+// Escrivão: mesmo edital do Agente. Muda a matéria da P2 (Arquivologia no lugar de
+// Contabilidade), as vagas, o turno (manhã) e entra a prova prática de digitação.
+const PC_PE_ESCRIVAO: InfoConcurso = {
+  ...PC_PE,
+  destaques: PC_PE.destaques.map((d) =>
+    d.rotulo === "Vagas (Agente)"
+      ? { icone: "🖋️", rotulo: "Vagas (Escrivão)", valor: "70", sub: "45 de ampla concorrência" }
+      : d.rotulo === "Prova"
+        ? { ...d, sub: "domingo, turno da manhã" }
+        : d
+  ),
+  datas: PC_PE.datas.flatMap((d) =>
+    d.titulo.startsWith("PROVA")
+      ? [{ ...d, obs: "turno da manhã (Agente faz à tarde)" }]
+      : d.titulo === "Avaliação psicológica"
+        ? [{ titulo: "Prova prática de digitação", inicio: "2027-11-06", destaque: true }, d]
+        : [d]
+  ),
+  provas: PC_PE.provas.map((p) =>
+    p.prova === "P2"
+      ? { ...p, materias: p.materias.map((m) => (m === "Contabilidade Geral" ? "Noções de Arquivologia" : m)) }
+      : p
+  ),
+  regrasProva: [
+    "Questões de múltipla escolha com 5 opções (A a E) e uma só correta — NÃO é Certo/Errado.",
+    "Cada questão vale 1 ponto e o erro não desconta: nunca deixe em branco.",
+    "Mínimo de 30 dos 60 pontos nas objetivas (não há mínimo por prova ou por matéria).",
+    "A redação só é corrigida para os mais bem classificados nas objetivas (270 da ampla concorrência; 420 no total).",
+    "Nota da redação = conteúdo (até 30) − 6 × erros ÷ linhas escritas. Escrever pouco faz cada erro pesar mais.",
+    "Nota da 1ª etapa = objetivas + redação (máx. 90). Ela define quem vai para os exames médicos (180 da ampla; 280 no total).",
+    "Atualidades cai só na redação, nunca nas objetivas.",
+  ],
+  etapas: PC_PE.etapas.flatMap((e) =>
+    e.nome === "Avaliação psicológica"
+      ? [
+          {
+            nome: "Prova prática de digitação",
+            quando: "06/11/2027",
+            detalhe:
+              "10 minutos para digitar um texto de ~2.000 caracteres, em Recife. Precisa de 100 toques líquidos por minuto (cada erro desconta 3 toques). Eliminatória; a nota não soma. Só vai quem foi recomendado na investigação social.",
+          },
+          { ...e, detalhe: "Para os aprovados na digitação." },
+        ]
+      : [e]
+  ),
+  vagas: [
+    { rotulo: "Ampla concorrência", n: 45 },
+    { rotulo: "Pretos e pardos", n: 18 },
+    { rotulo: "Pessoas com deficiência", n: 4 },
+    { rotulo: "Indígenas", n: 2 },
+    { rotulo: "Quilombolas", n: 1 },
+  ],
+  extras: [
+    {
+      titulo: "Dá para fazer Escrivão e Agente",
+      icone: "🔁",
+      itens: [
+        "Pode se inscrever nos dois cargos: Escrivão é de manhã e Agente à tarde, no mesmo dia (07/03/2027). Paga as duas taxas.",
+        "Exames médicos e TAF são feitos uma vez só e valem para os dois.",
+        "O conteúdo é o mesmo, menos uma matéria da P2: Arquivologia (Escrivão) × Contabilidade (Agente).",
+      ],
+    },
+    ...PC_PE.extras,
+  ],
+};
+
 export const INFO_CONCURSOS: Record<string, InfoConcurso> = {
   pc_pe: PC_PE,
+  pc_pe_escrivao: PC_PE_ESCRIVAO,
 };

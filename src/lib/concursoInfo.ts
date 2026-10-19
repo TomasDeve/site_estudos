@@ -33,11 +33,12 @@ function alvoDaEtiqueta(tag: string): string | null {
 /**
  * A etiqueta "COMUM X" aponta para o próprio concurso aberto (ex.: "COMUM PCPE"
  * vendo a PC PE)? Aí ela é redundante e fica escondida — o assunto guarda as duas
- * ("COMUM PCAL" e "COMUM PCPE") e cada concurso mostra só a do outro.
+ * ("COMUM PCAL" e "COMUM PCPE") e cada concurso mostra só a do outro. Vale também
+ * para outro cargo do mesmo edital: "COMUM PCPE" some no `pc_pe_escrivao`.
  */
 export function etiquetaDoProprioConcurso(tag: string, slugConcurso: string): boolean {
   const alvo = alvoDaEtiqueta(tag);
-  return alvo !== null && alvo === slugConcurso.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return alvo !== null && slugConcurso.toUpperCase().replace(/[^A-Z0-9]/g, "").startsWith(alvo);
 }
 
 /**

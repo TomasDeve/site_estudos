@@ -33,6 +33,11 @@ describe("etiquetas COMUM", () => {
     expect(etiquetaDoProprioConcurso("REVISAR", "pc_pe")).toBe(false);
   });
 
+  it("outro cargo do mesmo edital também esconde a etiqueta", () => {
+    expect(etiquetaDoProprioConcurso("COMUM PCPE", "pc_pe_escrivao")).toBe(true);
+    expect(etiquetaDoProprioConcurso("COMUM PPPE", "pc_pe_escrivao")).toBe(false);
+  });
+
   it("explica a etiqueta com o nome do outro concurso", () => {
     expect(ajudaDaEtiqueta("COMUM PCAL")).toBe("Este assunto também cai no edital da PC-AL");
     expect(ajudaDaEtiqueta("COMUM PCPE")).toBe("Este assunto também cai no edital da PC-PE");
