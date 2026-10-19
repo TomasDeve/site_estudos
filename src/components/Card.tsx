@@ -7,7 +7,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export function Card({ className = "", children, ...rest }: CardProps) {
   return (
     <div
-      className={`rounded-card border border-line/60 bg-navy-800/80 shadow-card backdrop-blur-sm ${className}`}
+      className={`rounded-card border border-line/50 bg-gradient-to-b from-navy-800/95 to-navy-800/75 shadow-card backdrop-blur-sm ${className}`}
       {...rest}
     >
       {children}
@@ -27,7 +27,7 @@ export function CardHeader({
   return (
     <div className="flex items-start justify-between gap-3 border-b border-line/40 px-4 py-4 sm:px-5">
       <div className="min-w-0">
-        <h3 className="text-sm font-semibold tracking-wide text-txt">{title}</h3>
+        <h3 className="text-[15px] font-bold text-txt">{title}</h3>
         {subtitle && <p className="mt-0.5 text-xs text-mut">{subtitle}</p>}
       </div>
       {action}

@@ -15,13 +15,15 @@ export function ProgressBar({ value, color, size = "md", showLabel = false, clas
   const fill = color ?? "var(--color-gold)";
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
-      <div className={`flex-1 overflow-hidden rounded-full bg-navy-900 ${heights[size]}`}>
+      <div
+        className={`flex-1 overflow-hidden rounded-full bg-navy-950/70 shadow-[inset_0_1px_2px_rgb(0_0_0/0.45)] ${heights[size]}`}
+      >
         <div
           className="h-full rounded-full transition-[width] duration-700 ease-out"
           style={{
             width: `${pct}%`,
-            background: `linear-gradient(90deg, ${fill}, ${fill}cc)`,
-            boxShadow: pct > 0 ? `0 0 8px ${fill}55` : undefined,
+            background: `linear-gradient(90deg, ${fill}b3, ${fill})`,
+            boxShadow: pct > 0 ? `0 0 10px ${fill}66` : undefined,
           }}
         />
       </div>

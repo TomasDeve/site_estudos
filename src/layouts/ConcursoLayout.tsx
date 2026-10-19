@@ -118,24 +118,31 @@ export function ConcursoLayout() {
   const materiaAtiva = location.pathname.match(/\/conteudos\/([^/?#]+)/)?.[1] ?? null;
 
   const itemDesktop = (isActive: boolean) =>
-    `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-      isActive ? "" : "text-dim hover:bg-navy-700/70 hover:text-txt"
+    `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+      isActive ? "" : "text-dim hover:bg-navy-700/60 hover:text-txt"
     }`;
+  // Ativo: faixa na cor do concurso que some para a direita + fio de luz à esquerda.
   const estiloAtivo = (isActive: boolean) =>
-    isActive ? { background: `${cor}1f`, color: cor, boxShadow: `inset 2px 0 0 ${cor}` } : undefined;
+    isActive
+      ? {
+          background: `linear-gradient(90deg, ${cor}2e, ${cor}0a)`,
+          color: cor,
+          boxShadow: `inset 3px 0 0 ${cor}`,
+        }
+      : undefined;
 
   // Abas do celular: uma coluna por item, ícone em cima e rótulo curto embaixo.
   const itemMobile =
-    "relative flex min-w-0 flex-col items-center justify-center gap-1 whitespace-nowrap pb-2 pt-2.5 text-[10px] font-medium leading-none tracking-tight transition-colors";
+    "relative flex min-w-0 flex-col items-center justify-center gap-1 whitespace-nowrap pb-2 pt-2 text-[10px] font-semibold leading-none tracking-tight transition-colors";
   const abasMobile = NAV.map(({ to, label, curto, icon: Icon, end, novaAba }) => {
     if (novaAba) {
       return (
         <a key={to} href={to} target="_blank" rel="noreferrer" className={`${itemMobile} text-dim`}>
-          <span className="relative">
+          <span className="relative px-3 py-1">
             <Icon className="size-5" />
             {/* Quantas questões esperam na Impressão, como no menu do computador */}
             {to === "/impressao" && !!marcadasImpressao && (
-              <span className="absolute -right-2.5 -top-1.5 min-w-4 rounded-full bg-gold px-1 text-center text-[9px] font-bold leading-4 tabular-nums text-navy-950">
+              <span className="absolute -top-0.5 right-0 min-w-4 rounded-full bg-gold px-1 text-center text-[9px] font-bold leading-4 tabular-nums text-navy-950">
                 {marcadasImpressao > 99 ? "99+" : marcadasImpressao}
               </span>
             )}
@@ -151,12 +158,19 @@ export function ConcursoLayout() {
         end={end}
         onClick={() => setSwitcherAberto(false)}
         className={({ isActive }) => `${itemMobile} ${isActive ? "" : "text-dim"}`}
-        style={({ isActive }) =>
-          isActive ? { color: cor, boxShadow: `inset 0 2px 0 ${cor}` } : undefined
-        }
+        style={({ isActive }) => (isActive ? { color: cor } : undefined)}
       >
-        <Icon className="size-5" />
-        {curto ?? label}
+        {({ isActive }) => (
+          <>
+            <span
+              className="rounded-full px-3 py-1 transition-colors"
+              style={isActive ? { background: `${cor}24` } : undefined}
+            >
+              <Icon className="size-5" />
+            </span>
+            {curto ?? label}
+          </>
+        )}
       </NavLink>
     );
   });
@@ -164,17 +178,32 @@ export function ConcursoLayout() {
   return (
     <div className="min-h-dvh md:flex">
       {/* ===== Sidebar desktop — 100% sobre o concurso ativo ===== */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line/50 bg-navy-900/90 md:flex">
-        {/* seletor de concurso + resumo, tudo numa caixinha só */}
-        <div className="relative px-3 pt-3">
-          <div className="overflow-hidden rounded-xl border border-line/60 bg-navy-800">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line/40 bg-gradient-to-b from-navy-900/95 to-navy-950/95 backdrop-blur-xl md:flex">
+        {/* marca do site */}
+        <Link
+          to="/concursos"
+          className="flex items-center gap-2 px-5 pb-1 pt-4 text-[13px] font-extrabold tracking-tight text-txt transition-colors hover:text-gold"
+          title="Meus concursos"
+        >
+          <span className="text-base">🎯</span> Meus Estudos
+        </Link>
+
+        {/* seletor de concurso + contagem até a prova, tudo numa caixinha só */}
+        <div className="relative px-3 pt-2">
+          <div
+            className="overflow-hidden rounded-2xl border border-line/50 bg-navy-800/70 shadow-card"
+            style={{ backgroundImage: `radial-gradient(120% 90% at 100% 0%, ${cor}24, transparent 62%)` }}
+          >
             <button
               onClick={() => setSwitcherAberto((v) => !v)}
-              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-navy-700/50"
+              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-navy-700/40"
             >
               <span
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-lg"
-                style={{ background: `${cor}1a` }}
+                className="flex size-9 shrink-0 items-center justify-center rounded-xl text-lg"
+                style={{
+                  background: `linear-gradient(135deg, ${cor}3d, ${cor}14)`,
+                  boxShadow: `inset 0 0 0 1px ${cor}38`,
+                }}
               >
                 {concurso.icone}
               </span>
@@ -189,26 +218,33 @@ export function ConcursoLayout() {
               <ChevronsUpDown className="size-4 shrink-0 text-mut" />
             </button>
 
-            <div className="flex flex-col items-start gap-1.5 border-t border-line/40 px-3 py-2">
-              <StreakBadge compact />
-              {dias !== null && (
-                <p className="text-[11px] leading-tight text-dim">
-                  {dias >= 0 ? (
-                    <>
-                      <strong className="font-bold" style={{ color: cor }}>
-                        {dias}
-                      </strong>{" "}
+            {/* contagem até a prova em destaque; a sequência 🔥 logo abaixo */}
+            <div className="border-t border-line/40 px-3.5 pb-3 pt-2.5">
+              {dias === null ? (
+                <p className="text-[11px] text-mut">Sem data de prova</p>
+              ) : dias >= 0 ? (
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="text-[30px] font-extrabold leading-none tabular-nums"
+                    style={{ color: cor, textShadow: `0 0 18px ${cor}55` }}
+                  >
+                    {dias}
+                  </span>
+                  <span className="min-w-0 text-[11px] leading-tight">
+                    <span className="block whitespace-nowrap font-semibold text-dim">
                       {dias === 1 ? "dia" : "dias"} para a prova
-                    </>
-                  ) : (
-                    "prova realizada"
-                  )}
-                  <span className="text-mut"> · {fmtData(concurso.data_prova)}</span>
+                    </span>
+                    <span className="block text-mut">{fmtData(concurso.data_prova)}</span>
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs font-semibold text-dim">
+                  Prova realizada · {fmtData(concurso.data_prova)}
                 </p>
               )}
               {dias !== null && dias > 0 && (
                 // quebra no "·" (nunca no meio de "22 semanas e 2 dias")
-                <p className="flex flex-wrap gap-x-1 text-[11px] leading-tight text-mut">
+                <p className="mt-2 flex flex-wrap gap-x-1 text-[11px] leading-snug text-mut">
                   {fmtMesesSemanasAte(concurso.data_prova!)
                     .split(" · ")
                     .map((parte, i) => (
@@ -219,13 +255,16 @@ export function ConcursoLayout() {
                     ))}
                 </p>
               )}
+              <div className="mt-2.5 flex">
+                <StreakBadge compact />
+              </div>
             </div>
           </div>
 
           {switcherAberto && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setSwitcherAberto(false)} />
-              <div className="absolute inset-x-3 z-20 mt-1 rounded-xl border border-line bg-navy-700 p-1 shadow-2xl">
+              <div className="animar-surgir absolute inset-x-3 z-20 mt-1 rounded-xl border border-line bg-navy-700 p-1 shadow-pop">
                 {outros.map((c) => (
                   <Link
                     key={c.id}
@@ -258,7 +297,7 @@ export function ConcursoLayout() {
           )}
         </div>
 
-        <nav className="scrollbar-thin mt-3 flex-1 space-y-1 overflow-y-auto px-3">
+        <nav className="scrollbar-thin mt-4 flex-1 space-y-1 overflow-y-auto px-3">
           {NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
             if (novaAba) {
               return (
@@ -273,7 +312,7 @@ export function ConcursoLayout() {
                   {label}
                   {to === "/impressao" && !!marcadasImpressao && (
                     <span
-                      className="ml-auto rounded-full bg-navy-700 px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-dim"
+                      className="ml-auto rounded-full bg-gold/15 px-1.5 py-0.5 text-[10px] font-bold leading-none tabular-nums text-gold"
                       title={`${marcadasImpressao} ${
                         marcadasImpressao === 1 ? "questão marcada" : "questões marcadas"
                       } para impressão`}
@@ -400,11 +439,14 @@ export function ConcursoLayout() {
       </aside>
 
       {/* ===== Topo mobile ===== */}
-      <header className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-line/50 bg-navy-900/95 px-4 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] backdrop-blur md:hidden">
+      <header className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-line/40 bg-navy-900/85 px-4 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] backdrop-blur-xl md:hidden">
         <Link to="/concursos" className="flex min-w-0 items-center gap-2">
           <span
             className="flex size-8 shrink-0 items-center justify-center rounded-lg text-base"
-            style={{ background: `${cor}1a` }}
+            style={{
+              background: `linear-gradient(135deg, ${cor}3d, ${cor}14)`,
+              boxShadow: `inset 0 0 0 1px ${cor}38`,
+            }}
           >
             {concurso.icone}
           </span>
@@ -414,7 +456,12 @@ export function ConcursoLayout() {
               <ChevronsUpDown className="size-3.5 shrink-0 text-mut" />
             </span>
             {dias !== null && dias >= 0 && (
-              <span className="block text-[10px] text-mut">{dias} dias p/ prova</span>
+              <span className="block text-[10px] text-mut">
+                <strong className="font-bold" style={{ color: cor }}>
+                  {dias}
+                </strong>{" "}
+                dias p/ prova
+              </span>
             )}
           </span>
         </Link>
@@ -439,7 +486,7 @@ export function ConcursoLayout() {
 
       {/* ===== Tab bar mobile — uma coluna por item (sem sobrar espaço vazio) ===== */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line/50 bg-navy-900/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line/40 bg-navy-900/85 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
         style={{ gridTemplateColumns: `repeat(${NAV.length}, minmax(0, 1fr))` }}
       >
         {abasMobile}

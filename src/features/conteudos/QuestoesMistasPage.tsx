@@ -5,10 +5,12 @@ import {
   ArrowLeft,
   BookOpen,
   Check,
+  ChevronDown,
   MessageCircleQuestion,
   NotebookPen,
   RotateCcw,
   Shuffle,
+  SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Materia, QuestaoCategoria, TopicoQuestao } from "@/types/db";
@@ -35,7 +37,13 @@ import { corDesempenho } from "./desempenho";
 import { DesempenhoRecenteChip } from "./DesempenhoRecenteChip";
 import { ResumoRapido } from "./ResumoRapido";
 import { RelogioQuestoes } from "./RelogioQuestoes";
-import { BarraFiltroPadrao, ehVazio, lerFiltroPadrao, type FiltroPadrao } from "./filtroPadrao";
+import {
+  BarraFiltroPadrao,
+  ehVazio,
+  lerFiltroPadrao,
+  resumoDoFiltro,
+  type FiltroPadrao,
+} from "./filtroPadrao";
 import { TextoAssociado } from "./TextoAssociado";
 import {
   Grifavel,
@@ -86,6 +94,9 @@ import { ComentarioTexto } from "./ComentarioTexto";
 
 /** Quantas questões aparecem (e têm o conteúdo baixado) por vez fora dos bloquinhos. */
 const POR_VEZ = 20;
+
+/** Filtros abertos ou recolhidos na linha de resumo: fica neste navegador (começa recolhido). */
+const CHAVE_FILTROS_ABERTOS = "questoes.filtrosAbertos";
 
 const ABAS = [
   { chave: "responder", label: "Para responder" },
@@ -169,6 +180,23 @@ export function QuestoesMistasPage() {
   const [bancas, setBancas] = useState<ReadonlySet<string>>(new Set());
   // Só os assuntos marcados como Concluído (bolinha verde) — treinar o que já foi estudado.
   const [soConcluidos, setSoConcluidos] = useState(false);
+  // Os filtros ficam recolhidos numa linha com o resumo do que está valendo.
+  const [filtrosAbertos, setFiltrosAbertos] = useState(() => {
+    try {
+      return localStorage.getItem(CHAVE_FILTROS_ABERTOS) === "1";
+    } catch {
+      return false;
+    }
+  });
+  function alternarFiltros() {
+    const abrir = !filtrosAbertos;
+    setFiltrosAbertos(abrir);
+    try {
+      localStorage.setItem(CHAVE_FILTROS_ABERTOS, abrir ? "1" : "0");
+    } catch {
+      /* localStorage indisponível: vale só nesta visita */
+    }
+  }
 
   /** Liga/desliga uma origem no filtro — várias podem ficar ativas ao mesmo tempo. */
   function alternarCategoria(chave: QuestaoCategoria) {
@@ -638,62 +666,83 @@ export function QuestoesMistasPage() {
               <BotaoBloquinhos b={bloco} className="ml-auto" />
             </div>
 
-            {/* Filtro por matéria e assunto (estilo QConcursos) — abre sem filtro ou com o padrão;
-                matéria sem assunto marcado traz todos os assuntos dela. */}
-            <FiltroMateriaAssunto
-              grupos={gruposFiltro}
-              aplicado={filtro}
-              onAplicar={setFiltro}
-              contar={contarFiltro}
-              materiaFixa={materiaId}
-            />
-
-            <FiltroConcluidos
-              ativo={soConcluidos}
-              onMudar={setSoConcluidos}
-              total={vivas.length}
-              concluidas={vivasConcluidas.length}
-              assuntos={new Set(vivasConcluidas.map((q) => q.topico_id)).size}
-            />
-
-            <FiltroFormato questoes={emFoco} formato={formato} onMudar={setFormato} />
-
-            <FiltroBanca questoes={paraBanca} bancas={bancas} onMudar={setBancas} />
-
-            {/* Filtro por origem — as mesmas pílulas do caderno do assunto. Dá para
-                marcar várias (o escopo vira a união); "Todas" limpa e junta tudo. */}
-            <div className="flex flex-wrap items-center gap-1.5 [scrollbar-width:none] max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 [&::-webkit-scrollbar]:hidden">
-              <span className="mr-0.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-mut">
-                Tipo
-              </span>
-              <PillCategoria
-                ativo={cats.size === 0}
-                onClick={() => setCats(new Set())}
-                label="Todas"
-                contagem={noFiltro.length}
-              />
-              {CATEGORIAS_FILTRO.map((c) => (
-                <PillCategoria
-                  key={c.chave}
-                  ativo={cats.has(c.chave)}
-                  onClick={() => alternarCategoria(c.chave)}
-                  label={c.curto}
-                  title={c.label}
-                  contagem={contagemCategoria[c.chave]}
+            {/* Filtros: recolhidos numa linha com o resumo do que está valendo; um toque abre. */}
+            <div className="rounded-card border border-line/50 bg-navy-800/50 shadow-card">
+              <button
+                onClick={alternarFiltros}
+                aria-expanded={filtrosAbertos}
+                className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-3 text-left"
+              >
+                <SlidersHorizontal className="size-4 shrink-0 text-gold" />
+                <span className="shrink-0 text-sm font-bold text-txt">Filtros</span>
+                <span className="min-w-0 flex-1 truncate text-xs text-mut">
+                  {resumoDoFiltro(filtroAtual, padrao).join(" · ")}
+                </span>
+                <ChevronDown
+                  className={`size-4 shrink-0 text-mut transition-transform ${filtrosAbertos ? "rotate-180" : ""}`}
                 />
-              ))}
-            </div>
+              </button>
+              {filtrosAbertos && (
+                <div className="animar-surgir space-y-4 border-t border-line/40 px-3.5 py-3.5">
+                  {/* Filtro por matéria e assunto (estilo QConcursos) — abre sem filtro ou com o padrão;
+                      matéria sem assunto marcado traz todos os assuntos dela. */}
+                  <FiltroMateriaAssunto
+                    grupos={gruposFiltro}
+                    aplicado={filtro}
+                    onAplicar={setFiltro}
+                    contar={contarFiltro}
+                    materiaFixa={materiaId}
+                  />
 
-            {!materiaId && concursoAtivo && (
-              <BarraFiltroPadrao
-                atual={filtroAtual}
-                padrao={padrao}
-                salvando={salvarPadrao.isPending}
-                onSalvar={() => gravarPadrao(filtroAtual)}
-                onVoltar={() => padrao && aplicarPadrao(padrao)}
-                onRemover={() => gravarPadrao(null)}
-              />
-            )}
+                  <FiltroConcluidos
+                    ativo={soConcluidos}
+                    onMudar={setSoConcluidos}
+                    total={vivas.length}
+                    concluidas={vivasConcluidas.length}
+                    assuntos={new Set(vivasConcluidas.map((q) => q.topico_id)).size}
+                  />
+
+                  <FiltroFormato questoes={emFoco} formato={formato} onMudar={setFormato} />
+
+                  <FiltroBanca questoes={paraBanca} bancas={bancas} onMudar={setBancas} />
+
+                  {/* Filtro por origem — as mesmas pílulas do caderno do assunto. Dá para
+                      marcar várias (o escopo vira a união); "Todas" limpa e junta tudo. */}
+                  <div className="flex flex-wrap items-center gap-1.5 [scrollbar-width:none] max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 [&::-webkit-scrollbar]:hidden">
+                    <span className="mr-0.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-mut">
+                      Tipo
+                    </span>
+                    <PillCategoria
+                      ativo={cats.size === 0}
+                      onClick={() => setCats(new Set())}
+                      label="Todas"
+                      contagem={noFiltro.length}
+                    />
+                    {CATEGORIAS_FILTRO.map((c) => (
+                      <PillCategoria
+                        key={c.chave}
+                        ativo={cats.has(c.chave)}
+                        onClick={() => alternarCategoria(c.chave)}
+                        label={c.curto}
+                        title={c.label}
+                        contagem={contagemCategoria[c.chave]}
+                      />
+                    ))}
+                  </div>
+
+                  {!materiaId && concursoAtivo && (
+                    <BarraFiltroPadrao
+                      atual={filtroAtual}
+                      padrao={padrao}
+                      salvando={salvarPadrao.isPending}
+                      onSalvar={() => gravarPadrao(filtroAtual)}
+                      onVoltar={() => padrao && aplicarPadrao(padrao)}
+                      onRemover={() => gravarPadrao(null)}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Abas — rolam na horizontal em telas estreitas */}
             <div className="flex gap-1 overflow-x-auto border-b border-line/40 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

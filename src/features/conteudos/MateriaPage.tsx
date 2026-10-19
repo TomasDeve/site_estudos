@@ -287,21 +287,29 @@ export function MateriaPage() {
       </Link>
 
       {/* Cabeçalho imersivo da matéria */}
-      <Card>
+      <Card
+        className="overflow-hidden"
+        style={{
+          backgroundImage: `radial-gradient(70% 140% at 100% 0%, ${concurso.cor}1c, transparent 60%)`,
+        }}
+      >
         <CardBody>
           {/* No celular os botões descem para uma linha própria, abaixo do título
               (lado a lado eles espremiam o nome e vazavam da tela). */}
           <div className="flex flex-wrap items-start gap-x-4 gap-y-3.5">
             <span
               className="flex size-11 shrink-0 items-center justify-center rounded-xl text-2xl sm:size-14 sm:rounded-2xl sm:text-3xl"
-              style={{ background: `${concurso.cor}1a` }}
+              style={{
+                background: `linear-gradient(135deg, ${concurso.cor}33, ${concurso.cor}0d)`,
+                boxShadow: `inset 0 0 0 1px ${concurso.cor}30`,
+              }}
             >
               {materia.icone}
             </span>
             <div className="min-w-0 flex-[1_1_12rem]">
               <div className="flex flex-wrap items-center gap-2">
                 <h1
-                  className={`text-xl font-bold leading-tight tracking-tight sm:text-2xl ${
+                  className={`text-xl font-extrabold leading-tight tracking-tight sm:text-2xl ${
                     vinculo.riscada ? "text-mut line-through decoration-red/50" : "text-txt"
                   }`}
                 >

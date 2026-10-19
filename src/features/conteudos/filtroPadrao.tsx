@@ -1,6 +1,7 @@
 import { RotateCcw, Star } from "lucide-react";
 import type { Json, QuestaoCategoria } from "@/types/db";
 import { chaveFiltro, type FiltroQuestoes } from "./filtroQuestoes";
+import { CATEGORIAS_FILTRO } from "./categorias";
 import type { FormatoQuestao } from "./QuestoesPage";
 
 /**
@@ -55,6 +56,35 @@ export function chaveFiltroPadrao(p: FiltroPadrao): string {
     [...p.cats].sort().join(","),
     p.soConcluidos ? "concluidos" : "",
   ].join("#");
+}
+
+/**
+ * O filtro da tela em poucas palavras, para a linha dos filtros recolhidos:
+ * ["★ Filtro padrão", "8 matérias", "Só concluídos", "Múltipla escolha",
+ * "CESPE / CEBRASPE", "Reais"]. Sem nada filtrado: ["Todas as questões"].
+ */
+export function resumoDoFiltro(atual: FiltroPadrao, padrao: FiltroPadrao | null): string[] {
+  const partes: string[] = [];
+  if (padrao && chaveFiltroPadrao(padrao) === chaveFiltroPadrao(atual)) partes.push("★ Filtro padrão");
+  const n = atual.filtro.length;
+  if (n > 0) partes.push(`${n} ${n === 1 ? "matéria" : "matérias"}`);
+  if (atual.soConcluidos) partes.push("Só concluídos");
+  if (atual.formato === "ce") partes.push("Certo ou Errado");
+  if (atual.formato === "multipla") partes.push("Múltipla escolha");
+  if (atual.bancas.length > 0) {
+    const nomes = atual.bancas.map((b) => b || "Sem banca");
+    partes.push(
+      nomes.length <= 2 ? nomes.join(", ") : `${nomes.slice(0, 2).join(", ")} +${nomes.length - 2}`
+    );
+  }
+  if (atual.cats.length > 0) {
+    partes.push(
+      CATEGORIAS_FILTRO.filter((c) => atual.cats.includes(c.chave))
+        .map((c) => c.curto)
+        .join(", ")
+    );
+  }
+  return partes.length > 0 ? partes : ["Todas as questões"];
 }
 
 export const ehVazio = (p: FiltroPadrao) =>

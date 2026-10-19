@@ -106,16 +106,32 @@ export function HomePage() {
           // Concursos arquivados (PMAL, Indefinido) ficam FORA do hub de
           // propósito — o estudo é concentrado no concurso ativo (PC PE). Os
           // dados seguem no banco, arquivados; qualquer link antigo para eles
-          // é redirecionado ao ativo pelo ConcursoLayout.
-          <div className="grid gap-4 sm:grid-cols-2">
-            {ativos.map((c) => (
-              <ConcursoCard
-                key={c.id}
-                concurso={c}
-                pct={pcts.get(c.id) ?? 0}
-                onEdit={abrirEdicao}
-              />
-            ))}
+          // é redirecionado ao ativo pelo ConcursoLayout. Os em estudo vêm
+          // primeiro; os pausados (futuro), numa seção à parte.
+          <div className="space-y-7">
+            {[
+              { titulo: "Estudando agora", lista: ativos.filter((c) => c.status === "ativo") },
+              { titulo: "Pausados", lista: ativos.filter((c) => c.status !== "ativo") },
+            ]
+              .filter((s) => s.lista.length > 0)
+              .map((s) => (
+                <section key={s.titulo}>
+                  <h2 className="mb-3 flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-mut">
+                    {s.titulo}
+                    <span className="h-px flex-1 bg-gradient-to-r from-line/70 to-transparent" aria-hidden />
+                  </h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {s.lista.map((c) => (
+                      <ConcursoCard
+                        key={c.id}
+                        concurso={c}
+                        pct={pcts.get(c.id) ?? 0}
+                        onEdit={abrirEdicao}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
           </div>
         )}
       </main>

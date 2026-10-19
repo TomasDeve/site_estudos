@@ -859,78 +859,81 @@ function LinhaPreenchida({
   });
   return (
     <>
-      <button
-        ref={setNodeRef}
-        {...attributes}
-        {...listeners}
-        onClick={onEditar}
-        className={`flex min-w-0 flex-1 cursor-grab touch-manipulation items-center gap-2 py-1.5 pl-1 pr-1 text-left transition-colors hover:bg-navy-700/40 active:cursor-grabbing ${
-          isDragging ? "opacity-30" : ""
-        }`}
-        title={`${[materia?.nome, at.label, l.nota].filter(Boolean).join(" · ")} — clique no nome para abrir a matéria, no bloco para ver o que preencheu; arraste para mover`}
-      >
-        {/* No celular a alça some (arrasta segurando o bloco) e o espaço vai pro nome */}
-        <GripVertical
-          className="size-3 shrink-0 text-mut opacity-0 transition-opacity group-hover:opacity-70 max-md:hidden"
-          aria-hidden
-        />
-        <span className={`w-1 self-stretch rounded-full ${at.barra}`} aria-hidden />
-        <span className="min-w-0 flex-1">
-          <span
-            className={`flex items-center gap-1.5 text-xs font-semibold ${
-              l.feita ? "text-mut line-through" : "text-txt"
-            }`}
-          >
-            <span className="shrink-0 text-sm leading-none">
-              {livre ? at.icone : (materia?.icone ?? at.icone)}
-            </span>
-            {irParaMateria ? (
-              // No celular o nome ocupa quase a linha toda: o toque abre o bloco (o
-              // "Abrir matéria" fica dentro dele). O link do nome vale no computador.
-              <span
-                role="link"
-                onClick={irParaMateria}
-                className="cursor-pointer truncate decoration-gold/70 underline-offset-2 hover:text-gold hover:underline max-md:pointer-events-none"
-                title={`Abrir ${principal}`}
-              >
-                {principal}
+      <span className="relative flex min-w-0 flex-1">
+        <button
+          ref={setNodeRef}
+          {...attributes}
+          {...listeners}
+          onClick={onEditar}
+          className={`flex min-w-0 flex-1 cursor-grab touch-manipulation items-center gap-2 py-1.5 pl-1 pr-1 text-left transition-colors hover:bg-navy-700/40 active:cursor-grabbing ${
+            isDragging ? "opacity-30" : ""
+          }`}
+          title={`${[materia?.nome, at.label, l.nota].filter(Boolean).join(" · ")} — clique no nome para abrir a matéria, no bloco para ver o que preencheu; arraste para mover`}
+        >
+          {/* No celular a alça some (arrasta segurando o bloco) e o espaço vai pro nome */}
+          <GripVertical
+            className="size-3 shrink-0 text-mut opacity-0 transition-opacity group-hover:opacity-70 max-md:hidden"
+            aria-hidden
+          />
+          <span className={`w-1 self-stretch rounded-full ${at.barra}`} aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span
+              className={`flex items-center gap-1.5 text-xs font-semibold ${
+                l.feita ? "text-mut line-through" : "text-txt"
+              }`}
+            >
+              <span className="shrink-0 text-sm leading-none">
+                {livre ? at.icone : (materia?.icone ?? at.icone)}
               </span>
-            ) : (
-              <span className="truncate">{principal}</span>
+              {irParaMateria ? (
+                // No celular o nome ocupa quase a linha toda: o toque abre o bloco (o
+                // "Abrir matéria" fica dentro dele). O link do nome vale no computador.
+                <span
+                  role="link"
+                  onClick={irParaMateria}
+                  className="cursor-pointer truncate decoration-gold/70 underline-offset-2 hover:text-gold hover:underline max-md:pointer-events-none"
+                  title={`Abrir ${principal}`}
+                >
+                  {principal}
+                </span>
+              ) : (
+                <span className="truncate">{principal}</span>
+              )}
+            </span>
+            {/* 2ª linha: a atividade (e o detalhe, quando há matéria). Sem matéria e
+                sem texto, a atividade já é o título; texto livre não tem 2ª linha. */}
+            {!livre && (materia || l.nota) && (
+              <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px]">
+                <span className={`shrink-0 font-bold uppercase tracking-wide ${at.texto}`}>
+                  {at.label}
+                </span>
+                {materia && l.nota && <span className="truncate text-mut">· {l.nota}</span>}
+              </span>
             )}
           </span>
-          {/* 2ª linha: a atividade (e o detalhe, quando há matéria). Sem matéria e
-              sem texto, a atividade já é o título; texto livre não tem 2ª linha. */}
-          {!livre && (materia || l.nota) && (
-            <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px]">
-              <span className={`shrink-0 font-bold uppercase tracking-wide ${at.texto}`}>
-                {at.label}
-              </span>
-              {materia && l.nota && <span className="truncate text-mut">· {l.nota}</span>}
-            </span>
-          )}
+        </button>
+        {/* Ações rápidas, sem abrir o bloco: uma mini barra que só aparece ao passar o
+            mouse, por cima do fim da linha — assim o nome da matéria usa a largura toda.
+            No celular ficam dentro do bloco (tocar abre). */}
+        <span className="pointer-events-none absolute right-1 top-1/2 flex -translate-y-1/2 items-center rounded-lg border border-line/60 bg-navy-700/95 opacity-0 shadow-pop transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100 max-md:hidden">
+          <button
+            onClick={onReplicar}
+            disabled={!podeReplicar}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-600 hover:text-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-mut"
+            aria-label="Replicar este bloco abaixo"
+            title={podeReplicar ? "Replicar abaixo" : "Dia cheio (16 blocos)"}
+          >
+            <CopyPlus className="size-3.5" />
+          </button>
+          <button
+            onClick={onApagar}
+            className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-red/10 hover:text-red"
+            aria-label="Apagar este bloco"
+            title="Apagar bloco"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
         </span>
-      </button>
-      {/* Ações rápidas, sem abrir o bloco: discretas, acendem ao passar o mouse.
-          No celular ficam dentro do bloco (tocar abre) — aqui roubavam o nome. */}
-      <span className="flex shrink-0 items-center opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-md:hidden">
-        <button
-          onClick={onReplicar}
-          disabled={!podeReplicar}
-          className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-600 hover:text-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-mut"
-          aria-label="Replicar este bloco abaixo"
-          title={podeReplicar ? "Replicar abaixo" : "Dia cheio (16 blocos)"}
-        >
-          <CopyPlus className="size-3.5" />
-        </button>
-        <button
-          onClick={onApagar}
-          className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-red/10 hover:text-red"
-          aria-label="Apagar este bloco"
-          title="Apagar bloco"
-        >
-          <Trash2 className="size-3.5" />
-        </button>
       </span>
       <button
         onClick={onFeita}

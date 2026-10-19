@@ -21,13 +21,18 @@
   --color-dim: #9db0c7;
   --color-mut: #6f849e;
 
-  --radius-card: 14px;
+  --radius-card: 16px;
 
-  /* Sombras coesas para cards e elementos flutuantes (menus, popovers) */
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.16), 0 6px 20px rgb(0 0 0 / 0.18);
-  --shadow-pop: 0 12px 34px rgb(0 0 0 / 0.5);
+  /* Sombras coesas para cards e elementos flutuantes (menus, popovers). O card
+     ganha um fio de luz no topo (inset) — dá relevo sem clarear o fundo. */
+  --shadow-card: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 1px 2px rgb(0 0 0 / 0.22),
+    0 12px 32px -14px rgb(0 0 0 / 0.55);
+  --shadow-pop: 0 16px 40px -8px rgb(0 0 0 / 0.6);
+  --shadow-gold: 0 8px 22px -8px rgb(224 168 62 / 0.55);
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  /* Plus Jakarta Sans (variável, servida junto com o site); o resto é reserva. */
+  --font-sans: "Plus Jakarta Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
 }
 
 html {
@@ -50,10 +55,28 @@ summary:focus-visible,
 
 body {
   @apply bg-navy-950 text-txt font-sans antialiased;
-  background-image:
-    radial-gradient(1200px 600px at 80% -10%, rgb(224 168 62 / 0.06), transparent),
-    radial-gradient(900px 500px at -10% 110%, rgb(79 157 222 / 0.05), transparent);
   min-height: 100dvh;
+}
+
+/* Fundo: brilhos suaves (dourado em cima, azul embaixo) numa camada fixa — fica
+   parado ao rolar, inclusive no celular (onde background-attachment: fixed falha). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1000px 520px at 88% -14%, rgb(224 168 62 / 0.09), transparent 62%),
+    radial-gradient(820px 560px at -12% 108%, rgb(79 157 222 / 0.08), transparent 60%),
+    radial-gradient(640px 420px at 45% 40%, rgb(63 200 214 / 0.025), transparent 70%);
+}
+
+/* Títulos um pouco mais justos: a Plus Jakarta respira melhor assim. */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.012em;
 }
 
 ::-webkit-scrollbar {

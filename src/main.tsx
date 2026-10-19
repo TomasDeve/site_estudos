@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { queryClient } from "@/lib/queryClient";
 import { AuthProvider } from "@/auth/AuthProvider";
 import { router } from "@/router";
+import "@fontsource-variable/plus-jakarta-sans";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(

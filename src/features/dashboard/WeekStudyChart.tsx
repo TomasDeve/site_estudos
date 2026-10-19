@@ -34,7 +34,18 @@ export function WeekStudyChart() {
       <CardBody>
         <ResponsiveContainer width="100%" height={190}>
           <BarChart data={dados} margin={{ top: 8, right: 8, bottom: 0, left: -18 }}>
-            <CartesianGrid stroke="#25405f" strokeDasharray="3 3" vertical={false} />
+            {/* degradê das barras: azul nos outros dias, dourado hoje */}
+            <defs>
+              <linearGradient id="barra-dia" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#6fb3ea" />
+                <stop offset="100%" stopColor="#2f6fae" />
+              </linearGradient>
+              <linearGradient id="barra-hoje" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f0c874" />
+                <stop offset="100%" stopColor="#c98a22" />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="#25405f" strokeOpacity={0.6} strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="dia"
               tick={{ fill: "#6f849e", fontSize: 11 }}
@@ -61,10 +72,10 @@ export function WeekStudyChart() {
               labelFormatter={(label, payload) => payload?.[0]?.payload?.data ?? label}
               formatter={(v) => [fmtMinutos(Number(v)), "estudado"]}
             />
-            <Bar dataKey="minutos" radius={[6, 6, 0, 0]}>
+            <Bar dataKey="minutos" radius={[8, 8, 2, 2]} maxBarSize={48}>
               {dados.map((d, i) => (
                 // hoje em dourado, resto em azul
-                <Cell key={i} fill={d.ehHoje ? "#e0a83e" : "#4f9dde"} />
+                <Cell key={i} fill={d.ehHoje ? "url(#barra-hoje)" : "url(#barra-dia)"} />
               ))}
             </Bar>
           </BarChart>
