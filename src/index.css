@@ -182,76 +182,53 @@ textarea,
   }
 }
 
-/* ================= Celular do resumo (página /resumo e o flutuante das questões) =================
-   No celular de verdade ele é a própria tela; do "sm" para cima ganha a moldura de
-   aparelho (bordas, ilha, botões laterais). O papel de parede puxa a cor do concurso. */
-.celular-tela {
-  background:
-    radial-gradient(120% 55% at 100% 0%, color-mix(in srgb, var(--cor-celular, #e0a83e) 24%, transparent), transparent 62%),
-    radial-gradient(95% 45% at 0% 100%, rgb(79 157 222 / 0.14), transparent 62%),
-    linear-gradient(180deg, #0d182a, #070e1a 72%);
-}
-@media (min-width: 640px) {
-  .celular-moldura {
-    border-radius: 3.25rem;
-    padding: 11px;
-    background: linear-gradient(155deg, #3d5070 0%, #121b2b 24%, #070b13 60%, #27364f 100%);
-    box-shadow:
-      0 50px 110px -30px rgb(0 0 0 / 0.9),
-      0 0 0 1px rgb(255 255 255 / 0.08),
-      inset 0 1px 1px rgb(255 255 255 / 0.14);
-  }
-  .celular-moldura > .celular-tela {
-    border-radius: 2.6rem;
-    box-shadow: 0 0 0 1.5px #000;
-  }
-}
+/* ================= Quadro do resumo (página /resumo e a gaveta das questões) ================= */
 /* Apps e quadradinhos têm o próprio "selecionado" (anel branco, como no GTA): sem o
    contorno dourado padrão do foco por teclado, que somaria dois destaques. */
-.celular-moldura [data-anel]:focus-visible {
+.quadro-resumo [data-anel]:focus-visible {
   outline: none;
 }
-/* Puxar o celular: sobe do rodapé com um tranco no fim, como no GTA. */
-@keyframes celular-subir {
+/* A gaveta entra pela direita. */
+@keyframes quadro-gaveta {
   from {
-    transform: translateY(108%);
+    transform: translateX(100%);
   }
   to {
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
-.celular-subir {
-  animation: celular-subir 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.08);
+.quadro-gaveta {
+  animation: quadro-gaveta 0.26s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 /* Abrir um app cresce de leve; voltar encolhe. */
-@keyframes celular-abrir {
+@keyframes quadro-abrir {
   from {
     opacity: 0;
-    transform: scale(0.93);
+    transform: scale(0.97);
   }
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
-@keyframes celular-voltar {
+@keyframes quadro-voltar {
   from {
     opacity: 0;
-    transform: scale(1.05);
+    transform: scale(1.02);
   }
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
-.celular-abrir {
-  animation: celular-abrir 0.2s ease-out;
+.quadro-abrir {
+  animation: quadro-abrir 0.18s ease-out;
 }
-.celular-voltar {
-  animation: celular-voltar 0.2s ease-out;
+.quadro-voltar {
+  animation: quadro-voltar 0.18s ease-out;
 }
 /* Anterior/próxima questão: entra pelo lado de onde veio (--de). */
-@keyframes celular-deslizar {
+@keyframes quadro-deslizar {
   from {
     opacity: 0;
     transform: translateX(var(--de, 0px));
@@ -261,8 +238,8 @@ textarea,
     transform: translateX(0);
   }
 }
-.celular-deslizar {
-  animation: celular-deslizar 0.18s ease-out;
+.quadro-deslizar {
+  animation: quadro-deslizar 0.18s ease-out;
 }
 
 /* Leitor/editor de textos e resumos */

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { TopicoQuestao } from "@/types/db";
 import { useAnexarResumoQuestoes } from "@/api/topicoTextos";
-import { abrirCelularResumo, EVENTO_QUESTAO_REMOVIDA } from "@/features/resumo/celularNavegacao";
+import { abrirQuadroResumo, EVENTO_QUESTAO_REMOVIDA } from "@/features/resumo/navegacaoResumo";
 import { anexarAoResumoAberto, chaveDestinoResumo } from "./ResumoRapido";
 import { envolverBlocoQuestao } from "./resumoBlocos";
 import { cabecalhoFonte } from "./fonteQuestao";
@@ -151,7 +151,7 @@ export function useAdicionarQuestaoAoResumo() {
     });
   }, []);
 
-  // O trecho também pode sair do resumo pelo celular do resumo.
+  // O trecho também pode sair do resumo pelo quadro do resumo.
   useEffect(() => {
     const h = (e: Event) => esquecer((e as CustomEvent<string>).detail);
     window.addEventListener(EVENTO_QUESTAO_REMOVIDA, h);
@@ -175,7 +175,7 @@ export function useAdicionarQuestaoAoResumo() {
       }
       setAdicionadas((s) => new Set(s).add(questao.id));
       toast.success("Adicionado ao resumo 📝", {
-        action: { label: "Ver no celular", onClick: () => abrirCelularResumo({ questaoId: questao.id }) },
+        action: { label: "Ver no quadro", onClick: () => abrirQuadroResumo({ questaoId: questao.id }) },
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));

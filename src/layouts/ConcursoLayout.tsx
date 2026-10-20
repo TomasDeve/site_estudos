@@ -11,7 +11,6 @@ import {
   LogOut,
   Printer,
   Shuffle,
-  Smartphone,
   type LucideIcon,
 } from "lucide-react";
 import type { Concurso } from "@/types/db";
@@ -46,8 +45,8 @@ const NAV: { to: string; label: string; curto?: string; icon: LucideIcon; end: b
   { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },
   // questões marcadas (a caixinha 🖨 do card): folha para imprimir + correção, em aba própria
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
-  // o "Adicionar ao resumo" como um celular: o que já foi e o que falta ir pro Anki, em aba própria
-  { to: "/resumo", label: "Resumo", icon: Smartphone, end: false, novaAba: true },
+  // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki, em aba própria
+  { to: "/resumo", label: "Resumo", icon: LayoutGrid, end: false, novaAba: true },
   { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
 ];
 

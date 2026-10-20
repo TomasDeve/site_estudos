@@ -3,7 +3,7 @@ import type { MarcaAnki } from "@/api/questoesAnki";
 import type { QuestaoDoResumo } from "@/api/topicoQuestoes";
 import {
   appsPorMateria,
-  cargaDaBateria,
+  percentualNoAnki,
   contar,
   criarFiltroEdital,
   estadoDaQuestao,
@@ -184,14 +184,14 @@ describe("montarItens", () => {
     expect(porId.get(Q1)!.destino).toEqual({ topicoId: "t1" });
   });
 
-  it("contagem e bateria (só no Anki ÷ no Anki + falta)", () => {
+  it("contagem e % no Anki (só no Anki ÷ no Anki + falta)", () => {
     const c = contar(itens);
     expect(c).toEqual({ total: 4, falta: 1, no_anki: 1, ignorada: 0, fora: 1, apagada: 1 });
-    expect(cargaDaBateria(c)).toBe(50);
-    expect(cargaDaBateria({ falta: 0, no_anki: 0 })).toBe(100);
+    expect(percentualNoAnki(c)).toBe(50);
+    expect(percentualNoAnki({ falta: 0, no_anki: 0 })).toBe(100);
   });
 
-  it("filtro do celular", () => {
+  it("filtro do quadro", () => {
     expect(passaNoFiltro("fora", "todas")).toBe(true);
     expect(passaNoFiltro("fora", "falta")).toBe(false);
     expect(passaNoFiltro("no_anki", "no_anki")).toBe(true);

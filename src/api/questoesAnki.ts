@@ -12,7 +12,7 @@ const CHAVE_FALTAM = ["topico_textos", "resumo-anki-faltam"] as const;
 
 /**
  * As marcas de Anki de todas as questões do resumo — uma linha por questão marcada
- * (a importação grava sozinha; o celular do resumo marca à mão). Lista curta.
+ * (a importação grava sozinha; o quadro do resumo marca à mão). Lista curta.
  * `staleTime: 0` porque a skill de importação grava por fora do site: ao voltar
  * para a aba, as cores já vêm atualizadas.
  */
@@ -34,7 +34,7 @@ export function useQuestoesAnki(ativo = true) {
 
 /**
  * Quantas questões do resumo ainda faltam ir para o Anki (função no banco — não
- * baixa os resumos). É o numerozinho do menu e do botão do celular.
+ * baixa os resumos). É o numerozinho do menu e do botão do quadro.
  */
 export function useResumoAnkiFaltam(ativo = true) {
   return useQuery({

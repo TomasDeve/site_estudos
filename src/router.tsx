@@ -16,7 +16,7 @@ const QuestoesPage = lazy(() => import("@/features/conteudos/QuestoesPage").then
 const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMistasPage").then((m) => ({ default: m.QuestoesMistasPage })));
 const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
 const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
-const ResumoCelularPage = lazy(() => import("@/features/resumo/ResumoCelularPage").then((m) => ({ default: m.ResumoCelularPage })));
+const ResumoPage = lazy(() => import("@/features/resumo/ResumoPage").then((m) => ({ default: m.ResumoPage })));
 
 function pagina(node: ReactNode) {
   return <Suspense fallback={<FullScreenSpinner />}>{node}</Suspense>;
@@ -43,8 +43,8 @@ export const router = createBrowserRouter([
       { path: "banco", element: <Navigate to="/" replace /> },
       // questões marcadas para impressão: folha pronta + correção (aba própria, sem sidebar)
       { path: "impressao", element: pagina(<ImpressaoPage />) },
-      // o "Adicionar ao resumo" como um celular: o que já foi e o que falta ir pro Anki (aba própria)
-      { path: "resumo", element: pagina(<ResumoCelularPage />) },
+      // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki (aba própria)
+      { path: "resumo", element: pagina(<ResumoPage />) },
       // tudo abaixo vive dentro do concurso ativo
       {
         path: "concurso/:concursoId",

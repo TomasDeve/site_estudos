@@ -6,7 +6,7 @@ import { acertou, estaResolvida } from "@/features/conteudos/questaoModelo";
 
 /**
  * Onde cada questão do "Adicionar ao resumo" está em relação ao Anki — a cor do
- * quadradinho no celular do resumo:
+ * quadradinho no quadro do resumo (/resumo):
  *   falta     ainda não virou card (e cai no edital do concurso ativo);
  *   no_anki   já virou card (importação, achada no Anki ou marcada à mão);
  *   ignorada  você decidiu que não vai para o Anki;
@@ -135,7 +135,7 @@ export function estadoDaQuestao(
   return noEdital ? "falta" : "fora";
 }
 
-/** Um resumo de questões (linha de `topico_textos`) como o celular precisa. */
+/** Um resumo de questões (linha de `topico_textos`) como o quadro precisa. */
 export interface ResumoDeQuestoes {
   id: string;
   conteudo: string;
@@ -143,7 +143,7 @@ export interface ResumoDeQuestoes {
   materia_id: string | null;
 }
 
-/** Uma questão no celular do resumo — um quadradinho. */
+/** Uma questão no quadro do resumo — um quadradinho. */
 export interface ItemResumo {
   questaoId: string;
   /** Texto (topico_textos) onde o trecho mora — o "Editar trecho" grava nele. */
@@ -248,21 +248,21 @@ export function contar(itens: readonly Pick<ItemResumo, "estado">[]): Contagem {
 }
 
 /**
- * A "bateria" do celular: quanto do que importa já está no Anki — no Anki ÷ (no Anki
- * + falta). Ignoradas, fora do edital e apagadas não entram na conta.
+ * Quanto do que importa já está no Anki — no Anki ÷ (no Anki + falta), em %.
+ * Ignoradas, fora do edital e apagadas não entram na conta.
  */
-export function cargaDaBateria(c: Pick<Contagem, "falta" | "no_anki">): number {
+export function percentualNoAnki(c: Pick<Contagem, "falta" | "no_anki">): number {
   const base = c.falta + c.no_anki;
   return base === 0 ? 100 : Math.round((c.no_anki / base) * 100);
 }
 
-export type FiltroCelular = "todas" | "falta" | "no_anki";
+export type FiltroResumo = "todas" | "falta" | "no_anki";
 
-export function passaNoFiltro(estado: EstadoAnki, filtro: FiltroCelular): boolean {
+export function passaNoFiltro(estado: EstadoAnki, filtro: FiltroResumo): boolean {
   return filtro === "todas" || estado === filtro;
 }
 
-/** Uma matéria do celular — um "app" na tela inicial. */
+/** Uma matéria do quadro — um "app" na tela inicial. */
 export interface AppMateria {
   materiaId: string;
   nome: string;

@@ -372,7 +372,7 @@ export function useQuestoesPorIds(ids: string[]) {
   });
 }
 
-/** O que o celular do resumo precisa de cada questão: sem comentário, alternativas nem texto. */
+/** O que o quadro do resumo precisa de cada questão: sem comentário, alternativas nem texto. */
 export type QuestaoDoResumo = Pick<
   TopicoQuestao,
   | "id"
@@ -387,7 +387,7 @@ export type QuestaoDoResumo = Pick<
 >;
 
 /**
- * As questões que estão no "Resumo das questões" (o celular do resumo), pelo id e só
+ * As questões que estão no "Resumo das questões" (o quadro do resumo), pelo id e só
  * com as colunas leves — umas 200 questões, ~40 KB. Os lotes saem em paralelo.
  */
 export function useQuestoesDoResumo(ids: string[], ativo = true) {
