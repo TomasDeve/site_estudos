@@ -512,6 +512,7 @@ export function MateriaPage() {
       <ResumosDaMateriaModal
         open={modalResumos}
         onClose={() => setModalResumos(false)}
+        materiaId={materia.id}
         materiaNome={materia.nome}
         topicos={meusTopicos.filter((t) => (textosPorTopico.get(t.id) ?? []).length > 0)}
       />

@@ -11,6 +11,7 @@ import {
   LogOut,
   Printer,
   Shuffle,
+  Smartphone,
   type LucideIcon,
 } from "lucide-react";
 import type { Concurso } from "@/types/db";
@@ -18,6 +19,7 @@ import { concursoDeEstudo, useConcurso } from "@/api/concursos";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { useContagemImpressao } from "@/api/topicoQuestoes";
+import { useResumoAnkiFaltam } from "@/api/questoesAnki";
 import { supabase } from "@/lib/supabase";
 import { setConcursoAtual } from "@/lib/currentConcurso";
 import { diasAte, fmtData, fmtMesesSemanasAte } from "@/lib/dates";
@@ -44,6 +46,8 @@ const NAV: { to: string; label: string; curto?: string; icon: LucideIcon; end: b
   { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },
   // questões marcadas (a caixinha 🖨 do card): folha para imprimir + correção, em aba própria
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
+  // o "Adicionar ao resumo" como um celular: o que já foi e o que falta ir pro Anki, em aba própria
+  { to: "/resumo", label: "Resumo", icon: Smartphone, end: false, novaAba: true },
   { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
 ];
 
@@ -59,8 +63,28 @@ export function ConcursoLayout() {
   const { data: materias } = useMaterias();
   const { data: vinculos } = useConcursoMaterias();
   const { data: topicos } = useTopicos();
-  // Quantas questões esperam na "Impressão" — o numerozinho ao lado do item.
+  // Quantas questões esperam na "Impressão" e quantas do resumo faltam ir pro Anki —
+  // os numerozinhos ao lado dos itens.
   const { data: marcadasImpressao } = useContagemImpressao();
+  const { data: faltamNoAnki } = useResumoAnkiFaltam();
+  const contagemDaAba: Record<string, { n: number; titulo: string } | undefined> = {
+    "/impressao": marcadasImpressao
+      ? {
+          n: marcadasImpressao,
+          titulo: `${marcadasImpressao} ${
+            marcadasImpressao === 1 ? "questão marcada" : "questões marcadas"
+          } para impressão`,
+        }
+      : undefined,
+    "/resumo": faltamNoAnki
+      ? {
+          n: faltamNoAnki,
+          titulo: `${faltamNoAnki} ${
+            faltamNoAnki === 1 ? "questão do resumo falta" : "questões do resumo faltam"
+          } ir pro Anki`,
+        }
+      : undefined,
+  };
 
   // Matérias do concurso ativo, na ordem do edital, com progresso para o submenu.
   const materiasDoConcurso = useMemo(() => {
@@ -136,18 +160,22 @@ export function ConcursoLayout() {
     "relative flex min-w-0 flex-col items-center justify-center gap-1 whitespace-nowrap pb-2 pt-2 text-[10px] font-semibold leading-none tracking-tight transition-colors";
   const abasMobile = NAV.map(({ to, label, curto, icon: Icon, end, novaAba }) => {
     if (novaAba) {
+      const contagem = contagemDaAba[to];
       return (
         <a key={to} href={to} target="_blank" rel="noreferrer" className={`${itemMobile} text-dim`}>
           <span className="relative px-3 py-1">
             <Icon className="size-5" />
-            {/* Quantas questões esperam na Impressão, como no menu do computador */}
-            {to === "/impressao" && !!marcadasImpressao && (
-              <span className="absolute -top-0.5 right-0 min-w-4 rounded-full bg-gold px-1 text-center text-[9px] font-bold leading-4 tabular-nums text-navy-950">
-                {marcadasImpressao > 99 ? "99+" : marcadasImpressao}
+            {/* O numerozinho (Impressão, Resumo), como no menu do computador */}
+            {contagem && (
+              <span
+                className="absolute -top-0.5 right-0 min-w-4 rounded-full bg-gold px-1 text-center text-[9px] font-bold leading-4 tabular-nums text-navy-950"
+                title={contagem.titulo}
+              >
+                {contagem.n > 99 ? "99+" : contagem.n}
               </span>
             )}
           </span>
-          {label}
+          {curto ?? label}
         </a>
       );
     }
@@ -300,6 +328,7 @@ export function ConcursoLayout() {
         <nav className="scrollbar-thin mt-4 flex-1 space-y-1 overflow-y-auto px-3">
           {NAV.map(({ to, label, icon: Icon, end, novaAba }) => {
             if (novaAba) {
+              const contagem = contagemDaAba[to];
               return (
                 <a
                   key={to}
@@ -310,14 +339,12 @@ export function ConcursoLayout() {
                 >
                   <Icon className="size-4.5" />
                   {label}
-                  {to === "/impressao" && !!marcadasImpressao && (
+                  {contagem && (
                     <span
                       className="ml-auto rounded-full bg-gold/15 px-1.5 py-0.5 text-[10px] font-bold leading-none tabular-nums text-gold"
-                      title={`${marcadasImpressao} ${
-                        marcadasImpressao === 1 ? "questão marcada" : "questões marcadas"
-                      } para impressão`}
+                      title={contagem.titulo}
                     >
-                      {marcadasImpressao}
+                      {contagem.n}
                     </span>
                   )}
                 </a>

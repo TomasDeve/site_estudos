@@ -10,6 +10,7 @@ import {
 } from "@/api/topicoTextos";
 import { useMaterias } from "@/api/materias";
 import { Spinner } from "@/components/Spinner";
+import { CelularFlutuante } from "@/features/resumo/CelularFlutuante";
 import { ChatIA } from "./ChatIA";
 
 const MATERIA_KEY = "resumo-rapido-materia-id";
@@ -213,6 +214,9 @@ export function ResumoRapido({ topico }: Props) {
       >
         {aberto ? <X className="size-5" /> : <NotebookPen className="size-5" />}
       </button>
+
+      {/* Ao lado: o celular do resumo (o que já foi e o que falta ir pro Anki) */}
+      <CelularFlutuante materiaInicial={topico?.materia_id} />
 
       {verificando && (
         <ChatIA

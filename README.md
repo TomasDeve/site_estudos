@@ -12,6 +12,10 @@ verticalizado; o foco atual é a **PC PE 2026** (Agente e Escrivão).
   de questões, textos/resumos (leitor com marca-texto), links e PDFs.
 - **Questões** — todas as questões misturadas, com filtro padrão (aba própria).
 - **Impressão** — questões marcadas, em folha pronta para imprimir (aba própria).
+- **Resumo** — o "Adicionar ao resumo" como um celular (estilo GTA): um app por matéria e
+  um quadradinho por questão — dourado falta ir pro Anki, verde já está (aba própria e
+  flutuante nas páginas de questões). A cor vem da tabela `questoes_anki`, que a skill
+  de importação mantém.
 - **Informações** — ficha do edital (vagas, datas, divisão da prova, TAF).
 
 **Stack:** React 19 + Vite + TypeScript + Tailwind v4 · Supabase (Postgres + Auth, RLS) ·

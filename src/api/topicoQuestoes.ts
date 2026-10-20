@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
 import type {
@@ -368,6 +368,53 @@ export function useQuestoesPorIds(ids: string[]) {
         .in("id", chave.split(","));
       if (error) throw error;
       return data as TopicoQuestao[];
+    },
+  });
+}
+
+/** O que o celular do resumo precisa de cada questão: sem comentário, alternativas nem texto. */
+export type QuestaoDoResumo = Pick<
+  TopicoQuestao,
+  | "id"
+  | "topico_id"
+  | "tipo"
+  | "fonte"
+  | "enunciado"
+  | "resposta"
+  | "resposta_letra"
+  | "gabarito"
+  | "gabarito_letra"
+>;
+
+/**
+ * As questões que estão no "Resumo das questões" (o celular do resumo), pelo id e só
+ * com as colunas leves — umas 200 questões, ~40 KB. Os lotes saem em paralelo.
+ */
+export function useQuestoesDoResumo(ids: string[], ativo = true) {
+  const chave = [...ids].sort().join(",");
+  return useQuery({
+    queryKey: ["topico_questoes", "do-resumo", chave],
+    enabled: ativo && ids.length > 0,
+    // Entrou um trecho novo: a lista anterior segue na tela enquanto a nova chega.
+    placeholderData: keepPreviousData,
+    queryFn: async () => {
+      const todos = chave.split(",");
+      const lotes: string[][] = [];
+      for (let i = 0; i < todos.length; i += LOTE_CONTEUDO) lotes.push(todos.slice(i, i + LOTE_CONTEUDO));
+      const res = await Promise.all(
+        lotes.map((lote) =>
+          supabase
+            .from("topico_questoes")
+            .select("id,topico_id,tipo,fonte,enunciado,resposta,resposta_letra,gabarito,gabarito_letra")
+            .in("id", lote)
+        )
+      );
+      const out: QuestaoDoResumo[] = [];
+      for (const r of res) {
+        if (r.error) throw r.error;
+        out.push(...(r.data ?? []));
+      }
+      return out;
     },
   });
 }

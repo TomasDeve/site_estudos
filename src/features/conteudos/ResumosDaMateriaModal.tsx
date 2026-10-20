@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, ChevronRight, Maximize2, Sparkles, Target } from "lucide-react";
+import { BookOpen, ChevronRight, Maximize2, Smartphone, Sparkles, Target } from "lucide-react";
 import type { Topico, TopicoTexto } from "@/types/db";
 import { TITULO_RESUMO_QUESTOES, useTextosDosTopicos } from "@/api/topicoTextos";
+import { abrirCelularResumo } from "@/features/resumo/celularNavegacao";
 import { idsNoResumo } from "./resumoBlocos";
 import { Modal } from "@/components/Modal";
 import { EmptyState } from "@/components/EmptyState";
@@ -11,6 +12,8 @@ import { STATUS_INFO } from "./statusInfo";
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Abre esta matéria no celular do resumo (o que já foi e o que falta ir pro Anki). */
+  materiaId: string;
   materiaNome: string;
   /** Assuntos da matéria que têm algum texto, já na ordem do edital. */
   topicos: Topico[];
@@ -38,7 +41,7 @@ interface Grupo {
  * Os "Resumo das questões" já abrem expandidos (são curtos); os demais textos —
  * como leis inteiras — começam recolhidos para não pesar a tela.
  */
-export function ResumosDaMateriaModal({ open, onClose, materiaNome, topicos }: Props) {
+export function ResumosDaMateriaModal({ open, onClose, materiaId, materiaNome, topicos }: Props) {
   const [soResumos, setSoResumos] = useState(false);
   const [abertos, setAbertos] = useState<ReadonlySet<string>>(new Set());
 
@@ -168,14 +171,23 @@ export function ResumosDaMateriaModal({ open, onClose, materiaNome, topicos }: P
               />
               Só resumos de questões
             </label>
-            {idsVisiveis.length > 0 && (
+            <div className="flex items-center gap-1.5">
               <button
-                onClick={expandirRecolherTudo}
-                className="cursor-pointer rounded-lg border border-line/60 px-2.5 py-1 text-xs text-mut transition-colors hover:border-line hover:text-gold"
+                onClick={() => abrirCelularResumo({ materiaId })}
+                className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-2.5 py-1 text-xs font-semibold text-gold transition-colors hover:bg-gold/15"
+                title="As questões do resumo desta matéria em quadradinhos: o que já foi e o que falta ir pro Anki (nova aba)"
               >
-                {todosAbertos ? "Recolher tudo" : "Expandir tudo"}
+                <Smartphone className="size-3.5" /> Ver no celular
               </button>
-            )}
+              {idsVisiveis.length > 0 && (
+                <button
+                  onClick={expandirRecolherTudo}
+                  className="cursor-pointer rounded-lg border border-line/60 px-2.5 py-1 text-xs text-mut transition-colors hover:border-line hover:text-gold"
+                >
+                  {todosAbertos ? "Recolher tudo" : "Expandir tudo"}
+                </button>
+              )}
+            </div>
           </div>
 
           {gruposVisiveis.length === 0 ? (

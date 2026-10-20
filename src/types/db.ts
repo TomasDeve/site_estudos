@@ -731,6 +731,38 @@ export type Database = {
           },
         ]
       }
+      questoes_anki: {
+        Row: {
+          em: string
+          origem: string
+          questao_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          em?: string
+          origem?: string
+          questao_id: string
+          status: string
+          user_id?: string
+        }
+        Update: {
+          em?: string
+          origem?: string
+          questao_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questoes_anki_questao_id_fkey"
+            columns: ["questao_id"]
+            isOneToOne: true
+            referencedRelation: "topico_questoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questoes_importadas: {
         Row: {
           alternativas: Json
@@ -1307,6 +1339,10 @@ export type Database = {
         Args: { acao?: string }
         Returns: Json
       }
+      resumo_anki_faltam: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       registrar_clique_questao: {
         Args: {
           p_data: string
@@ -1479,6 +1515,7 @@ export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
 export type PlanoHora = Tables<"plano_horas">
 export type RotinaBloco = Tables<"rotina_blocos">
+export type QuestaoAnki = Tables<"questoes_anki">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "arquivada"
@@ -1486,6 +1523,10 @@ export type QuestaoDificuldade = "facil" | "medio_facil" | "medio_dificil" | "di
 export type QuestaoCategoria = "doutrina_jurisprudencia" | "baseada_questoes" | "ia" | "real"
 export type TopicoMetaTipo = "manual" | "volume" | "acerto" | "frio"
 export type MateriaTipo = "normal" | "redacao"
+/** Onde a questão do resumo está em relação ao Anki (`questoes_anki.status`). Sem linha = falta. */
+export type QuestaoAnkiStatus = "no_anki" | "ignorada"
+/** Quem marcou: a skill de importação, a busca do Q##### no Anki ou você no site. */
+export type QuestaoAnkiOrigem = "importacao" | "anki" | "site"
 
 // Banco de questões importadas (curadoria das questões reais coladas do QConcursos)
 export type QuestaoImportadaStatus = "nova" | "aprovada" | "descartada" | "usada"

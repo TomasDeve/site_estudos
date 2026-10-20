@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { TopicoQuestao } from "@/types/db";
 import { useAnexarResumoQuestoes } from "@/api/topicoTextos";
+import { abrirCelularResumo, EVENTO_QUESTAO_REMOVIDA } from "@/features/resumo/celularNavegacao";
 import { anexarAoResumoAberto, chaveDestinoResumo } from "./ResumoRapido";
 import { envolverBlocoQuestao } from "./resumoBlocos";
 import { cabecalhoFonte } from "./fonteQuestao";
@@ -150,6 +151,13 @@ export function useAdicionarQuestaoAoResumo() {
     });
   }, []);
 
+  // O trecho também pode sair do resumo pelo celular do resumo.
+  useEffect(() => {
+    const h = (e: Event) => esquecer((e as CustomEvent<string>).detail);
+    window.addEventListener(EVENTO_QUESTAO_REMOVIDA, h);
+    return () => window.removeEventListener(EVENTO_QUESTAO_REMOVIDA, h);
+  }, [esquecer]);
+
   async function adicionar({ questao, destino }: Args) {
     if (pendenteId) return;
     if (!destino.topicoId && !destino.materiaId) {
@@ -166,7 +174,9 @@ export function useAdicionarQuestaoAoResumo() {
         await anexarNoBanco.mutateAsync({ ...destino, html: bloco });
       }
       setAdicionadas((s) => new Set(s).add(questao.id));
-      toast.success("Adicionado ao resumo 📝");
+      toast.success("Adicionado ao resumo 📝", {
+        action: { label: "Ver no celular", onClick: () => abrirCelularResumo({ questaoId: questao.id }) },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err));
     } finally {
