@@ -1,16 +1,8 @@
 import type { ReactNode } from "react";
-import { BadgeCheck, Lightbulb, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import type { CorrecaoParagrafo, UsoIA } from "@/api/paragrafos";
-import { CORINGAS, ROTULO_TIPO, tipoDoAspecto } from "./coringas";
 import { rotuloDoModelo } from "./modelos";
-import {
-  aberturaDoParagrafo,
-  embasamentoDoParagrafo,
-  modeloDoParagrafo,
-  pontosDoParagrafo,
-  type TemaParagrafo,
-  type TipoParagrafo,
-} from "./paragrafos";
+import type { TemaParagrafo, TipoParagrafo } from "./paragrafos";
 
 /** Texto com **negrito** (o formato dos fontes do PDF). */
 export function Negrito({ texto }: { texto: string }) {
@@ -291,118 +283,4 @@ export function fmtTempo(seg: number): string {
   const m = Math.floor(seg / 60);
   const s = seg % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
-}
-
-/** O repertório coringa daquele parágrafo: os pontos do tema, o "para decorar" e os 6 coringas. */
-export function Repertorio({
-  tema,
-  tipo,
-  aspecto,
-}: {
-  tema: TemaParagrafo;
-  tipo: TipoParagrafo;
-  aspecto: number | null;
-}) {
-  const pontos = pontosDoParagrafo(tema, tipo, aspecto);
-  const embasamento = embasamentoDoParagrafo(tema, tipo, aspecto);
-  const tipoAsp = tipo === "introducao" ? "cenario" : tipoDoAspecto(tema.aspectos[aspecto ?? 0].texto);
-  const coringas = CORINGAS.filter((c) => c.frases[tipoAsp]);
-  const e = tema.esqueleto;
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 pt-2">
-        <Lightbulb className="size-5 text-gold" />
-        <h2 className="text-lg font-bold text-txt">Repertório para este parágrafo</h2>
-      </div>
-
-      <Secao titulo={tipo === "introducao" ? "Fatos para abrir" : `Pontos para o aspecto ${(aspecto ?? 0) + 1}`}>
-        <ul className="space-y-3">
-          {pontos.map((p, i) => (
-            <li key={i} className="flex gap-2 text-sm leading-snug text-txt">
-              <span className="font-bold text-gold">{i + 1}.</span>
-              <span className="min-w-0">
-                <Negrito texto={p} />
-                {embasamento[i] && (
-                  <span className="mt-1 block border-l-2 border-gold/40 pl-2 text-xs leading-relaxed text-dim">
-                    <span className="font-semibold text-gold/90">Embasamento: </span>
-                    {embasamento[i]}
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-        {tipo === "introducao" && (
-          <div className="mt-4 border-t border-line/40 pt-3">
-            <p className="text-xs font-semibold text-dim">Anúncio dos aspectos</p>
-            <p className="mt-1 text-sm leading-relaxed text-dim">
-              Nesse sentido, vale citar <strong className="text-txt">{e.anuncia[0]}</strong>, expor{" "}
-              <strong className="text-txt">{e.anuncia[1]}</strong> e <strong className="text-txt">{e.anuncia[2]}</strong>.
-            </p>
-            {e.pronta && (
-              <>
-                <p className="mt-3 text-xs font-semibold text-dim">Introdução pronta (do PDF)</p>
-                <p className="mt-1 text-sm italic leading-relaxed text-dim">{e.pronta}</p>
-              </>
-            )}
-          </div>
-        )}
-      </Secao>
-
-      {tema.decorar.length > 0 && (
-        <Secao titulo="Para decorar deste tema">
-          <ul className="space-y-2.5">
-            {tema.decorar.map((d, i) => (
-              <li key={i} className="text-sm leading-snug text-dim">
-                {d.titulo && (
-                  <strong className="font-semibold text-txt">
-                    {d.titulo}
-                    {d.texto ? ": " : ""}
-                  </strong>
-                )}
-                <Negrito texto={d.texto} />
-              </li>
-            ))}
-          </ul>
-        </Secao>
-      )}
-
-      <Secao titulo={`Coringas · ${ROTULO_TIPO[tipoAsp]}`}>
-        <p className="mb-3 text-xs text-mut">
-          Servem em quase todo tema. Pegue 2 de coringas diferentes e você tem os 2 pontos do parágrafo.
-        </p>
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          {coringas.map((c) => (
-            <div key={c.nome} className="rounded-xl border border-line/50 bg-navy-900/60 px-3 py-2.5">
-              <p className="text-xs font-bold text-gold">{c.nome}</p>
-              <p className="mt-1 text-sm leading-snug text-txt">{c.frases[tipoAsp]}.</p>
-              <p className="mt-1 text-[11px] text-mut">{c.base}</p>
-            </div>
-          ))}
-        </div>
-      </Secao>
-
-      <p className="text-center text-xs text-mut">Abertura do esqueleto: {aberturaDoParagrafo(tipo, aspecto)}</p>
-
-      {/* O modelo fica por último: primeiro o repertório, depois a resposta pronta. */}
-      <Secao
-        titulo={
-          <span className="inline-flex items-center gap-1.5">
-            <BadgeCheck className="size-3.5 text-green" /> Parágrafo modelo · nota máxima
-          </span>
-        }
-        className="ring-1 ring-green/30"
-      >
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-txt">
-          {modeloDoParagrafo(tema, tipo, aspecto)}
-        </p>
-        <p className="mt-3 border-t border-line/40 pt-2 text-[11px] leading-relaxed text-mut">
-          Escrito no seu esqueleto, pelos critérios da Cebraspe: responde ao aspecto com as palavras do enunciado,
-          desenvolve 2 pontos com informação concreta e fecha ligando ao tema, sem os erros que a banca desconta
-          (estrangeirismo entre aspas, vírgulas da norma, nada de falar com o leitor). Não é o único jeito certo: outra
-          abordagem bem desenvolvida também tira nota máxima.
-        </p>
-      </Secao>
-    </div>
-  );
 }

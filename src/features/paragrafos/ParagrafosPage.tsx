@@ -29,7 +29,8 @@ import {
   type Sorteio,
   type TipoParagrafo,
 } from "./paragrafos";
-import { Correcao, GastoIA, Proposta, Repertorio, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
+import { Correcao, GastoIA, Proposta, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
+import { Repertorio } from "./repertorio";
 import { FolhaRedacao } from "./FolhaRedacao";
 import { NIVEIS, PARAGRAFOS_POR_MES, useNivelCorrecao, type NivelCorrecao } from "./modelos";
 

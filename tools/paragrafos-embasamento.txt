@@ -30,7 +30,7 @@ fim: Fica Vivo! (MG, 2002) e Estado Presente (ES, 2011) levaram prevenção e po
 @fim
 
 @embasamento b02a
-p1: As polícias civis têm 96,9 mil policiais, 55% dos 175,4 mil previstos em lei (Fórum Brasileiro de Segurança Pública, ago. 2026); em Tamandaré (PE), o MPPE achou só 9 servidores na delegacia e atraso nos inquéritos (jul. 2026).
+p1: As polícias civis têm 96,9 mil policiais, 55% dos 175,4 mil previstos em lei; em Tamandaré (PE), o MPPE achou só 9 servidores na delegacia e atraso nos inquéritos (FBSP, ago. 2026; MPPE, jul. 2026).
 p1: CPP, arts. 158-A a 158-F (Pacote Anticrime, Lei 13.964/2019): o vestígio precisa de cadeia de custódia, da coleta ao descarte, para valer como prova.
 p1: Lei 9.807/1999: programas de proteção a vítimas e testemunhas ameaçadas, porque, sem testemunha, muitos homicídios ficam sem autor.
 p2: Lei 12.654/2012: coleta de perfil genético para identificação criminal, que alimenta a Rede Integrada de Bancos de Perfis Genéticos e cruza vestígios de todo o país.
@@ -275,14 +275,14 @@ p1: Lei 14.735/2023 (Lei Orgânica Nacional das Polícias Civis): normas gerais 
 p1: Lei 14.531/2023: incluiu os profissionais de segurança na política nacional de prevenção do suicídio e obriga a produção de dados.
 p2: 110 suicídios contra 139 assassinatos em 2025; os suicídios caíram de 126 (2024), mas a série cresce desde 2017 (Anuário 2026).
 p2: Decreto 12.341/2024: o uso da força exige necessidade e proporcionalidade, decisões que pedem equilíbrio emocional.
-p2: As polícias civis têm 96,9 mil policiais, 55% do previsto em lei (FBSP, ago. 2026): quem fica acumula o trabalho.
+p2: Quem fica acumula o trabalho: as polícias civis têm 96,9 mil policiais, 55% do previsto em lei (FBSP, ago. 2026).
 fim: Pró-Vida (Lei 13.675/2018, ampliado pela Lei 14.531/2023): atenção psicossocial aos profissionais de segurança.
 fim: Leis 14.735/2023 e 14.751/2023 (leis orgânicas nacionais); CF, art. 40, § 4º-B: aposentadoria própria pelo risco da atividade.
 fim: Juntos pela Segurança (PE, 2023): prevê a contratação de milhares de novos policiais (SDS-PE).
 @fim
 
 @embasamento b12b
-p1: As polícias civis têm 96,9 mil policiais, 55% dos 175,4 mil previstos em lei; o FBSP liga o déficit a poucos concursos (ago. 2026).
+p1: As polícias civis têm 96,9 mil policiais, 55% dos 175,4 mil previstos em lei, e o estudo liga o déficit a poucos concursos (FBSP, ago. 2026).
 p1: Inspeção do MPPE em Tamandaré (jul. 2026): delegacia com só 9 servidores, sem sede adequada e sem local para guardar drogas e armas apreendidas.
 p1: 110 suicídios de policiais em 2025, quase os 139 assassinados (Anuário 2026).
 p2: Decreto 12.341/2024: necessidade e proporcionalidade no uso da força exigem treino e equilíbrio.
