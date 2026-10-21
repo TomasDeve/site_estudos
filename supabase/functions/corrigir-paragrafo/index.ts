@@ -30,6 +30,8 @@ interface Payload {
   meta: [number, number];
   /** Pontos de repertório já conferidos para esse parágrafo (fonte da reescrita). */
   repertorio?: string[];
+  /** Quanto a IA raciocina antes de responder (padrão "high"); "medium" sai mais barato. */
+  esforco?: "low" | "medium" | "high";
 }
 
 function erro(mensagem: string, status: number): Response {
@@ -179,12 +181,13 @@ Deno.serve(async (req: Request) => {
   const client = new Anthropic({ apiKey });
 
   try {
-    // Correção pede critério: effort high. Saída em JSON pelo schema (structured outputs).
+    // Correção pede critério: effort high por padrão. Saída em JSON pelo schema (structured outputs).
+    const esforco = payload.esforco && ["low", "medium", "high"].includes(payload.esforco) ? payload.esforco : "high";
     const resposta = await client.messages.create({
       model: MODELO,
       max_tokens: 16000,
       output_config: {
-        effort: "high",
+        effort: esforco,
         format: { type: "json_schema", schema: SCHEMA },
       },
       system: BASE,
@@ -205,6 +208,7 @@ Deno.serve(async (req: Request) => {
       u.input_tokens + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0);
     const uso = {
       modelo: MODELO,
+      esforco,
       entrada,
       saida: u.output_tokens,
       custo_usd: (entrada * PRECO.entrada + u.output_tokens * PRECO.saida) / 1_000_000,
