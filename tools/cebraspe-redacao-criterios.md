@@ -96,7 +96,22 @@ Outras falas do padrão:
   - sob / sobre.
 - **Formas não dicionarizadas:** "muita das vezes" (o certo é "muitas vezes") e "vez que" (o certo é "uma vez que").
 
-## 4. Como isso vira regra nos parágrafos modelo
+## 4. Como o site converte a nota
+
+O espelho da banca tem o quesito 1 (apresentação) e um quesito 2.x **por aspecto**, pontuado só pelo conceito. **Não há quesito separado de repertório, estilo ou estrutura do parágrafo**: tudo isso já está dentro do conceito. Por isso, no treino, a nota de conteúdo (0 a 10) sai **só do conceito**:
+
+| Conceito | Nota de conteúdo |
+|---|---|
+| 3 | 10 |
+| 2 | ≈ 6,7 |
+| 1 | ≈ 3,3 |
+| 0 | 0 |
+
+Os erros descontam pela conta da banca (2 × NE ÷ TL, em escala 10). Os critérios mostrados (ok / parcial / faltou) são só o diagnóstico do que pesou.
+
+**Por que mudou (21/10):** antes, a nota somava abordagem (6) + repertório (2) + estrutura (2). A IA quase nunca dava os 4 pontos extras, e até o parágrafo modelo, com conceito 3, ficava em 8. Depois da troca, o modelo tira 10, e o parágrafo fraco dele continua em ~5. Não é conversão oficial publicada: é a proporção do conceito, coerente com o espelho.
+
+## 5. Como isso vira regra nos parágrafos modelo
 
 - **Texto expositivo em 3ª pessoa,** sem "eu", sem opinião e sem conversar com o leitor.
 - **Abertura com as palavras do aspecto,** para o corretor achar o quesito, seguindo o esqueleto dele:

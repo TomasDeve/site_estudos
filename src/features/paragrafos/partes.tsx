@@ -159,8 +159,9 @@ export function Correcao({
           </dl>
         </div>
         <p className="mt-2 text-xs text-mut">
-          Conceito {correcao.conceito}: {CONCEITOS[correcao.conceito]}. Nota = conteúdo − 2 × erros ÷ linhas (a conta
-          da Cebraspe, em escala 10).
+          Conceito {correcao.conceito}: {CONCEITOS[correcao.conceito]}. Como no quesito da banca, o conceito dá o
+          conteúdo (3 = 10; 2 ≈ 6,7; 1 ≈ 3,3), e a nota = conteúdo − 2 × erros ÷ linhas (a conta da Cebraspe, em
+          escala 10).
         </p>
         <p className="mt-3 text-sm leading-relaxed text-txt">{correcao.veredito}</p>
         {correcao.uso && (
@@ -170,15 +171,13 @@ export function Correcao({
         )}
       </Secao>
 
-      <Secao titulo="Critérios">
+      <Secao titulo="O que pesou no conceito">
         <ul className="divide-y divide-line/40">
           {correcao.criterios.map((c, i) => (
             <li key={i} className="py-2 first:pt-0 last:pb-0">
               <div className="flex items-baseline justify-between gap-3">
                 <span className="text-sm font-semibold text-txt">{c.nome}</span>
-                <span className="shrink-0 text-sm font-bold tabular-nums text-gold">
-                  {c.pontos.toLocaleString("pt-BR")} / {c.max.toLocaleString("pt-BR")}
-                </span>
+                <SituacaoCriterio criterio={c} />
               </div>
               <p className="mt-0.5 text-xs leading-relaxed text-dim">{c.comentario}</p>
             </li>
@@ -222,6 +221,27 @@ export function Correcao({
         <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-txt">{correcao.reescrita}</p>
       </Secao>
     </div>
+  );
+}
+
+const SITUACOES = {
+  ok: { rotulo: "ok", cor: "bg-green/15 text-green" },
+  parcial: { rotulo: "parcial", cor: "bg-amber/15 text-amber" },
+  faltou: { rotulo: "faltou", cor: "bg-red/15 text-red" },
+} as const;
+
+/** Situação do critério; correções antigas (com pontos) viram ok/parcial/faltou pela proporção. */
+function SituacaoCriterio({ criterio }: { criterio: CorrecaoParagrafo["criterios"][number] }) {
+  let s = criterio.situacao;
+  if (!s && criterio.max) {
+    const r = (criterio.pontos ?? 0) / criterio.max;
+    s = r >= 0.99 ? "ok" : r > 0 ? "parcial" : "faltou";
+  }
+  if (!s) return null;
+  return (
+    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${SITUACOES[s].cor}`}>
+      {SITUACOES[s].rotulo}
+    </span>
   );
 }
 

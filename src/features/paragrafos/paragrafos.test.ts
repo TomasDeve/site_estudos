@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CORINGAS, tipoDoAspecto } from "./coringas";
-import { TEMAS, linhasNaFolha, notaConteudo, notaFinal, pontosDoParagrafo, sortear } from "./paragrafos";
+import { TEMAS, linhasNaFolha, notaDoConceito, notaFinal, pontosDoParagrafo, sortear } from "./paragrafos";
 
 describe("banco de temas", () => {
   it("tem os 34 temas com 3 aspectos e esqueleto", () => {
@@ -55,8 +55,11 @@ describe("linhas e nota", () => {
     expect(notaFinal(1, 10, 2)).toBe(0);
   });
 
-  it("soma os critérios sem passar do máximo", () => {
-    expect(notaConteudo([{ pontos: 6, max: 6 }, { pontos: 3, max: 2 }, { pontos: 1.5, max: 2 }])).toBe(9.5);
+  it("converte o conceito como o quesito da banca", () => {
+    expect(notaDoConceito(3)).toBe(10);
+    expect(notaDoConceito(2)).toBe(6.67);
+    expect(notaDoConceito(1)).toBe(3.33);
+    expect(notaDoConceito(0)).toBe(0);
   });
 });
 

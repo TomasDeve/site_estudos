@@ -131,8 +131,12 @@ export function notaFinal(notaConteudo: number, erros: number, linhas: number): 
   return Math.round(Math.min(10, Math.max(0, nota)) * 100) / 100;
 }
 
-/** Soma dos critérios da IA, limitada a 0–10 (a IA às vezes passa do máximo). */
-export function notaConteudo(criterios: { pontos: number; max: number }[]): number {
-  const soma = criterios.reduce((s, c) => s + Math.min(Math.max(0, c.pontos), c.max), 0);
-  return Math.round(Math.min(10, soma) * 100) / 100;
+/**
+ * Nota de conteúdo (0–10) a partir do conceito, como o quesito de cada aspecto da Cebraspe:
+ * conceito 3 = nota cheia, 2 = dois terços, 1 = um terço. A banca não tem quesito separado
+ * de repertório ou estilo — isso já está dentro do conceito.
+ */
+export function notaDoConceito(conceito: number): number {
+  const c = Math.min(3, Math.max(0, Math.round(conceito)));
+  return Math.round(((c * 10) / 3) * 100) / 100;
 }

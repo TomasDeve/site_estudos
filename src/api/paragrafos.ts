@@ -9,7 +9,14 @@ const CHAVE = ["redacao_paragrafos"] as const;
 export interface CorrecaoParagrafo {
   conceito: 0 | 1 | 2 | 3;
   veredito: string;
-  criterios: { nome: string; pontos: number; max: number; comentario: string }[];
+  /** Diagnóstico do que pesou no conceito. Correções antigas trazem pontos/max em vez de situacao. */
+  criterios: {
+    nome: string;
+    situacao?: "ok" | "parcial" | "faltou";
+    pontos?: number;
+    max?: number;
+    comentario: string;
+  }[];
   acertos: string[];
   melhorar: string[];
   erros: { trecho: string; correcao: string; explicacao: string }[];

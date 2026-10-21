@@ -21,7 +21,7 @@ import {
   aberturaDoParagrafo,
   linhasNaFolha,
   modeloDoParagrafo,
-  notaConteudo as somaConteudo,
+  notaDoConceito,
   notaFinal,
   pontosDoParagrafo,
   sortear,
@@ -203,7 +203,7 @@ export function ParagrafosPage() {
         },
         ctrl.signal
       );
-      const nc = somaConteudo(correcao.criterios);
+      const nc = notaDoConceito(correcao.conceito);
       const nota = notaFinal(nc, correcao.erros.length, linhas);
       gravarRascunho(null);
       setEtapa({
