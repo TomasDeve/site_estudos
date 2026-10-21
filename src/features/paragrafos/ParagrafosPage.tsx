@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Eye, EyeOff, PenLine, RotateCcw, Shuffle, Timer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import { Spinner } from "@/components/Spinner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   TEMAS,
+  CARACTERES_POR_LINHA,
   TIPOS,
   aberturaDoParagrafo,
   linhasNaFolha,
@@ -26,6 +27,7 @@ import {
   type TipoParagrafo,
 } from "./paragrafos";
 import { Correcao, Proposta, Repertorio, Secao, corDaNota, fmtTempo } from "./partes";
+import { FolhaRedacao } from "./FolhaRedacao";
 
 /** Um parágrafo corrigido em tela (o que acabou de sair da IA ou um do histórico). */
 interface Resultado {
@@ -100,6 +102,11 @@ export function ParagrafosPage() {
   const [consultou, setConsultou] = useState(rascunhoInicial?.consultou ?? false);
   const [apagar, setApagar] = useState<RedacaoParagrafo | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // Linhas que o parágrafo ocupa na caixa (cada linha da tela = uma linha da folha).
+  const linhasRef = useRef(0);
+  const guardarLinhas = useCallback((n: number) => {
+    linhasRef.current = n;
+  }, []);
 
   useEffect(() => {
     const anterior = document.title;
@@ -164,7 +171,7 @@ export function ParagrafosPage() {
     const { tema, tipo, aspecto } = sorteio;
     const limpo = texto.trim();
     if (!limpo) return;
-    const linhas = linhasNaFolha(limpo);
+    const linhas = linhasRef.current || linhasNaFolha(limpo);
     const segundos = Math.round((Date.now() - inicio) / 1000);
     const meta = TIPOS[tipo].meta;
     const ctrl = new AbortController();
@@ -281,6 +288,7 @@ export function ParagrafosPage() {
             texto={texto}
             setTexto={setTexto}
             corrigindo={corrigindo}
+            onLinhas={guardarLinhas}
             respostaAberta={respostaAberta}
             onVerResposta={() => {
               setRespostaAberta((v) => !v);
@@ -456,6 +464,7 @@ function Escrevendo({
   texto,
   setTexto,
   corrigindo,
+  onLinhas,
   respostaAberta,
   onVerResposta,
   onCorrigir,
@@ -466,6 +475,7 @@ function Escrevendo({
   texto: string;
   setTexto: (t: string) => void;
   corrigindo: boolean;
+  onLinhas: (n: number) => void;
   respostaAberta: boolean;
   onVerResposta: () => void;
   onCorrigir: () => void;
@@ -474,7 +484,14 @@ function Escrevendo({
 }) {
   const { tema, tipo, aspecto } = sorteio;
   const info = TIPOS[tipo];
-  const linhas = linhasNaFolha(texto);
+  const [linhas, setLinhas] = useState(0);
+  const contarLinhas = useCallback(
+    (n: number) => {
+      setLinhas(n);
+      onLinhas(n);
+    },
+    [onLinhas]
+  );
   const dentro = linhas >= info.meta[0] && linhas <= info.meta[1];
   const abertura = aberturaDoParagrafo(tipo, aspecto);
   const respostaRef = useRef<HTMLDivElement>(null);
@@ -499,20 +516,15 @@ function Escrevendo({
         <p className="mt-0.5 text-xs text-dim">
           {info.meta[0]} a {info.meta[1]} linhas · abertura do seu esqueleto: {abertura}
         </p>
-        <textarea
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          disabled={corrigindo}
-          rows={info.meta[1] + 2}
-          placeholder="Escreva o parágrafo aqui…"
-          spellCheck={false}
-          className="folha-paragrafo mt-3 w-full resize-y rounded-xl border border-line bg-navy-900 px-3.5 text-[15px] text-txt outline-none transition-colors placeholder:text-mut focus:border-gold/60 focus:ring-2 focus:ring-gold/15 disabled:opacity-60"
-        />
+        <FolhaRedacao value={texto} onChange={setTexto} disabled={corrigindo} meta={info.meta} onLinhas={contarLinhas} />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
           <span className={`text-xs font-semibold tabular-nums ${linhas === 0 ? "text-mut" : dentro ? "text-green" : "text-amber"}`}>
-            ≈ {linhas} {linhas === 1 ? "linha" : "linhas"} na folha · meta {info.meta[0]}–{info.meta[1]}
+            {linhas} {linhas === 1 ? "linha" : "linhas"} · meta {info.meta[0]}–{info.meta[1]}
           </span>
-          <span className="text-[11px] text-mut">O corretor ortográfico fica desligado, como na prova.</span>
+          <span className="text-[11px] text-mut">
+            Cada linha cabe o que cabe numa linha da folha (cerca de {CARACTERES_POR_LINHA} caracteres). Corretor
+            ortográfico desligado, como na prova.
+          </span>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {corrigindo ? (

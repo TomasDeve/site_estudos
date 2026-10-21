@@ -49,9 +49,10 @@ export const TIPOS: Record<
 
 /**
  * Caracteres que cabem numa linha manuscrita da folha da Cebraspe (184 mm de escrita).
- * É estimativa: letra pequena cabe mais, letra grande cabe menos.
+ * Define a largura de cada linha da caixa de escrita. Estimativa provisória: calibrar
+ * com as fotos das redações dele (letra pequena cabe mais, letra grande cabe menos).
  */
-export const CARACTERES_POR_LINHA = 70;
+export const CARACTERES_POR_LINHA = 62;
 /** O recuo do parágrafo come uns 3 caracteres da 1ª linha. */
 const RECUO = 3;
 
