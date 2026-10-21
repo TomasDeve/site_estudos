@@ -1,0 +1,414 @@
+# Embasamento de cada ponto do repertório (p1, p2 e fim de cada tema), na mesma ordem
+# dos pontos do esqueleto: um dado, uma lei ou um caso concreto, com a fonte.
+# Fontes: v1 do PDF de Atualidades (impressao/Atualidades-Redacao-PCPE/backup/blocos-v1-2026-10-13,
+# conferida em 13/10/2026: Anuário Brasileiro de Segurança Pública 2026, leis no Planalto,
+# decisões do STF/STJ), estudo do FBSP sobre efetivos (ago. 2026) e inspeção do MPPE em
+# Tamandaré (jul. 2026). Lidos por tools/paragrafos-temas.py.
+
+@embasamento b01a
+p1: Em 2025, o Brasil teve 40.775 mortes violentas intencionais, queda de 8,2%; a taxa de 19,1 por 100 mil é a menor desde 2012 (Anuário Brasileiro de Segurança Pública 2026).
+p1: 90,8% das vítimas eram homens e 79,7% eram negras; 41,6% tinham de 18 a 29 anos (Anuário 2026).
+p1: A taxa do Nordeste (31,6 por 100 mil) é quase o triplo da do Sul (11,9); as 10 cidades mais violentas do país ficam no CE, na BA, em PE e na PB (Anuário 2026).
+p2: Pacto pela Vida (PE, 2007): metas de redução de homicídios por área, monitoramento semanal e reuniões entre polícias, Ministério Público e Judiciário.
+p2: Os homicídios em PE caíram quase 40% entre 2007 e 2013 (avaliação da UFPE); o Banco Mundial citou a experiência em 2013.
+p2: Fica Vivo! (MG, 2002): nasceu no Morro das Pedras, em Belo Horizonte, com oficinas para jovens de 12 a 24 anos e polícia, MP e Judiciário focados nos autores de homicídio.
+fim: Lei 13.675/2018 (SUSP): metas, dados compartilhados e avaliação; a meta nacional de 16 homicídios por 100 mil até 2027 foi alcançada em 2025, com 15,4 (Anuário 2026).
+fim: O Anuário 2026 liga a concentração das mortes no Norte e no Nordeste à expansão das facções, que disputam territórios e rotas do tráfico.
+fim: CF, art. 6º: a segurança é direito social; art. 144: "dever do Estado, direito e responsabilidade de todos".
+@fim
+
+@embasamento b01b
+p1: Nordeste: 31,6 mortes violentas por 100 mil, contra 11,9 no Sul; 7 das 10 unidades da Federação com as maiores taxas estão na região (Anuário 2026).
+p1: 90,8% das vítimas de mortes violentas eram homens e 79,7% eram negras (Anuário 2026).
+p1: O Cabo de Santo Agostinho (PE) foi a 8ª cidade mais violenta do país em 2025, com 65,1 mortes por 100 mil (Anuário 2026).
+p2: O Anuário 2026 associa a violência no Norte e no Nordeste à "captura de territórios, de economias e de modos de vida" pelas facções; o Cabo fica a cerca de 20 km do Porto de Suape.
+p2: Os jovens de 18 a 29 anos são 41,6% das vítimas de mortes violentas (Anuário 2026); evasão escolar e desemprego estão entre os fatores de risco.
+p2: Só cerca de 36% dos homicídios são esclarecidos no Brasil (Instituto Sou da Paz, Onde Mora a Impunidade, 2025).
+fim: Pacto pela Vida: queda de quase 40% dos homicídios em PE entre 2007 e 2013, com metas por área e monitoramento semanal (UFPE; Banco Mundial).
+fim: Lei 15.358/2026 (Lei Antifacção), art. 29: Banco Nacional de Dados de organizações criminosas ultraviolentas, integrado às bases estaduais.
+fim: Fica Vivo! (MG, 2002) e Estado Presente (ES, 2011) levaram prevenção e policiamento juntos aos bairros mais violentos; em PE, o Juntos pela Segurança (2023) tem eixo de prevenção.
+@fim
+
+@embasamento b02a
+p1: As polícias civis têm 96,9 mil policiais, 55% dos 175,4 mil previstos em lei (Fórum Brasileiro de Segurança Pública, ago. 2026); em Tamandaré (PE), o MPPE achou só 9 servidores na delegacia e atraso nos inquéritos (jul. 2026).
+p1: CPP, arts. 158-A a 158-F (Pacote Anticrime, Lei 13.964/2019): o vestígio precisa de cadeia de custódia, da coleta ao descarte, para valer como prova.
+p1: Lei 9.807/1999: programas de proteção a vítimas e testemunhas ameaçadas, porque, sem testemunha, muitos homicídios ficam sem autor.
+p2: Lei 12.654/2012: coleta de perfil genético para identificação criminal, que alimenta a Rede Integrada de Bancos de Perfis Genéticos e cruza vestígios de todo o país.
+p2: Em PE, o Departamento de Homicídios e Proteção à Pessoa (DHPP) da Polícia Civil concentra a investigação dos crimes contra a vida, com equipes exclusivas.
+p2: Pacto pela Vida: metas por área e reuniões semanais entre polícias, MP e Judiciário; queda de quase 40% dos homicídios em PE entre 2007 e 2013 (UFPE).
+fim: O estudo do FBSP (ago. 2026) liga o déficit das polícias civis a poucos concursos; a Lei 14.735/2023 (Lei Orgânica Nacional das Polícias Civis) padronizou carreira e garantias.
+fim: CPP, art. 158-A: cadeia de custódia; prova mal guardada ou obtida sem ordem judicial pode anular a investigação.
+fim: CF, art. 144, § 4º: às polícias civis cabem as funções de polícia judiciária e a apuração das infrações penais.
+@fim
+
+@embasamento b02b
+p1: Em 2025, o Brasil teve 2,26 milhões de estelionatos e só 4.819 presos por esse crime; para o FBSP, na prática, o golpe "compensa" (Anuário 2026).
+p1: As medidas protetivas foram descumpridas 132.025 vezes em 2025 (+16,7%): quando a punição não vem, a vítima desacredita da denúncia (Anuário 2026).
+p1: Só cerca de 36% dos homicídios são esclarecidos (Instituto Sou da Paz, 2025): nos outros, o autor segue livre.
+p2: Canais anônimos (disque-denúncia) e a Lei 9.807/1999, que protege vítimas e testemunhas ameaçadas, existem para vencer o medo de colaborar.
+p2: O Anuário 2026 associa a violência no Norte e no Nordeste à "captura de territórios" pelas facções, que impõem o silêncio aos moradores.
+p2: CF, art. 144: a segurança é "responsabilidade de todos"; a colaboração da população faz parte do sistema de segurança pública.
+fim: CF, art. 144, § 4º, e Lei 12.830/2013: a investigação conduzida pelo delegado é função de natureza jurídica, essencial e exclusiva de Estado.
+fim: Lei 12.654/2012 (banco de DNA) e Lei 14.541/2023 (delegacias da mulher 24 horas) são estruturas que aumentam o esclarecimento e o acolhimento.
+fim: Só 36% dos homicídios esclarecidos (Sou da Paz, 2025): cada ponto a mais nessa taxa é menos impunidade.
+@fim
+
+@embasamento b03a
+p1: Cada estado contrata a sua própria plataforma de boletim de ocorrência; o Sinesp, sistema nacional ligado ao SUSP (Lei 13.675/2018), busca integrar esses dados.
+p1: O Anuário 2026 aponta que alguns estados quase não usam a categoria "feminicídio" ao registrar mortes de mulheres, o que distorce a comparação.
+p1: LGPD (Lei 13.709/2018), art. 4º, III: a lei não se aplica à segurança pública e manda que o tema tenha lei específica, ainda não aprovada.
+p2: Lei 13.675/2018: SUSP e Sinesp; foi o exemplo esperado no padrão de resposta oficial da prova de Escrivão da PC PE de 2024 (Cebraspe).
+p2: Córtex (Ministério da Justiça): integra câmeras de leitura de placas e bases de vários estados; um veículo roubado gera alerta em tempo real.
+p2: Prova da PC PE de 2024: um condenado por estelionato, foragido da Justiça de PE desde 2020, foi capturado no Ceará após troca de informações entre as polícias civis.
+fim: BNMP (Banco Nacional de Monitoramento de Prisões, do CNJ): reúne os mandados de prisão do país, e o foragido aparece em qualquer abordagem.
+fim: Lei 15.358/2026, art. 29: Banco Nacional de Dados de Organizações Criminosas Ultraviolentas, integrado às bases estaduais.
+fim: EC 115/2022: a proteção de dados pessoais é direito fundamental (CF, art. 5º, LXXIX).
+@fim
+
+@embasamento b03b
+p1: CF, art. 144, § 4º, e CPP, art. 4º: a polícia judiciária apura as infrações penais e a sua autoria, produzindo prova para o processo.
+p1: Decreto 3.695/2000: criou o Subsistema de Inteligência de Segurança Pública (SISP), voltado a produzir conhecimento para decisões.
+p1: Lei 12.850/2013: ação controlada e infiltração de agentes, técnicas em que a inteligência orienta e a investigação transforma em prova.
+p2: Lei 12.850/2013: organização criminosa reúne 4 ou mais pessoas, com estrutura ordenada e divisão de tarefas; mapear essa estrutura é o primeiro passo.
+p2: Operação Carbono Oculto (ago. 2025): Receita Federal, PF e MPSP revelaram facção no setor de combustíveis usando fintechs e fundos para lavar dinheiro.
+p2: Lei 15.358/2026, art. 29: banco nacional de dados das organizações criminosas ultraviolentas, integrado aos bancos estaduais.
+fim: LGPD, art. 4º, III: o uso de dados para segurança pública e investigação ficou para lei específica, ainda não aprovada.
+fim: EC 115/2022 (CF, art. 5º, LXXIX): proteção de dados é direito fundamental; o acesso precisa de registro e auditoria.
+fim: Lei 13.869/2019 (abuso de autoridade), art. 25: obter prova por meio manifestamente ilícito é crime.
+@fim
+
+@embasamento b04a
+p1: Em 2025, o Brasil gastou R$ 163,1 bilhões com segurança: estados R$ 131,2 bi (80%), União R$ 18 bi e municípios R$ 13,7 bi (Anuário 2026).
+p1: CF: saúde (art. 198) e educação (art. 212) têm gasto mínimo garantido; a segurança pública (art. 144) não tem.
+p1: Lei 13.756/2018: o Fundo Nacional de Segurança Pública recebe parte da arrecadação das loterias; gastou R$ 2,2 bilhões em 2025 (Anuário 2026).
+p2: Em 2022, a segurança consumiu 1,26% do PIB, cerca de um terço do gasto com saúde pública (Anuário 2023, citado na prova da PC PE de 2024).
+p2: O Pacto pela Vida perdeu força a partir de 2014, e PE chegou ao pior ano em 2017, com 5.427 mortes: retrato da descontinuidade.
+p2: Lei 13.675/2018 (SUSP): a política nacional exige metas e avaliação de resultados das ações de segurança.
+fim: PEC 18/2025 (PEC da Segurança): leva o SUSP para a Constituição e discute o financiamento; aprovada na Câmara, estava no Senado em outubro de 2026 (confira antes da prova).
+fim: Lei 15.358/2026: os bens perdidos pelas facções vão para os fundos de segurança e podem equipar a polícia.
+fim: Pacto pela Vida: queda de quase 40% dos homicídios em PE entre 2007 e 2013, enquanto teve continuidade (UFPE).
+@fim
+
+@embasamento b04b
+p1: Lei 12.850/2013: a organização criminosa tem estrutura e divisão de tarefas, e o integrante preso é logo substituído.
+p1: Lei 9.613/1998 (lavagem de dinheiro): o crime precisa dar aparência legal ao lucro para conseguir usá-lo.
+p1: Operação Carbono Oculto (ago. 2025): Receita, PF e MPSP atingiram facção infiltrada na cadeia de combustíveis, com fintechs e fundos de investimento.
+p2: Lei 15.358/2026: perdimento extraordinário de bens de origem claramente ilícita, mesmo sem condenação, e ação civil de perdimento imprescritível.
+p2: Lei 15.358/2026: o produto dos bens vai para os fundos de segurança pública e pode ser usado no reaparelhamento policial.
+p2: O Coaf e a Receita Federal produzem inteligência financeira (Lei 9.613/1998); a Carbono Oculto juntou Receita, PF e MPSP.
+fim: Lei 15.358/2026: a destinação dos bens é supervisionada pelo Conselho Nacional de Justiça e pelo Conselho Nacional do Ministério Público.
+fim: Lei 15.358/2026: em caso de absolvição, os valores voltam com juros; a lei já é questionada no STF (confira antes da prova).
+fim: CF, art. 5º, LIV: ninguém será privado da liberdade ou de seus bens sem o devido processo legal.
+@fim
+
+@embasamento b05a
+p1: Lei 15.358/2026: criou o crime de domínio social estruturado (facção que usa violência para controlar territórios), com pena de 20 a 40 anos, hediondo.
+p1: Operação Carbono Oculto (2025): facção infiltrada no setor de combustíveis e usando fintechs para lavar dinheiro.
+p1: As duas maiores facções do país surgiram dentro de presídios (RJ, no fim dos anos 1970, e SP, em 1993); o Brasil tem 964.668 presos (Anuário 2026).
+p2: Operação Carbono Oculto (ago. 2025): PF, Receita e MPSP atingiram o caixa da facção na cadeia de combustíveis, exemplo de asfixia financeira.
+p2: Lei 15.358/2026: bloqueio de bens e perdimento, com o dinheiro indo para os fundos de segurança.
+p2: Sistema Penitenciário Federal: 5 penitenciárias de segurança máxima (Catanduvas, Campo Grande, Porto Velho, Mossoró e Brasília) que isolam as lideranças.
+fim: Lei 9.613/1998 e Coaf: inteligência financeira; a Lei 15.358/2026 cria o banco nacional de dados das facções (art. 29).
+fim: Lei 15.358/2026: os bens perdidos pelas facções equipam a polícia por meio dos fundos de segurança.
+fim: Estado Presente (ES, 2011) e Fica Vivo! (MG, 2002) uniram policiamento e serviços sociais nos bairros mais violentos.
+@fim
+
+@embasamento b05b
+p1: Atlas da Violência 2025 (Ipea e FBSP): 71,6% das mortes violentas de 2023 foram cometidas com arma de fogo, cerca de 7 em cada 10.
+p1: Em 2025, as polícias estaduais apreenderam 108.786 armas de fogo; PE apreendeu 6.396 (+6,6%) (Anuário 2026).
+p1: Sinarm: de 637,9 mil armas com registro ativo em 2017 para 2,1 milhões em 2025 (+240%); cerca de 1 milhão de CACs com 1,6 milhão de armas (Anuário 2026).
+p2: Decreto 11.615/2023: o registro e a fiscalização das armas de CACs passaram do Exército para a Polícia Federal, que assumiu em julho de 2025.
+p2: Estatuto do Desarmamento (Lei 10.826/2003), art. 18: tráfico internacional de arma de fogo, com pena de 8 a 16 anos (Pacote Anticrime, 2019).
+p2: Estatuto do Desarmamento: toda arma registrada deve estar no Sinarm, da Polícia Federal; rastrear a arma apreendida depende desse cadastro.
+fim: Sinarm (PF) e Sigma (Exército): cruzar a arma apreendida com o registro revela a origem do desvio.
+fim: Lei 10.826/2003 e Decreto 11.615/2023, que endureceu as regras; o mercado legal se estabilizou (+0,8% em 2025) (Anuário 2026).
+fim: PE apreendeu 6.396 armas em 2025 (Anuário 2026): cada uma é uma arma a menos nas mãos do crime.
+@fim
+
+@embasamento b06a
+p1: 1.571 feminicídios em 2025 (+4%), enquanto os homicídios caíram; 44,4% das mulheres assassinadas foram mortas por razões de gênero, o maior percentual desde 2015 (Anuário 2026).
+p1: 60,9% dos feminicídios foram cometidos pelo parceiro e 18,9% pelo ex-parceiro (Anuário 2026).
+p1: 1 em cada 9 vítimas de feminicídio tinha medida protetiva ativa; as medidas foram descumpridas 132.025 vezes em 2025 (Anuário 2026).
+p2: Casa da Mulher Brasileira (programa federal): delegacia, juizado, MP, Defensoria e apoio psicossocial no mesmo prédio.
+p2: Lei Maria da Penha (Lei 11.340/2006), art. 18: o juiz decide a medida protetiva em até 48 horas.
+p2: Patrulha Maria da Penha: visitas às mulheres protegidas; a Lei 14.149/2021 criou o Formulário Nacional de Avaliação de Risco.
+fim: Lei Maria da Penha, art. 24-A: descumprir medida protetiva é crime; foram 132.025 descumprimentos em 2025 (+16,7%) (Anuário 2026).
+fim: Lei 14.541/2023: delegacias da mulher funcionando 24 horas, inclusive em feriados e fins de semana.
+fim: Lei Maria da Penha, art. 8º, IX: currículos escolares com conteúdos sobre equidade de gênero e violência doméstica.
+@fim
+
+@embasamento b06b
+p1: 60,9% dos feminicídios foram cometidos pelo parceiro (Anuário 2026); a Lei 14.674/2023 incluiu na Lei Maria da Penha (art. 23, VI) o auxílio-aluguel, por até 6 meses, para a vítima afastada do lar.
+p1: Lei Maria da Penha, art. 23: o juiz pode adotar medidas que protegem também os filhos, como a matrícula em escola perto da nova casa.
+p1: Lei 14.321/2022: criou o crime de violência institucional, que pune submeter a vítima a procedimentos que a façam reviver a violência.
+p2: Lei Maria da Penha, art. 10-A: atendimento policial especializado, preferencialmente por mulheres, sem revitimização.
+p2: Lei 14.541/2023 (delegacias da mulher 24 horas) e Casa da Mulher Brasileira (atendimento integrado em um só lugar).
+p2: Lei 14.149/2021: Formulário Nacional de Avaliação de Risco, aplicado no atendimento à vítima.
+fim: Lei Maria da Penha, art. 12, III, e art. 18: a polícia envia o pedido em 48 horas, e o juiz decide em 48 horas.
+fim: Lei Maria da Penha, art. 24-A: descumprir medida protetiva é crime; foram 132.025 descumprimentos em 2025 (Anuário 2026).
+fim: 1 em cada 9 vítimas de feminicídio já tinha medida protetiva (Anuário 2026): a morte era anunciada.
+@fim
+
+@embasamento b07a
+p1: 2,26 milhões de estelionatos em 2025, cerca de 258 por hora, alta de 429,8% desde 2018 (Anuário 2026).
+p1: Só 4.819 presos por estelionato para mais de 2 milhões de golpes em 2025 (Anuário 2026).
+p1: Golpes com voz e vídeo falsos (deepfakes) imitam parentes e funcionários de banco; o estelionato virou o principal crime contra o patrimônio (Anuário 2026).
+p2: Lei 14.155/2021: nos golpes por transferência, a competência passou a ser o domicílio da vítima (CPP, art. 70, § 4º), para não travar a investigação à distância.
+p2: Marco Civil da Internet (Lei 12.965/2014): registros de conexão guardados por 1 ano e de aplicações por 6 meses, entregues com ordem judicial.
+p2: Só 63.771 processos penais e 4.819 presos para 2,26 milhões de estelionatos em 2025 (Anuário 2026).
+fim: Convenção de Budapeste, à qual o Brasil aderiu em 2023: cooperação internacional contra crimes cibernéticos.
+fim: MED do Pix (Banco Central): bloqueio e devolução de valores do golpe; Celular Seguro (2023): bloqueia linha, aparelho e apps de banco de uma vez.
+fim: Lei 14.155/2021: a pena da fraude eletrônica aumenta de 1/3 ao dobro quando a vítima é idosa ou vulnerável (CP, art. 171, § 4º).
+@fim
+
+@embasamento b07b
+p1: 4.063 registros de material de abuso sexual infantil (+25,3%) e 2.464 de aliciamento em 2025 (Anuário 2026); o ECA, art. 241-D, pune o aliciamento por meio de comunicação.
+p1: Lei 14.811/2024: "cyberbullying" (intimidação sistemática virtual) no CP, art. 146-A; foram 677 registros em 2025 (+61,4%) (Anuário 2026).
+p1: Para o FBSP, os registros são "uma pequena amostra do que efetivamente circula na internet" (Anuário 2026).
+p2: Lei 15.211/2025 (ECA Digital), em vigor desde março de 2026: ferramentas de supervisão parental obrigatórias nas plataformas.
+p2: Lei 13.185/2015: Programa de Combate à Intimidação Sistemática; a Lei 14.811/2024 prevê medidas de proteção nas escolas.
+p2: ECA Digital: verificação de idade confiável e bloqueio de conteúdo ilegal; o STF (2025) ampliou a responsabilidade das plataformas (Marco Civil, art. 19).
+fim: ECA, arts. 240 e 241-A a 241-E: produzir, compartilhar ou guardar material de abuso sexual infantil é crime.
+fim: Operação Impregnator (2024): a PF, a partir de um alerta da Interpol, prendeu suspeito de compartilhar imagens de abuso na "dark web"; a perícia confirmou vítimas brasileiras.
+fim: CF, art. 227: prioridade absoluta para crianças e adolescentes; ECA, art. 1º: proteção integral.
+@fim
+
+@embasamento b08a
+p1: Portaria MJSP 648/2024: diretrizes nacionais que dizem quando a câmera deve gravar (abordagens, uso da força, custódia de pessoas).
+p1: Para o FBSP, as câmeras "protegem os policiais que atuam dentro da lei" e permitem responsabilizar quem extrapola (Anuário 2026).
+p1: ADPF 635 (STF): com regras, câmeras e controle externo, as mortes por intervenção no RJ caíram de 1.814 (2019) para cerca de 700 (2024).
+p2: A Polícia Militar de São Paulo usa câmeras corporais em larga escala desde 2020.
+p2: Estudos sobre o programa paulista associaram as câmeras à queda das mortes em intervenções policiais e do uso da força (FBSP).
+p2: ADPF 635 (julgamento concluído em 03/04/2025): câmeras nas fardas e viaturas no RJ, preservação do local e perícia rápida nas mortes em operações.
+fim: Portaria MJSP 648/2024: define as situações de gravação; o debate é entre gravação contínua ou automática e acionamento pelo policial.
+fim: CPP, art. 158-A (cadeia de custódia) e CF, art. 129, VII (controle externo da atividade policial pelo Ministério Público).
+fim: Em PE, as mortes em intervenções policiais subiram 31,7% em 2025 (103), embora sejam só 3,3% das mortes violentas (Anuário 2026).
+@fim
+
+@embasamento b08b
+p1: Lei 13.812/2019: a busca de desaparecidos é prioridade com caráter de urgência, e a tecnologia de imagem acelera essa busca.
+p1: Lei 12.654/2012 (banco de DNA) e leitura de placas: prova técnica que não depende de testemunha.
+p1: O padrão de resposta oficial da prova de Agente da PC PE de 2024 aceitou o "reconhecimento facial para identificação de pessoas foragidas" como exemplo de investimento eficaz.
+p2: STJ, HC 598.886/SC (2020): o reconhecimento de pessoas deve seguir o art. 226 do CPP, e a foto sozinha não basta para condenar.
+p2: LGPD, art. 4º, III: sem lei específica para a segurança pública, não há regra clara sobre a guarda e o uso das imagens.
+p2: EC 115/2022: proteção de dados pessoais é direito fundamental (CF, art. 5º, LXXIX).
+fim: STJ, HC 598.886/SC (2020) e CPP, art. 226: o reconhecimento exige procedimento e outras provas.
+fim: LGPD, art. 4º, III (lei específica pendente) e CPP, art. 158-A (cadeia de custódia).
+fim: Lei 13.869/2019, art. 25: obter prova por meio manifestamente ilícito é abuso de autoridade.
+@fim
+
+@embasamento b09a
+p1: 6.602 mortes por intervenção policial em 2025 (+5,4%), cerca de 16% das mortes violentas do país (Anuário 2026).
+p1: 82% das vítimas eram negras e 99,3% eram homens; a taxa entre negros é 3,5 vezes a de brancos (Anuário 2026).
+p1: 139 policiais civis e militares assassinados em 2025; outros 110 morreram por suicídio (Anuário 2026).
+p2: Decreto 12.341/2024: o uso da força deve seguir legalidade, necessidade, proporcionalidade, razoabilidade e não discriminação.
+p2: ADPF 635: com regras e controle, as mortes por intervenção no RJ caíram de 1.814 (2019) para cerca de 700 (2024).
+p2: Câmeras da PM-SP associadas à queda das mortes em intervenções (FBSP); no policiamento comunitário, o mesmo policial atua fixo no bairro.
+fim: Lei 13.060/2014: prioriza instrumentos de menor potencial ofensivo e proíbe atirar em quem foge desarmado sem oferecer risco.
+fim: CF, art. 129, VII: controle externo pelo Ministério Público; ADPF 635: perícia em até 10 dias nas mortes em operações.
+fim: PE tem letalidade baixa (103 mortes, 3,3% das mortes violentas), mas em alta de 31,7% em 2025 (Anuário 2026).
+@fim
+
+@embasamento b09b
+p1: CF, art. 144: a segurança é "responsabilidade de todos"; a colaboração da população faz parte do sistema.
+p1: Só cerca de 36% dos homicídios são esclarecidos (Sou da Paz, 2025): sem testemunha, a investigação depende da prova técnica, que é escassa.
+p1: 6.602 mortes por intervenção em 2025, 82% de vítimas negras (Anuário 2026): o abuso se concentra em quem mais precisa confiar na polícia.
+p2: Lei 13.675/2018 (SUSP): a política nacional tem, entre os seus princípios, a participação e o controle social.
+p2: Fica Vivo! (MG, 2002): queda dos homicídios nas áreas atendidas; Estado Presente (ES, 2011): policiamento e serviços sociais nos bairros mais violentos.
+p2: Para o FBSP, as câmeras protegem o bom policial e permitem responsabilizar quem extrapola (Anuário 2026).
+fim: As mortes em intervenções subiram 5,4% no país e 31,7% em PE em 2025 (Anuário 2026).
+fim: Decreto 12.341/2024 (uso da força) e Lei 13.869/2019 (abuso de autoridade).
+fim: CF, art. 5º: a polícia garante na rua direitos como a proibição de tortura (inciso III) e a presunção de inocência (inciso LVII).
+@fim
+
+@embasamento b10a
+p1: 964.668 presos e 281.213 vagas a menos (1,4 preso por vaga); em PE, 1,8 preso por vaga (Anuário 2026).
+p1: Só 21,6% dos presos trabalham (Anuário 2026); a LEP, art. 126, prevê 1 dia de remição a cada 3 dias de trabalho.
+p1: ADPF 347 (STF, 2023): estado de coisas inconstitucional; daí o Plano Pena Justa (2025), com 307 metas até 2027.
+p2: As duas maiores facções do país surgiram dentro de presídios: uma no RJ, no fim dos anos 1970, e outra em SP, em 1993.
+p2: ADPF 347: o STF reconheceu violação massiva de direitos nas prisões, vácuo que a facção ocupa oferecendo "proteção".
+p2: Lei 15.358/2026: atacar presídios e coordenar ações violentas estão entre as condutas do domínio social estruturado (pena de 20 a 40 anos).
+fim: Plano Pena Justa (CNJ e governo federal, 2025): 307 metas até 2027, com controle de vagas e penas alternativas.
+fim: LEP, art. 126 (remição) e método APAC: unidades sem facção, com trabalho e estudo; o TJMG aponta reincidência menor.
+fim: LEP, art. 1º: a execução deve "proporcionar condições para a harmônica integração social do condenado".
+@fim
+
+@embasamento b10b
+p1: LEP, art. 126: 1 dia a menos de pena a cada 3 dias de trabalho ou 12 horas de estudo; a leitura também dá remição (Resolução CNJ 391/2021).
+p1: Só 21,6% dos presos trabalham (Anuário 2026).
+p1: Método APAC (MG): unidades menores, sem facção, com trabalho, estudo e família; o TJMG aponta reincidência menor.
+p2: Escritórios Sociais (CNJ): encaminham o egresso para documentos, emprego e atendimento.
+p2: Lei 14.133/2021 (licitações), art. 25, § 9º: o edital pode exigir que a empresa contratada empregue egressos do sistema prisional.
+p2: Cuidado: o número "70% de reincidência" circula muito, mas não tem base oficial; fale em reincidência sem número.
+fim: LEP, art. 1º: a pena deve preparar a integração social do condenado.
+fim: Plano Pena Justa (2025): eixo de "saída e reintegração", com metas até 2027.
+fim: O Brasil tinha 964.668 presos em 2025 (Anuário 2026), e quase todos voltarão para a sociedade.
+@fim
+
+@embasamento b11a
+p1: 41,6% das vítimas de mortes violentas tinham de 18 a 29 anos, e 79,7% eram negras (Anuário 2026).
+p1: ECA, art. 56: a escola deve comunicar ao Conselho Tutelar faltas reiteradas, evasão e suspeita de maus-tratos.
+p1: ECA, art. 244-B: corromper ou facilitar a corrupção de menor de 18 anos para praticar crime é crime.
+p2: Fica Vivo! (MG, 2002): criado no Morro das Pedras, em Belo Horizonte, com oficinas para jovens de 12 a 24 anos e foco policial nos autores de homicídio.
+p2: A queda dos homicídios nas áreas atendidas fez do Fica Vivo! referência nacional (Governo de Minas Gerais).
+p2: Estado Presente (ES, 2011): policiamento qualificado e ações sociais concentrados nos bairros mais violentos do Espírito Santo.
+fim: Lei 14.811/2024 ("bullying" e "cyberbullying" como crime) e busca ativa dos alunos faltosos (ECA, art. 56).
+fim: Lei 10.097/2000 (Lei do Aprendiz), para jovens de 14 a 24 anos; ECA, art. 244-B, contra quem alicia adolescente para o crime.
+fim: Pronasci (Programa Nacional de Segurança Pública com Cidadania), relançado em 2023, une segurança e políticas sociais.
+@fim
+
+@embasamento b11b
+p1: 4.549 registros de "bullying" (+68,2%) e 677 de "cyberbullying" (+61,4%) contra crianças e adolescentes em 2025 (Anuário 2026).
+p1: Operação Escola Segura (Ministério da Justiça, abril de 2023): monitorou ameaças de ataques a escolas e levou a prisões em vários estados, inclusive PE.
+p1: ECA, art. 244-B (corrupção de menores) e art. 241-D (aliciamento de criança por meio de comunicação).
+p2: Lei 14.344/2022 (Lei Henry Borel): enfrentamento da violência doméstica contra crianças e adolescentes.
+p2: Lei 15.211/2025 (ECA Digital): supervisão parental obrigatória nas plataformas desde março de 2026.
+p2: Lei 13.935/2019: serviços de psicologia e de serviço social nas escolas públicas de educação básica.
+fim: Lei 14.811/2024: medidas de proteção nas escolas; Lei 13.185/2015: Programa de Combate à Intimidação Sistemática.
+fim: CP, art. 146-A: o "bullying" é crime desde 2024; o Conselho Tutelar (ECA, art. 131) recebe os encaminhamentos da polícia.
+fim: Lei 13.935/2019: psicólogos e assistentes sociais nas escolas, para agir antes da tragédia.
+@fim
+
+@embasamento b12a
+p1: 139 policiais assassinados e 110 suicídios de policiais da ativa em 2025 (Anuário 2026).
+p1: Lei 14.735/2023 (Lei Orgânica Nacional das Polícias Civis): normas gerais de carreira, direitos e garantias.
+p1: Lei 14.531/2023: incluiu os profissionais de segurança na política nacional de prevenção do suicídio e obriga a produção de dados.
+p2: 110 suicídios contra 139 assassinatos em 2025; os suicídios caíram de 126 (2024), mas a série cresce desde 2017 (Anuário 2026).
+p2: Decreto 12.341/2024: o uso da força exige necessidade e proporcionalidade, decisões que pedem equilíbrio emocional.
+p2: As polícias civis têm 96,9 mil policiais, 55% do previsto em lei (FBSP, ago. 2026): quem fica acumula o trabalho.
+fim: Pró-Vida (Lei 13.675/2018, ampliado pela Lei 14.531/2023): atenção psicossocial aos profissionais de segurança.
+fim: Leis 14.735/2023 e 14.751/2023 (leis orgânicas nacionais); CF, art. 40, § 4º-B: aposentadoria própria pelo risco da atividade.
+fim: Juntos pela Segurança (PE, 2023): prevê a contratação de milhares de novos policiais (SDS-PE).
+@fim
+
+@embasamento b12b
+p1: As polícias civis têm 96,9 mil policiais, 55% dos 175,4 mil previstos em lei; o FBSP liga o déficit a poucos concursos (ago. 2026).
+p1: Inspeção do MPPE em Tamandaré (jul. 2026): delegacia com só 9 servidores, sem sede adequada e sem local para guardar drogas e armas apreendidas.
+p1: 110 suicídios de policiais em 2025, quase os 139 assassinados (Anuário 2026).
+p2: Decreto 12.341/2024: necessidade e proporcionalidade no uso da força exigem treino e equilíbrio.
+p2: Lei 14.531/2023: a saúde mental do policial passou a ser tratada como política pública.
+p2: MPPE em Tamandaré (jul. 2026): a falta de efetivo atrasou a tramitação dos inquéritos.
+fim: Juntos pela Segurança (PE, 2023): contratação de milhares de policiais civis, militares, penais e científicos (SDS-PE).
+fim: Pró-Vida e Lei 14.531/2023 (saúde mental); Lei 14.735/2023 (Lei Orgânica Nacional das Polícias Civis).
+fim: CF, art. 144: a segurança é dever do Estado, e o policial é quem a executa.
+@fim
+
+@embasamento e1
+p1: 84.269 desaparecimentos em 2025 (+3,6%) e 61.305 localizações; 2.801 registros em PE (Anuário 2026).
+p1: Por trás do número podem estar fuga de casa, doença mental, tráfico de pessoas (CP, art. 149-A) e homicídio com ocultação de cadáver.
+p1: Lei 13.812/2019: a busca é prioridade com caráter de urgência, sem prazo para registrar; ECA, art. 208, § 2º: investigação imediata para crianças.
+p2: Lei 13.812/2019 criou a Política Nacional de Busca, mas a estrutura especializada depende de cada estado.
+p2: Lei 13.812/2019: criou o Cadastro Nacional de Pessoas Desaparecidas, para integrar os registros estaduais.
+p2: Lei 12.654/2012 e a Rede Integrada de Bancos de Perfis Genéticos permitem cruzar o DNA de familiares com o de corpos não identificados.
+fim: Lei 13.812/2019 (cadastro nacional e urgência) e ECA, art. 208, § 2º (busca imediata de crianças).
+fim: Rede Integrada de Bancos de Perfis Genéticos (Lei 12.654/2012): o DNA de familiares ajuda a identificar desaparecidos.
+fim: Em 2025, 61.305 pessoas foram localizadas (Anuário 2026): a busca rápida funciona.
+@fim
+
+@embasamento e2
+p1: 830.890 celulares roubados ou furtados em 2025 (−9%); em PE, 41.505 (Anuário 2026).
+p1: A cidade de São Paulo tem 5,6% da população e 20% desses crimes; Olinda está entre as 10 cidades com mais casos por habitante (Anuário 2026).
+p1: O estelionato (2,26 milhões em 2025) virou o principal crime contra o patrimônio, e o celular roubado é a porta de entrada (Anuário 2026).
+p2: CP, art. 180: receptação; no comércio (§ 1º), a pena é de 3 a 8 anos.
+p2: Lei 14.155/2021: fraude eletrônica (CP, art. 171, § 2º-A) e furto mediante fraude eletrônica (art. 155, § 4º-B).
+p2: Parte dos aparelhos é desmontada ou enviada para fora do país, o que dificulta o rastreamento.
+fim: Celular Seguro (governo federal, 2023): bloqueio de linha, aparelho e apps de banco de uma vez; bloqueio por IMEI nas operadoras.
+fim: CP, art. 180, § 1º: receptação no comércio, com pena de 3 a 8 anos.
+fim: MED do Pix (Banco Central): bloqueio e devolução de valores enviados em golpe.
+@fim
+
+@embasamento e3
+p1: O Anuário 2026 liga a violência no Norte e no Nordeste à expansão das facções; o tráfico é uma das suas principais fontes de dinheiro.
+p1: 207.058 ocorrências de tráfico em 2025 (+18,5%), enquanto as de posse caíram 38,8% desde a decisão do STF (Anuário 2026).
+p1: Lei 11.343/2006, art. 28: o usuário não vai preso (advertência, serviço comunitário ou curso); art. 33: tráfico, de 5 a 15 anos.
+p2: Rede de Atenção Psicossocial do SUS: os CAPS AD atendem pessoas com dependência de álcool e drogas.
+p2: Lei 11.343/2006, art. 33: tráfico, com pena de 5 a 15 anos, um dos crimes que mais levam à prisão.
+p2: STF, RE 635.659 (Tema 506, 2024): presume-se usuário quem tem até 40 g de maconha ou 6 plantas fêmeas.
+fim: Lei 15.358/2026: bloqueio e perdimento dos bens das facções.
+fim: CAPS AD (SUS) e prevenção nas escolas (Lei 11.343/2006, art. 19, sobre as atividades de prevenção).
+fim: PEC 45/2023, aprovada no Senado, quer pôr na Constituição que portar qualquer droga é crime (confira antes da prova).
+@fim
+
+@embasamento e4
+p1: 84.388 estupros em 2025, 61.076 com vítimas de 0 a 17 anos (Anuário 2026).
+p1: 65,6% dos estupros ocorreram em casa; quando a relação foi registrada, o autor era parente em 59,2% dos casos (Anuário 2026).
+p1: 4.063 registros de material de abuso sexual infantil (+25,3%) e 2.464 de aliciamento em 2025 (Anuário 2026).
+p2: CP, art. 217-A: estupro de vulnerável (menor de 14 anos), com pena de 8 a 15 anos.
+p2: Lei 13.431/2017: escuta especializada e depoimento especial de crianças vítimas, para evitar a revitimização.
+p2: ECA, art. 241-D: aliciar criança por qualquer meio de comunicação é crime.
+fim: ECA, art. 13 e art. 245: profissionais de saúde e de educação devem comunicar suspeitas de maus-tratos ao Conselho Tutelar.
+fim: Lei 13.431/2017 (depoimento especial) e Lei 14.344/2022 (Lei Henry Borel).
+fim: Lei 15.211/2025 (ECA Digital), em vigor desde março de 2026.
+@fim
+
+@embasamento e5
+p1: Os estados pagaram R$ 131,2 bi dos R$ 163,1 bi gastos com segurança em 2025, cerca de 80% (Anuário 2026).
+p1: A União gastou R$ 18 bi; o Fundo Nacional de Segurança Pública, R$ 2,2 bi em 2025 (Anuário 2026).
+p1: CF, art. 144, § 8º: guardas municipais; em 2025 já eram 107,5 mil guardas, mais do que os policiais civis (FBSP, 2026).
+p2: O Anuário 2026 liga a violência do Norte e do Nordeste à expansão de facções que atuam em vários estados.
+p2: Lei 15.358/2026, art. 29 (banco nacional das facções) e Lei 13.675/2018 (Sinesp).
+p2: PEC 18/2025: aprovada na Câmara em março de 2026; na CCJ do Senado em outubro de 2026 (confira antes da prova).
+fim: Lei 13.675/2018 (SUSP): União, estados e municípios atuando de forma integrada, com metas.
+fim: Lei 13.756/2018: repasses do Fundo Nacional de Segurança Pública aos fundos estaduais.
+fim: CF, art. 144: a segurança é dever do Estado, de todos os entes, cada um com o seu papel.
+@fim
+
+@embasamento e6
+p1: Lei 12.850/2013: a organização criminosa tem estrutura e divisão de tarefas, como uma empresa.
+p1: Lei 15.358/2026: bloqueio de bens, direitos e valores, inclusive ativos virtuais, das organizações criminosas ultraviolentas.
+p1: Operação Carbono Oculto (2025): facção infiltrada em várias etapas da cadeia de combustíveis.
+p2: Carbono Oculto: uso de fintechs e de fundos de investimento para ocultar e blindar patrimônio (Receita Federal, PF e MPSP).
+p2: Lei 14.790/2023: regulamentou as apostas on-line ("bets"), com regras de prevenção à lavagem de dinheiro.
+p2: Lei 9.613/1998, art. 1º: ocultar ou dissimular a origem de bens do crime é lavagem, com pena de 3 a 10 anos.
+fim: Coaf (Lei 9.613/1998): recebe comunicações de operações suspeitas de bancos e de outros setores.
+fim: Lei 15.358/2026: perdimento extraordinário e ação civil imprescritível; o dinheiro vai para os fundos de segurança.
+fim: Operação Carbono Oculto (2025): atingir o caixa, e não só o integrante da ponta, é o que desmonta a facção.
+@fim
+
+@embasamento e7
+p1: CF, art. 144: a segurança pública é "dever do Estado, direito e responsabilidade de todos".
+p1: Lei 13.675/2018 (SUSP): a participação e o controle social estão entre os princípios da política nacional.
+p1: CF, art. 5º, caput, e art. 6º: a segurança é direito individual e social.
+p2: Lei 9.807/1999: proteção a vítimas e testemunhas ameaçadas, para que colaborar não custe a vida.
+p2: Os conselhos comunitários de segurança reúnem moradores, comerciantes e polícias para definir as prioridades do bairro.
+p2: Disque 100 (direitos humanos) e Ligue 180 (Central de Atendimento à Mulher) recebem denúncias de qualquer pessoa.
+fim: CP, art. 345: fazer justiça com as próprias mãos é crime (exercício arbitrário das próprias razões); quem lincha responde por lesão corporal ou homicídio.
+fim: Decreto 12.341/2024 e câmeras corporais: transparência no uso da força constrói confiança.
+fim: Fica Vivo! (MG) e Estado Presente (ES): Estado e comunidade juntos reduziram a violência nos bairros atendidos.
+@fim
+
+@embasamento e8
+p1: Lei 14.155/2021: fraude eletrônica, com pena de 4 a 8 anos; golpes com voz clonada se enquadram aqui.
+p1: 2,26 milhões de estelionatos em 2025, cerca de 258 por hora (Anuário 2026).
+p1: Só 4.819 presos por estelionato em 2025 (Anuário 2026).
+p2: A prova discursiva da PF de 2025 cobrou "Investigação policial na era dos dados": "big data", mineração de dados e aprendizado de máquina.
+p2: Córtex (Ministério da Justiça): cruza câmeras de placas e bancos de dados de vários estados.
+p2: Decreto 3.695/2000: Subsistema de Inteligência de Segurança Pública (SISP).
+fim: STJ, HC 598.886/SC (2020): o reconhecimento, sozinho, não basta para condenar.
+fim: LGPD, art. 4º, III: falta lei específica para os dados na segurança pública.
+fim: Convenção de Budapeste (adesão do Brasil em 2023): cooperação internacional contra crimes cibernéticos.
+@fim
+
+@embasamento e9
+p1: Lei Áurea (1888): o Brasil foi o último país das Américas a abolir a escravidão.
+p1: Lei 14.532/2023: pena aumentada quando a injúria racial ocorre em contexto de "descontração, diversão ou recreação" (racismo recreativo).
+p1: Mais de 50 mil registros de racismo e de injúria racial em 2025 (Anuário 2026).
+p2: Lei 7.716/1989 (Lei do Racismo); desde a Lei 14.532/2023, a injúria racial também é crime de racismo.
+p2: CF, art. 5º, XLII: a prática do racismo é crime inafiançável e imprescritível, sujeito à pena de reclusão.
+p2: STF, ADO 26 e MI 4733 (2019): homofobia e transfobia enquadradas como racismo.
+fim: Disque 100 recebe denúncias de discriminação racial.
+fim: Lei 10.639/2003: ensino de história e cultura afro-brasileira nas escolas.
+fim: CF, art. 3º, IV: promover o bem de todos, sem preconceito de raça ou cor, é objetivo da República.
+@fim
+
+@embasamento e10
+p1: Guarujá (SP), 2014: Fabiane Maria de Jesus foi linchada após um boato falso nas redes sociais.
+p1: Operação Escola Segura (Ministério da Justiça, 2023): monitorou ameaças de ataques a escolas e levou a prisões em vários estados, inclusive PE.
+p1: Lei 14.155/2021: fraude eletrônica, com pena de 4 a 8 anos, inclusive com vídeos falsos.
+p2: Guarujá, 2014: o caso virou símbolo de como um boato pode matar.
+p2: Abril de 2023: Ministério da Justiça e polícias estaduais monitoraram as ameaças às escolas em tempo real.
+p2: STF, Temas 533 e 987 (26/06/2025): as plataformas passaram a responder por conteúdo criminoso grave mesmo sem ordem judicial (Marco Civil, art. 19).
+fim: STF (2025): dever de remoção rápida de conteúdo criminoso grave pelas plataformas.
+fim: Marco Civil (Lei 12.965/2014) e Lei 14.155/2021: base legal para investigar e pedir dados.
+fim: Lei de Contravenções Penais, art. 41: provocar alarme anunciando perigo inexistente é contravenção.
+@fim

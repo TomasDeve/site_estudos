@@ -4,6 +4,7 @@
 #   impressao/Atualidades-Redacao-PCPE/blocos/extras.txt    (E1..E10, proposta X + esqueleto)
 #   tools/paragrafos-esqueletos-b.txt                        (esqueleto das Propostas B, que o PDF não tem)
 #   tools/paragrafos-modelos.txt                             (parágrafo modelo de cada parte, critérios Cebraspe)
+#   tools/paragrafos-embasamento.txt                         (dado, lei ou caso concreto de cada ponto, com fonte)
 # Entra só proposta que tem esqueleto (é dele que sai o repertório de cada parágrafo).
 # Rodar da raiz do repo:  py -3.14 -I tools/paragrafos-temas.py
 import json
@@ -129,6 +130,21 @@ for t in temas:
     m = modelos.get(t["id"])
     assert m and set(m) == {"intro", "p1", "p2", "fim"}, f"modelo incompleto: {t['id']}"
     t["modelo"] = m
+
+embasamento_txt = (RAIZ / "tools" / "paragrafos-embasamento.txt").read_text(encoding="utf-8")
+embasamentos = {}
+for tid, corpo in re.findall(r"^@embasamento (\S+)\n(.*?)\n@fim", embasamento_txt, flags=re.M | re.S):
+    por_parte: dict = {"p1": [], "p2": [], "fim": []}
+    for linha in corpo.splitlines():
+        chave, _, valor = linha.partition(":")
+        por_parte[chave.strip()].append(limpa(valor))
+    embasamentos[tid] = por_parte
+for t in temas:
+    b = embasamentos.get(t["id"])
+    assert b, f"sem embasamento: {t['id']}"
+    for parte in ("p1", "p2", "fim"):
+        assert len(b[parte]) == len(t["esqueleto"][parte]), f"{t['id']} {parte}: {len(b[parte])} x {len(t['esqueleto'][parte])}"
+    t["embasamento"] = b
 
 for t in temas:
     e = t["esqueleto"]

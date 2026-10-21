@@ -91,6 +91,23 @@
    "p1": "Inicialmente, cabe destacar que, apesar da queda recente, a violência letal continua alta no país, com mais de 40 mil mortes por ano. Além disso, ela não atinge todos da mesma forma: as vítimas são, em sua maioria, homens jovens e negros das periferias. A distribuição pelo território também é desigual, já que as cidades mais violentas do Brasil se concentram no Nordeste. Dessa forma, a redução é real, mas ainda não chegou aos grupos e às regiões mais vulneráveis.",
    "p2": "Posteriormente, vale dissertar sobre as políticas públicas que ajudaram a reduzir os homicídios. Em Pernambuco, o Pacto pela Vida, de 2007, criou metas por área e reuniões semanais entre polícias, Ministério Público e Justiça, e os homicídios caíram quase 40% em seis anos. Em Minas Gerais, o Fica Vivo! uniu oficinas para jovens dos bairros mais violentos a um policiamento focado nos autores de homicídio. Assim, gestão por resultados e prevenção mostram que é possível salvar vidas.",
    "fim": "Por fim, é preciso concentrar esforços onde a violência é maior. Cabe à União fortalecer o SUSP, com metas e dados compartilhados com os estados, e aos governos estaduais priorizar o Nordeste e a juventude negra, com inteligência contra as facções e prevenção nos bairros mais atingidos. Só assim a queda das mortes violentas chegará a todos, pois a segurança é um direito de todos, e não um privilégio de algumas regiões."
+  },
+  "embasamento": {
+   "p1": [
+    "Em 2025, o Brasil teve 40.775 mortes violentas intencionais, queda de 8,2%; a taxa de 19,1 por 100 mil é a menor desde 2012 (Anuário Brasileiro de Segurança Pública 2026).",
+    "90,8% das vítimas eram homens e 79,7% eram negras; 41,6% tinham de 18 a 29 anos (Anuário 2026).",
+    "A taxa do Nordeste (31,6 por 100 mil) é quase o triplo da do Sul (11,9); as 10 cidades mais violentas do país ficam no CE, na BA, em PE e na PB (Anuário 2026)."
+   ],
+   "p2": [
+    "Pacto pela Vida (PE, 2007): metas de redução de homicídios por área, monitoramento semanal e reuniões entre polícias, Ministério Público e Judiciário.",
+    "Os homicídios em PE caíram quase 40% entre 2007 e 2013 (avaliação da UFPE); o Banco Mundial citou a experiência em 2013.",
+    "Fica Vivo! (MG, 2002): nasceu no Morro das Pedras, em Belo Horizonte, com oficinas para jovens de 12 a 24 anos e polícia, MP e Judiciário focados nos autores de homicídio."
+   ],
+   "fim": [
+    "Lei 13.675/2018 (SUSP): metas, dados compartilhados e avaliação; a meta nacional de 16 homicídios por 100 mil até 2027 foi alcançada em 2025, com 15,4 (Anuário 2026).",
+    "O Anuário 2026 liga a concentração das mortes no Norte e no Nordeste à expansão das facções, que disputam territórios e rotas do tráfico.",
+    "CF, art. 6º: a segurança é direito social; art. 144: \"dever do Estado, direito e responsabilidade de todos\"."
+   ]
   }
  },
  {
@@ -181,6 +198,23 @@
    "p1": "Inicialmente, cabe destacar que a violência letal no Nordeste tem características próprias. A região reúne a maioria dos estados com as maiores taxas de mortes violentas e as cidades mais violentas do país, como o Cabo de Santo Agostinho, em Pernambuco. Além disso, as vítimas seguem um perfil definido: são, sobretudo, homens jovens e negros, moradores das periferias. Dessa forma, a violência nordestina não é aleatória, mas concentrada em territórios e grupos específicos.",
    "p2": "Posteriormente, vale dissertar sobre os fatores que explicam essa concentração. O primeiro é a disputa entre facções por territórios e rotas do tráfico, inclusive perto de portos, como o de Suape, em Pernambuco. O segundo é a ausência do Estado nos bairros mais pobres, onde a desigualdade deixa os jovens expostos ao recrutamento. Soma-se a isso a impunidade, já que apenas um em cada três homicídios é esclarecido no país. Assim, crime organizado, desigualdade e impunidade se reforçam.",
    "fim": "Por fim, é preciso adotar estratégias adequadas à realidade regional. Os estados nordestinos podem investir em gestão por resultados, com metas e dados, como fez Pernambuco no Pacto pela Vida, que reduziu os homicídios em quase 40%. Ao mesmo tempo, polícias, Ministério Público e Justiça devem atuar de forma integrada, como prevê o SUSP, com inteligência voltada às facções. Com prevenção nos territórios mais violentos, a queda da violência poderá chegar a todos."
+  },
+  "embasamento": {
+   "p1": [
+    "Nordeste: 31,6 mortes violentas por 100 mil, contra 11,9 no Sul; 7 das 10 unidades da Federação com as maiores taxas estão na região (Anuário 2026).",
+    "90,8% das vítimas de mortes violentas eram homens e 79,7% eram negras (Anuário 2026).",
+    "O Cabo de Santo Agostinho (PE) foi a 8ª cidade mais violenta do país em 2025, com 65,1 mortes por 100 mil (Anuário 2026)."
+   ],
+   "p2": [
+    "O Anuário 2026 associa a violência no Norte e no Nordeste à \"captura de territórios, de economias e de modos de vida\" pelas facções; o Cabo fica a cerca de 20 km do Porto de Suape.",
+    "Os jovens de 18 a 29 anos são 41,6% das vítimas de mortes violentas (Anuário 2026); evasão escolar e desemprego estão entre os fatores de risco.",
+    "Só cerca de 36% dos homicídios são esclarecidos no Brasil (Instituto Sou da Paz, Onde Mora a Impunidade, 2025)."
+   ],
+   "fim": [
+    "Pacto pela Vida: queda de quase 40% dos homicídios em PE entre 2007 e 2013, com metas por área e monitoramento semanal (UFPE; Banco Mundial).",
+    "Lei 15.358/2026 (Lei Antifacção), art. 29: Banco Nacional de Dados de organizações criminosas ultraviolentas, integrado às bases estaduais.",
+    "Fica Vivo! (MG, 2002) e Estado Presente (ES, 2011) levaram prevenção e policiamento juntos aos bairros mais violentos; em PE, o Juntos pela Segurança (2023) tem eixo de prevenção."
+   ]
   }
  },
  {
@@ -275,6 +309,23 @@
    "p1": "Inicialmente, cabe destacar que a baixa resolução de crimes tem causas estruturais. Em primeiro lugar, faltam policiais, e cada equipe acumula um número excessivo de inquéritos. Em segundo lugar, a perícia é insuficiente, e o local do crime muitas vezes não é preservado, o que destrói provas importantes. Além disso, o medo faz as testemunhas se calarem, sobretudo onde há facções. Dessa forma, o crime fica sem autor, e a impunidade estimula novos delitos.",
    "p2": "Posteriormente, vale dissertar sobre os exemplos de investigação eficaz já usados no Brasil. O banco nacional de DNA compara vestígios de locais de crime em todo o país e identifica o autor sem depender de testemunhas. Já as delegacias especializadas em homicídios contam com equipes e perícia exclusivas para os crimes contra a vida. Em Pernambuco, o Pacto pela Vida reuniu polícias, Ministério Público e Justiça em encontros semanais com metas. Assim, tecnologia e integração elevam o esclarecimento.",
    "fim": "Por fim, é preciso fortalecer a investigação criminal com medidas concretas. Cabe aos governos estaduais ampliar o efetivo e a perícia da Polícia Civil, com concursos regulares, e investir em tecnologia, como laboratórios e bancos de dados integrados. Também é necessário garantir que a prova seja bem guardada, para que tenha valor no processo. Afinal, investigar bem pune o culpado, protege o inocente e devolve à população a confiança na polícia."
+  },
+  "embasamento": {
+   "p1": [
+    "As polícias civis têm 96,9 mil policiais, 55% dos 175,4 mil previstos em lei (Fórum Brasileiro de Segurança Pública, ago. 2026); em Tamandaré (PE), o MPPE achou só 9 servidores na delegacia e atraso nos inquéritos (jul. 2026).",
+    "CPP, arts. 158-A a 158-F (Pacote Anticrime, Lei 13.964/2019): o vestígio precisa de cadeia de custódia, da coleta ao descarte, para valer como prova.",
+    "Lei 9.807/1999: programas de proteção a vítimas e testemunhas ameaçadas, porque, sem testemunha, muitos homicídios ficam sem autor."
+   ],
+   "p2": [
+    "Lei 12.654/2012: coleta de perfil genético para identificação criminal, que alimenta a Rede Integrada de Bancos de Perfis Genéticos e cruza vestígios de todo o país.",
+    "Em PE, o Departamento de Homicídios e Proteção à Pessoa (DHPP) da Polícia Civil concentra a investigação dos crimes contra a vida, com equipes exclusivas.",
+    "Pacto pela Vida: metas por área e reuniões semanais entre polícias, MP e Judiciário; queda de quase 40% dos homicídios em PE entre 2007 e 2013 (UFPE)."
+   ],
+   "fim": [
+    "O estudo do FBSP (ago. 2026) liga o déficit das polícias civis a poucos concursos; a Lei 14.735/2023 (Lei Orgânica Nacional das Polícias Civis) padronizou carreira e garantias.",
+    "CPP, art. 158-A: cadeia de custódia; prova mal guardada ou obtida sem ordem judicial pode anular a investigação.",
+    "CF, art. 144, § 4º: às polícias civis cabem as funções de polícia judiciária e a apuração das infrações penais."
+   ]
   }
  },
  {
@@ -365,6 +416,23 @@
    "p1": "Inicialmente, cabe destacar que a impunidade traz consequências para toda a sociedade. Quando o crime fica sem resposta, cresce a sensação de que ele compensa: quem o cometeu volta a agir, e outros são estimulados a fazer o mesmo. Para o trabalho policial, o efeito também é grave, porque a população deixa de denunciar e as testemunhas se calam, o que torna o crime seguinte ainda mais difícil de esclarecer. Dessa forma, a impunidade alimenta a si mesma.",
    "p2": "Posteriormente, vale dissertar sobre a relação entre a confiança da população e o esclarecimento de crimes. Testemunhas, denúncias anônimas e informações sobre o território só chegam à polícia quando as pessoas confiam nas instituições. Onde há facção, por outro lado, o medo silencia a comunidade, e o crime fica sem autor. Trata-se de um ciclo: cada crime esclarecido gera confiança, e essa confiança traz as informações que ajudam a esclarecer os próximos casos.",
    "fim": "Por fim, é preciso reconhecer o papel central da Polícia Civil na redução da impunidade. Como polícia judiciária, ela deve investigar com qualidade, apoiada em perícia e em prova técnica bem guardada. Delegacias especializadas, o banco nacional de DNA e um atendimento que acolha a vítima e proteja a testemunha completam esse trabalho. Afinal, investigar bem pune o culpado, protege o inocente e devolve a confiança da população."
+  },
+  "embasamento": {
+   "p1": [
+    "Em 2025, o Brasil teve 2,26 milhões de estelionatos e só 4.819 presos por esse crime; para o FBSP, na prática, o golpe \"compensa\" (Anuário 2026).",
+    "As medidas protetivas foram descumpridas 132.025 vezes em 2025 (+16,7%): quando a punição não vem, a vítima desacredita da denúncia (Anuário 2026).",
+    "Só cerca de 36% dos homicídios são esclarecidos (Instituto Sou da Paz, 2025): nos outros, o autor segue livre."
+   ],
+   "p2": [
+    "Canais anônimos (disque-denúncia) e a Lei 9.807/1999, que protege vítimas e testemunhas ameaçadas, existem para vencer o medo de colaborar.",
+    "O Anuário 2026 associa a violência no Norte e no Nordeste à \"captura de territórios\" pelas facções, que impõem o silêncio aos moradores.",
+    "CF, art. 144: a segurança é \"responsabilidade de todos\"; a colaboração da população faz parte do sistema de segurança pública."
+   ],
+   "fim": [
+    "CF, art. 144, § 4º, e Lei 12.830/2013: a investigação conduzida pelo delegado é função de natureza jurídica, essencial e exclusiva de Estado.",
+    "Lei 12.654/2012 (banco de DNA) e Lei 14.541/2023 (delegacias da mulher 24 horas) são estruturas que aumentam o esclarecimento e o acolhimento.",
+    "Só 36% dos homicídios esclarecidos (Sou da Paz, 2025): cada ponto a mais nessa taxa é menos impunidade."
+   ]
   }
  },
  {
@@ -450,6 +518,23 @@
    "p1": "Inicialmente, cabe destacar que a troca de dados entre os órgãos de segurança enfrenta desafios técnicos e jurídicos. No plano técnico, cada estado usa sistemas próprios, que não se comunicam, e registra os crimes à sua maneira, o que impede comparações. No plano jurídico, falta uma lei de proteção de dados voltada à segurança pública, o que gera insegurança sobre o que pode ser compartilhado. Assim, o criminoso escapa pelas brechas entre um estado e outro.",
    "p2": "Posteriormente, vale dissertar sobre os modelos de integração já existentes no Brasil. O principal é o Sistema Único de Segurança Pública, o SUSP, criado em 2018, que determina que União, estados e municípios atuem juntos e compartilhem dados. Outro exemplo é o Córtex, do Ministério da Justiça, que liga câmeras de leitura de placas a bancos de dados de vários estados. Esses modelos já permitiram até a captura de um foragido de Pernambuco no Ceará. Assim, integrar é possível.",
    "fim": "Por fim, é preciso apontar os impactos da integração dos sistemas de informação. Com dados compartilhados, as polícias localizam foragidos e veículos roubados com mais rapidez, esclarecem mais crimes ao cruzar informações e conseguem atingir facções que agem em vários estados ao mesmo tempo. Para que esses ganhos se sustentem, a integração deve vir acompanhada de controle de acesso e de proteção dos dados pessoais, unindo eficiência e respeito aos direitos."
+  },
+  "embasamento": {
+   "p1": [
+    "Cada estado contrata a sua própria plataforma de boletim de ocorrência; o Sinesp, sistema nacional ligado ao SUSP (Lei 13.675/2018), busca integrar esses dados.",
+    "O Anuário 2026 aponta que alguns estados quase não usam a categoria \"feminicídio\" ao registrar mortes de mulheres, o que distorce a comparação.",
+    "LGPD (Lei 13.709/2018), art. 4º, III: a lei não se aplica à segurança pública e manda que o tema tenha lei específica, ainda não aprovada."
+   ],
+   "p2": [
+    "Lei 13.675/2018: SUSP e Sinesp; foi o exemplo esperado no padrão de resposta oficial da prova de Escrivão da PC PE de 2024 (Cebraspe).",
+    "Córtex (Ministério da Justiça): integra câmeras de leitura de placas e bases de vários estados; um veículo roubado gera alerta em tempo real.",
+    "Prova da PC PE de 2024: um condenado por estelionato, foragido da Justiça de PE desde 2020, foi capturado no Ceará após troca de informações entre as polícias civis."
+   ],
+   "fim": [
+    "BNMP (Banco Nacional de Monitoramento de Prisões, do CNJ): reúne os mandados de prisão do país, e o foragido aparece em qualquer abordagem.",
+    "Lei 15.358/2026, art. 29: Banco Nacional de Dados de Organizações Criminosas Ultraviolentas, integrado às bases estaduais.",
+    "EC 115/2022: a proteção de dados pessoais é direito fundamental (CF, art. 5º, LXXIX)."
+   ]
   }
  },
  {
@@ -535,6 +620,23 @@
    "p1": "Inicialmente, cabe destacar que inteligência e investigação são atividades diferentes, mas complementares. A investigação criminal reúne provas sobre um crime específico para o processo penal, com o objetivo de responsabilizar o autor. A inteligência, por sua vez, produz conhecimento para apoiar decisões: tem caráter preventivo e estratégico, antecipa ameaças e orienta ações. Desse modo, a inteligência indica onde agir, e a investigação produz a prova que leva à condenação.",
    "p2": "Posteriormente, vale dissertar sobre as contribuições da inteligência para o combate às facções. Em primeiro lugar, ela mapeia a estrutura desses grupos: quem lidera, quem financia e por onde passa a droga. Em segundo lugar, permite seguir o dinheiro do crime, como na Operação Carbono Oculto, de 2025, que atingiu uma facção infiltrada no setor de combustíveis. Além disso, o cruzamento de dados entre estados ajuda a enfrentar facções que agem em todo o país.",
    "fim": "Por fim, é preciso respeitar limites legais no uso de dados pela inteligência policial. A Lei Geral de Proteção de Dados não se aplica à segurança pública, e ainda falta uma lei própria para essa área, o que exige cautela redobrada. Por isso, o acesso às informações deve ser controlado, e os dados devem ser usados apenas para a finalidade prevista em lei. Somente com regras claras a inteligência une eficiência no combate ao crime e respeito aos direitos."
+  },
+  "embasamento": {
+   "p1": [
+    "CF, art. 144, § 4º, e CPP, art. 4º: a polícia judiciária apura as infrações penais e a sua autoria, produzindo prova para o processo.",
+    "Decreto 3.695/2000: criou o Subsistema de Inteligência de Segurança Pública (SISP), voltado a produzir conhecimento para decisões.",
+    "Lei 12.850/2013: ação controlada e infiltração de agentes, técnicas em que a inteligência orienta e a investigação transforma em prova."
+   ],
+   "p2": [
+    "Lei 12.850/2013: organização criminosa reúne 4 ou mais pessoas, com estrutura ordenada e divisão de tarefas; mapear essa estrutura é o primeiro passo.",
+    "Operação Carbono Oculto (ago. 2025): Receita Federal, PF e MPSP revelaram facção no setor de combustíveis usando fintechs e fundos para lavar dinheiro.",
+    "Lei 15.358/2026, art. 29: banco nacional de dados das organizações criminosas ultraviolentas, integrado aos bancos estaduais."
+   ],
+   "fim": [
+    "LGPD, art. 4º, III: o uso de dados para segurança pública e investigação ficou para lei específica, ainda não aprovada.",
+    "EC 115/2022 (CF, art. 5º, LXXIX): proteção de dados é direito fundamental; o acesso precisa de registro e auditoria.",
+    "Lei 13.869/2019 (abuso de autoridade), art. 25: obter prova por meio manifestamente ilícito é crime."
+   ]
   }
  },
  {
@@ -625,6 +727,23 @@
    "p1": "Inicialmente, cabe destacar que o financiamento da segurança pública recai, sobretudo, sobre os estados, que pagam 8 de cada 10 reais gastos na área, pois mantêm as polícias civil e militar. A União participa com as polícias federais e com o Fundo Nacional de Segurança Pública, abastecido em parte pelas loterias. Além disso, ao contrário da saúde e da educação, a segurança não tem gasto mínimo garantido na Constituição. Assim, o dinheiro depende das escolhas de cada governo.",
    "p2": "Posteriormente, vale dissertar sobre os obstáculos ao uso eficiente desses recursos. O principal é que quase todo o orçamento fica preso à folha de pagamento, e sobra pouco para tecnologia, perícia e prevenção. Outro problema é a instabilidade: a verba federal pode ser bloqueada, e cada governo costuma trocar o programa do anterior. Além disso, raramente se avalia se o gasto realmente reduziu o crime. Dessa forma, gasta-se muito, mas sem garantia de resultado.",
    "fim": "Por fim, é preciso garantir recursos estáveis e bem aplicados. Cabe à União fazer repasses regulares aos estados, vinculados a metas de redução da violência, e aos governos estaduais priorizar inteligência, perícia e tecnologia. Os bens tomados das facções, como prevê a Lei Antifacção, de 2026, também podem reforçar os fundos de segurança. Além disso, programas que deram certo devem virar política de Estado, pois não basta gastar mais: é preciso gastar melhor."
+  },
+  "embasamento": {
+   "p1": [
+    "Em 2025, o Brasil gastou R$ 163,1 bilhões com segurança: estados R$ 131,2 bi (80%), União R$ 18 bi e municípios R$ 13,7 bi (Anuário 2026).",
+    "CF: saúde (art. 198) e educação (art. 212) têm gasto mínimo garantido; a segurança pública (art. 144) não tem.",
+    "Lei 13.756/2018: o Fundo Nacional de Segurança Pública recebe parte da arrecadação das loterias; gastou R$ 2,2 bilhões em 2025 (Anuário 2026)."
+   ],
+   "p2": [
+    "Em 2022, a segurança consumiu 1,26% do PIB, cerca de um terço do gasto com saúde pública (Anuário 2023, citado na prova da PC PE de 2024).",
+    "O Pacto pela Vida perdeu força a partir de 2014, e PE chegou ao pior ano em 2017, com 5.427 mortes: retrato da descontinuidade.",
+    "Lei 13.675/2018 (SUSP): a política nacional exige metas e avaliação de resultados das ações de segurança."
+   ],
+   "fim": [
+    "PEC 18/2025 (PEC da Segurança): leva o SUSP para a Constituição e discute o financiamento; aprovada na Câmara, estava no Senado em outubro de 2026 (confira antes da prova).",
+    "Lei 15.358/2026: os bens perdidos pelas facções vão para os fundos de segurança e podem equipar a polícia.",
+    "Pacto pela Vida: queda de quase 40% dos homicídios em PE entre 2007 e 2013, enquanto teve continuidade (UFPE)."
+   ]
   }
  },
  {
@@ -715,6 +834,23 @@
    "p1": "Inicialmente, cabe destacar que atingir o patrimônio das organizações criminosas é essencial para enfraquecê-las. O dinheiro sustenta o crime: compra armas, corrompe agentes públicos e financia o recrutamento de jovens. Por isso, prender apenas o integrante da ponta não desmonta a facção, que logo o substitui. Um exemplo é a Operação Carbono Oculto, de 2025, que atingiu o dinheiro de uma facção infiltrada no setor de combustíveis. Assim, a asfixia financeira atinge a estrutura do grupo.",
    "p2": "Posteriormente, vale dissertar sobre os mecanismos legais de perda e destinação desses bens. A Lei Antifacção permite que o juiz decrete a perda de bens de origem claramente ilícita ligados a facções ultraviolentas, mesmo sem condenação penal. O produto desse patrimônio vai para os fundos de segurança pública, o que transforma o dinheiro do crime em investimento contra ele. Para isso, porém, é preciso rastrear o patrimônio, o que exige integração entre polícias, Ministério Público e Receita.",
    "fim": "Por fim, é preciso garantir transparência e respeito aos direitos nesse processo. A própria lei determina que o uso dos bens seja supervisionado pelo Conselho Nacional de Justiça e pelo Conselho Nacional do Ministério Público, o que permite fiscalizar o destino do dinheiro. Além disso, em caso de absolvição, os valores devem ser devolvidos com juros, protegendo quem foi acusado injustamente. Assim, o dinheiro do crime financia a segurança sem ferir o devido processo legal."
+  },
+  "embasamento": {
+   "p1": [
+    "Lei 12.850/2013: a organização criminosa tem estrutura e divisão de tarefas, e o integrante preso é logo substituído.",
+    "Lei 9.613/1998 (lavagem de dinheiro): o crime precisa dar aparência legal ao lucro para conseguir usá-lo.",
+    "Operação Carbono Oculto (ago. 2025): Receita, PF e MPSP atingiram facção infiltrada na cadeia de combustíveis, com fintechs e fundos de investimento."
+   ],
+   "p2": [
+    "Lei 15.358/2026: perdimento extraordinário de bens de origem claramente ilícita, mesmo sem condenação, e ação civil de perdimento imprescritível.",
+    "Lei 15.358/2026: o produto dos bens vai para os fundos de segurança pública e pode ser usado no reaparelhamento policial.",
+    "O Coaf e a Receita Federal produzem inteligência financeira (Lei 9.613/1998); a Carbono Oculto juntou Receita, PF e MPSP."
+   ],
+   "fim": [
+    "Lei 15.358/2026: a destinação dos bens é supervisionada pelo Conselho Nacional de Justiça e pelo Conselho Nacional do Ministério Público.",
+    "Lei 15.358/2026: em caso de absolvição, os valores voltam com juros; a lei já é questionada no STF (confira antes da prova).",
+    "CF, art. 5º, LIV: ninguém será privado da liberdade ou de seus bens sem o devido processo legal."
+   ]
   }
  },
  {
@@ -804,6 +940,23 @@
    "p1": "Inicialmente, cabe destacar que as facções criminosas deixaram de atuar apenas no tráfico de drogas. Hoje, elas dominam bairros, cobram \"taxas\" de comerciantes e controlam serviços como gás, internet e transporte, impondo regras aos moradores. Além disso, lavam dinheiro em empresas legais, corrompem agentes públicos e recrutam jovens nas periferias, muitas vezes comandando o crime de dentro dos presídios. Dessa forma, ocupam o espaço que deveria ser do Estado.",
    "p2": "Posteriormente, vale dissertar sobre as estratégias eficazes de enfrentamento ao crime organizado. A Operação Carbono Oculto, de 2025, reuniu Polícia Federal, Receita e Ministério Público para atingir o dinheiro de uma facção infiltrada no setor de combustíveis, provando que seguir o dinheiro alcança a estrutura, e não só a ponta. Outro exemplo são os presídios federais de segurança máxima, que isolam as lideranças. Assim, inteligência e isolamento enfraquecem as facções.",
    "fim": "Por fim, é preciso adotar medidas para que o Estado retome os territórios dominados. Polícias, Ministério Público e Receita devem atuar de forma integrada, com foco no dinheiro das facções, aplicando a Lei Antifacção para tomar seus bens e reinvesti-los na segurança. Contudo, operações pontuais não são suficientes: o poder público precisa permanecer nesses bairros com escola, saúde e policiamento. Afinal, onde o Estado não está, a facção ocupa o vazio."
+  },
+  "embasamento": {
+   "p1": [
+    "Lei 15.358/2026: criou o crime de domínio social estruturado (facção que usa violência para controlar territórios), com pena de 20 a 40 anos, hediondo.",
+    "Operação Carbono Oculto (2025): facção infiltrada no setor de combustíveis e usando fintechs para lavar dinheiro.",
+    "As duas maiores facções do país surgiram dentro de presídios (RJ, no fim dos anos 1970, e SP, em 1993); o Brasil tem 964.668 presos (Anuário 2026)."
+   ],
+   "p2": [
+    "Operação Carbono Oculto (ago. 2025): PF, Receita e MPSP atingiram o caixa da facção na cadeia de combustíveis, exemplo de asfixia financeira.",
+    "Lei 15.358/2026: bloqueio de bens e perdimento, com o dinheiro indo para os fundos de segurança.",
+    "Sistema Penitenciário Federal: 5 penitenciárias de segurança máxima (Catanduvas, Campo Grande, Porto Velho, Mossoró e Brasília) que isolam as lideranças."
+   ],
+   "fim": [
+    "Lei 9.613/1998 e Coaf: inteligência financeira; a Lei 15.358/2026 cria o banco nacional de dados das facções (art. 29).",
+    "Lei 15.358/2026: os bens perdidos pelas facções equipam a polícia por meio dos fundos de segurança.",
+    "Estado Presente (ES, 2011) e Fica Vivo! (MG, 2002) uniram policiamento e serviços sociais nos bairros mais violentos."
+   ]
   }
  },
  {
@@ -889,6 +1042,23 @@
    "p1": "Inicialmente, cabe destacar que a circulação de armas de fogo está diretamente ligada à violência. A maior parte dos homicídios no Brasil é cometida com esse tipo de arma, e, quanto mais armas em circulação, mais letais se tornam brigas, assaltos e conflitos. Além disso, as armas dão às facções poder para dominar territórios e enfrentar a polícia. Dessa forma, cada arma que chega às mãos erradas aumenta o risco para a população e para os agentes de segurança.",
    "p2": "Posteriormente, vale dissertar sobre as formas pelas quais as armas chegam às organizações criminosas. Parte delas tem origem no mercado legal e é desviada por meio de furtos, roubos e revendas irregulares. Outra parte entra pelo contrabando e pelo tráfico, que usam as mesmas rotas do crime organizado. O problema se agrava porque, sem rastreamento, a arma apreendida não revela de onde veio nem quem a desviou. Assim, o crime se reabastece com facilidade.",
    "fim": "Por fim, é preciso adotar medidas de controle e de rastreamento para reduzir esse fluxo. Cabe às polícias rastrear toda arma apreendida, a fim de identificar as rotas e os responsáveis pelo desvio. Também é necessário fiscalizar registros e estoques, como determina o Estatuto do Desarmamento, de 2003, com dados integrados entre as polícias, como prevê o SUSP. Afinal, menos armas nas mãos do crime significam menos mortes, para a população e para o policial."
+  },
+  "embasamento": {
+   "p1": [
+    "Atlas da Violência 2025 (Ipea e FBSP): 71,6% das mortes violentas de 2023 foram cometidas com arma de fogo, cerca de 7 em cada 10.",
+    "Em 2025, as polícias estaduais apreenderam 108.786 armas de fogo; PE apreendeu 6.396 (+6,6%) (Anuário 2026).",
+    "Sinarm: de 637,9 mil armas com registro ativo em 2017 para 2,1 milhões em 2025 (+240%); cerca de 1 milhão de CACs com 1,6 milhão de armas (Anuário 2026)."
+   ],
+   "p2": [
+    "Decreto 11.615/2023: o registro e a fiscalização das armas de CACs passaram do Exército para a Polícia Federal, que assumiu em julho de 2025.",
+    "Estatuto do Desarmamento (Lei 10.826/2003), art. 18: tráfico internacional de arma de fogo, com pena de 8 a 16 anos (Pacote Anticrime, 2019).",
+    "Estatuto do Desarmamento: toda arma registrada deve estar no Sinarm, da Polícia Federal; rastrear a arma apreendida depende desse cadastro."
+   ],
+   "fim": [
+    "Sinarm (PF) e Sigma (Exército): cruzar a arma apreendida com o registro revela a origem do desvio.",
+    "Lei 10.826/2003 e Decreto 11.615/2023, que endureceu as regras; o mercado legal se estabilizou (+0,8% em 2025) (Anuário 2026).",
+    "PE apreendeu 6.396 armas em 2025 (Anuário 2026): cada uma é uma arma a menos nas mãos do crime."
+   ]
   }
  },
  {
@@ -988,6 +1158,23 @@
    "p1": "Inicialmente, cabe destacar que o feminicídio tem características que o diferenciam de outros homicídios. Trata-se de um crime cometido, em geral, dentro de casa: 8 em cada 10 casos são praticados pelo parceiro ou ex-parceiro da vítima. Além disso, raramente é um ato isolado, mas o fim de um ciclo de ciúme, ameaças e agressões, muitas vezes já denunciado. Preocupa também o aumento desse crime enquanto os homicídios caíam. Assim, trata-se de uma morte anunciada.",
    "p2": "Posteriormente, vale dissertar sobre as iniciativas de proteção às mulheres já implementadas. A Casa da Mulher Brasileira reúne, no mesmo prédio, delegacia, Justiça, Ministério Público, Defensoria e apoio psicológico, de modo que a vítima conta a sua história uma única vez e sai com a medida protetiva pedida. Já a Patrulha Maria da Penha visita as mulheres protegidas para fiscalizar o cumprimento dessas medidas. Esses exemplos mostram que acompanhar a vítima salva vidas.",
    "fim": "Por fim, é preciso tornar efetiva a proteção às mulheres em situação de violência. Cabe às polícias fiscalizar as medidas protetivas e investigar com rapidez quem as descumpre, e aos estados manter delegacias da mulher abertas 24 horas, com policiais preparados para acolher. Além disso, as escolas devem educar contra o machismo, pois a punição chega tarde e a prevenção salva. Afinal, interromper o ciclo da violência cedo é a melhor forma de evitar o feminicídio."
+  },
+  "embasamento": {
+   "p1": [
+    "1.571 feminicídios em 2025 (+4%), enquanto os homicídios caíram; 44,4% das mulheres assassinadas foram mortas por razões de gênero, o maior percentual desde 2015 (Anuário 2026).",
+    "60,9% dos feminicídios foram cometidos pelo parceiro e 18,9% pelo ex-parceiro (Anuário 2026).",
+    "1 em cada 9 vítimas de feminicídio tinha medida protetiva ativa; as medidas foram descumpridas 132.025 vezes em 2025 (Anuário 2026)."
+   ],
+   "p2": [
+    "Casa da Mulher Brasileira (programa federal): delegacia, juizado, MP, Defensoria e apoio psicossocial no mesmo prédio.",
+    "Lei Maria da Penha (Lei 11.340/2006), art. 18: o juiz decide a medida protetiva em até 48 horas.",
+    "Patrulha Maria da Penha: visitas às mulheres protegidas; a Lei 14.149/2021 criou o Formulário Nacional de Avaliação de Risco."
+   ],
+   "fim": [
+    "Lei Maria da Penha, art. 24-A: descumprir medida protetiva é crime; foram 132.025 descumprimentos em 2025 (+16,7%) (Anuário 2026).",
+    "Lei 14.541/2023: delegacias da mulher funcionando 24 horas, inclusive em feriados e fins de semana.",
+    "Lei Maria da Penha, art. 8º, IX: currículos escolares com conteúdos sobre equidade de gênero e violência doméstica."
+   ]
   }
  },
  {
@@ -1083,6 +1270,23 @@
    "p1": "Inicialmente, cabe destacar que diversos obstáculos levam as mulheres a não denunciar a violência sofrida. O primeiro é o medo do agressor, somado à dependência financeira e emocional, sobretudo quando há filhos. O segundo é o receio de não ser acreditada e de sofrer nova violência no próprio atendimento, a chamada revitimização. Dessa forma, muitas vítimas permanecem em silêncio, e o ciclo de agressões continua até se tornar, em alguns casos, um feminicídio.",
    "p2": "Posteriormente, vale dissertar sobre a importância de um atendimento policial especializado e acolhedor. O modo como a mulher é recebida na delegacia pode decidir se ela seguirá ou não com a denúncia. Por isso, uma lei de 2023 determinou que as Delegacias da Mulher funcionem 24 horas, inclusive em feriados, e a Casa da Mulher Brasileira permite que a vítima conte a sua história uma única vez. Além disso, a avaliação de risco no atendimento prioriza os casos mais graves.",
    "fim": "Por fim, é preciso destacar o papel da Polícia Civil na prevenção do feminicídio. Cabe a ela acolher a vítima sem julgamentos, registrar a ocorrência e pedir a medida protetiva, que o juiz deve analisar em até 48 horas. Também é seu dever investigar com rapidez as ameaças e o descumprimento dessas medidas, que ainda é frequente. Afinal, o feminicídio é uma morte anunciada, e interromper o ciclo da violência cedo salva vidas."
+  },
+  "embasamento": {
+   "p1": [
+    "60,9% dos feminicídios foram cometidos pelo parceiro (Anuário 2026); a Lei 14.674/2023 incluiu na Lei Maria da Penha (art. 23, VI) o auxílio-aluguel, por até 6 meses, para a vítima afastada do lar.",
+    "Lei Maria da Penha, art. 23: o juiz pode adotar medidas que protegem também os filhos, como a matrícula em escola perto da nova casa.",
+    "Lei 14.321/2022: criou o crime de violência institucional, que pune submeter a vítima a procedimentos que a façam reviver a violência."
+   ],
+   "p2": [
+    "Lei Maria da Penha, art. 10-A: atendimento policial especializado, preferencialmente por mulheres, sem revitimização.",
+    "Lei 14.541/2023 (delegacias da mulher 24 horas) e Casa da Mulher Brasileira (atendimento integrado em um só lugar).",
+    "Lei 14.149/2021: Formulário Nacional de Avaliação de Risco, aplicado no atendimento à vítima."
+   ],
+   "fim": [
+    "Lei Maria da Penha, art. 12, III, e art. 18: a polícia envia o pedido em 48 horas, e o juiz decide em 48 horas.",
+    "Lei Maria da Penha, art. 24-A: descumprir medida protetiva é crime; foram 132.025 descumprimentos em 2025 (Anuário 2026).",
+    "1 em cada 9 vítimas de feminicídio já tinha medida protetiva (Anuário 2026): a morte era anunciada."
+   ]
   }
  },
  {
@@ -1178,6 +1382,23 @@
    "p1": "Inicialmente, cabe destacar que o crescimento dos golpes digitais acompanha a mudança nos hábitos da população. A vida financeira foi para o celular, com Pix, aplicativos de banco e redes sociais, o que criou novas oportunidades para o crime. Além disso, o golpista convence a própria vítima a entregar senhas ou fazer transferências, prática chamada de engenharia social, e corre pouco risco. Mais recentemente, a inteligência artificial tornou os golpes mais convincentes.",
    "p2": "Posteriormente, vale dissertar sobre as dificuldades enfrentadas pela polícia na investigação desses crimes. O autor costuma agir de longe, às vezes de outro estado ou de dentro de presídios, e espalha o dinheiro em contas de \"laranjas\" em poucos minutos. Além disso, a investigação depende de dados de bancos e plataformas, que exigem ordem judicial e demoram a chegar. Faltam também delegacias especializadas e peritos em informática. Por isso, há muitos golpes e poucos presos.",
    "fim": "Por fim, é preciso combinar prevenção e repressão. Cabe aos estados criar delegacias de crimes cibernéticos e investir em perícia digital, enquanto bancos e plataformas devem bloquear contas suspeitas, remover perfis falsos e devolver o dinheiro com rapidez, como permite o mecanismo de devolução do Pix. Além disso, campanhas de educação digital, sobretudo para os idosos, são essenciais, pois o melhor golpe é aquele que não acontece."
+  },
+  "embasamento": {
+   "p1": [
+    "2,26 milhões de estelionatos em 2025, cerca de 258 por hora, alta de 429,8% desde 2018 (Anuário 2026).",
+    "Só 4.819 presos por estelionato para mais de 2 milhões de golpes em 2025 (Anuário 2026).",
+    "Golpes com voz e vídeo falsos (deepfakes) imitam parentes e funcionários de banco; o estelionato virou o principal crime contra o patrimônio (Anuário 2026)."
+   ],
+   "p2": [
+    "Lei 14.155/2021: nos golpes por transferência, a competência passou a ser o domicílio da vítima (CPP, art. 70, § 4º), para não travar a investigação à distância.",
+    "Marco Civil da Internet (Lei 12.965/2014): registros de conexão guardados por 1 ano e de aplicações por 6 meses, entregues com ordem judicial.",
+    "Só 63.771 processos penais e 4.819 presos para 2,26 milhões de estelionatos em 2025 (Anuário 2026)."
+   ],
+   "fim": [
+    "Convenção de Budapeste, à qual o Brasil aderiu em 2023: cooperação internacional contra crimes cibernéticos.",
+    "MED do Pix (Banco Central): bloqueio e devolução de valores do golpe; Celular Seguro (2023): bloqueia linha, aparelho e apps de banco de uma vez.",
+    "Lei 14.155/2021: a pena da fraude eletrônica aumenta de 1/3 ao dobro quando a vítima é idosa ou vulnerável (CP, art. 171, § 4º)."
+   ]
   }
  },
  {
@@ -1273,6 +1494,23 @@
    "p1": "Inicialmente, cabe destacar que crianças e adolescentes estão expostos a diversos riscos na internet. O mais grave é o aliciamento por adultos, que se aproximam por meio de perfis falsos, e a circulação de material de abuso sexual infantil. Há também o \"cyberbullying\", que passou a ser crime em 2024, além de golpes e conteúdos impróprios para a idade. Vale ressaltar que os casos registrados são apenas uma pequena amostra do que circula na rede, o que torna o problema maior.",
    "p2": "Posteriormente, vale dissertar sobre as responsabilidades de famílias, escolas e plataformas digitais. Às famílias cabe acompanhar o uso da internet, com as ferramentas de supervisão previstas no ECA Digital, e manter o diálogo com os filhos. Às escolas cabe promover a educação digital, combater o \"cyberbullying\" e observar sinais de abuso. Já as plataformas devem verificar a idade dos usuários e impedir o acesso a conteúdos ilegais. Assim, a proteção é uma tarefa compartilhada.",
    "fim": "Por fim, é preciso destacar o papel da investigação policial na proteção desse público. Cabe às polícias manter delegacias de crimes cibernéticos e perícia digital para identificar quem alicia e quem compartilha material de abuso. A cooperação internacional também é decisiva, como na Operação Impregnator, de 2024, em que a Polícia Federal, após alerta da Interpol, prendeu um suspeito. Afinal, a proteção integral do ECA vale também na internet."
+  },
+  "embasamento": {
+   "p1": [
+    "4.063 registros de material de abuso sexual infantil (+25,3%) e 2.464 de aliciamento em 2025 (Anuário 2026); o ECA, art. 241-D, pune o aliciamento por meio de comunicação.",
+    "Lei 14.811/2024: \"cyberbullying\" (intimidação sistemática virtual) no CP, art. 146-A; foram 677 registros em 2025 (+61,4%) (Anuário 2026).",
+    "Para o FBSP, os registros são \"uma pequena amostra do que efetivamente circula na internet\" (Anuário 2026)."
+   ],
+   "p2": [
+    "Lei 15.211/2025 (ECA Digital), em vigor desde março de 2026: ferramentas de supervisão parental obrigatórias nas plataformas.",
+    "Lei 13.185/2015: Programa de Combate à Intimidação Sistemática; a Lei 14.811/2024 prevê medidas de proteção nas escolas.",
+    "ECA Digital: verificação de idade confiável e bloqueio de conteúdo ilegal; o STF (2025) ampliou a responsabilidade das plataformas (Marco Civil, art. 19)."
+   ],
+   "fim": [
+    "ECA, arts. 240 e 241-A a 241-E: produzir, compartilhar ou guardar material de abuso sexual infantil é crime.",
+    "Operação Impregnator (2024): a PF, a partir de um alerta da Interpol, prendeu suspeito de compartilhar imagens de abuso na \"dark web\"; a perícia confirmou vítimas brasileiras.",
+    "CF, art. 227: prioridade absoluta para crianças e adolescentes; ECA, art. 1º: proteção integral."
+   ]
   }
  },
  {
@@ -1358,6 +1596,23 @@
    "p1": "Inicialmente, cabe destacar que as câmeras corporais têm objetivos que beneficiam tanto a população quanto a polícia. Em primeiro lugar, elas registram as abordagens e produzem prova do que realmente aconteceu, o que fortalece a investigação. Em segundo lugar, protegem o policial contra agressões e falsas acusações. Além disso, ao inibir abusos, aumentam a confiança da população na polícia. Desse modo, a câmera funciona como garantia para todos os envolvidos.",
    "p2": "Posteriormente, vale dissertar sobre as experiências com câmeras corporais e os seus resultados. A Polícia Militar de São Paulo adotou o equipamento, e estudos mostraram menos mortes em ações policiais e mais provas em vídeo para os processos. Na mesma linha, o Supremo Tribunal Federal exigiu, em 2025, câmeras nas fardas e nas viaturas das polícias do Rio de Janeiro. Esses casos mostram que a tecnologia, quando bem aplicada, reduz a letalidade e qualifica a prova.",
    "fim": "Por fim, é preciso adotar cuidados para que o uso das câmeras seja eficaz e respeite direitos. A gravação deve ser automática, e não depender da decisão do policial, para evitar que o equipamento seja desligado na hora errada. Além disso, as imagens precisam ser bem guardadas e estar acessíveis ao Ministério Público e à defesa, preservando a cadeia de custódia. Com essas regras, a câmera protege o bom policial e responsabiliza quem abusa."
+  },
+  "embasamento": {
+   "p1": [
+    "Portaria MJSP 648/2024: diretrizes nacionais que dizem quando a câmera deve gravar (abordagens, uso da força, custódia de pessoas).",
+    "Para o FBSP, as câmeras \"protegem os policiais que atuam dentro da lei\" e permitem responsabilizar quem extrapola (Anuário 2026).",
+    "ADPF 635 (STF): com regras, câmeras e controle externo, as mortes por intervenção no RJ caíram de 1.814 (2019) para cerca de 700 (2024)."
+   ],
+   "p2": [
+    "A Polícia Militar de São Paulo usa câmeras corporais em larga escala desde 2020.",
+    "Estudos sobre o programa paulista associaram as câmeras à queda das mortes em intervenções policiais e do uso da força (FBSP).",
+    "ADPF 635 (julgamento concluído em 03/04/2025): câmeras nas fardas e viaturas no RJ, preservação do local e perícia rápida nas mortes em operações."
+   ],
+   "fim": [
+    "Portaria MJSP 648/2024: define as situações de gravação; o debate é entre gravação contínua ou automática e acionamento pelo policial.",
+    "CPP, art. 158-A (cadeia de custódia) e CF, art. 129, VII (controle externo da atividade policial pelo Ministério Público).",
+    "Em PE, as mortes em intervenções policiais subiram 31,7% em 2025 (103), embora sejam só 3,3% das mortes violentas (Anuário 2026)."
+   ]
   }
  },
  {
@@ -1443,6 +1698,23 @@
    "p1": "Inicialmente, cabe destacar que o reconhecimento facial e a inteligência artificial trazem benefícios importantes às forças de segurança. Essas ferramentas ajudam a localizar foragidos da Justiça e pessoas desaparecidas, além de produzir provas, como imagens e dados, que dão mais rapidez à investigação. Um exemplo é o Córtex, do Ministério da Justiça, que cruza câmeras e bancos de dados de vários estados. Assim, a tecnologia amplia a capacidade de ação da polícia.",
    "p2": "Posteriormente, vale dissertar sobre os riscos que essas tecnologias trazem para os direitos fundamentais. O principal é o erro de identificação, que atinge com mais frequência as pessoas negras e já levou inocentes à prisão. Há ainda o risco de vigilância sem controle e de vazamento de dados pessoais. O problema se agrava porque, embora a proteção de dados seja um direito fundamental, ainda falta uma lei específica para a segurança pública. Assim, a eficiência pode custar direitos.",
    "fim": "Por fim, é preciso estabelecer regras e controles para o uso responsável dessas ferramentas. Toda identificação feita pelo sistema precisa de conferência humana, e o Superior Tribunal de Justiça já decidiu que o reconhecimento, sozinho, não serve para condenar. Além disso, o Congresso deve aprovar uma lei de proteção de dados para a segurança pública, com controle de acesso e prova bem guardada. Desse modo, é possível unir eficiência e respeito aos direitos."
+  },
+  "embasamento": {
+   "p1": [
+    "Lei 13.812/2019: a busca de desaparecidos é prioridade com caráter de urgência, e a tecnologia de imagem acelera essa busca.",
+    "Lei 12.654/2012 (banco de DNA) e leitura de placas: prova técnica que não depende de testemunha.",
+    "O padrão de resposta oficial da prova de Agente da PC PE de 2024 aceitou o \"reconhecimento facial para identificação de pessoas foragidas\" como exemplo de investimento eficaz."
+   ],
+   "p2": [
+    "STJ, HC 598.886/SC (2020): o reconhecimento de pessoas deve seguir o art. 226 do CPP, e a foto sozinha não basta para condenar.",
+    "LGPD, art. 4º, III: sem lei específica para a segurança pública, não há regra clara sobre a guarda e o uso das imagens.",
+    "EC 115/2022: proteção de dados pessoais é direito fundamental (CF, art. 5º, LXXIX)."
+   ],
+   "fim": [
+    "STJ, HC 598.886/SC (2020) e CPP, art. 226: o reconhecimento exige procedimento e outras provas.",
+    "LGPD, art. 4º, III (lei específica pendente) e CPP, art. 158-A (cadeia de custódia).",
+    "Lei 13.869/2019, art. 25: obter prova por meio manifestamente ilícito é abuso de autoridade."
+   ]
   }
  },
  {
@@ -1533,6 +1805,23 @@
    "p1": "Inicialmente, cabe destacar que a letalidade policial no Brasil é elevada e atinge um perfil definido de vítimas. São mais de 6 mil mortes por ano em ações policiais, e a maioria das vítimas é formada por jovens negros das periferias. Por outro lado, a violência também atinge os agentes, já que muitos policiais são assassinados todos os anos, em serviço ou de folga. Dessa forma, a polícia brasileira mata muito, mas também morre muito, em um ciclo que precisa ser rompido.",
    "p2": "Posteriormente, vale dissertar sobre a relação entre o uso adequado da força e a confiança da população. Quando a força é desproporcional, a comunidade se afasta: testemunhas e informantes deixam de colaborar, e as investigações param. Já a polícia respeitada recebe informações, esclarece mais crimes e corre menos riscos. Exemplos disso são as câmeras corporais da Polícia Militar de São Paulo, que reduziram mortes, e o policiamento comunitário. Assim, legitimidade e eficiência caminham juntas.",
    "fim": "Por fim, é preciso adotar medidas que garantam uma atuação segura para a população e para os agentes. Cabe aos governos oferecer treinamento contínuo e armas não letais, como determina a lei de 2014 sobre o tema, além de câmeras corporais. Também é necessário que toda morte em ação policial seja periciada e investigada, com controle do Ministério Público, o que comprova a legítima defesa de quem agiu certo. Afinal, reduzir a letalidade protege a todos."
+  },
+  "embasamento": {
+   "p1": [
+    "6.602 mortes por intervenção policial em 2025 (+5,4%), cerca de 16% das mortes violentas do país (Anuário 2026).",
+    "82% das vítimas eram negras e 99,3% eram homens; a taxa entre negros é 3,5 vezes a de brancos (Anuário 2026).",
+    "139 policiais civis e militares assassinados em 2025; outros 110 morreram por suicídio (Anuário 2026)."
+   ],
+   "p2": [
+    "Decreto 12.341/2024: o uso da força deve seguir legalidade, necessidade, proporcionalidade, razoabilidade e não discriminação.",
+    "ADPF 635: com regras e controle, as mortes por intervenção no RJ caíram de 1.814 (2019) para cerca de 700 (2024).",
+    "Câmeras da PM-SP associadas à queda das mortes em intervenções (FBSP); no policiamento comunitário, o mesmo policial atua fixo no bairro."
+   ],
+   "fim": [
+    "Lei 13.060/2014: prioriza instrumentos de menor potencial ofensivo e proíbe atirar em quem foge desarmado sem oferecer risco.",
+    "CF, art. 129, VII: controle externo pelo Ministério Público; ADPF 635: perícia em até 10 dias nas mortes em operações.",
+    "PE tem letalidade baixa (103 mortes, 3,3% das mortes violentas), mas em alta de 31,7% em 2025 (Anuário 2026)."
+   ]
   }
  },
  {
@@ -1623,6 +1912,23 @@
    "p1": "Inicialmente, cabe destacar que a confiança da população é indispensável ao trabalho policial. É ela que traz informação: testemunhas que aceitam depor, denúncias anônimas e conhecimento sobre o território. Com essas informações, a polícia esclarece mais crimes e corre menos riscos. Por outro lado, quando a polícia abusa da força, perde essa colaboração: ninguém testemunha e ninguém denuncia. Dessa forma, a confiança é, ao mesmo tempo, resultado e condição de um bom trabalho policial.",
    "p2": "Posteriormente, vale dissertar sobre as estratégias de aproximação entre polícia e comunidade. O policiamento comunitário mantém o mesmo policial no mesmo bairro, o que permite conhecer os moradores e os problemas locais. Programas como o Fica Vivo!, em Minas Gerais, e o Estado Presente, no Espírito Santo, levaram policiamento e serviços sociais juntos aos bairros mais violentos. Já as câmeras corporais deram mais transparência à atuação. Assim, presença e transparência geram confiança.",
    "fim": "Por fim, é preciso reconhecer os desafios e os caminhos para fortalecer essa relação. Entre os desafios estão a desconfiança nas periferias, o uso excessivo da força e o medo das testemunhas onde há facções. Como caminho, os governos devem investir em treinamento contínuo, investigar toda morte em ação policial e garantir atendimento respeitoso nas delegacias. Afinal, a polícia é quem garante os direitos na rua, e a confiança da comunidade é a sua maior aliada."
+  },
+  "embasamento": {
+   "p1": [
+    "CF, art. 144: a segurança é \"responsabilidade de todos\"; a colaboração da população faz parte do sistema.",
+    "Só cerca de 36% dos homicídios são esclarecidos (Sou da Paz, 2025): sem testemunha, a investigação depende da prova técnica, que é escassa.",
+    "6.602 mortes por intervenção em 2025, 82% de vítimas negras (Anuário 2026): o abuso se concentra em quem mais precisa confiar na polícia."
+   ],
+   "p2": [
+    "Lei 13.675/2018 (SUSP): a política nacional tem, entre os seus princípios, a participação e o controle social.",
+    "Fica Vivo! (MG, 2002): queda dos homicídios nas áreas atendidas; Estado Presente (ES, 2011): policiamento e serviços sociais nos bairros mais violentos.",
+    "Para o FBSP, as câmeras protegem o bom policial e permitem responsabilizar quem extrapola (Anuário 2026)."
+   ],
+   "fim": [
+    "As mortes em intervenções subiram 5,4% no país e 31,7% em PE em 2025 (Anuário 2026).",
+    "Decreto 12.341/2024 (uso da força) e Lei 13.869/2019 (abuso de autoridade).",
+    "CF, art. 5º: a polícia garante na rua direitos como a proibição de tortura (inciso III) e a presunção de inocência (inciso LVII)."
+   ]
   }
  },
  {
@@ -1718,6 +2024,23 @@
    "p1": "Inicialmente, cabe destacar que o sistema prisional brasileiro enfrenta problemas graves. O principal é a superlotação, já que há muito mais presos do que vagas, o que gera celas insalubres e difíceis de controlar. Além disso, predomina o ócio: apenas 1 em cada 5 presos trabalha, e faltam estudo e atendimento de saúde. A situação é tão grave que o Supremo Tribunal Federal reconheceu um \"estado de coisas inconstitucional\" nas prisões. Assim, a pena deixa de cumprir a sua função.",
    "p2": "Posteriormente, vale dissertar sobre a relação entre as condições do cárcere e o fortalecimento das facções criminosas. Algumas das maiores facções do país nasceram dentro de presídios, justamente onde o Estado não garante proteção nem condições mínimas. Nesse ambiente, o preso busca a facção para sobreviver, e a prisão se transforma em uma \"escola do crime\". Além disso, de dentro das celas saem ordens para ataques e golpes. Dessa forma, o presídio sem controle fortalece o crime.",
    "fim": "Por fim, é preciso adotar medidas para reduzir a reincidência criminal. Cabe ao poder público cumprir o Plano Pena Justa, com controle de vagas e penas alternativas para crimes sem violência, e ampliar o trabalho e o estudo dentro das prisões. Também é necessário apoiar o egresso na volta à sociedade, a exemplo do método APAC, em Minas Gerais, que registra menos reincidência. Afinal, a prisão que ressocializa reduz o crime de amanhã e enfraquece as facções."
+  },
+  "embasamento": {
+   "p1": [
+    "964.668 presos e 281.213 vagas a menos (1,4 preso por vaga); em PE, 1,8 preso por vaga (Anuário 2026).",
+    "Só 21,6% dos presos trabalham (Anuário 2026); a LEP, art. 126, prevê 1 dia de remição a cada 3 dias de trabalho.",
+    "ADPF 347 (STF, 2023): estado de coisas inconstitucional; daí o Plano Pena Justa (2025), com 307 metas até 2027."
+   ],
+   "p2": [
+    "As duas maiores facções do país surgiram dentro de presídios: uma no RJ, no fim dos anos 1970, e outra em SP, em 1993.",
+    "ADPF 347: o STF reconheceu violação massiva de direitos nas prisões, vácuo que a facção ocupa oferecendo \"proteção\".",
+    "Lei 15.358/2026: atacar presídios e coordenar ações violentas estão entre as condutas do domínio social estruturado (pena de 20 a 40 anos)."
+   ],
+   "fim": [
+    "Plano Pena Justa (CNJ e governo federal, 2025): 307 metas até 2027, com controle de vagas e penas alternativas.",
+    "LEP, art. 126 (remição) e método APAC: unidades sem facção, com trabalho e estudo; o TJMG aponta reincidência menor.",
+    "LEP, art. 1º: a execução deve \"proporcionar condições para a harmônica integração social do condenado\"."
+   ]
   }
  },
  {
@@ -1813,6 +2136,23 @@
    "p1": "Inicialmente, cabe destacar que o trabalho e o estudo são essenciais ao longo da pena. Sem atividade, o preso passa os dias ocioso, o que facilita o recrutamento pelas facções dentro das celas. Para estimular essa rotina, a Lei de Execução Penal prevê a remição: cada três dias de trabalho ou doze horas de estudo reduzem um dia da pena. Além disso, a qualificação prepara a volta à sociedade, como mostra a APAC, em Minas Gerais, com menos reincidência. Assim, ocupar o preso é investir na segurança de todos.",
    "p2": "Posteriormente, vale dissertar sobre os obstáculos enfrentados pelos egressos do sistema prisional. Ao deixar a prisão, muitos não têm documentos, emprego nem moradia, o que torna o recomeço difícil. Além disso, o preconceito contra quem cumpriu pena fecha as portas do mercado de trabalho, mesmo para quem se qualificou. Sem apoio, o egresso fica vulnerável e acaba voltando ao crime, o que caracteriza a reincidência. Dessa forma, a pena termina, mas a exclusão continua.",
    "fim": "Por fim, é preciso compreender que reintegração social e segurança pública estão diretamente ligadas. Quem sai da prisão e consegue trabalho tem menos motivos para voltar ao crime, e cada reincidência evitada poupa novas vítimas. Por isso, iniciativas como os Escritórios Sociais, apoiados pelo Conselho Nacional de Justiça, e o Plano Pena Justa são investimentos em segurança. Afinal, a prisão que não ressocializa devolve à sociedade alguém pior do que entrou."
+  },
+  "embasamento": {
+   "p1": [
+    "LEP, art. 126: 1 dia a menos de pena a cada 3 dias de trabalho ou 12 horas de estudo; a leitura também dá remição (Resolução CNJ 391/2021).",
+    "Só 21,6% dos presos trabalham (Anuário 2026).",
+    "Método APAC (MG): unidades menores, sem facção, com trabalho, estudo e família; o TJMG aponta reincidência menor."
+   ],
+   "p2": [
+    "Escritórios Sociais (CNJ): encaminham o egresso para documentos, emprego e atendimento.",
+    "Lei 14.133/2021 (licitações), art. 25, § 9º: o edital pode exigir que a empresa contratada empregue egressos do sistema prisional.",
+    "Cuidado: o número \"70% de reincidência\" circula muito, mas não tem base oficial; fale em reincidência sem número."
+   ],
+   "fim": [
+    "LEP, art. 1º: a pena deve preparar a integração social do condenado.",
+    "Plano Pena Justa (2025): eixo de \"saída e reintegração\", com metas até 2027.",
+    "O Brasil tinha 964.668 presos em 2025 (Anuário 2026), e quase todos voltarão para a sociedade."
+   ]
   }
  },
  {
@@ -1903,6 +2243,23 @@
    "p1": "Inicialmente, cabe destacar que diversos fatores expõem os jovens à violência, tanto como vítimas quanto como autores. Eles, sobretudo os negros, são a maioria das vítimas de homicídio no país. Ao mesmo tempo, a evasão escolar, o desemprego e a violência dentro de casa aproximam muitos deles do crime. Nesse cenário, as facções oferecem dinheiro rápido e sensação de pertencimento, o que facilita o recrutamento. Dessa forma, a falta de oportunidades abre caminho para o crime.",
    "p2": "Posteriormente, vale dissertar sobre os programas de prevenção da violência já implementados. Em Minas Gerais, o Fica Vivo! oferece oficinas de esporte, cultura e trabalho a jovens dos bairros mais violentos, aliadas a um policiamento focado nos autores de homicídio, e os homicídios caíram nas áreas atendidas. No Espírito Santo, o Estado Presente levou policiamento e serviços sociais, juntos, às regiões mais violentas. Esses exemplos mostram que prevenir é possível.",
    "fim": "Por fim, é preciso definir o papel de cada instituição na prevenção. À escola cabe buscar o aluno que falta, oferecer tempo integral e combater o \"bullying\". Ao poder público cabe garantir qualificação profissional e primeiro emprego aos jovens. Às forças de segurança cabe investigar e punir quem alicia adolescentes para o crime. Agindo em conjunto, essas instituições atacam as causas da violência, pois prevenir custa menos que punir e salva vidas."
+  },
+  "embasamento": {
+   "p1": [
+    "41,6% das vítimas de mortes violentas tinham de 18 a 29 anos, e 79,7% eram negras (Anuário 2026).",
+    "ECA, art. 56: a escola deve comunicar ao Conselho Tutelar faltas reiteradas, evasão e suspeita de maus-tratos.",
+    "ECA, art. 244-B: corromper ou facilitar a corrupção de menor de 18 anos para praticar crime é crime."
+   ],
+   "p2": [
+    "Fica Vivo! (MG, 2002): criado no Morro das Pedras, em Belo Horizonte, com oficinas para jovens de 12 a 24 anos e foco policial nos autores de homicídio.",
+    "A queda dos homicídios nas áreas atendidas fez do Fica Vivo! referência nacional (Governo de Minas Gerais).",
+    "Estado Presente (ES, 2011): policiamento qualificado e ações sociais concentrados nos bairros mais violentos do Espírito Santo."
+   ],
+   "fim": [
+    "Lei 14.811/2024 (\"bullying\" e \"cyberbullying\" como crime) e busca ativa dos alunos faltosos (ECA, art. 56).",
+    "Lei 10.097/2000 (Lei do Aprendiz), para jovens de 14 a 24 anos; ECA, art. 244-B, contra quem alicia adolescente para o crime.",
+    "Pronasci (Programa Nacional de Segurança Pública com Cidadania), relançado em 2023, une segurança e políticas sociais."
+   ]
   }
  },
  {
@@ -1993,6 +2350,23 @@
    "p1": "Inicialmente, cabe destacar que a violência no ambiente escolar assume diferentes formas. A mais comum é o \"bullying\", que, assim como o \"cyberbullying\", passou a ser crime em 2024 e cresceu de forma expressiva. Além disso, as escolas sofrem com ameaças e ataques, que geram medo em alunos, professores e famílias. Há ainda o aliciamento de crianças e adolescentes, seja para o tráfico, seja para crimes sexuais. Dessa forma, a escola, que deveria proteger, também se torna alvo da violência.",
    "p2": "Posteriormente, vale dissertar sobre os fatores que contribuem para essa violência. Muitos casos têm origem fora da escola, na violência dentro de casa e na falta de acompanhamento da família. O uso da internet sem supervisão também favorece o \"cyberbullying\", que ultrapassa os muros da escola. Além disso, faltam apoio psicológico e canais de denúncia nas instituições de ensino, o que impede que os conflitos sejam percebidos a tempo. Assim, as agressões crescem sem que ninguém as interrompa.",
    "fim": "Por fim, é preciso adotar medidas de prevenção que envolvam escolas e forças de segurança. Às escolas cabe combater o \"bullying\", oferecer apoio psicológico e manter canais de denúncia, como prevê a lei de 2024. Às forças de segurança, sobretudo à Polícia Civil, cabe apurar o \"bullying\" e o \"cyberbullying\", investigar quem alicia alunos e encaminhar as vítimas ao Conselho Tutelar. Juntas, essas ações protegem os estudantes, pois prevenir custa menos que punir."
+  },
+  "embasamento": {
+   "p1": [
+    "4.549 registros de \"bullying\" (+68,2%) e 677 de \"cyberbullying\" (+61,4%) contra crianças e adolescentes em 2025 (Anuário 2026).",
+    "Operação Escola Segura (Ministério da Justiça, abril de 2023): monitorou ameaças de ataques a escolas e levou a prisões em vários estados, inclusive PE.",
+    "ECA, art. 244-B (corrupção de menores) e art. 241-D (aliciamento de criança por meio de comunicação)."
+   ],
+   "p2": [
+    "Lei 14.344/2022 (Lei Henry Borel): enfrentamento da violência doméstica contra crianças e adolescentes.",
+    "Lei 15.211/2025 (ECA Digital): supervisão parental obrigatória nas plataformas desde março de 2026.",
+    "Lei 13.935/2019: serviços de psicologia e de serviço social nas escolas públicas de educação básica."
+   ],
+   "fim": [
+    "Lei 14.811/2024: medidas de proteção nas escolas; Lei 13.185/2015: Programa de Combate à Intimidação Sistemática.",
+    "CP, art. 146-A: o \"bullying\" é crime desde 2024; o Conselho Tutelar (ECA, art. 131) recebe os encaminhamentos da polícia.",
+    "Lei 13.935/2019: psicólogos e assistentes sociais nas escolas, para agir antes da tragédia."
+   ]
   }
  },
  {
@@ -2088,6 +2462,23 @@
    "p1": "Inicialmente, cabe destacar que diversos fatores contribuem para o adoecimento mental dos profissionais de segurança. O primeiro é o contato diário com a violência e a morte, somado ao risco constante à própria vida. Além disso, plantões longos, o \"bico\" para completar a renda e a cobrança por resultados geram desgaste contínuo. Soma-se a isso a cultura de que o policial não pode demonstrar fraqueza, o que faz muitos evitarem pedir ajuda. Dessa forma, o sofrimento cresce em silêncio.",
    "p2": "Posteriormente, vale dissertar sobre as consequências desse adoecimento para os profissionais e para a população. Para os agentes, o efeito mais grave é o suicídio, que já se aproxima do número de policiais assassinados. Para o serviço, um profissional adoecido tende a tomar decisões piores sob pressão, com mais risco de uso excessivo da força. Além disso, os afastamentos por doença sobrecarregam quem permanece na ativa. Assim, o adoecimento de quem protege afeta a segurança de todos.",
    "fim": "Por fim, é preciso adotar medidas de prevenção e de cuidado com a saúde mental desses profissionais. Cabe às instituições oferecer atendimento psicológico regular e após ocorrências traumáticas, como preveem o programa Pró-Vida e a lei de 2023 de prevenção ao suicídio de policiais. Também é dever do poder público valorizar a carreira, com salário adequado, escalas justas, formação e concursos regulares. Afinal, cuidar de quem protege é cuidar da segurança de todos."
+  },
+  "embasamento": {
+   "p1": [
+    "139 policiais assassinados e 110 suicídios de policiais da ativa em 2025 (Anuário 2026).",
+    "Lei 14.735/2023 (Lei Orgânica Nacional das Polícias Civis): normas gerais de carreira, direitos e garantias.",
+    "Lei 14.531/2023: incluiu os profissionais de segurança na política nacional de prevenção do suicídio e obriga a produção de dados."
+   ],
+   "p2": [
+    "110 suicídios contra 139 assassinatos em 2025; os suicídios caíram de 126 (2024), mas a série cresce desde 2017 (Anuário 2026).",
+    "Decreto 12.341/2024: o uso da força exige necessidade e proporcionalidade, decisões que pedem equilíbrio emocional.",
+    "As polícias civis têm 96,9 mil policiais, 55% do previsto em lei (FBSP, ago. 2026): quem fica acumula o trabalho."
+   ],
+   "fim": [
+    "Pró-Vida (Lei 13.675/2018, ampliado pela Lei 14.531/2023): atenção psicossocial aos profissionais de segurança.",
+    "Leis 14.735/2023 e 14.751/2023 (leis orgânicas nacionais); CF, art. 40, § 4º-B: aposentadoria própria pelo risco da atividade.",
+    "Juntos pela Segurança (PE, 2023): prevê a contratação de milhares de novos policiais (SDS-PE)."
+   ]
   }
  },
  {
@@ -2183,6 +2574,23 @@
    "p1": "Inicialmente, cabe destacar que as condições de trabalho dos profissionais de segurança pública ainda são precárias. Efetivos reduzidos impõem jornadas longas, e muitos agentes recorrem ao \"bico\" para completar a renda. Somam-se a isso a baixa remuneração e a falta de equipamentos adequados. O resultado é o adoecimento: em 2025, quase tantos policiais morreram por suicídio quanto foram assassinados, segundo o Anuário Brasileiro de Segurança Pública. Assim, quem protege a sociedade trabalha desprotegido.",
    "p2": "Posteriormente, vale dissertar sobre a relação entre a valorização profissional e a qualidade do serviço prestado. Um policial descansado, bem formado e equipado toma decisões melhores sob pressão, inclusive no uso da força. Por outro lado, o profissional adoecido tende a agir com excesso e a atender pior a população. Além disso, equipes completas reduzem a sobrecarga e melhoram a investigação, com mais crimes esclarecidos. Dessa forma, valorizar o policial é investir na segurança da sociedade.",
    "fim": "Por fim, é preciso adotar medidas de valorização por parte do poder público. Cabe aos governos realizar concursos regulares, como faz Pernambuco no programa Juntos pela Segurança, que prevê milhares de novos policiais, além de pagar salários adequados e organizar escalas que respeitem o descanso. Também é necessário investir em formação continuada, equipamentos e atendimento psicológico, como no Pró-Vida. Afinal, cuidar de quem protege é cuidar da segurança de todos."
+  },
+  "embasamento": {
+   "p1": [
+    "As polícias civis têm 96,9 mil policiais, 55% dos 175,4 mil previstos em lei; o FBSP liga o déficit a poucos concursos (ago. 2026).",
+    "Inspeção do MPPE em Tamandaré (jul. 2026): delegacia com só 9 servidores, sem sede adequada e sem local para guardar drogas e armas apreendidas.",
+    "110 suicídios de policiais em 2025, quase os 139 assassinados (Anuário 2026)."
+   ],
+   "p2": [
+    "Decreto 12.341/2024: necessidade e proporcionalidade no uso da força exigem treino e equilíbrio.",
+    "Lei 14.531/2023: a saúde mental do policial passou a ser tratada como política pública.",
+    "MPPE em Tamandaré (jul. 2026): a falta de efetivo atrasou a tramitação dos inquéritos."
+   ],
+   "fim": [
+    "Juntos pela Segurança (PE, 2023): contratação de milhares de policiais civis, militares, penais e científicos (SDS-PE).",
+    "Pró-Vida e Lei 14.531/2023 (saúde mental); Lei 14.735/2023 (Lei Orgânica Nacional das Polícias Civis).",
+    "CF, art. 144: a segurança é dever do Estado, e o policial é quem a executa."
+   ]
   }
  },
  {
@@ -2263,6 +2671,23 @@
    "p1": "Inicialmente, cabe destacar que o desaparecimento de pessoas é um problema de grande dimensão e de causas variadas. Por trás de cada caso podem estar conflitos familiares, doenças mentais, tráfico de pessoas ou até homicídios com o corpo escondido. A situação se agrava por causa do mito de que é preciso esperar 24 horas para registrar o desaparecimento, o que atrasa a busca justamente nas horas mais importantes. Dessa forma, rapidez e informação são decisivas.",
    "p2": "Posteriormente, vale dissertar sobre as dificuldades enfrentadas na busca e na investigação. Há poucas delegacias especializadas, e muitos casos ainda são tratados como \"menores\", sem a devida prioridade. Além disso, os cadastros estaduais não conversam entre si, o que dificulta localizar alguém que se deslocou para outro estado. Também há pouco cruzamento de informações com bancos de DNA e com registros de corpos não identificados. Assim, muitas famílias passam anos sem respostas.",
    "fim": "Por fim, é preciso adotar medidas para tornar a localização mais rápida e eficaz. Cabe ao poder público integrar os dados em um cadastro nacional e garantir a busca imediata, como determina a lei de 2019, que trata o desaparecimento como urgência. As polícias, por sua vez, devem contar com delegacias especializadas e coletar o DNA de familiares. Além disso, campanhas devem combater o mito das 24 horas, pois, na busca por desaparecidos, cada hora conta."
+  },
+  "embasamento": {
+   "p1": [
+    "84.269 desaparecimentos em 2025 (+3,6%) e 61.305 localizações; 2.801 registros em PE (Anuário 2026).",
+    "Por trás do número podem estar fuga de casa, doença mental, tráfico de pessoas (CP, art. 149-A) e homicídio com ocultação de cadáver.",
+    "Lei 13.812/2019: a busca é prioridade com caráter de urgência, sem prazo para registrar; ECA, art. 208, § 2º: investigação imediata para crianças."
+   ],
+   "p2": [
+    "Lei 13.812/2019 criou a Política Nacional de Busca, mas a estrutura especializada depende de cada estado.",
+    "Lei 13.812/2019: criou o Cadastro Nacional de Pessoas Desaparecidas, para integrar os registros estaduais.",
+    "Lei 12.654/2012 e a Rede Integrada de Bancos de Perfis Genéticos permitem cruzar o DNA de familiares com o de corpos não identificados."
+   ],
+   "fim": [
+    "Lei 13.812/2019 (cadastro nacional e urgência) e ECA, art. 208, § 2º (busca imediata de crianças).",
+    "Rede Integrada de Bancos de Perfis Genéticos (Lei 12.654/2012): o DNA de familiares ajuda a identificar desaparecidos.",
+    "Em 2025, 61.305 pessoas foram localizadas (Anuário 2026): a busca rápida funciona."
+   ]
   }
  },
  {
@@ -2348,6 +2773,23 @@
    "p1": "Inicialmente, cabe destacar que o celular se tornou o alvo preferencial do crime de rua por diversos fatores. Trata-se de um objeto pequeno, caro, fácil de esconder e de revender. Além disso, hoje o aparelho vale menos pelo seu preço do que pelo acesso que oferece: Pix, aplicativos de banco e dados pessoais da vítima. Dessa forma, um único roubo pode render ao criminoso muito mais do que o próprio telefone, o que explica a expansão desse crime nas grandes cidades.",
    "p2": "Posteriormente, vale dissertar sobre a relação entre esses crimes, a receptação e os golpes financeiros. Por trás de cada roubo há um mercado que compra, desmonta e revende os aparelhos, muitas vezes enviando peças para outros estados e países. Ao mesmo tempo, o celular roubado é usado para acessar as contas da vítima e aplicar golpes bancários. Assim, o roubo é apenas o início de uma cadeia criminosa: sem receptação e sem golpe, esse crime deixaria de compensar.",
    "fim": "Por fim, é preciso adotar medidas de prevenção e de repressão. A população deve usar o Celular Seguro, programa federal que bloqueia linha, aparelho e aplicativos de banco de uma só vez, o que faz o aparelho perder o valor. As polícias, por sua vez, precisam investigar os receptadores, e não apenas quem rouba, para desmontar o mercado ilegal. Já os bancos devem adotar mais camadas de segurança, para que o roubo não se transforme em golpe."
+  },
+  "embasamento": {
+   "p1": [
+    "830.890 celulares roubados ou furtados em 2025 (−9%); em PE, 41.505 (Anuário 2026).",
+    "A cidade de São Paulo tem 5,6% da população e 20% desses crimes; Olinda está entre as 10 cidades com mais casos por habitante (Anuário 2026).",
+    "O estelionato (2,26 milhões em 2025) virou o principal crime contra o patrimônio, e o celular roubado é a porta de entrada (Anuário 2026)."
+   ],
+   "p2": [
+    "CP, art. 180: receptação; no comércio (§ 1º), a pena é de 3 a 8 anos.",
+    "Lei 14.155/2021: fraude eletrônica (CP, art. 171, § 2º-A) e furto mediante fraude eletrônica (art. 155, § 4º-B).",
+    "Parte dos aparelhos é desmontada ou enviada para fora do país, o que dificulta o rastreamento."
+   ],
+   "fim": [
+    "Celular Seguro (governo federal, 2023): bloqueio de linha, aparelho e apps de banco de uma vez; bloqueio por IMEI nas operadoras.",
+    "CP, art. 180, § 1º: receptação no comércio, com pena de 3 a 8 anos.",
+    "MED do Pix (Banco Central): bloqueio e devolução de valores enviados em golpe."
+   ]
   }
  },
  {
@@ -2428,6 +2870,23 @@
    "p1": "Inicialmente, cabe destacar que o mercado de drogas está diretamente ligado à violência no Brasil. O tráfico é uma das principais fontes de dinheiro das facções criminosas e financia a compra de armas e as disputas por território, que provocam muitas mortes. Além disso, os registros de tráfico subiram quase 20% em 2025. Nesse contexto, o dependente químico é, ao mesmo tempo, vítima da dependência e alvo do aliciamento. Dessa forma, a droga alimenta um ciclo de violência.",
    "p2": "Posteriormente, vale dissertar sobre os argumentos das abordagens de saúde pública e de segurança pública. Para a saúde, a dependência é uma doença, e tratamento e prevenção são os meios mais eficazes de reduzir o consumo. Para a segurança, o consumo sustenta o mercado do tráfico e, por isso, deve ser enfrentado. A Lei de Drogas, de 2006, já diferencia usuário e traficante, e o STF fixou um critério objetivo para separá-los. Assim, as duas visões tratam faces do mesmo problema.",
    "fim": "Por fim, é preciso construir uma política de drogas equilibrada. As polícias devem concentrar esforços nas lideranças e no dinheiro do tráfico, e não no pequeno usuário, enquanto o sistema de saúde precisa oferecer uma rede de tratamento e programas de prevenção nas escolas. Desse modo, cada área atua no que lhe cabe. Afinal, tratar o usuário e punir o traficante com rigor não são políticas opostas, mas complementares."
+  },
+  "embasamento": {
+   "p1": [
+    "O Anuário 2026 liga a violência no Norte e no Nordeste à expansão das facções; o tráfico é uma das suas principais fontes de dinheiro.",
+    "207.058 ocorrências de tráfico em 2025 (+18,5%), enquanto as de posse caíram 38,8% desde a decisão do STF (Anuário 2026).",
+    "Lei 11.343/2006, art. 28: o usuário não vai preso (advertência, serviço comunitário ou curso); art. 33: tráfico, de 5 a 15 anos."
+   ],
+   "p2": [
+    "Rede de Atenção Psicossocial do SUS: os CAPS AD atendem pessoas com dependência de álcool e drogas.",
+    "Lei 11.343/2006, art. 33: tráfico, com pena de 5 a 15 anos, um dos crimes que mais levam à prisão.",
+    "STF, RE 635.659 (Tema 506, 2024): presume-se usuário quem tem até 40 g de maconha ou 6 plantas fêmeas."
+   ],
+   "fim": [
+    "Lei 15.358/2026: bloqueio e perdimento dos bens das facções.",
+    "CAPS AD (SUS) e prevenção nas escolas (Lei 11.343/2006, art. 19, sobre as atividades de prevenção).",
+    "PEC 45/2023, aprovada no Senado, quer pôr na Constituição que portar qualquer droga é crime (confira antes da prova)."
+   ]
   }
  },
  {
@@ -2513,6 +2972,23 @@
    "p1": "Inicialmente, cabe destacar que a violência sexual contra crianças e adolescentes tem características marcantes. A maioria das vítimas de estupro no país está nessa faixa etária, e o crime acontece, em geral, dentro de casa, cometido por parentes ou pessoas próximas. Além disso, a violência também ocorre no ambiente digital, por meio do aliciamento e da circulação de material de abuso sexual infantil. Dessa forma, quem deveria proteger a criança é, muitas vezes, quem a agride.",
    "p2": "Posteriormente, vale dissertar sobre os obstáculos à denúncia e à investigação desses crimes. Como o agressor costuma ser alguém da família, a vítima depende dele e sente medo ou vergonha de contar o que sofreu. Além disso, faltam profissionais preparados para ouvir crianças de forma adequada, sem causar novo sofrimento. Na internet, a investigação esbarra em perfis falsos, atrás dos quais os autores se escondem. Por isso, muitos casos só são descobertos pela escola ou pela saúde.",
    "fim": "Por fim, é preciso adotar medidas de prevenção e de proteção às vítimas. Escolas e serviços de saúde devem ser treinados para perceber sinais de abuso e acionar o Conselho Tutelar. As polícias precisam de delegacias especializadas e de escuta protegida da criança, aplicando a Lei Henry Borel, de 2022. Além disso, o ECA Digital e a educação adequada à idade ajudam a criança a reconhecer o abuso e a pedir ajuda. Afinal, a proteção integral exige a ação de todos."
+  },
+  "embasamento": {
+   "p1": [
+    "84.388 estupros em 2025, 61.076 com vítimas de 0 a 17 anos (Anuário 2026).",
+    "65,6% dos estupros ocorreram em casa; quando a relação foi registrada, o autor era parente em 59,2% dos casos (Anuário 2026).",
+    "4.063 registros de material de abuso sexual infantil (+25,3%) e 2.464 de aliciamento em 2025 (Anuário 2026)."
+   ],
+   "p2": [
+    "CP, art. 217-A: estupro de vulnerável (menor de 14 anos), com pena de 8 a 15 anos.",
+    "Lei 13.431/2017: escuta especializada e depoimento especial de crianças vítimas, para evitar a revitimização.",
+    "ECA, art. 241-D: aliciar criança por qualquer meio de comunicação é crime."
+   ],
+   "fim": [
+    "ECA, art. 13 e art. 245: profissionais de saúde e de educação devem comunicar suspeitas de maus-tratos ao Conselho Tutelar.",
+    "Lei 13.431/2017 (depoimento especial) e Lei 14.344/2022 (Lei Henry Borel).",
+    "Lei 15.211/2025 (ECA Digital), em vigor desde março de 2026."
+   ]
   }
  },
  {
@@ -2598,6 +3074,23 @@
    "p1": "Inicialmente, cabe destacar que a responsabilidade pela segurança pública está dividida de forma desigual entre os entes federativos. Os estados mantêm as polícias civil e militar e arcam com a maior parte dos gastos. A União cuida das polícias federais e do Fundo Nacional de Segurança Pública, que repassa recursos aos estados. Já os municípios têm as guardas municipais e atuam na prevenção, com papel ainda pequeno. Dessa forma, o peso recai principalmente sobre os governos estaduais.",
    "p2": "Posteriormente, vale dissertar sobre os argumentos favoráveis a uma maior participação da União. O principal é que o crime organizado atua em todo o país, e facções nacionais exigem uma resposta coordenada, e não estados agindo sozinhos. Além disso, a União tem condições de integrar dados e inteligência e de garantir recursos estáveis. Nesse sentido, a PEC da Segurança Pública propõe levar o SUSP para a Constituição e ampliar o papel federal. Assim, a coordenação nacional ganha força.",
    "fim": "Por fim, é preciso conciliar a coordenação nacional com a autonomia dos estados. Cabe à União coordenar, financiar e integrar os dados, enquanto os estados continuam responsáveis pelo policiamento e pela investigação. Para isso, metas combinadas entre os entes e repasses ligados a resultados, como prevê o SUSP, são caminhos eficientes. Trata-se do federalismo cooperativo: enfrentar um crime nacional sem apagar a autonomia estadual garantida pela Constituição."
+  },
+  "embasamento": {
+   "p1": [
+    "Os estados pagaram R$ 131,2 bi dos R$ 163,1 bi gastos com segurança em 2025, cerca de 80% (Anuário 2026).",
+    "A União gastou R$ 18 bi; o Fundo Nacional de Segurança Pública, R$ 2,2 bi em 2025 (Anuário 2026).",
+    "CF, art. 144, § 8º: guardas municipais; em 2025 já eram 107,5 mil guardas, mais do que os policiais civis (FBSP, 2026)."
+   ],
+   "p2": [
+    "O Anuário 2026 liga a violência do Norte e do Nordeste à expansão de facções que atuam em vários estados.",
+    "Lei 15.358/2026, art. 29 (banco nacional das facções) e Lei 13.675/2018 (Sinesp).",
+    "PEC 18/2025: aprovada na Câmara em março de 2026; na CCJ do Senado em outubro de 2026 (confira antes da prova)."
+   ],
+   "fim": [
+    "Lei 13.675/2018 (SUSP): União, estados e municípios atuando de forma integrada, com metas.",
+    "Lei 13.756/2018: repasses do Fundo Nacional de Segurança Pública aos fundos estaduais.",
+    "CF, art. 144: a segurança é dever do Estado, de todos os entes, cada um com o seu papel."
+   ]
   }
  },
  {
@@ -2678,6 +3171,23 @@
    "p1": "Inicialmente, cabe destacar que os recursos financeiros são a base de funcionamento das organizações criminosas. O lucro do crime paga armas, a corrupção de agentes públicos e o recrutamento de novos integrantes. Além disso, é o dinheiro que mantém a facção viva mesmo quando os seus líderes estão presos. Por isso, esses grupos se infiltram na economia legal, em setores como postos de combustíveis, construção e transporte. Dessa forma, o crime organizado funciona como uma empresa.",
    "p2": "Posteriormente, vale dissertar sobre os novos meios utilizados para a lavagem de dinheiro. Lavar dinheiro é dar aparência legal a recursos obtidos com o crime, e as facções têm usado ferramentas cada vez mais sofisticadas, como \"fintechs\" e fundos de investimento, conforme revelou a Operação Carbono Oculto. Também recorrem a criptomoedas e a apostas on-line, que dificultam o rastreamento, além de \"laranjas\" e empresas de fachada. Assim, o dinheiro sujo se mistura à economia formal.",
    "fim": "Por fim, é preciso adotar estratégias para atingir o patrimônio das organizações criminosas. Receita Federal, Coaf, polícias e Ministério Público devem atuar com inteligência financeira integrada, cruzando dados para seguir o caminho do dinheiro. Além disso, cabe à Justiça bloquear e decretar a perda dos bens, como permite a Lei Antifacção, de 2026, que destina esses recursos à segurança. Afinal, prender só o soldado não desmonta a facção, mas tirar o seu dinheiro, sim."
+  },
+  "embasamento": {
+   "p1": [
+    "Lei 12.850/2013: a organização criminosa tem estrutura e divisão de tarefas, como uma empresa.",
+    "Lei 15.358/2026: bloqueio de bens, direitos e valores, inclusive ativos virtuais, das organizações criminosas ultraviolentas.",
+    "Operação Carbono Oculto (2025): facção infiltrada em várias etapas da cadeia de combustíveis."
+   ],
+   "p2": [
+    "Carbono Oculto: uso de fintechs e de fundos de investimento para ocultar e blindar patrimônio (Receita Federal, PF e MPSP).",
+    "Lei 14.790/2023: regulamentou as apostas on-line (\"bets\"), com regras de prevenção à lavagem de dinheiro.",
+    "Lei 9.613/1998, art. 1º: ocultar ou dissimular a origem de bens do crime é lavagem, com pena de 3 a 10 anos."
+   ],
+   "fim": [
+    "Coaf (Lei 9.613/1998): recebe comunicações de operações suspeitas de bancos e de outros setores.",
+    "Lei 15.358/2026: perdimento extraordinário e ação civil imprescritível; o dinheiro vai para os fundos de segurança.",
+    "Operação Carbono Oculto (2025): atingir o caixa, e não só o integrante da ponta, é o que desmonta a facção."
+   ]
   }
  },
  {
@@ -2758,6 +3268,23 @@
    "p1": "Inicialmente, cabe destacar que afirmar que a segurança é responsabilidade de todos não significa transferir ao cidadão o dever do Estado. O poder público continua sendo o principal responsável, por meio das polícias, da Justiça e das políticas públicas. À sociedade cabe um papel complementar: prevenir, denunciar, colaborar com as investigações e fiscalizar as instituições. Além disso, a segurança é um direito de todos, que deve chegar a cada cidadão. Assim, Estado e sociedade atuam juntos.",
    "p2": "Posteriormente, vale dissertar sobre as formas legítimas de participação da sociedade na segurança pública. A denúncia, inclusive anônima, e o testemunho são essenciais para esclarecer crimes. Os conselhos comunitários de segurança e o policiamento comunitário aproximam a população das forças policiais. Além disso, vizinhos atentos que percebem e denunciam a violência contra mulheres e crianças podem salvar vidas. Dessa forma, a colaboração fortalece o trabalho da polícia sem substituí-lo.",
    "fim": "Por fim, é preciso reconhecer os limites dessa participação e o papel insubstituível do Estado. Ninguém pode fazer justiça com as próprias mãos, e o linchamento é crime, por mais revoltante que seja o fato que o motivou. Além disso, a participação da sociedade depende da confiança na polícia, que o Estado constrói com respeito e transparência. Afinal, Estado e sociedade, cada um no seu papel, constroem juntos uma segurança pública duradoura."
+  },
+  "embasamento": {
+   "p1": [
+    "CF, art. 144: a segurança pública é \"dever do Estado, direito e responsabilidade de todos\".",
+    "Lei 13.675/2018 (SUSP): a participação e o controle social estão entre os princípios da política nacional.",
+    "CF, art. 5º, caput, e art. 6º: a segurança é direito individual e social."
+   ],
+   "p2": [
+    "Lei 9.807/1999: proteção a vítimas e testemunhas ameaçadas, para que colaborar não custe a vida.",
+    "Os conselhos comunitários de segurança reúnem moradores, comerciantes e polícias para definir as prioridades do bairro.",
+    "Disque 100 (direitos humanos) e Ligue 180 (Central de Atendimento à Mulher) recebem denúncias de qualquer pessoa."
+   ],
+   "fim": [
+    "CP, art. 345: fazer justiça com as próprias mãos é crime (exercício arbitrário das próprias razões); quem lincha responde por lesão corporal ou homicídio.",
+    "Decreto 12.341/2024 e câmeras corporais: transparência no uso da força constrói confiança.",
+    "Fica Vivo! (MG) e Estado Presente (ES): Estado e comunidade juntos reduziram a violência nos bairros atendidos."
+   ]
   }
  },
  {
@@ -2843,6 +3370,23 @@
    "p1": "Inicialmente, cabe destacar que a inteligência artificial já é usada na prática de crimes. Com ela, golpistas criam vozes e vídeos falsos para enganar famílias e empresas, simulando pedidos de dinheiro de parentes ou chefes. Além disso, a tecnologia torna as mensagens de golpe mais convincentes e permite enviá-las em massa. Os criminosos também ficam mais difíceis de identificar, o que desafia a investigação. Dessa forma, o crime se moderniza e exige uma resposta à altura.",
    "p2": "Posteriormente, vale dissertar sobre as oportunidades que essa tecnologia oferece à investigação policial. A inteligência artificial pode analisar em minutos vídeos, imagens e dados apreendidos que um investigador levaria semanas para examinar. Ela também permite cruzar bases de dados e descobrir padrões de golpes, ligando casos que pareciam isolados. Além disso, apoia a inteligência policial e o planejamento do policiamento. Assim, bem utilizada, a tecnologia multiplica a capacidade de investigar.",
    "fim": "Por fim, é preciso estabelecer regras para o uso responsável da inteligência artificial pelas polícias. A tecnologia deve funcionar como apoio, e a decisão e a prova devem continuar sendo humanas, já que os sistemas podem errar, sobretudo com pessoas negras. Também é necessária uma lei de proteção de dados para a segurança pública, com controle de acesso. Além disso, treinar policiais e investir em perícia digital evita que a polícia fique atrás do crime."
+  },
+  "embasamento": {
+   "p1": [
+    "Lei 14.155/2021: fraude eletrônica, com pena de 4 a 8 anos; golpes com voz clonada se enquadram aqui.",
+    "2,26 milhões de estelionatos em 2025, cerca de 258 por hora (Anuário 2026).",
+    "Só 4.819 presos por estelionato em 2025 (Anuário 2026)."
+   ],
+   "p2": [
+    "A prova discursiva da PF de 2025 cobrou \"Investigação policial na era dos dados\": \"big data\", mineração de dados e aprendizado de máquina.",
+    "Córtex (Ministério da Justiça): cruza câmeras de placas e bancos de dados de vários estados.",
+    "Decreto 3.695/2000: Subsistema de Inteligência de Segurança Pública (SISP)."
+   ],
+   "fim": [
+    "STJ, HC 598.886/SC (2020): o reconhecimento, sozinho, não basta para condenar.",
+    "LGPD, art. 4º, III: falta lei específica para os dados na segurança pública.",
+    "Convenção de Budapeste (adesão do Brasil em 2023): cooperação internacional contra crimes cibernéticos."
+   ]
   }
  },
  {
@@ -2923,6 +3467,23 @@
    "p1": "Inicialmente, cabe destacar que o racismo no Brasil tem raízes históricas profundas. O país foi um dos últimos do mundo a abolir a escravidão, e a desigualdade entre negros e brancos continuou depois da abolição. Hoje, ele se manifesta em ofensas, em \"piadas\" que humilham, o chamado racismo recreativo, e na exclusão no mercado de trabalho. Além disso, muitos casos nem chegam à polícia. Dessa forma, o preconceito permanece no cotidiano, muitas vezes disfarçado de brincadeira.",
    "p2": "Posteriormente, vale dissertar sobre o tratamento que a legislação brasileira dá a esses crimes. A Lei do Racismo pune a discriminação, e, desde 2023, a injúria racial também passou a ser considerada crime de racismo. Por isso, ambos são inafiançáveis e imprescritíveis, e a ofensa feita em tom de \"brincadeira\" tem a pena aumentada. Além disso, o Supremo Tribunal Federal equiparou a homofobia e a transfobia ao racismo. Assim, a lei deixa claro que discriminar não é opinião, mas crime.",
    "fim": "Por fim, é preciso que indivíduos, sociedade e Estado atuem juntos contra o racismo. Cada pessoa deve deixar de reproduzir \"piadas\" racistas e denunciar os casos que presenciar. Empresas e organizações precisam manter canais de denúncia e regras contra a discriminação. Ao Estado cabe promover a educação antirracista nas escolas e preparar as forças de segurança para registrar e investigar esses crimes. Afinal, racismo não é brincadeira: é crime."
+  },
+  "embasamento": {
+   "p1": [
+    "Lei Áurea (1888): o Brasil foi o último país das Américas a abolir a escravidão.",
+    "Lei 14.532/2023: pena aumentada quando a injúria racial ocorre em contexto de \"descontração, diversão ou recreação\" (racismo recreativo).",
+    "Mais de 50 mil registros de racismo e de injúria racial em 2025 (Anuário 2026)."
+   ],
+   "p2": [
+    "Lei 7.716/1989 (Lei do Racismo); desde a Lei 14.532/2023, a injúria racial também é crime de racismo.",
+    "CF, art. 5º, XLII: a prática do racismo é crime inafiançável e imprescritível, sujeito à pena de reclusão.",
+    "STF, ADO 26 e MI 4733 (2019): homofobia e transfobia enquadradas como racismo."
+   ],
+   "fim": [
+    "Disque 100 recebe denúncias de discriminação racial.",
+    "Lei 10.639/2003: ensino de história e cultura afro-brasileira nas escolas.",
+    "CF, art. 3º, IV: promover o bem de todos, sem preconceito de raça ou cor, é objetivo da República."
+   ]
   }
  },
  {
@@ -3003,6 +3564,23 @@
    "p1": "Inicialmente, cabe destacar que a desinformação e as ameaças on-line trazem riscos concretos à segurança pública. Boatos espalhados nas redes podem gerar pânico, linchamentos e justiça feita com as próprias mãos. Além disso, ameaças, falsas ou reais, obrigam a polícia a agir com rapidez para evitar tragédias. Mais recentemente, golpes e vídeos falsos criados com inteligência artificial passaram a enganar a população. Dessa forma, a mentira digital produz consequências reais.",
    "p2": "Posteriormente, vale dissertar sobre casos e respostas já adotadas pelo poder público. Em 2014, no Guarujá, em São Paulo, uma mulher foi linchada após um boato falso espalhado nas redes sociais. Já em 2023, diante de ameaças de ataques a escolas, o Ministério da Justiça criou a Operação Escola Segura, que monitorou as redes e levou a prisões em vários estados, inclusive Pernambuco. Além disso, o STF ampliou a responsabilidade das plataformas. Assim, o Estado tem reagido.",
    "fim": "Por fim, é preciso definir as responsabilidades de plataformas, Estado e usuários. As plataformas devem remover com rapidez conteúdos criminosos e perfis falsos. O Estado precisa dar à polícia estrutura para investigar crimes digitais. Os usuários, por sua vez, devem checar as informações antes de compartilhá-las. Afinal, na era das redes sociais, a informação confiável também é uma questão de segurança pública."
+  },
+  "embasamento": {
+   "p1": [
+    "Guarujá (SP), 2014: Fabiane Maria de Jesus foi linchada após um boato falso nas redes sociais.",
+    "Operação Escola Segura (Ministério da Justiça, 2023): monitorou ameaças de ataques a escolas e levou a prisões em vários estados, inclusive PE.",
+    "Lei 14.155/2021: fraude eletrônica, com pena de 4 a 8 anos, inclusive com vídeos falsos."
+   ],
+   "p2": [
+    "Guarujá, 2014: o caso virou símbolo de como um boato pode matar.",
+    "Abril de 2023: Ministério da Justiça e polícias estaduais monitoraram as ameaças às escolas em tempo real.",
+    "STF, Temas 533 e 987 (26/06/2025): as plataformas passaram a responder por conteúdo criminoso grave mesmo sem ordem judicial (Marco Civil, art. 19)."
+   ],
+   "fim": [
+    "STF (2025): dever de remoção rápida de conteúdo criminoso grave pelas plataformas.",
+    "Marco Civil (Lei 12.965/2014) e Lei 14.155/2021: base legal para investigar e pedir dados.",
+    "Lei de Contravenções Penais, art. 41: provocar alarme anunciando perigo inexistente é contravenção."
+   ]
   }
  }
 ]

@@ -14,6 +14,10 @@ describe("banco de temas", () => {
       expect(t.modelo.p1.startsWith("Inicialmente, cabe destacar")).toBe(true);
       expect(t.modelo.p2.startsWith("Posteriormente, vale dissertar")).toBe(true);
       expect(t.modelo.fim.startsWith("Por fim, é preciso")).toBe(true);
+      for (const parte of ["p1", "p2", "fim"] as const) {
+        expect(t.embasamento[parte]).toHaveLength(t.esqueleto[parte].length);
+        for (const e of t.embasamento[parte]) expect(e.length).toBeGreaterThan(30);
+      }
     }
     expect(new Set(TEMAS.map((t) => t.id)).size).toBe(TEMAS.length);
   });

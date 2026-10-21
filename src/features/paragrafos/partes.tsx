@@ -5,6 +5,7 @@ import { CORINGAS, ROTULO_TIPO, tipoDoAspecto } from "./coringas";
 import { rotuloDoModelo } from "./modelos";
 import {
   aberturaDoParagrafo,
+  embasamentoDoParagrafo,
   modeloDoParagrafo,
   pontosDoParagrafo,
   type TemaParagrafo,
@@ -303,6 +304,7 @@ export function Repertorio({
   aspecto: number | null;
 }) {
   const pontos = pontosDoParagrafo(tema, tipo, aspecto);
+  const embasamento = embasamentoDoParagrafo(tema, tipo, aspecto);
   const tipoAsp = tipo === "introducao" ? "cenario" : tipoDoAspecto(tema.aspectos[aspecto ?? 0].texto);
   const coringas = CORINGAS.filter((c) => c.frases[tipoAsp]);
   const e = tema.esqueleto;
@@ -314,12 +316,18 @@ export function Repertorio({
       </div>
 
       <Secao titulo={tipo === "introducao" ? "Fatos para abrir" : `Pontos para o aspecto ${(aspecto ?? 0) + 1}`}>
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {pontos.map((p, i) => (
             <li key={i} className="flex gap-2 text-sm leading-snug text-txt">
               <span className="font-bold text-gold">{i + 1}.</span>
-              <span>
+              <span className="min-w-0">
                 <Negrito texto={p} />
+                {embasamento[i] && (
+                  <span className="mt-1 block border-l-2 border-gold/40 pl-2 text-xs leading-relaxed text-dim">
+                    <span className="font-semibold text-gold/90">Embasamento: </span>
+                    {embasamento[i]}
+                  </span>
+                )}
               </span>
             </li>
           ))}

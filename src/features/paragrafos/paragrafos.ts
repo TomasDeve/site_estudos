@@ -19,6 +19,8 @@ export interface TemaParagrafo {
   };
   /** Parágrafo modelo (nota máxima) de cada parte, no esqueleto dele e nos critérios da Cebraspe. */
   modelo: { intro: string; p1: string; p2: string; fim: string };
+  /** Dado, lei ou caso concreto (com fonte) de cada ponto de p1, p2 e fim, na mesma ordem. */
+  embasamento: { p1: string[]; p2: string[]; fim: string[] };
 }
 
 export const TEMAS = temasJson as TemaParagrafo[];
@@ -83,6 +85,13 @@ export function modeloDoParagrafo(tema: TemaParagrafo, tipo: TipoParagrafo, aspe
   if (tipo === "introducao") return tema.modelo.intro;
   if (tipo === "conclusao") return tema.modelo.fim;
   return aspecto === 1 ? tema.modelo.p2 : tema.modelo.p1;
+}
+
+/** Embasamento de cada ponto daquele parágrafo (a introdução não tem: os fatos já vêm com fonte). */
+export function embasamentoDoParagrafo(tema: TemaParagrafo, tipo: TipoParagrafo, aspecto: number | null): string[] {
+  if (tipo === "introducao") return [];
+  if (tipo === "conclusao") return tema.embasamento.fim;
+  return aspecto === 1 ? tema.embasamento.p2 : tema.embasamento.p1;
 }
 
 /** Pontos do esqueleto que servem para aquele parágrafo. */

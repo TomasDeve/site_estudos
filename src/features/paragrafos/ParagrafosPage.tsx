@@ -19,6 +19,7 @@ import {
   CARACTERES_POR_LINHA,
   TIPOS,
   aberturaDoParagrafo,
+  embasamentoDoParagrafo,
   linhasNaFolha,
   modeloDoParagrafo,
   notaDoConceito,
@@ -199,7 +200,11 @@ export function ParagrafosPage() {
           paragrafoModelo: modeloDoParagrafo(tema, tipo, aspecto),
           modelo: NIVEIS[nivel].modelo,
           esforco: NIVEIS[nivel].esforco,
-          repertorio: [...pontosDoParagrafo(tema, tipo, aspecto), ...tema.decorar.map((d) => `${d.titulo} ${d.texto}`.trim())],
+          repertorio: [
+            ...pontosDoParagrafo(tema, tipo, aspecto),
+            ...embasamentoDoParagrafo(tema, tipo, aspecto),
+            ...tema.decorar.map((d) => `${d.titulo} ${d.texto}`.trim()),
+          ],
         },
         ctrl.signal
       );
