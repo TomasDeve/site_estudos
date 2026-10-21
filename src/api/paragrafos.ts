@@ -14,6 +14,8 @@ export interface CorrecaoParagrafo {
   melhorar: string[];
   erros: { trecho: string; correcao: string; explicacao: string }[];
   reescrita: string;
+  /** Gravado pelo site (não vem da IA): abriu o "Ver resposta" antes de corrigir. */
+  consultou_repertorio?: boolean;
 }
 
 export interface PedidoCorrecao {

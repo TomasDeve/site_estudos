@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, PenLine, RotateCcw, Shuffle, Timer, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, PenLine, RotateCcw, Shuffle, Timer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { RedacaoParagrafo } from "@/types/db";
 import {
@@ -50,6 +50,8 @@ interface Rascunho {
   aspecto: number | null;
   texto: string;
   inicio: number;
+  /** Abriu o "Ver resposta" (o repertório) antes de mandar corrigir. */
+  consultou?: boolean;
 }
 
 function lerRascunho(): Rascunho | null {
@@ -92,6 +94,10 @@ export function ParagrafosPage() {
   const [inicio, setInicio] = useState(rascunhoInicial?.inicio ?? Date.now());
   const [agora, setAgora] = useState(Date.now());
   const [corrigindo, setCorrigindo] = useState(false);
+  // "Ver resposta": o repertório aberto durante a escrita. `consultou` fica marcado no
+  // histórico, para separar o parágrafo feito de cabeça do feito com a resposta à vista.
+  const [respostaAberta, setRespostaAberta] = useState(false);
+  const [consultou, setConsultou] = useState(rascunhoInicial?.consultou ?? false);
   const [apagar, setApagar] = useState<RedacaoParagrafo | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -114,8 +120,8 @@ export function ParagrafosPage() {
   useEffect(() => {
     if (etapa.tipo !== "escrevendo") return;
     const s = etapa.sorteio;
-    gravarRascunho({ tipo: s.tipo, temaId: s.tema.id, aspecto: s.aspecto, texto, inicio });
-  }, [etapa, texto, inicio]);
+    gravarRascunho({ tipo: s.tipo, temaId: s.tema.id, aspecto: s.aspecto, texto, inicio, consultou });
+  }, [etapa, texto, inicio, consultou]);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -125,6 +131,8 @@ export function ParagrafosPage() {
     setTexto("");
     setInicio(Date.now());
     setAgora(Date.now());
+    setRespostaAberta(false);
+    setConsultou(false);
     setEtapa({ tipo: "escrevendo", sorteio: sortear(tipo, historico ?? []) });
   }
 
@@ -132,6 +140,8 @@ export function ParagrafosPage() {
     setTexto("");
     setInicio(Date.now());
     setAgora(Date.now());
+    setRespostaAberta(false);
+    setConsultou(false);
     setEtapa({ tipo: "escrevendo", sorteio });
   }
 
@@ -196,7 +206,7 @@ export function ParagrafosPage() {
           nota_conteudo: nc,
           erros: correcao.erros.length,
           nota,
-          correcao,
+          correcao: { ...correcao, consultou_repertorio: consultou },
         },
         { onError: (e) => toast.error(`A correção não foi salva no histórico: ${e.message}`) }
       );
@@ -271,6 +281,11 @@ export function ParagrafosPage() {
             texto={texto}
             setTexto={setTexto}
             corrigindo={corrigindo}
+            respostaAberta={respostaAberta}
+            onVerResposta={() => {
+              setRespostaAberta((v) => !v);
+              setConsultou(true);
+            }}
             onCorrigir={corrigir}
             onTrocar={() => comecar(etapa.sorteio.tipo)}
             onCancelar={() => {
@@ -412,6 +427,9 @@ function Inicio({
                         {TIPOS[p.tipo as TipoParagrafo]?.nome ?? p.tipo}
                         {p.tipo === "desenvolvimento" && ` · aspecto ${(p.aspecto ?? 0) + 1}`} ·{" "}
                         {new Date(p.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                        {(p.correcao as { consultou_repertorio?: boolean } | null)?.consultou_repertorio && (
+                          <span className="text-amber"> · viu a resposta</span>
+                        )}
                       </span>
                     </span>
                   </button>
@@ -438,6 +456,8 @@ function Escrevendo({
   texto,
   setTexto,
   corrigindo,
+  respostaAberta,
+  onVerResposta,
   onCorrigir,
   onTrocar,
   onCancelar,
@@ -446,6 +466,8 @@ function Escrevendo({
   texto: string;
   setTexto: (t: string) => void;
   corrigindo: boolean;
+  respostaAberta: boolean;
+  onVerResposta: () => void;
   onCorrigir: () => void;
   onTrocar: () => void;
   onCancelar: () => void;
@@ -455,6 +477,12 @@ function Escrevendo({
   const linhas = linhasNaFolha(texto);
   const dentro = linhas >= info.meta[0] && linhas <= info.meta[1];
   const abertura = aberturaDoParagrafo(tipo, aspecto);
+  const respostaRef = useRef<HTMLDivElement>(null);
+
+  // Abriu a resposta: rola até ela (o campo de escrita continua logo acima).
+  useEffect(() => {
+    if (respostaAberta) respostaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [respostaAberta]);
   const pedido =
     tipo === "introducao"
       ? "Escreva só a introdução: apresente o tema e anuncie os 3 aspectos."
@@ -501,6 +529,10 @@ function Escrevendo({
               <Button onClick={onCorrigir} disabled={!texto.trim()}>
                 Corrigir com IA
               </Button>
+              <Button variant="secondary" onClick={onVerResposta} title="Mostra o repertório deste parágrafo">
+                {respostaAberta ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                {respostaAberta ? "Esconder resposta" : "Ver resposta"}
+              </Button>
               <Button variant="ghost" onClick={onTrocar}>
                 <Shuffle className="size-4" />
                 Sortear outro tema
@@ -509,6 +541,12 @@ function Escrevendo({
           )}
         </div>
       </section>
+
+      {respostaAberta && (
+        <div ref={respostaRef} className="scroll-mt-20">
+          <Repertorio tema={tema} tipo={tipo} aspecto={aspecto} />
+        </div>
+      )}
     </div>
   );
 }
