@@ -189,6 +189,7 @@ export function ParagrafosPage() {
           texto: limpo,
           linhas,
           meta,
+          caracteresPorLinha: CARACTERES_POR_LINHA,
           repertorio: [...pontosDoParagrafo(tema, tipo, aspecto), ...tema.decorar.map((d) => `${d.titulo} ${d.texto}`.trim())],
         },
         ctrl.signal

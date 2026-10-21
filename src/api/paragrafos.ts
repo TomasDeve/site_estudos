@@ -36,6 +36,8 @@ export interface PedidoCorrecao {
   texto: string;
   linhas: number;
   meta: [number, number];
+  /** Caracteres por linha da folha (a largura da caixa de escrita). */
+  caracteresPorLinha: number;
   repertorio: string[];
 }
 

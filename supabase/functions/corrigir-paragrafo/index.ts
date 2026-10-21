@@ -28,10 +28,14 @@ interface Payload {
   linhas: number;
   /** Faixa de linhas pedida para o tipo de parágrafo, ex.: [8, 9]. */
   meta: [number, number];
+  /** Caracteres que cabem numa linha da folha, na letra do aluno (o site manda; padrão 62). */
+  caracteresPorLinha?: number;
   /** Pontos de repertório já conferidos para esse parágrafo (fonte da reescrita). */
   repertorio?: string[];
   /** Quanto a IA raciocina antes de responder (padrão "high"); "medium" sai mais barato. */
   esforco?: "low" | "medium" | "high";
+  /** Modelo da correção (padrão: Opus 5.5). Opção para comparar custo e qualidade. */
+  modelo?: string;
 }
 
 function erro(mensagem: string, status: number): Response {
@@ -68,13 +72,16 @@ const BASE = [
   "",
   "Seja um corretor exigente e justo, como a banca. Comentários curtos, concretos e em português do Brasil, falando com o aluno ('você').",
   "acertos: até 3 itens. melhorar: até 3 itens, cada um dizendo exatamente o que escrever ou trocar.",
-  "reescrita: o MESMO parágrafo do aluno reescrito para nota máxima, no esqueleto dele, mantendo as ideias boas e corrigindo os erros, com o tamanho da meta (cerca de 70 caracteres por linha). Use só fatos que o aluno escreveu ou que estão no repertório conferido enviado; nunca invente dado, lei ou exemplo.",
+  "reescrita: o MESMO parágrafo do aluno reescrito para nota máxima, no esqueleto dele, mantendo as ideias boas e corrigindo os erros, dentro do limite de caracteres informado no pedido (é o tamanho da meta na folha; NÃO passe do máximo, mesmo que o parágrafo do aluno seja maior). Use só fatos que o aluno escreveu ou que estão no repertório conferido enviado; nunca invente dado, lei ou exemplo.",
 ].join("\n");
 
-// Modelo e preço (US$ por milhão de tokens) — o site mostra o custo de cada correção.
-// A saída inclui o raciocínio da IA (thinking), cobrado como saída.
+// Modelos aceitos e preço (US$ por milhão de tokens) — o site mostra o custo de cada
+// correção. A saída inclui o raciocínio da IA (thinking), cobrado como saída.
 const MODELO = "claude-opus-5-5";
-const PRECO = { entrada: 4, saida: 20 };
+const PRECOS: Record<string, { entrada: number; saida: number }> = {
+  "claude-opus-5-5": { entrada: 4, saida: 20 },
+  "claude-sonnet-5-5": { entrada: 2, saida: 10 },
+};
 
 const NOMES: Record<Tipo, string> = {
   introducao: "Introdução",
@@ -100,7 +107,11 @@ function pedido(p: Payload): string {
         ? `a CONCLUSÃO, que responde ao aspecto 3: "${p.aspectos[2]}"`
         : `o ${(p.aspecto ?? 0) + 1}º parágrafo de DESENVOLVIMENTO, que responde ao aspecto ${(p.aspecto ?? 0) + 1}: "${p.aspectos[p.aspecto ?? 0]}"`;
   linhas.push(`O aluno escreveu ${qual}.`);
-  linhas.push(`Meta: ${p.meta[0]} a ${p.meta[1]} linhas. Linhas estimadas na folha: ${p.linhas}.`);
+  const cpl = p.caracteresPorLinha && p.caracteresPorLinha > 30 ? p.caracteresPorLinha : 62;
+  linhas.push(`Meta: ${p.meta[0]} a ${p.meta[1]} linhas. Linhas que o parágrafo do aluno ocupa na folha: ${p.linhas}.`);
+  linhas.push(
+    `Tamanho da reescrita: entre ${p.meta[0] * cpl} e ${p.meta[1] * cpl} caracteres, contando espaços (${cpl} caracteres por linha da folha).`,
+  );
   if (p.repertorio?.length) {
     linhas.push("");
     linhas.push("Repertório conferido para este parágrafo (pode usar na reescrita):");
@@ -182,9 +193,11 @@ Deno.serve(async (req: Request) => {
 
   try {
     // Correção pede critério: effort high por padrão. Saída em JSON pelo schema (structured outputs).
+    const modelo = payload.modelo && PRECOS[payload.modelo] ? payload.modelo : MODELO;
+    const preco = PRECOS[modelo];
     const esforco = payload.esforco && ["low", "medium", "high"].includes(payload.esforco) ? payload.esforco : "high";
     const resposta = await client.messages.create({
-      model: MODELO,
+      model: modelo,
       max_tokens: 16000,
       output_config: {
         effort: esforco,
@@ -207,11 +220,11 @@ Deno.serve(async (req: Request) => {
     const entrada =
       u.input_tokens + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0);
     const uso = {
-      modelo: MODELO,
+      modelo,
       esforco,
       entrada,
       saida: u.output_tokens,
-      custo_usd: (entrada * PRECO.entrada + u.output_tokens * PRECO.saida) / 1_000_000,
+      custo_usd: (entrada * preco.entrada + u.output_tokens * preco.saida) / 1_000_000,
     };
 
     return new Response(JSON.stringify({ ...correcao, tipo: NOMES[payload.tipo], uso }), {
