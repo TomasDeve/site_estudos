@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Lightbulb, Sparkles } from "lucide-react";
 import type { CorrecaoParagrafo, UsoIA } from "@/api/paragrafos";
 import { CORINGAS, ROTULO_TIPO, tipoDoAspecto } from "./coringas";
+import { rotuloDoModelo } from "./modelos";
 import { aberturaDoParagrafo, pontosDoParagrafo, type TemaParagrafo, type TipoParagrafo } from "./paragrafos";
 
 /** Texto com **negrito** (o formato dos fontes do PDF). */
@@ -158,7 +159,7 @@ export function Correcao({
         <p className="mt-3 text-sm leading-relaxed text-txt">{correcao.veredito}</p>
         {correcao.uso && (
           <p className="mt-3 border-t border-line/40 pt-2 text-[11px] text-mut">
-            Gasto desta correção: <GastoIA uso={correcao.uso} />
+            Gasto desta correção ({rotuloDoModelo(correcao.uso.modelo)}): <GastoIA uso={correcao.uso} />
           </p>
         )}
       </Secao>
@@ -242,7 +243,7 @@ function Lista({ itens, cor, vazio }: { itens: string[]; cor: string; vazio: str
 }
 
 export function fmtUSD(v: number): string {
-  return `US$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: v < 1 ? 3 : 2, maximumFractionDigits: v < 1 ? 3 : 2 })}`;
+  return `US$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: v < 0.1 ? 3 : 2, maximumFractionDigits: v < 0.1 ? 3 : 2 })}`;
 }
 
 export function fmtTokens(n: number): string {

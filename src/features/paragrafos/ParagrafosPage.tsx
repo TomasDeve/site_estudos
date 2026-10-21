@@ -29,6 +29,7 @@ import {
 } from "./paragrafos";
 import { Correcao, GastoIA, Proposta, Repertorio, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
 import { FolhaRedacao } from "./FolhaRedacao";
+import { NIVEIS, PARAGRAFOS_POR_MES, useNivelCorrecao, type NivelCorrecao } from "./modelos";
 
 /** Um parágrafo corrigido em tela (o que acabou de sair da IA ou um do histórico). */
 interface Resultado {
@@ -102,6 +103,7 @@ export function ParagrafosPage() {
   const [respostaAberta, setRespostaAberta] = useState(false);
   const [consultou, setConsultou] = useState(rascunhoInicial?.consultou ?? false);
   const [apagar, setApagar] = useState<RedacaoParagrafo | null>(null);
+  const [nivel, setNivel] = useNivelCorrecao();
   const abortRef = useRef<AbortController | null>(null);
   // Linhas que o parágrafo ocupa na caixa (cada linha da tela = uma linha da folha).
   const linhasRef = useRef(0);
@@ -190,6 +192,8 @@ export function ParagrafosPage() {
           linhas,
           meta,
           caracteresPorLinha: CARACTERES_POR_LINHA,
+          modelo: NIVEIS[nivel].modelo,
+          esforco: NIVEIS[nivel].esforco,
           repertorio: [...pontosDoParagrafo(tema, tipo, aspecto), ...tema.decorar.map((d) => `${d.titulo} ${d.texto}`.trim())],
         },
         ctrl.signal
@@ -279,6 +283,8 @@ export function ParagrafosPage() {
             historico={historico ?? []}
             carregando={isLoading}
             onComecar={comecar}
+            nivel={nivel}
+            onNivel={setNivel}
             onAbrir={abrirDoHistorico}
             onApagar={setApagar}
           />
@@ -291,6 +297,7 @@ export function ParagrafosPage() {
             setTexto={setTexto}
             corrigindo={corrigindo}
             onLinhas={guardarLinhas}
+            nivel={nivel}
             respostaAberta={respostaAberta}
             onVerResposta={() => {
               setRespostaAberta((v) => !v);
@@ -347,12 +354,16 @@ function Inicio({
   historico,
   carregando,
   onComecar,
+  nivel,
+  onNivel,
   onAbrir,
   onApagar,
 }: {
   historico: RedacaoParagrafo[];
   carregando: boolean;
   onComecar: (t: TipoParagrafo) => void;
+  nivel: NivelCorrecao;
+  onNivel: (n: NivelCorrecao) => void;
   onAbrir: (p: RedacaoParagrafo) => void;
   onApagar: (p: RedacaoParagrafo) => void;
 }) {
@@ -412,18 +423,25 @@ function Inicio({
         {TEMAS.length} temas do seu PDF de Atualidades. O sorteio evita repetir o que você já fez.
       </p>
 
-      {gasto && gasto.correcoes > 0 && (
-        <Secao titulo="Gasto com a IA neste mês">
-          <p className="text-sm text-txt">
-            {gasto.correcoes} {gasto.correcoes === 1 ? "correção" : "correções"} ·{" "}
-            <GastoIA uso={{ entrada: gasto.entrada, saida: gasto.saida, custo_usd: gasto.custo }} />
-          </p>
-          <p className="mt-1 text-xs text-mut">
-            Média de {fmtUSD(gasto.custo / gasto.correcoes)} por correção. A saída inclui o raciocínio da IA antes de
-            responder, e é a parte mais cara (5 vezes o preço da entrada).
-          </p>
-        </Secao>
-      )}
+      <Secao titulo="Correção da IA">
+        <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Nível de correção">
+          {(Object.keys(NIVEIS) as NivelCorrecao[]).map((n) => (
+            <CartaoNivel key={n} nivel={n} ativo={n === nivel} onEscolher={() => onNivel(n)} />
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-mut">
+          Estimativas dos testes com o mesmo parágrafo (12 erros de português). Custo do mês para 10 parágrafos por dia.
+        </p>
+        {gasto && gasto.correcoes > 0 && (
+          <div className="mt-4 border-t border-line/40 pt-3">
+            <p className="text-sm text-txt">
+              Neste mês: {gasto.correcoes} {gasto.correcoes === 1 ? "correção" : "correções"} ·{" "}
+              <GastoIA uso={{ entrada: gasto.entrada, saida: gasto.saida, custo_usd: gasto.custo }} />
+            </p>
+            <p className="mt-1 text-xs text-mut">Média de {fmtUSD(gasto.custo / gasto.correcoes)} por correção.</p>
+          </div>
+        )}
+      </Secao>
 
       <Secao titulo="Histórico">
         {carregando ? (
@@ -475,12 +493,42 @@ function Inicio({
   );
 }
 
+function CartaoNivel({ nivel, ativo, onEscolher }: { nivel: NivelCorrecao; ativo: boolean; onEscolher: () => void }) {
+  const info = NIVEIS[nivel];
+  return (
+    <button
+      role="radio"
+      aria-checked={ativo}
+      onClick={onEscolher}
+      className={`flex h-full cursor-pointer flex-col rounded-xl border px-3 py-2.5 text-left transition-colors ${
+        ativo ? "border-gold/60 bg-gold/10" : "border-line/50 bg-navy-900/60 hover:border-line"
+      }`}
+    >
+      <span className="flex items-baseline justify-between gap-2">
+        <span className={`text-sm font-bold ${ativo ? "text-gold" : "text-txt"}`}>{info.nome}</span>
+        <span className="text-[11px] text-mut">{info.rotulo}</span>
+      </span>
+      <span className="mt-2 block text-[10px] font-semibold uppercase tracking-wide text-mut">Custo estimado</span>
+      <span className="block text-sm font-semibold tabular-nums text-txt">~{fmtUSD(info.custo)} por parágrafo</span>
+      <span className="block text-xs tabular-nums text-dim">~{fmtUSD(info.custo * PARAGRAFOS_POR_MES)} por mês</span>
+      <span className="mt-2 block text-[10px] font-semibold uppercase tracking-wide text-mut">Precisão estimada</span>
+      <span className="block text-sm tracking-[0.2em] text-gold" aria-label={`${info.precisao} de 5`}>
+        {"●".repeat(info.precisao)}
+        <span className="text-line">{"●".repeat(5 - info.precisao)}</span>
+      </span>
+      <span className="block text-xs text-dim">achou {info.errosNoTeste} de 12 erros no teste</span>
+      <span className="mt-2 block text-xs leading-snug text-mut">{info.descricao}</span>
+    </button>
+  );
+}
+
 function Escrevendo({
   sorteio,
   texto,
   setTexto,
   corrigindo,
   onLinhas,
+  nivel,
   respostaAberta,
   onVerResposta,
   onCorrigir,
@@ -492,6 +540,7 @@ function Escrevendo({
   setTexto: (t: string) => void;
   corrigindo: boolean;
   onLinhas: (n: number) => void;
+  nivel: NivelCorrecao;
   respostaAberta: boolean;
   onVerResposta: () => void;
   onCorrigir: () => void;
@@ -546,7 +595,7 @@ function Escrevendo({
           {corrigindo ? (
             <>
               <Button disabled loading>
-                Corrigindo… (leva uns 30 s)
+                Corrigindo… (leva uns 20 a 30 s)
               </Button>
               <Button variant="ghost" onClick={onCancelar}>
                 Cancelar
@@ -568,6 +617,10 @@ function Escrevendo({
             </>
           )}
         </div>
+        <p className="mt-2 text-[11px] text-mut">
+          Correção {NIVEIS[nivel].nome.toLowerCase()} ({NIVEIS[nivel].rotulo}, ~{fmtUSD(NIVEIS[nivel].custo)}). Troque o
+          nível na tela inicial.
+        </p>
       </section>
 
       {respostaAberta && (
