@@ -16,6 +16,15 @@ export interface CorrecaoParagrafo {
   reescrita: string;
   /** Gravado pelo site (não vem da IA): abriu o "Ver resposta" antes de corrigir. */
   consultou_repertorio?: boolean;
+  /** Tokens e custo da correção (a edge function mede; a saída inclui o raciocínio da IA). */
+  uso?: UsoIA;
+}
+
+export interface UsoIA {
+  modelo: string;
+  entrada: number;
+  saida: number;
+  custo_usd: number;
 }
 
 export interface PedidoCorrecao {
@@ -69,6 +78,29 @@ export function useParagrafosRecentes() {
         .limit(200);
       if (error) throw error;
       return data as RedacaoParagrafo[];
+    },
+  });
+}
+
+/** Tokens e custo das correções do mês (só a coluna do uso, sem baixar os textos). */
+export function useGastoIAMes() {
+  return useQuery({
+    queryKey: [...CHAVE, "gasto-mes"],
+    queryFn: async () => {
+      const agora = new Date();
+      const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
+      const { data, error } = await supabase
+        .from("redacao_paragrafos")
+        .select("uso:correcao->uso")
+        .gte("created_at", inicioMes);
+      if (error) throw error;
+      const usos = (data as unknown as { uso: UsoIA | null }[]).map((d) => d.uso).filter((u): u is UsoIA => !!u);
+      return {
+        correcoes: usos.length,
+        entrada: usos.reduce((s, u) => s + u.entrada, 0),
+        saida: usos.reduce((s, u) => s + u.saida, 0),
+        custo: usos.reduce((s, u) => s + u.custo_usd, 0),
+      };
     },
   });
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Lightbulb, Sparkles } from "lucide-react";
-import type { CorrecaoParagrafo } from "@/api/paragrafos";
+import type { CorrecaoParagrafo, UsoIA } from "@/api/paragrafos";
 import { CORINGAS, ROTULO_TIPO, tipoDoAspecto } from "./coringas";
 import { aberturaDoParagrafo, pontosDoParagrafo, type TemaParagrafo, type TipoParagrafo } from "./paragrafos";
 
@@ -156,6 +156,11 @@ export function Correcao({
           da Cebraspe, em escala 10).
         </p>
         <p className="mt-3 text-sm leading-relaxed text-txt">{correcao.veredito}</p>
+        {correcao.uso && (
+          <p className="mt-3 border-t border-line/40 pt-2 text-[11px] text-mut">
+            Gasto desta correção: <GastoIA uso={correcao.uso} />
+          </p>
+        )}
       </Secao>
 
       <Secao titulo="Critérios">
@@ -233,6 +238,24 @@ function Lista({ itens, cor, vazio }: { itens: string[]; cor: string; vazio: str
         </li>
       ))}
     </ul>
+  );
+}
+
+export function fmtUSD(v: number): string {
+  return `US$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: v < 1 ? 3 : 2, maximumFractionDigits: v < 1 ? 3 : 2 })}`;
+}
+
+export function fmtTokens(n: number): string {
+  return n >= 10_000 ? `${(n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} mil` : n.toLocaleString("pt-BR");
+}
+
+/** "3.120 tokens de entrada + 2.850 de saída ≈ US$ 0,069" */
+export function GastoIA({ uso }: { uso: Pick<UsoIA, "entrada" | "saida" | "custo_usd"> }) {
+  return (
+    <span className="tabular-nums">
+      {fmtTokens(uso.entrada)} tokens de entrada + {fmtTokens(uso.saida)} de saída ≈{" "}
+      <strong className="font-semibold text-dim">{fmtUSD(uso.custo_usd)}</strong>
+    </span>
   );
 }
 

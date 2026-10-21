@@ -6,6 +6,7 @@ import type { RedacaoParagrafo } from "@/types/db";
 import {
   corrigirParagrafo,
   useExcluirParagrafo,
+  useGastoIAMes,
   useParagrafosRecentes,
   useSalvarParagrafo,
   type CorrecaoParagrafo,
@@ -26,7 +27,7 @@ import {
   type Sorteio,
   type TipoParagrafo,
 } from "./paragrafos";
-import { Correcao, Proposta, Repertorio, Secao, corDaNota, fmtTempo } from "./partes";
+import { Correcao, GastoIA, Proposta, Repertorio, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
 import { FolhaRedacao } from "./FolhaRedacao";
 
 /** Um parágrafo corrigido em tela (o que acabou de sair da IA ou um do histórico). */
@@ -355,6 +356,7 @@ function Inicio({
   onApagar: (p: RedacaoParagrafo) => void;
 }) {
   const tipos = Object.keys(TIPOS) as TipoParagrafo[];
+  const { data: gasto } = useGastoIAMes();
   return (
     <div className="space-y-5">
       <div>
@@ -408,6 +410,19 @@ function Inicio({
       <p className="text-xs text-mut">
         {TEMAS.length} temas do seu PDF de Atualidades. O sorteio evita repetir o que você já fez.
       </p>
+
+      {gasto && gasto.correcoes > 0 && (
+        <Secao titulo="Gasto com a IA neste mês">
+          <p className="text-sm text-txt">
+            {gasto.correcoes} {gasto.correcoes === 1 ? "correção" : "correções"} ·{" "}
+            <GastoIA uso={{ entrada: gasto.entrada, saida: gasto.saida, custo_usd: gasto.custo }} />
+          </p>
+          <p className="mt-1 text-xs text-mut">
+            Média de {fmtUSD(gasto.custo / gasto.correcoes)} por correção. A saída inclui o raciocínio da IA antes de
+            responder, e é a parte mais cara (5 vezes o preço da entrada).
+          </p>
+        </Secao>
+      )}
 
       <Secao titulo="Histórico">
         {carregando ? (

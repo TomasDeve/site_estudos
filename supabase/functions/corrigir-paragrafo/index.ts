@@ -69,6 +69,11 @@ const BASE = [
   "reescrita: o MESMO parágrafo do aluno reescrito para nota máxima, no esqueleto dele, mantendo as ideias boas e corrigindo os erros, com o tamanho da meta (cerca de 70 caracteres por linha). Use só fatos que o aluno escreveu ou que estão no repertório conferido enviado; nunca invente dado, lei ou exemplo.",
 ].join("\n");
 
+// Modelo e preço (US$ por milhão de tokens) — o site mostra o custo de cada correção.
+// A saída inclui o raciocínio da IA (thinking), cobrado como saída.
+const MODELO = "claude-opus-5-5";
+const PRECO = { entrada: 4, saida: 20 };
+
 const NOMES: Record<Tipo, string> = {
   introducao: "Introdução",
   desenvolvimento: "Desenvolvimento",
@@ -176,7 +181,7 @@ Deno.serve(async (req: Request) => {
   try {
     // Correção pede critério: effort high. Saída em JSON pelo schema (structured outputs).
     const resposta = await client.messages.create({
-      model: "claude-opus-5-5",
+      model: MODELO,
       max_tokens: 16000,
       output_config: {
         effort: "high",
@@ -195,8 +200,17 @@ Deno.serve(async (req: Request) => {
     const bloco = resposta.content.find((b) => b.type === "text");
     if (!bloco || bloco.type !== "text") return erro("A IA não devolveu a correção.", 502);
     const correcao = JSON.parse(bloco.text);
+    const u = resposta.usage;
+    const entrada =
+      u.input_tokens + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0);
+    const uso = {
+      modelo: MODELO,
+      entrada,
+      saida: u.output_tokens,
+      custo_usd: (entrada * PRECO.entrada + u.output_tokens * PRECO.saida) / 1_000_000,
+    };
 
-    return new Response(JSON.stringify({ ...correcao, tipo: NOMES[payload.tipo] }), {
+    return new Response(JSON.stringify({ ...correcao, tipo: NOMES[payload.tipo], uso }), {
       headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
     });
   } catch (err) {
