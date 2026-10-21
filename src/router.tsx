@@ -17,6 +17,7 @@ const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMista
 const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
 const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
 const ResumoPage = lazy(() => import("@/features/resumo/ResumoPage").then((m) => ({ default: m.ResumoPage })));
+const ParagrafosPage = lazy(() => import("@/features/paragrafos/ParagrafosPage").then((m) => ({ default: m.ParagrafosPage })));
 
 function pagina(node: ReactNode) {
   return <Suspense fallback={<FullScreenSpinner />}>{node}</Suspense>;
@@ -45,6 +46,8 @@ export const router = createBrowserRouter([
       { path: "impressao", element: pagina(<ImpressaoPage />) },
       // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki (aba própria)
       { path: "resumo", element: pagina(<ResumoPage />) },
+      // treino de redação: um parágrafo por vez, tema sorteado, correção da IA e repertório (aba própria)
+      { path: "paragrafos", element: pagina(<ParagrafosPage />) },
       // tudo abaixo vive dentro do concurso ativo
       {
         path: "concurso/:concursoId",

@@ -642,3 +642,19 @@ textarea,
     border-radius: 4px;
   }
 }
+
+/* Treino de parágrafos: o campo de escrita com pauta, como a folha de redação. */
+.folha-paragrafo {
+  --pauta: 1.9rem;
+  line-height: var(--pauta);
+  padding-top: calc(var(--pauta) * 0.25);
+  padding-bottom: calc(var(--pauta) * 0.25);
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--pauta) - 1px),
+    rgb(37 64 95 / 0.55) calc(var(--pauta) - 1px)
+  );
+  background-size: 100% var(--pauta);
+  background-position: 0 calc(var(--pauta) * 0.25);
+  background-attachment: local;
+}

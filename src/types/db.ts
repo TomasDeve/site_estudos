@@ -882,6 +882,57 @@ export type Database = {
         }
         Relationships: []
       }
+      redacao_paragrafos: {
+        Row: {
+          aspecto: number | null
+          conceito: number | null
+          correcao: Json | null
+          created_at: string
+          erros: number
+          id: string
+          linhas: number
+          nota: number | null
+          nota_conteudo: number | null
+          segundos: number | null
+          tema_id: string
+          texto: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          aspecto?: number | null
+          conceito?: number | null
+          correcao?: Json | null
+          created_at?: string
+          erros?: number
+          id?: string
+          linhas?: number
+          nota?: number | null
+          nota_conteudo?: number | null
+          segundos?: number | null
+          tema_id: string
+          texto: string
+          tipo: string
+          user_id?: string
+        }
+        Update: {
+          aspecto?: number | null
+          conceito?: number | null
+          correcao?: Json | null
+          created_at?: string
+          erros?: number
+          id?: string
+          linhas?: number
+          nota?: number | null
+          nota_conteudo?: number | null
+          segundos?: number | null
+          tema_id?: string
+          texto?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       redacoes: {
         Row: {
           concurso_id: string
@@ -1516,6 +1567,7 @@ export type QuestaoImportada = Tables<"questoes_importadas">
 export type PlanoHora = Tables<"plano_horas">
 export type RotinaBloco = Tables<"rotina_blocos">
 export type QuestaoAnki = Tables<"questoes_anki">
+export type RedacaoParagrafo = Tables<"redacao_paragrafos">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "arquivada"
