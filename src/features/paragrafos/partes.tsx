@@ -313,25 +313,6 @@ export function Repertorio({
         <h2 className="text-lg font-bold text-txt">Repertório para este parágrafo</h2>
       </div>
 
-      <Secao
-        titulo={
-          <span className="inline-flex items-center gap-1.5">
-            <BadgeCheck className="size-3.5 text-green" /> Parágrafo modelo · nota máxima
-          </span>
-        }
-        className="ring-1 ring-green/30"
-      >
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-txt">
-          {modeloDoParagrafo(tema, tipo, aspecto)}
-        </p>
-        <p className="mt-3 border-t border-line/40 pt-2 text-[11px] leading-relaxed text-mut">
-          Escrito no seu esqueleto, pelos critérios da Cebraspe: responde ao aspecto com as palavras do enunciado,
-          desenvolve 2 pontos com informação concreta e fecha ligando ao tema, sem os erros que a banca desconta
-          (estrangeirismo entre aspas, vírgulas da norma, nada de falar com o leitor). Não é o único jeito certo: outra
-          abordagem bem desenvolvida também tira nota máxima.
-        </p>
-      </Secao>
-
       <Secao titulo={tipo === "introducao" ? "Fatos para abrir" : `Pontos para o aspecto ${(aspecto ?? 0) + 1}`}>
         <ul className="space-y-2">
           {pontos.map((p, i) => (
@@ -394,6 +375,26 @@ export function Repertorio({
       </Secao>
 
       <p className="text-center text-xs text-mut">Abertura do esqueleto: {aberturaDoParagrafo(tipo, aspecto)}</p>
+
+      {/* O modelo fica por último: primeiro o repertório, depois a resposta pronta. */}
+      <Secao
+        titulo={
+          <span className="inline-flex items-center gap-1.5">
+            <BadgeCheck className="size-3.5 text-green" /> Parágrafo modelo · nota máxima
+          </span>
+        }
+        className="ring-1 ring-green/30"
+      >
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-txt">
+          {modeloDoParagrafo(tema, tipo, aspecto)}
+        </p>
+        <p className="mt-3 border-t border-line/40 pt-2 text-[11px] leading-relaxed text-mut">
+          Escrito no seu esqueleto, pelos critérios da Cebraspe: responde ao aspecto com as palavras do enunciado,
+          desenvolve 2 pontos com informação concreta e fecha ligando ao tema, sem os erros que a banca desconta
+          (estrangeirismo entre aspas, vírgulas da norma, nada de falar com o leitor). Não é o único jeito certo: outra
+          abordagem bem desenvolvida também tira nota máxima.
+        </p>
+      </Secao>
     </div>
   );
 }
