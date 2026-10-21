@@ -3,6 +3,7 @@
 #   impressao/Atualidades-Redacao-PCPE/blocos/b01..b12.txt  (Proposta A + esqueleto)
 #   impressao/Atualidades-Redacao-PCPE/blocos/extras.txt    (E1..E10, proposta X + esqueleto)
 #   tools/paragrafos-esqueletos-b.txt                        (esqueleto das Propostas B, que o PDF não tem)
+#   tools/paragrafos-modelos.txt                             (parágrafo modelo de cada parte, critérios Cebraspe)
 # Entra só proposta que tem esqueleto (é dele que sai o repertório de cada parágrafo).
 # Rodar da raiz do repo:  py -3.14 -I tools/paragrafos-temas.py
 import json
@@ -118,6 +119,16 @@ for parte in re.split(r"^(?=# E\d+ )", extras, flags=re.M):
             "esqueleto": esqueleto(secao(linhas, "@esqueleto")),
         }
     )
+
+modelos_txt = (RAIZ / "tools" / "paragrafos-modelos.txt").read_text(encoding="utf-8")
+modelos = {
+    tid: {k.strip(): limpa(v) for k, _, v in (l.partition(":") for l in corpo.splitlines())}
+    for tid, corpo in re.findall(r"^@modelo (\S+)\n(.*?)\n@fim", modelos_txt, flags=re.M | re.S)
+}
+for t in temas:
+    m = modelos.get(t["id"])
+    assert m and set(m) == {"intro", "p1", "p2", "fim"}, f"modelo incompleto: {t['id']}"
+    t["modelo"] = m
 
 for t in temas:
     e = t["esqueleto"]

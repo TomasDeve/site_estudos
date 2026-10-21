@@ -17,6 +17,8 @@ export interface TemaParagrafo {
     fim: string[];
     pronta: string;
   };
+  /** Parágrafo modelo (nota máxima) de cada parte, no esqueleto dele e nos critérios da Cebraspe. */
+  modelo: { intro: string; p1: string; p2: string; fim: string };
 }
 
 export const TEMAS = temasJson as TemaParagrafo[];
@@ -74,6 +76,13 @@ export function aspectoDoParagrafo(tipo: TipoParagrafo, aspecto: number | null):
 export function aberturaDoParagrafo(tipo: TipoParagrafo, aspecto: number | null): string {
   if (tipo !== "desenvolvimento") return TIPOS[tipo].abertura;
   return aspecto === 1 ? "“Posteriormente, vale dissertar sobre…”" : "“Inicialmente, cabe destacar que…”";
+}
+
+/** O parágrafo modelo daquela parte da redação. */
+export function modeloDoParagrafo(tema: TemaParagrafo, tipo: TipoParagrafo, aspecto: number | null): string {
+  if (tipo === "introducao") return tema.modelo.intro;
+  if (tipo === "conclusao") return tema.modelo.fim;
+  return aspecto === 1 ? tema.modelo.p2 : tema.modelo.p1;
 }
 
 /** Pontos do esqueleto que servem para aquele parágrafo. */

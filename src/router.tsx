@@ -46,8 +46,10 @@ export const router = createBrowserRouter([
       { path: "impressao", element: pagina(<ImpressaoPage />) },
       // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki (aba própria)
       { path: "resumo", element: pagina(<ResumoPage />) },
-      // treino de redação: um parágrafo por vez, tema sorteado, correção da IA e repertório (aba própria)
-      { path: "paragrafos", element: pagina(<ParagrafosPage />) },
+      // treino de redação no padrão Cebraspe: um parágrafo por vez, tema sorteado, correção da IA,
+      // parágrafo modelo e repertório (aba própria). O link antigo /paragrafos cai aqui.
+      { path: "redacao", element: pagina(<ParagrafosPage />) },
+      { path: "paragrafos", element: <Navigate to="/redacao" replace /> },
       // tudo abaixo vive dentro do concurso ativo
       {
         path: "concurso/:concursoId",

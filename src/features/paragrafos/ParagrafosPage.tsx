@@ -20,6 +20,7 @@ import {
   TIPOS,
   aberturaDoParagrafo,
   linhasNaFolha,
+  modeloDoParagrafo,
   notaConteudo as somaConteudo,
   notaFinal,
   pontosDoParagrafo,
@@ -33,6 +34,8 @@ import { NIVEIS, PARAGRAFOS_POR_MES, useNivelCorrecao, type NivelCorrecao } from
 
 /** Um parágrafo corrigido em tela (o que acabou de sair da IA ou um do histórico). */
 interface Resultado {
+  /** Linha do histórico (chega quando o salvamento termina; do histórico já vem pronta). */
+  id?: string;
   correcao: CorrecaoParagrafo;
   texto: string;
   nota: number;
@@ -102,7 +105,8 @@ export function ParagrafosPage() {
   // histórico, para separar o parágrafo feito de cabeça do feito com a resposta à vista.
   const [respostaAberta, setRespostaAberta] = useState(false);
   const [consultou, setConsultou] = useState(rascunhoInicial?.consultou ?? false);
-  const [apagar, setApagar] = useState<RedacaoParagrafo | null>(null);
+  // O que apagar: uma linha do histórico, ou a correção aberta na tela (aí volta ao início).
+  const [apagar, setApagar] = useState<{ id: string; daTela?: boolean } | null>(null);
   const [nivel, setNivel] = useNivelCorrecao();
   const abortRef = useRef<AbortController | null>(null);
   // Linhas que o parágrafo ocupa na caixa (cada linha da tela = uma linha da folha).
@@ -113,7 +117,7 @@ export function ParagrafosPage() {
 
   useEffect(() => {
     const anterior = document.title;
-    document.title = "Treino de parágrafos";
+    document.title = "Redação";
     return () => {
       document.title = anterior;
       abortRef.current?.abort();
@@ -192,6 +196,7 @@ export function ParagrafosPage() {
           linhas,
           meta,
           caracteresPorLinha: CARACTERES_POR_LINHA,
+          paragrafoModelo: modeloDoParagrafo(tema, tipo, aspecto),
           modelo: NIVEIS[nivel].modelo,
           esforco: NIVEIS[nivel].esforco,
           repertorio: [...pontosDoParagrafo(tema, tipo, aspecto), ...tema.decorar.map((d) => `${d.titulo} ${d.texto}`.trim())],
@@ -221,7 +226,15 @@ export function ParagrafosPage() {
           nota,
           correcao: { ...correcao, consultou_repertorio: consultou },
         },
-        { onError: (e) => toast.error(`A correção não foi salva no histórico: ${e.message}`) }
+        {
+          onSuccess: (linha) =>
+            setEtapa((atual) =>
+              atual.tipo === "corrigido" && !atual.resultado.id && atual.resultado.texto === limpo
+                ? { ...atual, resultado: { ...atual.resultado, id: linha.id } }
+                : atual
+            ),
+          onError: (e) => toast.error(`A correção não foi salva no histórico: ${e.message}`),
+        }
       );
     } catch (e) {
       if (!ctrl.signal.aborted) toast.error(e instanceof Error ? e.message : String(e));
@@ -238,6 +251,7 @@ export function ParagrafosPage() {
       tipo: "corrigido",
       sorteio: { tema, tipo: p.tipo as TipoParagrafo, aspecto: p.aspecto },
       resultado: {
+        id: p.id,
         correcao,
         texto: p.texto,
         nota: Number(p.nota ?? 0),
@@ -251,7 +265,7 @@ export function ParagrafosPage() {
 
   const titulo =
     etapa.tipo === "inicio"
-      ? "Treino de parágrafos"
+      ? "Redação"
       : `${TIPOS[etapa.sorteio.tipo].nome}${
           etapa.sorteio.tipo === "desenvolvimento" ? ` · aspecto ${(etapa.sorteio.aspecto ?? 0) + 1}` : ""
         }`;
@@ -329,6 +343,15 @@ export function ParagrafosPage() {
               <Button variant="ghost" onClick={irParaInicio}>
                 Outro tipo
               </Button>
+              <Button
+                variant="danger"
+                onClick={() => etapa.resultado.id && setApagar({ id: etapa.resultado.id, daTela: true })}
+                disabled={!etapa.resultado.id}
+                title={etapa.resultado.id ? "Apagar esta correção do histórico" : "Salvando no histórico…"}
+              >
+                <Trash2 className="size-4" />
+                Apagar
+              </Button>
             </div>
           </div>
         )}
@@ -336,12 +359,18 @@ export function ParagrafosPage() {
 
       <ConfirmDialog
         open={apagar !== null}
-        title="Apagar este parágrafo do histórico?"
-        message="A correção some e o tema volta a poder ser sorteado."
+        title="Apagar esta correção?"
+        message="O parágrafo e a correção saem do histórico (e da média), e o tema volta a poder ser sorteado."
         confirmLabel="Apagar"
         danger
         onConfirm={() => {
-          if (apagar) excluir.mutate(apagar.id, { onError: (e) => toast.error(e.message) });
+          if (apagar) {
+            excluir.mutate(apagar.id, {
+              onSuccess: () => toast.success("Correção apagada"),
+              onError: (e) => toast.error(e.message),
+            });
+            if (apagar.daTela) irParaInicio();
+          }
           setApagar(null);
         }}
         onClose={() => setApagar(null)}
@@ -423,6 +452,8 @@ function Inicio({
         {TEMAS.length} temas do seu PDF de Atualidades. O sorteio evita repetir o que você já fez.
       </p>
 
+      <ComoCebraspeCorrige />
+
       <Secao titulo="Correção da IA">
         <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Nível de correção">
           {(Object.keys(NIVEIS) as NivelCorrecao[]).map((n) => (
@@ -490,6 +521,68 @@ function Inicio({
         )}
       </Secao>
     </div>
+  );
+}
+
+/** Resumo da pesquisa em tools/cebraspe-redacao-criterios.md (fontes oficiais). */
+function ComoCebraspeCorrige() {
+  const fontes = [
+    ["Edital PC PE 2026, item 9", "https://cdn.cebraspe.org.br/concursos/PC_PE_26/arquivos/D70610824B6BDD9266B820E9F9E5A3527D9125712B300C4F3A4A49DB948553E2.html"],
+    ["Padrão de resposta 2024 (Agente)", "https://cdn.cebraspe.org.br/concursos/PC_PE_23/arquivos/PC_PE_23_PADRAO_PRELIMINAR_DE_RESPOSTAS_CARGO_1.PDF"],
+    ["Padrão de resposta 2024 (Escrivão)", "https://cdn.cebraspe.org.br/concursos/PC_PE_23/arquivos/PC_PE_23_PADRAO_PRELIMINAR_DE_RESPOSTAS_CARGO_3.PDF"],
+    ["Critérios de redação da Cebraspe", "https://cdn.cebraspe.org.br/arquivos/PAS/Guia/Prova_de_Redacao_do_PAS_V11.pdf"],
+  ];
+  const itens: [string, string][] = [
+    [
+      "A nota",
+      "Até 30 linhas, 30 pontos; aprova com 15. Nota = conteúdo − 6 × erros ÷ linhas escritas. Fuga ao tema dá zero, e o que passa da linha 30 é ignorado.",
+    ],
+    [
+      "Cada aspecto",
+      "0 = não abordou · 1 = só mencionou · 2 = desenvolveu de forma insuficiente ou desarticulada · 3 = desenvolveu articulado ao tema. Os 3 aspectos valem cerca de 28,5 pontos; os outros 1,5 são de apresentação: letra legível, margens e recuo de parágrafo.",
+    ],
+    [
+      "Aspecto de exemplo",
+      "Vale o exemplo eficaz e já implementado, com nome e lugar. O que \"ainda vai ser implementado\" perde ponto.",
+    ],
+    [
+      "Desenvolver",
+      "Afirme, explique com informação concreta (lei pelo nome e ano, dado com fonte, exemplo com resultado) e feche ligando ao tema. Só citar ou listar vale 1 de 3.",
+    ],
+    [
+      "Erros que descontam",
+      "Grafia e acentuação; morfossintaxe (vírgula, concordância, regência — cada ocorrência conta); propriedade vocabular (estrangeirismo ou gíria sem aspas, \"onde\" fora de lugar, palavra repetida no parágrafo, falar com o leitor). Com 30 linhas, cada erro tira 0,2 ponto.",
+    ],
+  ];
+  return (
+    <details className="group rounded-card border border-line/50 bg-navy-800/80 shadow-card">
+      <summary className="cursor-pointer list-none px-4 py-3.5 sm:px-5">
+        <span className="text-[13px] font-bold uppercase tracking-wide text-dim">Como a Cebraspe corrige</span>
+        <span className="ml-2 text-xs text-mut group-open:hidden">· abrir</span>
+      </summary>
+      <div className="border-t border-line/40 px-4 pb-4 pt-3 sm:px-5">
+        <dl className="space-y-2.5">
+          {itens.map(([t, d]) => (
+            <div key={t}>
+              <dt className="text-sm font-semibold text-txt">{t}</dt>
+              <dd className="text-sm leading-relaxed text-dim">{d}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-3 text-[11px] text-mut">
+          Fontes oficiais:{" "}
+          {fontes.map(([nome, url], i) => (
+            <span key={url}>
+              {i > 0 && " · "}
+              <a href={url} target="_blank" rel="noreferrer" className="text-gold hover:underline">
+                {nome}
+              </a>
+            </span>
+          ))}
+          . A IA corrige com esses mesmos critérios.
+        </p>
+      </div>
+    </details>
   );
 }
 

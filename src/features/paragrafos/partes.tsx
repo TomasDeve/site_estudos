@@ -1,9 +1,15 @@
 import type { ReactNode } from "react";
-import { Lightbulb, Sparkles } from "lucide-react";
+import { BadgeCheck, Lightbulb, Sparkles } from "lucide-react";
 import type { CorrecaoParagrafo, UsoIA } from "@/api/paragrafos";
 import { CORINGAS, ROTULO_TIPO, tipoDoAspecto } from "./coringas";
 import { rotuloDoModelo } from "./modelos";
-import { aberturaDoParagrafo, pontosDoParagrafo, type TemaParagrafo, type TipoParagrafo } from "./paragrafos";
+import {
+  aberturaDoParagrafo,
+  modeloDoParagrafo,
+  pontosDoParagrafo,
+  type TemaParagrafo,
+  type TipoParagrafo,
+} from "./paragrafos";
 
 /** Texto com **negrito** (o formato dos fontes do PDF). */
 export function Negrito({ texto }: { texto: string }) {
@@ -286,6 +292,25 @@ export function Repertorio({
         <Lightbulb className="size-5 text-gold" />
         <h2 className="text-lg font-bold text-txt">Repertório para este parágrafo</h2>
       </div>
+
+      <Secao
+        titulo={
+          <span className="inline-flex items-center gap-1.5">
+            <BadgeCheck className="size-3.5 text-green" /> Parágrafo modelo · nota máxima
+          </span>
+        }
+        className="ring-1 ring-green/30"
+      >
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-txt">
+          {modeloDoParagrafo(tema, tipo, aspecto)}
+        </p>
+        <p className="mt-3 border-t border-line/40 pt-2 text-[11px] leading-relaxed text-mut">
+          Escrito no seu esqueleto, pelos critérios da Cebraspe: responde ao aspecto com as palavras do enunciado,
+          desenvolve 2 pontos com informação concreta e fecha ligando ao tema, sem os erros que a banca desconta
+          (estrangeirismo entre aspas, vírgulas da norma, nada de falar com o leitor). Não é o único jeito certo: outra
+          abordagem bem desenvolvida também tira nota máxima.
+        </p>
+      </Secao>
 
       <Secao titulo={tipo === "introducao" ? "Fatos para abrir" : `Pontos para o aspecto ${(aspecto ?? 0) + 1}`}>
         <ul className="space-y-2">

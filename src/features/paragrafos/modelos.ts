@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
 
 // Os 3 níveis de correção (a edge function corrigir-paragrafo aceita esses modelos).
-// Custo e precisão estimados nos testes de 21/10/2026: o mesmo parágrafo de
+// Custo e precisão estimados nos testes de 21/10/2026 (custo refeito com o prompt dos critérios
+// da Cebraspe, que ficou maior; Haiku medido em US$ 0,0053): o mesmo parágrafo de
 // desenvolvimento (14 linhas, 12 erros de português) corrigido várias vezes por modelo.
 export type NivelCorrecao = "economica" | "equilibrada" | "precisa";
 
@@ -25,9 +26,9 @@ export const NIVEIS: Record<NivelCorrecao, InfoNivel> = {
     modelo: "claude-haiku-5-5",
     esforco: "medium",
     rotulo: "Haiku 5.5",
-    custo: 0.003,
+    custo: 0.005,
     precisao: 3,
-    errosNoTeste: "7 a 10",
+    errosNoTeste: "7 a 11",
     descricao: "Acerta o diagnóstico principal, mas deixa passar erros e detalhes. Boa para pegar o ritmo.",
   },
   equilibrada: {
@@ -35,7 +36,7 @@ export const NIVEIS: Record<NivelCorrecao, InfoNivel> = {
     modelo: "claude-sonnet-5-5",
     esforco: "high",
     rotulo: "Sonnet 5.5",
-    custo: 0.03,
+    custo: 0.035,
     precisao: 4,
     errosNoTeste: "7 a 8",
     descricao: "Comentários mais firmes e úteis; às vezes junta dois erros num só.",
@@ -45,7 +46,7 @@ export const NIVEIS: Record<NivelCorrecao, InfoNivel> = {
     modelo: "claude-opus-5-5",
     esforco: "high",
     rotulo: "Opus 5.5",
-    custo: 0.08,
+    custo: 0.085,
     precisao: 5,
     errosNoTeste: "11 a 12",
     descricao: "Pega quase todos os erros e os detalhes do enunciado. Para a reta final.",

@@ -40,6 +40,8 @@ export interface PedidoCorrecao {
   /** Caracteres por linha da folha (a largura da caixa de escrita). */
   caracteresPorLinha: number;
   repertorio: string[];
+  /** Parágrafo modelo daquela parte: a régua de nota máxima para a IA. */
+  paragrafoModelo: string;
   /** Modelo e esforço da IA (o nível de correção escolhido no site). */
   modelo: string;
   esforco: "low" | "medium" | "high";

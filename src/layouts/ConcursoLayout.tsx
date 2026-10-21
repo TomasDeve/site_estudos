@@ -48,8 +48,8 @@ const NAV: { to: string; label: string; curto?: string; icon: LucideIcon; end: b
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
   // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki, em aba própria
   { to: "/resumo", label: "Resumo", icon: LayoutGrid, end: false, novaAba: true },
-  // treino de redação, um parágrafo por vez, em aba própria
-  { to: "/paragrafos", label: "Parágrafos", curto: "Redação", icon: PenLine, end: false, novaAba: true },
+  // treino de redação no padrão Cebraspe, um parágrafo por vez, em aba própria
+  { to: "/redacao", label: "Redação", icon: PenLine, end: false, novaAba: true },
   { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
 ];
 
