@@ -2,6 +2,7 @@
 # a partir dos fontes do PDF "Atualidades para a Redação - PCPE 2026":
 #   impressao/Atualidades-Redacao-PCPE/blocos/b01..b12.txt  (Proposta A + esqueleto)
 #   impressao/Atualidades-Redacao-PCPE/blocos/extras.txt    (E1..E10, proposta X + esqueleto)
+#   tools/paragrafos-esqueletos-b.txt                        (esqueleto das Propostas B, que o PDF não tem)
 # Entra só proposta que tem esqueleto (é dele que sai o repertório de cada parágrafo).
 # Rodar da raiz do repo:  py -3.14 -I tools/paragrafos-temas.py
 import json
@@ -65,22 +66,36 @@ def decorar(linhas: list[str] | None) -> list[dict]:
     for l in linhas or []:
         tipo, _, resto = l.partition(":")
         partes = [limpa(p) for p in resto.split("::")]
-        itens.append({"tipo": tipo.strip(), "titulo": partes[0], "texto": " ".join(partes[1:])})
+        texto = partes[1] if len(partes) > 1 else ""
+        if len(partes) > 2:
+            texto += f" (fonte: {partes[2]})"
+        itens.append({"tipo": tipo.strip(), "titulo": partes[0], "texto": texto})
     return itens
 
+
+esqueletos_b = (RAIZ / "tools" / "paragrafos-esqueletos-b.txt").read_text(encoding="utf-8").splitlines()
 
 temas = []
 for n in range(1, 13):
     linhas = (BLOCOS / f"b{n:02d}.txt").read_text(encoding="utf-8").splitlines()
     _, titulo, _ = [p.strip() for p in linhas[0].lstrip("# ").split("|")]
-    p = proposta(secao(linhas, "@proposta A"))
+    para_decorar = decorar(secao(linhas, "@decorar"))
     temas.append(
         {
             "id": f"b{n:02d}a",
             "bloco": titulo,
-            **p,
-            "decorar": decorar(secao(linhas, "@decorar")),
+            **proposta(secao(linhas, "@proposta A")),
+            "decorar": para_decorar,
             "esqueleto": esqueleto(secao(linhas, "@esqueleto")),
+        }
+    )
+    temas.append(
+        {
+            "id": f"b{n:02d}b",
+            "bloco": titulo,
+            **proposta(secao(linhas, "@proposta B")),
+            "decorar": para_decorar,
+            "esqueleto": esqueleto(secao(esqueletos_b, f"@esqueleto b{n:02d}")),
         }
     )
 
@@ -106,7 +121,7 @@ for parte in re.split(r"^(?=# E\d+ )", extras, flags=re.M):
 
 for t in temas:
     e = t["esqueleto"]
-    assert e["abre"] and e["p1"] and e["p2"] and e["fim"], t["id"]
+    assert e["abre"] and len(e["anuncia"]) == 3 and e["p1"] and e["p2"] and e["fim"], t["id"]
 
 SAIDA.parent.mkdir(parents=True, exist_ok=True)
 SAIDA.write_text(json.dumps(temas, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

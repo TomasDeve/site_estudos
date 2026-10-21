@@ -3,8 +3,8 @@ import { CORINGAS, tipoDoAspecto } from "./coringas";
 import { TEMAS, linhasNaFolha, notaConteudo, notaFinal, pontosDoParagrafo, sortear } from "./paragrafos";
 
 describe("banco de temas", () => {
-  it("tem os 22 temas com 3 aspectos e esqueleto", () => {
-    expect(TEMAS).toHaveLength(22);
+  it("tem os 34 temas com 3 aspectos e esqueleto", () => {
+    expect(TEMAS).toHaveLength(34);
     for (const t of TEMAS) {
       expect(t.aspectos).toHaveLength(3);
       expect(t.esqueleto.p1.length).toBeGreaterThan(0);

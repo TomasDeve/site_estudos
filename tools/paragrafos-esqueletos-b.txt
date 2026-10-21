@@ -1,0 +1,233 @@
+# Esqueletos das Propostas B do PDF "Atualidades para a Redação - PCPE 2026" (o PDF só
+# tem esqueleto para a Proposta A de cada bloco). Lidos por tools/paragrafos-temas.py.
+# Mesmo formato do @esqueleto dos blocos: abre / anuncia / p1 (aspecto 1) / p2 (aspecto 2)
+# / fim (aspecto 3; a última linha é a síntese) / pronta (introdução pronta).
+# Só fatos que já estão no bloco ou nos textos motivadores da própria proposta.
+
+@esqueleto b01
+abre: Em 2025, a taxa de mortes violentas no Nordeste foi quase o triplo da registrada no Sul, segundo o Anuário Brasileiro de Segurança Pública.
+abre: As dez cidades mais violentas do Brasil ficam no Nordeste, segundo o Anuário Brasileiro de Segurança Pública.
+abre: A queda das mortes violentas no Brasil, em 2025, ainda não chegou a todas as regiões do país.
+anuncia: as características da violência letal no Nordeste
+anuncia: os fatores que explicam essa concentração
+anuncia: propor estratégias adequadas à realidade da região
+p1: taxa de mortes violentas quase o triplo da do Sul; sete dos dez estados com as maiores taxas ficam na região
+p1: as vítimas são sobretudo homens jovens e negros: 9 em cada 10 são homens, e 8 em cada 10 são negras
+p1: as dez cidades mais violentas do país estão no Nordeste, como o Cabo de Santo Agostinho (PE)
+p2: facções que disputam territórios e rotas do tráfico, inclusive perto de portos, como o de Suape
+p2: desigualdade e ausência do Estado nos bairros mais pobres, que deixam os jovens expostos ao recrutamento
+p2: poucos crimes esclarecidos: só 1 em cada 3 homicídios é esclarecido no país (Instituto Sou da Paz)
+fim: gestão por resultados, com metas e dados, como no Pacto pela Vida (PE), que reduziu os homicídios em quase 40%
+fim: integração entre polícias, Ministério Público e Justiça, como prevê o SUSP, e inteligência contra as facções
+fim: síntese: prevenção nos territórios mais violentos, porque a queda da violência ainda não chegou a todos os brasileiros
+pronta: Em 2025, a taxa de mortes violentas no Nordeste foi quase o triplo da registrada no Sul, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar as características da violência letal na região, expor os fatores que explicam essa concentração e propor estratégias de enfrentamento adequadas à realidade regional.
+@fim
+
+@esqueleto b02
+abre: Em 2025, o Brasil registrou mais de 2 milhões de estelionatos, mas menos de 5 mil pessoas estavam presas por esse crime, segundo o Anuário Brasileiro de Segurança Pública.
+abre: Apenas um em cada três homicídios é esclarecido no Brasil, segundo o Instituto Sou da Paz.
+abre: Para o Fórum Brasileiro de Segurança Pública, o golpe virou, na prática, um crime que "compensa".
+anuncia: as consequências da impunidade para a sociedade e para o trabalho policial
+anuncia: a relação entre a confiança da população e o esclarecimento de crimes
+anuncia: apontar o papel da Polícia Civil na redução da impunidade
+p1: a sensação de que o crime compensa: quem comete volta a agir, e novos crimes são estimulados
+p1: a população deixa de denunciar e perde a confiança nas instituições
+p1: para a polícia, menos colaboração: a testemunha se cala, e o crime seguinte fica mais difícil de esclarecer
+p2: testemunhas, denúncias anônimas e informações sobre o território dependem da confiança nas instituições
+p2: onde há facção, o medo faz a testemunha se calar, e o crime fica sem autor
+p2: é um ciclo: crime esclarecido gera confiança, e a confiança traz informação para esclarecer os crimes seguintes
+fim: investigar com qualidade, como polícia judiciária (CF, art. 144), com perícia, prova técnica e prova bem guardada
+fim: delegacias especializadas, tecnologia como o banco nacional de DNA e atendimento que acolhe a vítima e protege a testemunha
+fim: síntese: investigar bem pune o culpado, protege o inocente e devolve a confiança da população
+pronta: Apenas um em cada três homicídios é esclarecido no Brasil, segundo o Instituto Sou da Paz. Nesse sentido, vale citar as consequências da impunidade para a sociedade e para o trabalho policial, expor a relação entre a confiança da população e o esclarecimento de crimes e apontar o papel da Polícia Civil na redução da impunidade.
+@fim
+
+@esqueleto b03
+abre: A Lei Antifacção, de 2026, criou um banco nacional de dados sobre organizações criminosas ultraviolentas, integrado aos bancos estaduais.
+abre: O crime organizado atua em vários estados ao mesmo tempo, o que exige das polícias informação de qualidade e compartilhada.
+abre: Desde 2018, a Lei do SUSP determina que União, estados e municípios atuem de forma integrada e compartilhem dados.
+anuncia: a diferença entre a atividade de inteligência e a investigação criminal
+anuncia: as contribuições da inteligência para o combate às facções
+anuncia: apontar os limites legais e os cuidados no uso de dados
+p1: a investigação reúne provas de um crime para o processo penal; a inteligência produz conhecimento para apoiar decisões
+p1: a inteligência é preventiva e estratégica: antecipa ameaças e orienta ações contra o crime
+p1: as duas se completam: a inteligência mostra onde agir, e a investigação produz a prova que leva à condenação
+p2: mapear a estrutura das facções: quem lidera, quem financia e por onde passa a droga
+p2: seguir o dinheiro e atingir o patrimônio do crime (asfixia financeira), como na Operação Carbono Oculto (2025)
+p2: cruzar dados entre estados, como prevê o banco nacional da Lei Antifacção, para atingir facções que agem em vários estados
+fim: a lei geral de proteção de dados (LGPD) não vale para a segurança pública, e ainda falta uma lei própria
+fim: controle de acesso aos dados e uso apenas para a finalidade prevista em lei
+fim: síntese: inteligência com regras, unindo eficiência no combate ao crime e respeito aos direitos fundamentais
+pronta: A Lei Antifacção, de 2026, criou um banco nacional de dados sobre organizações criminosas ultraviolentas. Nesse sentido, vale citar a diferença entre a atividade de inteligência e a investigação criminal, expor as contribuições da inteligência para o combate às facções e apontar os limites legais e os cuidados no uso de dados pela inteligência policial.
+@fim
+
+@esqueleto b04
+abre: A Lei Antifacção, de 2026, destina aos fundos de segurança pública os bens tomados das organizações criminosas.
+abre: O Brasil gasta cerca de R$ 160 bilhões por ano com segurança pública, e 8 de cada 10 reais saem dos estados, segundo o Anuário Brasileiro de Segurança Pública.
+abre: As facções lavam dinheiro em empresas legais, como postos de combustíveis, e até em fintechs.
+anuncia: a importância de atingir o patrimônio das organizações criminosas
+anuncia: os mecanismos legais de perda e destinação desses bens
+anuncia: apontar os cuidados para garantir transparência e respeito aos direitos
+p1: prender o integrante da ponta não desmonta a facção; tirar o dinheiro, sim (asfixia financeira)
+p1: o dinheiro sustenta o crime: compra armas, corrompe agentes públicos e financia o recrutamento
+p1: a Operação Carbono Oculto (2025) atingiu o dinheiro de uma facção infiltrada no setor de combustíveis e em fintechs
+p2: a Lei Antifacção (2026) permite ao juiz decretar a perda de bens de origem claramente ilícita, mesmo sem condenação penal
+p2: o produto desses bens vai para os fundos de segurança pública
+p2: rastrear os bens exige integração entre polícias, Ministério Público e Receita
+fim: o uso dos bens é supervisionado pelo Conselho Nacional de Justiça e pelo Conselho Nacional do Ministério Público
+fim: em caso de absolvição, os valores são devolvidos com juros, o que protege quem foi acusado injustamente
+fim: síntese: o dinheiro do crime deve financiar a segurança, com transparência e respeito ao devido processo legal
+pronta: A Lei Antifacção, de 2026, destina aos fundos de segurança pública os bens tomados das organizações criminosas. Nesse sentido, vale citar a importância de atingir o patrimônio dessas organizações, expor os mecanismos legais de perda e destinação desses bens e apontar os cuidados necessários para garantir transparência e respeito aos direitos.
+@fim
+
+@esqueleto b05
+abre: Entre 2017 e 2025, o número de armas de fogo registradas no Brasil mais que triplicou, segundo o Anuário Brasileiro de Segurança Pública.
+abre: Em 2025, as polícias estaduais apreenderam mais de 100 mil armas de fogo, segundo o Anuário Brasileiro de Segurança Pública.
+abre: A maior parte dos homicídios no Brasil é cometida com arma de fogo.
+anuncia: a relação entre a circulação de armas de fogo e a violência
+anuncia: as formas pelas quais as armas chegam às organizações criminosas
+anuncia: propor medidas de controle e de rastreamento
+p1: a maior parte dos homicídios é cometida com arma de fogo: mais armas em circulação tornam os conflitos mais letais
+p1: as armas dão às facções poder para dominar territórios e enfrentar a polícia
+p1: as armas registradas passaram de pouco mais de 600 mil, em 2017, para mais de 2 milhões, em 2025
+p2: armas do mercado legal desviadas por furtos, roubos e revendas irregulares
+p2: contrabando e tráfico de armas pelas rotas do crime organizado
+p2: sem rastreamento, a arma apreendida não revela de onde veio nem quem a desviou
+fim: rastrear toda arma apreendida, para identificar as rotas e quem a desviou
+fim: fiscalizar registros e estoques, como manda o Estatuto do Desarmamento (2003), com dados integrados entre as polícias, como prevê o SUSP
+fim: síntese: menos armas nas mãos do crime significa menos mortes, para a população e para o policial
+pronta: Entre 2017 e 2025, o número de armas de fogo registradas no Brasil mais que triplicou, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar a relação entre a circulação de armas e a violência, expor as formas pelas quais elas chegam às organizações criminosas e propor medidas de controle e de rastreamento capazes de reduzir esse fluxo.
+@fim
+
+@esqueleto b06
+abre: Cerca de quatro mulheres foram vítimas de feminicídio por dia no Brasil em 2025, segundo o Anuário Brasileiro de Segurança Pública.
+abre: Desde 2023, a lei determina que as Delegacias da Mulher funcionem 24 horas, inclusive em feriados e fins de semana.
+abre: Muitas mulheres em situação de violência doméstica não procuram a polícia por medo do agressor.
+anuncia: os obstáculos que levam as mulheres a não denunciar
+anuncia: a importância de um atendimento policial especializado e acolhedor
+anuncia: apontar o papel da Polícia Civil na prevenção do feminicídio
+p1: medo do agressor e dependência financeira e emocional
+p1: preocupação com os filhos
+p1: medo de não ser acreditada e de sofrer de novo no atendimento (revitimização)
+p2: o acolhimento recebido pode decidir se a mulher seguirá com a denúncia
+p2: Delegacias da Mulher 24 horas (lei de 2023) e a Casa da Mulher Brasileira, onde a vítima conta a história uma vez só
+p2: avaliação de risco no atendimento, para priorizar os casos mais graves
+fim: acolher sem julgar, registrar e pedir a medida protetiva, que o juiz decide em até 48 horas
+fim: investigar rápido a ameaça e o descumprimento da medida protetiva, descumprida em média a cada 4 minutos em 2025
+fim: síntese: o feminicídio é uma morte anunciada, e interromper o ciclo cedo salva vidas
+pronta: Cerca de quatro mulheres foram vítimas de feminicídio por dia no Brasil em 2025, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar os obstáculos que levam as mulheres a não denunciar a violência, expor a importância de um atendimento policial especializado e acolhedor e apontar o papel da Polícia Civil na prevenção do feminicídio.
+@fim
+
+@esqueleto b07
+abre: Em 2025, os registros de material de abuso sexual infantil cresceram 25% no Brasil, segundo o Anuário Brasileiro de Segurança Pública.
+abre: Desde março de 2026, o ECA Digital obriga as plataformas a proteger crianças e adolescentes de conteúdos ilegais e impróprios.
+abre: Crianças e adolescentes passam cada vez mais tempo na internet, muitas vezes sem supervisão.
+anuncia: os riscos a que crianças e adolescentes estão expostos na internet
+anuncia: as responsabilidades das famílias, das escolas e das plataformas
+anuncia: apontar o papel da investigação policial na proteção desse público
+p1: aliciamento por adultos e circulação de material de abuso sexual infantil
+p1: cyberbullying, que virou crime em 2024
+p1: golpes e conteúdos impróprios; os registros são só uma pequena amostra do que circula na internet
+p2: famílias: acompanhar o uso, com as ferramentas de supervisão previstas no ECA Digital, e manter o diálogo
+p2: escolas: educação digital, combate ao cyberbullying e atenção aos sinais de abuso
+p2: plataformas: verificar a idade dos usuários e impedir o acesso a conteúdos ilegais, como manda o ECA Digital
+fim: delegacias de crimes cibernéticos e perícia digital para identificar quem alicia e quem compartilha
+fim: cooperação internacional, como na Operação Impregnator (2024), em que a Polícia Federal, a partir de um alerta da Interpol, prendeu um suspeito de compartilhar imagens de abuso
+fim: síntese: a proteção integral da criança, princípio do ECA, também vale no ambiente digital
+pronta: Em 2025, os registros de material de abuso sexual infantil cresceram 25% no Brasil, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar os riscos a que crianças e adolescentes estão expostos na internet, expor as responsabilidades das famílias, das escolas e das plataformas digitais e apontar o papel da investigação policial na proteção desse público.
+@fim
+
+@esqueleto b08
+abre: Sistemas de reconhecimento facial já são usados em ruas, estações e estádios de várias cidades brasileiras.
+abre: Câmeras, leitura de placas e inteligência artificial mudaram o trabalho policial no Brasil.
+abre: A lei geral de proteção de dados não se aplica à segurança pública, que ainda espera uma lei própria.
+anuncia: os benefícios dessas tecnologias para as forças de segurança
+anuncia: os riscos para os direitos fundamentais
+anuncia: apontar as regras e os controles necessários para o uso responsável
+p1: localizar foragidos da Justiça e pessoas desaparecidas
+p1: produzir prova (imagens, dados) e dar mais rapidez à investigação
+p1: o Córtex, do Ministério da Justiça, e o reconhecimento facial em estações, exemplo citado pela própria Cebraspe em 2024
+p2: erro de identificação, que atinge mais as pessoas negras e já levou inocentes à prisão
+p2: vigilância sem controle e vazamento de dados pessoais
+p2: a proteção de dados pessoais é direito fundamental desde 2022, mas falta lei específica para a segurança pública
+fim: conferência humana: o alerta do sistema não basta, e o STJ já decidiu que o reconhecimento sozinho não serve para condenar
+fim: lei específica de proteção de dados na segurança pública, controle de acesso e prova bem guardada (cadeia de custódia)
+fim: síntese: usar a tecnologia, mas com regras, unindo eficiência e respeito aos direitos
+pronta: Sistemas de reconhecimento facial já são usados em ruas, estações e estádios de várias cidades brasileiras. Nesse sentido, vale citar os benefícios dessas tecnologias para as forças de segurança, expor os riscos para os direitos fundamentais e apontar as regras e os controles necessários para o seu uso responsável.
+@fim
+
+@esqueleto b09
+abre: Testemunhas e denúncias anônimas, essenciais para esclarecer crimes, dependem da confiança que as pessoas têm na polícia.
+abre: Apenas um em cada três homicídios é esclarecido no Brasil, segundo o Instituto Sou da Paz.
+abre: A Constituição define a segurança pública como dever do Estado, direito e responsabilidade de todos.
+anuncia: a importância da confiança da população no trabalho policial
+anuncia: exemplos de estratégias de aproximação entre polícia e comunidade
+anuncia: apontar os desafios e os caminhos para fortalecer essa relação
+p1: a confiança traz informação: testemunhas, denúncias anônimas e conhecimento do território
+p1: com informação, a polícia esclarece mais crimes e corre menos risco
+p1: a polícia que abusa perde a colaboração: ninguém testemunha, ninguém denuncia
+p2: policiamento comunitário: o mesmo policial no mesmo bairro, conhecendo os moradores e os problemas locais
+p2: o Fica Vivo! (MG) e o Estado Presente (ES), que levaram policiamento e serviços sociais aos bairros mais violentos
+p2: câmeras corporais (PM de SP), que reduziram as mortes em ações policiais e dão transparência à atuação
+fim: desafios: desconfiança nas periferias, uso excessivo da força e medo das testemunhas onde há facção
+fim: caminhos: treinamento contínuo, investigação de toda morte em ação policial e atendimento respeitoso nas delegacias
+fim: síntese: a polícia não é inimiga dos direitos, é ela quem os garante na rua, e a confiança da comunidade é a sua maior aliada
+pronta: Testemunhas e denúncias anônimas, essenciais para esclarecer crimes, dependem da confiança que as pessoas têm na polícia. Nesse sentido, vale citar a importância dessa confiança para o trabalho policial, expor exemplos de estratégias de aproximação entre polícia e comunidade e apontar os desafios e os caminhos para fortalecer essa relação.
+@fim
+
+@esqueleto b10
+abre: O Brasil tem quase 1 milhão de presos, e apenas 1 em cada 5 trabalha, segundo o Anuário Brasileiro de Segurança Pública.
+abre: A Lei de Execução Penal permite reduzir a pena pelo trabalho e pelo estudo.
+abre: A prisão deve punir e também preparar a volta do condenado à sociedade.
+anuncia: a importância do trabalho e do estudo durante a pena
+anuncia: os obstáculos enfrentados pelos egressos
+anuncia: apontar a relação entre reintegração social e segurança pública
+p1: a remição: a cada 3 dias de trabalho ou 12 horas de estudo, 1 dia a menos de pena (Lei de Execução Penal)
+p1: só 1 em cada 5 presos trabalha, e o ócio facilita o recrutamento pelas facções
+p1: trabalho e estudo dão qualificação e rotina; a APAC (MG), com trabalho, estudo e família, tem menos reincidência
+p2: falta de documentos, de emprego e de moradia
+p2: preconceito contra quem saiu da prisão, que fecha as portas do mercado de trabalho
+p2: sem apoio, o egresso volta ao crime: é a reincidência
+fim: quem sai e consegue trabalho tem menos motivo para voltar ao crime, e cada reincidência evitada poupa novas vítimas
+fim: apoio ao egresso, como nos Escritórios Sociais do CNJ, e o Plano Pena Justa (2025)
+fim: síntese: a prisão que não ressocializa devolve à sociedade alguém pior do que entrou
+pronta: O Brasil tem quase 1 milhão de presos, e apenas 1 em cada 5 trabalha, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar a importância do trabalho e do estudo durante o cumprimento da pena, expor os obstáculos enfrentados pelos egressos e apontar a relação entre reintegração social e segurança pública.
+@fim
+
+@esqueleto b11
+abre: Em 2025, os registros de bullying contra crianças e adolescentes cresceram quase 70% no Brasil, segundo o Anuário Brasileiro de Segurança Pública.
+abre: Desde 2024, o bullying e o cyberbullying são crime no Brasil.
+abre: A escola protege os jovens, mas também sofre com bullying, ameaças e ataques.
+anuncia: as formas de violência presentes nas escolas
+anuncia: os fatores que contribuem para essa violência
+anuncia: propor medidas de prevenção, com o papel das escolas e das forças de segurança
+p1: bullying, que cresceu quase 70% em 2025, e cyberbullying, que cresceu cerca de 60%
+p1: ameaças e ataques às escolas
+p1: aliciamento de crianças e adolescentes, para o tráfico ou para crimes sexuais
+p2: violência em casa e falta de acompanhamento da família
+p2: uso da internet sem supervisão, que espalha o cyberbullying
+p2: falta de apoio psicológico e de canais de denúncia nas escolas
+fim: escola: combate ao bullying, apoio psicológico e canais de denúncia, como prevê a lei de 2024
+fim: forças de segurança: a Polícia Civil apura o bullying e o cyberbullying, investiga quem alicia e encaminha as vítimas ao Conselho Tutelar
+fim: síntese: prevenir custa menos que punir e salva vidas antes da tragédia
+pronta: Em 2025, os registros de bullying contra crianças e adolescentes cresceram quase 70% no Brasil, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar as formas de violência presentes no ambiente escolar, expor os fatores que contribuem para essa violência e propor medidas de prevenção, destacando o papel das escolas e das forças de segurança.
+@fim
+
+@esqueleto b12
+abre: Em 2025, quase tantos policiais morreram por suicídio quanto foram assassinados no Brasil, segundo o Anuário Brasileiro de Segurança Pública.
+abre: Desde 2023, leis orgânicas nacionais definem carreira, direitos e deveres das polícias civis e militares.
+abre: Efetivos reduzidos e longas jornadas estão entre as principais queixas dos profissionais de segurança pública.
+anuncia: as condições de trabalho dos profissionais de segurança
+anuncia: a relação entre valorização profissional e qualidade do serviço
+anuncia: propor medidas de valorização pelo poder público
+p1: efetivos reduzidos e longas jornadas, com o "bico" para completar a renda
+p1: baixa remuneração e falta de equipamentos
+p1: adoecimento: em 2025, quase tantos policiais morreram por suicídio quanto foram assassinados
+p2: policial descansado, bem formado e equipado decide melhor sob pressão
+p2: policial adoecido pode usar a força em excesso e atender pior a população
+p2: equipe completa reduz a sobrecarga e melhora a investigação, com mais crimes esclarecidos
+fim: concursos regulares, salário adequado e escalas que respeitem o descanso, como no Juntos pela Segurança (PE), que prevê milhares de novos policiais
+fim: formação continuada, equipamentos e atendimento psicológico, como no programa Pró-Vida e na lei de prevenção ao suicídio de policiais (2023)
+fim: síntese: cuidar de quem protege é cuidar da segurança de todos
+pronta: Em 2025, quase tantos policiais morreram por suicídio quanto foram assassinados no Brasil, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar as condições de trabalho dos profissionais de segurança pública, expor a relação entre a valorização profissional e a qualidade do serviço prestado e propor medidas de valorização que podem ser adotadas pelo poder público.
+@fim

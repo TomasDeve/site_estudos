@@ -35,17 +35,17 @@
    {
     "tipo": "numero",
     "titulo": "Mais de 40 mil",
-    "texto": "mortes violentas em 2025, o menor nível desde 2012. Anuário Brasileiro de Segurança Pública"
+    "texto": "mortes violentas em 2025, o menor nível desde 2012. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "numero",
     "titulo": "9 em cada 10",
-    "texto": "vítimas são homens, e 8 em cada 10 são negras. Anuário Brasileiro de Segurança Pública"
+    "texto": "vítimas são homens, e 8 em cada 10 são negras. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "exemplo",
     "titulo": "Pacto pela Vida (PE, 2007)",
-    "texto": "metas, dados e reuniões semanais; homicídios caíram quase 40% em seis anos. avaliação do programa feita pela UFPE; o Banco Mundial também destacou o resultado"
+    "texto": "metas, dados e reuniões semanais; homicídios caíram quase 40% em seis anos. (fonte: avaliação do programa feita pela UFPE; o Banco Mundial também destacou o resultado)"
    },
    {
     "tipo": "exemplo",
@@ -88,6 +88,90 @@
   }
  },
  {
+  "id": "b01b",
+  "bloco": "O retrato da segurança pública",
+  "tema": "A concentração da violência letal no Nordeste brasileiro",
+  "textos": [
+   {
+    "texto": "Em 2025, a taxa de mortes violentas no Nordeste foi quase o triplo da registrada no Sul do país. Sete dos dez estados com as maiores taxas ficam no Nordeste, assim como as dez cidades mais violentas do Brasil.",
+    "fonte": "Texto elaborado com dados do Anuário Brasileiro de Segurança Pública 2026 (FBSP)."
+   },
+   {
+    "texto": "Segundo o Fórum Brasileiro de Segurança Pública, a concentração das mortes violentas no Norte e no Nordeste está ligada à capacidade de organizações criminosas de dominar territórios, economias e modos de vida. Cidades próximas a portos, como o Cabo de Santo Agostinho (PE), vizinho ao Porto de Suape, convivem com a disputa por rotas do tráfico.",
+    "fonte": "Texto elaborado com base no Anuário Brasileiro de Segurança Pública 2026 (FBSP)."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "características da violência letal na região",
+    "valor": "8,50"
+   },
+   {
+    "texto": "fatores que ajudam a explicar essa concentração",
+    "valor": "10,00"
+   },
+   {
+    "texto": "estratégias de enfrentamento adequadas à realidade regional",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "Mais de 40 mil",
+    "texto": "mortes violentas em 2025, o menor nível desde 2012. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "numero",
+    "titulo": "9 em cada 10",
+    "texto": "vítimas são homens, e 8 em cada 10 são negras. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Pacto pela Vida (PE, 2007)",
+    "texto": "metas, dados e reuniões semanais; homicídios caíram quase 40% em seis anos. (fonte: avaliação do programa feita pela UFPE; o Banco Mundial também destacou o resultado)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Fica Vivo! (MG, 2002)",
+    "texto": "oficinas para jovens e polícia focada nos autores de homicídio dos bairros mais violentos."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"A queda da violência é real, mas ainda não chegou a todos os brasileiros.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Em 2025, a taxa de mortes violentas no Nordeste foi quase o triplo da registrada no Sul, segundo o Anuário Brasileiro de Segurança Pública.",
+    "As dez cidades mais violentas do Brasil ficam no Nordeste, segundo o Anuário Brasileiro de Segurança Pública.",
+    "A queda das mortes violentas no Brasil, em 2025, ainda não chegou a todas as regiões do país."
+   ],
+   "anuncia": [
+    "as características da violência letal no Nordeste",
+    "os fatores que explicam essa concentração",
+    "propor estratégias adequadas à realidade da região"
+   ],
+   "p1": [
+    "taxa de mortes violentas quase o triplo da do Sul; sete dos dez estados com as maiores taxas ficam na região",
+    "as vítimas são sobretudo homens jovens e negros: 9 em cada 10 são homens, e 8 em cada 10 são negras",
+    "as dez cidades mais violentas do país estão no Nordeste, como o Cabo de Santo Agostinho (PE)"
+   ],
+   "p2": [
+    "facções que disputam territórios e rotas do tráfico, inclusive perto de portos, como o de Suape",
+    "desigualdade e ausência do Estado nos bairros mais pobres, que deixam os jovens expostos ao recrutamento",
+    "poucos crimes esclarecidos: só 1 em cada 3 homicídios é esclarecido no país (Instituto Sou da Paz)"
+   ],
+   "fim": [
+    "gestão por resultados, com metas e dados, como no Pacto pela Vida (PE), que reduziu os homicídios em quase 40%",
+    "integração entre polícias, Ministério Público e Justiça, como prevê o SUSP, e inteligência contra as facções",
+    "síntese: prevenção nos territórios mais violentos, porque a queda da violência ainda não chegou a todos os brasileiros"
+   ],
+   "pronta": "Em 2025, a taxa de mortes violentas no Nordeste foi quase o triplo da registrada no Sul, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar as características da violência letal na região, expor os fatores que explicam essa concentração e propor estratégias de enfrentamento adequadas à realidade regional."
+  }
+ },
+ {
   "id": "b02a",
   "bloco": "Investigação e impunidade",
   "tema": "A baixa taxa de esclarecimento de crimes no Brasil e o papel da investigação policial",
@@ -123,7 +207,7 @@
    {
     "tipo": "numero",
     "titulo": "1 em cada 3",
-    "texto": "homicídios é esclarecido no Brasil. Instituto Sou da Paz (pesquisa Onde Mora a Impunidade)"
+    "texto": "homicídios é esclarecido no Brasil. (fonte: Instituto Sou da Paz (pesquisa Onde Mora a Impunidade))"
    },
    {
     "tipo": "lei",
@@ -173,6 +257,90 @@
     "síntese: investigar bem pune o culpado, protege o inocente e devolve a confiança da população"
    ],
    "pronta": "Apenas um em cada três homicídios é esclarecido no Brasil, segundo o Instituto Sou da Paz. Nesse sentido, vale citar as causas da baixa resolução de crimes, expor exemplos de investigação eficiente e propor caminhos para fortalecer a Polícia Civil."
+  }
+ },
+ {
+  "id": "b02b",
+  "bloco": "Investigação e impunidade",
+  "tema": "A impunidade e seus efeitos sobre a segurança pública",
+  "textos": [
+   {
+    "texto": "Em 2025, o Brasil registrou mais de 2 milhões de estelionatos. No mesmo período, menos de 5 mil pessoas estavam presas por esse crime. Para o Fórum Brasileiro de Segurança Pública, trata-se de um crime que, na prática, \"compensa\".",
+    "fonte": "Texto elaborado com dados do Anuário Brasileiro de Segurança Pública 2026 (FBSP)."
+   },
+   {
+    "texto": "A impunidade não se limita ao crime não punido: ela desestimula a denúncia, afasta testemunhas e enfraquece a confiança da população nas instituições, o que torna ainda mais difícil esclarecer os crimes seguintes.",
+    "fonte": "Texto elaborado para fins didáticos."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "consequências da impunidade para a sociedade e para o trabalho policial",
+    "valor": "8,50"
+   },
+   {
+    "texto": "relação entre a confiança da população nas instituições e o esclarecimento de crimes",
+    "valor": "10,00"
+   },
+   {
+    "texto": "papel da Polícia Civil na redução da impunidade",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "1 em cada 3",
+    "texto": "homicídios é esclarecido no Brasil. (fonte: Instituto Sou da Paz (pesquisa Onde Mora a Impunidade))"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "Constituição, art. 144",
+    "texto": "a Polícia Civil faz a polícia judiciária e apura as infrações penais."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Banco nacional de DNA",
+    "texto": "compara vestígios de locais de crime em todo o país e identifica o autor sem depender de testemunha."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Delegacias especializadas em homicídios",
+    "texto": "equipe exclusiva e perícia de plantão, só para os crimes contra a vida."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"Investigar bem pune o culpado, protege o inocente e devolve a confiança da população.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Em 2025, o Brasil registrou mais de 2 milhões de estelionatos, mas menos de 5 mil pessoas estavam presas por esse crime, segundo o Anuário Brasileiro de Segurança Pública.",
+    "Apenas um em cada três homicídios é esclarecido no Brasil, segundo o Instituto Sou da Paz.",
+    "Para o Fórum Brasileiro de Segurança Pública, o golpe virou, na prática, um crime que \"compensa\"."
+   ],
+   "anuncia": [
+    "as consequências da impunidade para a sociedade e para o trabalho policial",
+    "a relação entre a confiança da população e o esclarecimento de crimes",
+    "apontar o papel da Polícia Civil na redução da impunidade"
+   ],
+   "p1": [
+    "a sensação de que o crime compensa: quem comete volta a agir, e novos crimes são estimulados",
+    "a população deixa de denunciar e perde a confiança nas instituições",
+    "para a polícia, menos colaboração: a testemunha se cala, e o crime seguinte fica mais difícil de esclarecer"
+   ],
+   "p2": [
+    "testemunhas, denúncias anônimas e informações sobre o território dependem da confiança nas instituições",
+    "onde há facção, o medo faz a testemunha se calar, e o crime fica sem autor",
+    "é um ciclo: crime esclarecido gera confiança, e a confiança traz informação para esclarecer os crimes seguintes"
+   ],
+   "fim": [
+    "investigar com qualidade, como polícia judiciária (CF, art. 144), com perícia, prova técnica e prova bem guardada",
+    "delegacias especializadas, tecnologia como o banco nacional de DNA e atendimento que acolhe a vítima e protege a testemunha",
+    "síntese: investigar bem pune o culpado, protege o inocente e devolve a confiança da população"
+   ],
+   "pronta": "Apenas um em cada três homicídios é esclarecido no Brasil, segundo o Instituto Sou da Paz. Nesse sentido, vale citar as consequências da impunidade para a sociedade e para o trabalho policial, expor a relação entre a confiança da população e o esclarecimento de crimes e apontar o papel da Polícia Civil na redução da impunidade."
   }
  },
  {
@@ -255,6 +423,85 @@
   }
  },
  {
+  "id": "b03b",
+  "bloco": "Integração e inteligência",
+  "tema": "A inteligência policial no enfrentamento ao crime organizado",
+  "textos": [
+   {
+    "texto": "A atividade de inteligência de segurança pública busca produzir conhecimento para apoiar decisões, antecipar ameaças e orientar ações contra o crime. Diferentemente da investigação, que reúne provas para o processo penal, a inteligência tem caráter preventivo e estratégico.",
+    "fonte": "Texto elaborado para fins didáticos."
+   },
+   {
+    "texto": "A Lei Antifacção, de 2026, criou um banco nacional de dados sobre organizações criminosas ultraviolentas, a ser integrado aos bancos estaduais, para reunir informações sobre a estrutura, os integrantes e a atuação desses grupos.",
+    "fonte": "Texto elaborado com base na Lei 15.358/2026."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "diferença entre a atividade de inteligência e a investigação criminal",
+    "valor": "8,50"
+   },
+   {
+    "texto": "contribuições da inteligência para o combate às facções criminosas",
+    "valor": "10,00"
+   },
+   {
+    "texto": "limites legais e cuidados no uso de dados pela inteligência policial",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "lei",
+    "titulo": "Lei do SUSP (2018)",
+    "texto": "manda União, estados e municípios atuarem juntos e compartilharem dados. **Foi o exemplo mais esperado pela Cebraspe na prova de Escrivão de 2024.** (Lei 13.675/2018)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Córtex (Ministério da Justiça)",
+    "texto": "liga câmeras de leitura de placas e bancos de dados de vários estados."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Muralha Paulista (SP)",
+    "texto": "sistema que localizou e permitiu abordar um carro usado em roubo (texto da prova de 2024)."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"O crime é nacional; a informação policial também precisa ser.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "A Lei Antifacção, de 2026, criou um banco nacional de dados sobre organizações criminosas ultraviolentas, integrado aos bancos estaduais.",
+    "O crime organizado atua em vários estados ao mesmo tempo, o que exige das polícias informação de qualidade e compartilhada.",
+    "Desde 2018, a Lei do SUSP determina que União, estados e municípios atuem de forma integrada e compartilhem dados."
+   ],
+   "anuncia": [
+    "a diferença entre a atividade de inteligência e a investigação criminal",
+    "as contribuições da inteligência para o combate às facções",
+    "apontar os limites legais e os cuidados no uso de dados"
+   ],
+   "p1": [
+    "a investigação reúne provas de um crime para o processo penal; a inteligência produz conhecimento para apoiar decisões",
+    "a inteligência é preventiva e estratégica: antecipa ameaças e orienta ações contra o crime",
+    "as duas se completam: a inteligência mostra onde agir, e a investigação produz a prova que leva à condenação"
+   ],
+   "p2": [
+    "mapear a estrutura das facções: quem lidera, quem financia e por onde passa a droga",
+    "seguir o dinheiro e atingir o patrimônio do crime (asfixia financeira), como na Operação Carbono Oculto (2025)",
+    "cruzar dados entre estados, como prevê o banco nacional da Lei Antifacção, para atingir facções que agem em vários estados"
+   ],
+   "fim": [
+    "a lei geral de proteção de dados (LGPD) não vale para a segurança pública, e ainda falta uma lei própria",
+    "controle de acesso aos dados e uso apenas para a finalidade prevista em lei",
+    "síntese: inteligência com regras, unindo eficiência no combate ao crime e respeito aos direitos fundamentais"
+   ],
+   "pronta": "A Lei Antifacção, de 2026, criou um banco nacional de dados sobre organizações criminosas ultraviolentas. Nesse sentido, vale citar a diferença entre a atividade de inteligência e a investigação criminal, expor as contribuições da inteligência para o combate às facções e apontar os limites legais e os cuidados no uso de dados pela inteligência policial."
+  }
+ },
+ {
   "id": "b04a",
   "bloco": "Investimento e financiamento",
   "tema": "Financiamento da segurança pública: como garantir recursos estáveis e bem aplicados",
@@ -286,7 +533,7 @@
    {
     "tipo": "numero",
     "titulo": "Cerca de R$ 160 bilhões",
-    "texto": "gastos por ano com segurança pública no Brasil; 8 de cada 10 reais saem dos estados. Anuário Brasileiro de Segurança Pública"
+    "texto": "gastos por ano com segurança pública no Brasil; 8 de cada 10 reais saem dos estados. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "lei",
@@ -296,7 +543,7 @@
    {
     "tipo": "exemplo",
     "titulo": "Pacto pela Vida (PE, 2007)",
-    "texto": "dinheiro guiado por metas e dados; homicídios caíram quase 40% em seis anos. avaliação do programa feita pela UFPE; o Banco Mundial também destacou o resultado"
+    "texto": "dinheiro guiado por metas e dados; homicídios caíram quase 40% em seis anos. (fonte: avaliação do programa feita pela UFPE; o Banco Mundial também destacou o resultado)"
    },
    {
     "tipo": "exemplo",
@@ -336,6 +583,90 @@
     "síntese: transformar o que deu certo, como o Pacto pela Vida, em política de Estado"
    ],
    "pronta": "O Brasil gasta cerca de R$ 160 bilhões por ano com segurança pública, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar as características do financiamento atual, expor os obstáculos ao uso eficiente desses recursos e propor caminhos para um financiamento estável e eficiente."
+  }
+ },
+ {
+  "id": "b04b",
+  "bloco": "Investimento e financiamento",
+  "tema": "O uso do patrimônio do crime organizado no financiamento da segurança pública",
+  "textos": [
+   {
+    "texto": "A Lei Antifacção, de 2026, permite que o juiz decrete a perda de bens de origem claramente ilícita ligados a organizações criminosas ultraviolentas, mesmo sem condenação penal, e destina o produto desses bens aos fundos de segurança pública.",
+    "fonte": "Texto elaborado com base na Lei 15.358/2026."
+   },
+   {
+    "texto": "A mesma lei determina que o uso dos bens seja supervisionado pelo Conselho Nacional de Justiça e pelo Conselho Nacional do Ministério Público e que, em caso de absolvição, os valores sejam devolvidos com juros.",
+    "fonte": "Texto elaborado com base na Lei 15.358/2026."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "importância de atingir o patrimônio das organizações criminosas",
+    "valor": "8,50"
+   },
+   {
+    "texto": "mecanismos legais de perda e destinação desses bens",
+    "valor": "10,00"
+   },
+   {
+    "texto": "cuidados necessários para garantir transparência e respeito aos direitos",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "Cerca de R$ 160 bilhões",
+    "texto": "gastos por ano com segurança pública no Brasil; 8 de cada 10 reais saem dos estados. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "Fundo Nacional de Segurança Pública",
+    "texto": "dinheiro federal, parte dele vindo das loterias, repassado aos estados."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Pacto pela Vida (PE, 2007)",
+    "texto": "dinheiro guiado por metas e dados; homicídios caíram quase 40% em seis anos. (fonte: avaliação do programa feita pela UFPE; o Banco Mundial também destacou o resultado)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Tecnologia integrada (Córtex, reconhecimento facial)",
+    "texto": "câmeras e bancos de dados ligados entre estados para achar veículos roubados e foragidos; a própria Cebraspe aceitou esse tipo de exemplo em 2024."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"Não basta gastar mais: é preciso gastar melhor, com metas e avaliação.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "A Lei Antifacção, de 2026, destina aos fundos de segurança pública os bens tomados das organizações criminosas.",
+    "O Brasil gasta cerca de R$ 160 bilhões por ano com segurança pública, e 8 de cada 10 reais saem dos estados, segundo o Anuário Brasileiro de Segurança Pública.",
+    "As facções lavam dinheiro em empresas legais, como postos de combustíveis, e até em fintechs."
+   ],
+   "anuncia": [
+    "a importância de atingir o patrimônio das organizações criminosas",
+    "os mecanismos legais de perda e destinação desses bens",
+    "apontar os cuidados para garantir transparência e respeito aos direitos"
+   ],
+   "p1": [
+    "prender o integrante da ponta não desmonta a facção; tirar o dinheiro, sim (asfixia financeira)",
+    "o dinheiro sustenta o crime: compra armas, corrompe agentes públicos e financia o recrutamento",
+    "a Operação Carbono Oculto (2025) atingiu o dinheiro de uma facção infiltrada no setor de combustíveis e em fintechs"
+   ],
+   "p2": [
+    "a Lei Antifacção (2026) permite ao juiz decretar a perda de bens de origem claramente ilícita, mesmo sem condenação penal",
+    "o produto desses bens vai para os fundos de segurança pública",
+    "rastrear os bens exige integração entre polícias, Ministério Público e Receita"
+   ],
+   "fim": [
+    "o uso dos bens é supervisionado pelo Conselho Nacional de Justiça e pelo Conselho Nacional do Ministério Público",
+    "em caso de absolvição, os valores são devolvidos com juros, o que protege quem foi acusado injustamente",
+    "síntese: o dinheiro do crime deve financiar a segurança, com transparência e respeito ao devido processo legal"
+   ],
+   "pronta": "A Lei Antifacção, de 2026, destina aos fundos de segurança pública os bens tomados das organizações criminosas. Nesse sentido, vale citar a importância de atingir o patrimônio dessas organizações, expor os mecanismos legais de perda e destinação desses bens e apontar os cuidados necessários para garantir transparência e respeito aos direitos."
   }
  },
  {
@@ -422,6 +753,85 @@
   }
  },
  {
+  "id": "b05b",
+  "bloco": "Crime organizado e facções",
+  "tema": "O controle de armas de fogo e o enfrentamento ao crime organizado",
+  "textos": [
+   {
+    "texto": "Entre 2017 e 2025, o número de armas de fogo registradas no Brasil mais que triplicou, passando de pouco mais de 600 mil para mais de 2 milhões. Em 2025, as polícias estaduais apreenderam mais de 100 mil armas.",
+    "fonte": "Texto elaborado com dados do Anuário Brasileiro de Segurança Pública 2026 (FBSP)."
+   },
+   {
+    "texto": "Parte das armas usadas por organizações criminosas tem origem no mercado legal e chega ao crime por meio de furtos, roubos, desvios e revendas irregulares. O rastreamento das armas apreendidas permite identificar essas rotas.",
+    "fonte": "Texto elaborado para fins didáticos."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "relação entre a circulação de armas de fogo e a violência",
+    "valor": "8,50"
+   },
+   {
+    "texto": "formas pelas quais as armas chegam às organizações criminosas",
+    "valor": "10,00"
+   },
+   {
+    "texto": "medidas de controle e de rastreamento que podem reduzir esse fluxo",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "lei",
+    "titulo": "Lei Antifacção (2026)",
+    "texto": "criou o crime de domínio social estruturado (facção que controla território com violência): pena de 20 a 40 anos, crime hediondo. (Lei 15.358/2026)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Operação Carbono Oculto (2025)",
+    "texto": "Polícia Federal, Receita e Ministério Público de SP atingiram o dinheiro de uma facção infiltrada no setor de combustíveis e em fintechs."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Presídios federais de segurança máxima",
+    "texto": "isolam as lideranças das facções e dificultam que elas comandem o crime de dentro das celas."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"Prender o soldado da ponta não desmonta a facção; tirar o dinheiro, sim.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Entre 2017 e 2025, o número de armas de fogo registradas no Brasil mais que triplicou, segundo o Anuário Brasileiro de Segurança Pública.",
+    "Em 2025, as polícias estaduais apreenderam mais de 100 mil armas de fogo, segundo o Anuário Brasileiro de Segurança Pública.",
+    "A maior parte dos homicídios no Brasil é cometida com arma de fogo."
+   ],
+   "anuncia": [
+    "a relação entre a circulação de armas de fogo e a violência",
+    "as formas pelas quais as armas chegam às organizações criminosas",
+    "propor medidas de controle e de rastreamento"
+   ],
+   "p1": [
+    "a maior parte dos homicídios é cometida com arma de fogo: mais armas em circulação tornam os conflitos mais letais",
+    "as armas dão às facções poder para dominar territórios e enfrentar a polícia",
+    "as armas registradas passaram de pouco mais de 600 mil, em 2017, para mais de 2 milhões, em 2025"
+   ],
+   "p2": [
+    "armas do mercado legal desviadas por furtos, roubos e revendas irregulares",
+    "contrabando e tráfico de armas pelas rotas do crime organizado",
+    "sem rastreamento, a arma apreendida não revela de onde veio nem quem a desviou"
+   ],
+   "fim": [
+    "rastrear toda arma apreendida, para identificar as rotas e quem a desviou",
+    "fiscalizar registros e estoques, como manda o Estatuto do Desarmamento (2003), com dados integrados entre as polícias, como prevê o SUSP",
+    "síntese: menos armas nas mãos do crime significa menos mortes, para a população e para o policial"
+   ],
+   "pronta": "Entre 2017 e 2025, o número de armas de fogo registradas no Brasil mais que triplicou, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar a relação entre a circulação de armas e a violência, expor as formas pelas quais elas chegam às organizações criminosas e propor medidas de controle e de rastreamento capazes de reduzir esse fluxo."
+  }
+ },
+ {
   "id": "b06a",
   "bloco": "Violência contra a mulher",
   "tema": "O enfrentamento ao feminicídio no Brasil",
@@ -457,12 +867,12 @@
    {
     "tipo": "numero",
     "titulo": "4 por dia",
-    "texto": "mulheres mortas por feminicídio no Brasil em 2025; o número subiu enquanto os homicídios caíam. Anuário Brasileiro de Segurança Pública"
+    "texto": "mulheres mortas por feminicídio no Brasil em 2025; o número subiu enquanto os homicídios caíam. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "numero",
     "titulo": "8 em cada 10",
-    "texto": "feminicídios são cometidos pelo parceiro ou ex-parceiro. Anuário Brasileiro de Segurança Pública"
+    "texto": "feminicídios são cometidos pelo parceiro ou ex-parceiro. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "lei",
@@ -515,6 +925,95 @@
   }
  },
  {
+  "id": "b06b",
+  "bloco": "Violência contra a mulher",
+  "tema": "A atuação policial no atendimento às mulheres vítimas de violência doméstica",
+  "textos": [
+   {
+    "texto": "Muitas mulheres em situação de violência doméstica não procuram a polícia por medo do agressor, por dependência financeira, por preocupação com os filhos ou por temer não serem acreditadas. Quando procuram, o tipo de acolhimento recebido pode determinar se elas seguirão adiante com a denúncia.",
+    "fonte": "Texto elaborado para fins didáticos."
+   },
+   {
+    "texto": "A Lei 14.541/2023 determina que as Delegacias Especializadas de Atendimento à Mulher funcionem de forma ininterrupta, inclusive em feriados e fins de semana.",
+    "fonte": "Texto elaborado com base na Lei 14.541/2023."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "obstáculos que levam as mulheres a não denunciar a violência sofrida",
+    "valor": "8,50"
+   },
+   {
+    "texto": "importância de um atendimento policial especializado e acolhedor",
+    "valor": "10,00"
+   },
+   {
+    "texto": "papel da Polícia Civil na prevenção do feminicídio",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "4 por dia",
+    "texto": "mulheres mortas por feminicídio no Brasil em 2025; o número subiu enquanto os homicídios caíam. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "numero",
+    "titulo": "8 em cada 10",
+    "texto": "feminicídios são cometidos pelo parceiro ou ex-parceiro. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "Lei Maria da Penha (2006) e Pacote Antifeminicídio (2024)",
+    "texto": "medidas protetivas; feminicídio com pena de 20 a 40 anos. (Lei 11.340/2006 e Lei 14.994/2024)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Casa da Mulher Brasileira",
+    "texto": "delegacia, Justiça, Ministério Público, Defensoria e apoio psicológico no mesmo prédio; a vítima conta a história uma vez só."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Patrulha Maria da Penha",
+    "texto": "policiais visitam as mulheres com medida protetiva para fiscalizar o cumprimento."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"O feminicídio é uma morte anunciada: interromper o ciclo cedo salva vidas.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Cerca de quatro mulheres foram vítimas de feminicídio por dia no Brasil em 2025, segundo o Anuário Brasileiro de Segurança Pública.",
+    "Desde 2023, a lei determina que as Delegacias da Mulher funcionem 24 horas, inclusive em feriados e fins de semana.",
+    "Muitas mulheres em situação de violência doméstica não procuram a polícia por medo do agressor."
+   ],
+   "anuncia": [
+    "os obstáculos que levam as mulheres a não denunciar",
+    "a importância de um atendimento policial especializado e acolhedor",
+    "apontar o papel da Polícia Civil na prevenção do feminicídio"
+   ],
+   "p1": [
+    "medo do agressor e dependência financeira e emocional",
+    "preocupação com os filhos",
+    "medo de não ser acreditada e de sofrer de novo no atendimento (revitimização)"
+   ],
+   "p2": [
+    "o acolhimento recebido pode decidir se a mulher seguirá com a denúncia",
+    "Delegacias da Mulher 24 horas (lei de 2023) e a Casa da Mulher Brasileira, onde a vítima conta a história uma vez só",
+    "avaliação de risco no atendimento, para priorizar os casos mais graves"
+   ],
+   "fim": [
+    "acolher sem julgar, registrar e pedir a medida protetiva, que o juiz decide em até 48 horas",
+    "investigar rápido a ameaça e o descumprimento da medida protetiva, descumprida em média a cada 4 minutos em 2025",
+    "síntese: o feminicídio é uma morte anunciada, e interromper o ciclo cedo salva vidas"
+   ],
+   "pronta": "Cerca de quatro mulheres foram vítimas de feminicídio por dia no Brasil em 2025, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar os obstáculos que levam as mulheres a não denunciar a violência, expor a importância de um atendimento policial especializado e acolhedor e apontar o papel da Polícia Civil na prevenção do feminicídio."
+  }
+ },
+ {
   "id": "b07a",
   "bloco": "Golpes digitais e crimes cibernéticos",
   "tema": "O crescimento dos golpes digitais no Brasil e os desafios da investigação",
@@ -546,12 +1045,12 @@
    {
     "tipo": "numero",
     "titulo": "Mais de 2 milhões",
-    "texto": "de golpes por ano no Brasil (cerca de 250 por hora), cinco vezes mais que em 2018. Anuário Brasileiro de Segurança Pública"
+    "texto": "de golpes por ano no Brasil (cerca de 250 por hora), cinco vezes mais que em 2018. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "numero",
     "titulo": "Menos de 5 mil",
-    "texto": "presos por estelionato: o golpe virou \"o crime que compensa\". Anuário Brasileiro de Segurança Pública"
+    "texto": "presos por estelionato: o golpe virou \"o crime que compensa\". (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "lei",
@@ -601,6 +1100,95 @@
     "síntese: educação digital, sobretudo dos idosos, porque o melhor golpe é o que não acontece"
    ],
    "pronta": "O Brasil registra mais de 2 milhões de golpes por ano, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar os fatores que explicam esse crescimento, expor as dificuldades da investigação e propor medidas de prevenção e de repressão a esses crimes."
+  }
+ },
+ {
+  "id": "b07b",
+  "bloco": "Golpes digitais e crimes cibernéticos",
+  "tema": "A proteção de crianças e adolescentes contra crimes no ambiente digital",
+  "textos": [
+   {
+    "texto": "Em 2025, os registros de produção, posse ou distribuição de material de abuso sexual infantil cresceram 25% no Brasil. Segundo o Fórum Brasileiro de Segurança Pública, esses dados são uma pequena amostra do que efetivamente circula na internet.",
+    "fonte": "Texto elaborado com dados do Anuário Brasileiro de Segurança Pública 2026 (FBSP)."
+   },
+   {
+    "texto": "Em vigor desde março de 2026, o ECA Digital (Lei 15.211/2025) obriga as plataformas digitais a adotar medidas para impedir o acesso de crianças e adolescentes a conteúdos ilegais ou impróprios, exige formas confiáveis de verificar a idade dos usuários e prevê ferramentas de supervisão pelos pais.",
+    "fonte": "Texto elaborado com base na Lei 15.211/2025."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "riscos a que crianças e adolescentes estão expostos na internet",
+    "valor": "8,50"
+   },
+   {
+    "texto": "responsabilidades das famílias, das escolas e das plataformas digitais",
+    "valor": "10,00"
+   },
+   {
+    "texto": "papel da investigação policial na proteção desse público",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "Mais de 2 milhões",
+    "texto": "de golpes por ano no Brasil (cerca de 250 por hora), cinco vezes mais que em 2018. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "numero",
+    "titulo": "Menos de 5 mil",
+    "texto": "presos por estelionato: o golpe virou \"o crime que compensa\". (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "Lei da fraude eletrônica (2021)",
+    "texto": "golpe pela internet passou a ter pena de 4 a 8 anos. (Lei 14.155/2021)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Celular Seguro (governo federal, 2023)",
+    "texto": "depois do roubo, a vítima bloqueia linha, aparelho e aplicativos de banco de uma vez."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Devolução do Pix (Banco Central)",
+    "texto": "se a vítima avisa o banco rápido, o dinheiro do golpe pode ser bloqueado e devolvido."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"O melhor golpe é o que não acontece: educação digital também é segurança pública.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Em 2025, os registros de material de abuso sexual infantil cresceram 25% no Brasil, segundo o Anuário Brasileiro de Segurança Pública.",
+    "Desde março de 2026, o ECA Digital obriga as plataformas a proteger crianças e adolescentes de conteúdos ilegais e impróprios.",
+    "Crianças e adolescentes passam cada vez mais tempo na internet, muitas vezes sem supervisão."
+   ],
+   "anuncia": [
+    "os riscos a que crianças e adolescentes estão expostos na internet",
+    "as responsabilidades das famílias, das escolas e das plataformas",
+    "apontar o papel da investigação policial na proteção desse público"
+   ],
+   "p1": [
+    "aliciamento por adultos e circulação de material de abuso sexual infantil",
+    "cyberbullying, que virou crime em 2024",
+    "golpes e conteúdos impróprios; os registros são só uma pequena amostra do que circula na internet"
+   ],
+   "p2": [
+    "famílias: acompanhar o uso, com as ferramentas de supervisão previstas no ECA Digital, e manter o diálogo",
+    "escolas: educação digital, combate ao cyberbullying e atenção aos sinais de abuso",
+    "plataformas: verificar a idade dos usuários e impedir o acesso a conteúdos ilegais, como manda o ECA Digital"
+   ],
+   "fim": [
+    "delegacias de crimes cibernéticos e perícia digital para identificar quem alicia e quem compartilha",
+    "cooperação internacional, como na Operação Impregnator (2024), em que a Polícia Federal, a partir de um alerta da Interpol, prendeu um suspeito de compartilhar imagens de abuso",
+    "síntese: a proteção integral da criança, princípio do ECA, também vale no ambiente digital"
+   ],
+   "pronta": "Em 2025, os registros de material de abuso sexual infantil cresceram 25% no Brasil, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar os riscos a que crianças e adolescentes estão expostos na internet, expor as responsabilidades das famílias, das escolas e das plataformas digitais e apontar o papel da investigação policial na proteção desse público."
   }
  },
  {
@@ -683,6 +1271,85 @@
   }
  },
  {
+  "id": "b08b",
+  "bloco": "Tecnologia e direitos",
+  "tema": "Reconhecimento facial e inteligência artificial na segurança pública: benefícios e riscos",
+  "textos": [
+   {
+    "texto": "Sistemas de reconhecimento facial vêm sendo instalados em ruas, estações e estádios de várias cidades brasileiras para localizar foragidos da Justiça e pessoas desaparecidas. Há registros, porém, de pessoas abordadas e até presas por engano após falhas de identificação, que atingem com mais frequência pessoas negras.",
+    "fonte": "Texto elaborado para fins didáticos."
+   },
+   {
+    "texto": "A Lei Geral de Proteção de Dados Pessoais não se aplica ao tratamento de dados feito para fins de segurança pública e de investigação de crimes, que deverá ser regulado por lei específica.",
+    "fonte": "Texto elaborado com base na Lei 13.709/2018, art. 4º, III."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "benefícios do uso dessas tecnologias pelas forças de segurança",
+    "valor": "8,50"
+   },
+   {
+    "texto": "riscos para os direitos fundamentais",
+    "valor": "10,00"
+   },
+   {
+    "texto": "regras e controles necessários para o uso responsável dessas ferramentas",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "exemplo",
+    "titulo": "Câmeras corporais (PM de São Paulo)",
+    "texto": "menos mortes em ações policiais e mais provas em vídeo."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Reconhecimento facial",
+    "texto": "câmeras em estações e ruas ajudam a localizar foragidos da Justiça (exemplo citado pela própria Cebraspe em 2024)."
+   },
+   {
+    "tipo": "lei",
+    "titulo": "STF, 2025 (operações no Rio, ADPF 635)",
+    "texto": "exigiu câmeras nas fardas e viaturas e perícia rápida nas mortes em operações."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"A câmera protege o bom policial e responsabiliza quem abusa.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Sistemas de reconhecimento facial já são usados em ruas, estações e estádios de várias cidades brasileiras.",
+    "Câmeras, leitura de placas e inteligência artificial mudaram o trabalho policial no Brasil.",
+    "A lei geral de proteção de dados não se aplica à segurança pública, que ainda espera uma lei própria."
+   ],
+   "anuncia": [
+    "os benefícios dessas tecnologias para as forças de segurança",
+    "os riscos para os direitos fundamentais",
+    "apontar as regras e os controles necessários para o uso responsável"
+   ],
+   "p1": [
+    "localizar foragidos da Justiça e pessoas desaparecidas",
+    "produzir prova (imagens, dados) e dar mais rapidez à investigação",
+    "o Córtex, do Ministério da Justiça, e o reconhecimento facial em estações, exemplo citado pela própria Cebraspe em 2024"
+   ],
+   "p2": [
+    "erro de identificação, que atinge mais as pessoas negras e já levou inocentes à prisão",
+    "vigilância sem controle e vazamento de dados pessoais",
+    "a proteção de dados pessoais é direito fundamental desde 2022, mas falta lei específica para a segurança pública"
+   ],
+   "fim": [
+    "conferência humana: o alerta do sistema não basta, e o STJ já decidiu que o reconhecimento sozinho não serve para condenar",
+    "lei específica de proteção de dados na segurança pública, controle de acesso e prova bem guardada (cadeia de custódia)",
+    "síntese: usar a tecnologia, mas com regras, unindo eficiência e respeito aos direitos"
+   ],
+   "pronta": "Sistemas de reconhecimento facial já são usados em ruas, estações e estádios de várias cidades brasileiras. Nesse sentido, vale citar os benefícios dessas tecnologias para as forças de segurança, expor os riscos para os direitos fundamentais e apontar as regras e os controles necessários para o seu uso responsável."
+  }
+ },
+ {
   "id": "b09a",
   "bloco": "Uso da força e confiança na polícia",
   "tema": "Uso da força policial, letalidade e confiança da população",
@@ -714,7 +1381,7 @@
    {
     "tipo": "numero",
     "titulo": "Mais de 6 mil",
-    "texto": "mortes por ano em ações policiais no Brasil; 8 em cada 10 vítimas são negras. Anuário Brasileiro de Segurança Pública"
+    "texto": "mortes por ano em ações policiais no Brasil; 8 em cada 10 vítimas são negras. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "lei",
@@ -729,7 +1396,7 @@
    {
     "tipo": "exemplo",
     "titulo": "Decisão do STF sobre o Rio (ADPF 635)",
-    "texto": "com regras, câmeras e fiscalização, as mortes em ações policiais no Rio caíram mais da metade de 2019 a 2024. Instituto de Segurança Pública do Rio (ISP) e Fórum Brasileiro de Segurança Pública"
+    "texto": "com regras, câmeras e fiscalização, as mortes em ações policiais no Rio caíram mais da metade de 2019 a 2024. (fonte: Instituto de Segurança Pública do Rio (ISP) e Fórum Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "frase",
@@ -767,6 +1434,90 @@
   }
  },
  {
+  "id": "b09b",
+  "bloco": "Uso da força e confiança na polícia",
+  "tema": "A relação entre polícia e comunidade na prevenção e no esclarecimento de crimes",
+  "textos": [
+   {
+    "texto": "O policiamento comunitário aproxima os agentes de segurança dos moradores: o policial atua de forma fixa em uma área, conhece os problemas locais e trabalha em parceria com a comunidade para preveni-los.",
+    "fonte": "Texto elaborado para fins didáticos."
+   },
+   {
+    "texto": "A colaboração da população é essencial para o esclarecimento de crimes: testemunhas, denúncias anônimas e informações sobre o território dependem da confiança que as pessoas têm nas instituições policiais.",
+    "fonte": "Texto elaborado para fins didáticos."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "importância da confiança da população no trabalho policial",
+    "valor": "8,50"
+   },
+   {
+    "texto": "exemplos de estratégias de aproximação entre polícia e comunidade",
+    "valor": "10,00"
+   },
+   {
+    "texto": "desafios e caminhos para fortalecer essa relação",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "Mais de 6 mil",
+    "texto": "mortes por ano em ações policiais no Brasil; 8 em cada 10 vítimas são negras. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "Lei do uso de armas não letais (2014)",
+    "texto": "manda priorizar instrumentos de menor potencial ofensivo e proíbe atirar em quem foge desarmado. (Lei 13.060/2014)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Câmeras corporais (PM de SP)",
+    "texto": "menos mortes em ações policiais e mais provas em vídeo."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Decisão do STF sobre o Rio (ADPF 635)",
+    "texto": "com regras, câmeras e fiscalização, as mortes em ações policiais no Rio caíram mais da metade de 2019 a 2024. (fonte: Instituto de Segurança Pública do Rio (ISP) e Fórum Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"Reduzir a letalidade protege a população e o próprio policial.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Testemunhas e denúncias anônimas, essenciais para esclarecer crimes, dependem da confiança que as pessoas têm na polícia.",
+    "Apenas um em cada três homicídios é esclarecido no Brasil, segundo o Instituto Sou da Paz.",
+    "A Constituição define a segurança pública como dever do Estado, direito e responsabilidade de todos."
+   ],
+   "anuncia": [
+    "a importância da confiança da população no trabalho policial",
+    "exemplos de estratégias de aproximação entre polícia e comunidade",
+    "apontar os desafios e os caminhos para fortalecer essa relação"
+   ],
+   "p1": [
+    "a confiança traz informação: testemunhas, denúncias anônimas e conhecimento do território",
+    "com informação, a polícia esclarece mais crimes e corre menos risco",
+    "a polícia que abusa perde a colaboração: ninguém testemunha, ninguém denuncia"
+   ],
+   "p2": [
+    "policiamento comunitário: o mesmo policial no mesmo bairro, conhecendo os moradores e os problemas locais",
+    "o Fica Vivo! (MG) e o Estado Presente (ES), que levaram policiamento e serviços sociais aos bairros mais violentos",
+    "câmeras corporais (PM de SP), que reduziram as mortes em ações policiais e dão transparência à atuação"
+   ],
+   "fim": [
+    "desafios: desconfiança nas periferias, uso excessivo da força e medo das testemunhas onde há facção",
+    "caminhos: treinamento contínuo, investigação de toda morte em ação policial e atendimento respeitoso nas delegacias",
+    "síntese: a polícia não é inimiga dos direitos, é ela quem os garante na rua, e a confiança da comunidade é a sua maior aliada"
+   ],
+   "pronta": "Testemunhas e denúncias anônimas, essenciais para esclarecer crimes, dependem da confiança que as pessoas têm na polícia. Nesse sentido, vale citar a importância dessa confiança para o trabalho policial, expor exemplos de estratégias de aproximação entre polícia e comunidade e apontar os desafios e os caminhos para fortalecer essa relação."
+  }
+ },
+ {
   "id": "b10a",
   "bloco": "Sistema prisional e reincidência",
   "tema": "O sistema prisional brasileiro, o fortalecimento das facções e o desafio da reincidência",
@@ -798,12 +1549,12 @@
    {
     "tipo": "numero",
     "titulo": "Quase 1 milhão",
-    "texto": "de presos no Brasil, com quase 300 mil vagas a menos do que o necessário. Anuário Brasileiro de Segurança Pública"
+    "texto": "de presos no Brasil, com quase 300 mil vagas a menos do que o necessário. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "numero",
     "titulo": "1 em cada 5",
-    "texto": "presos trabalha. O resto passa o dia sem fazer nada. Anuário Brasileiro de Segurança Pública"
+    "texto": "presos trabalha. O resto passa o dia sem fazer nada. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "lei",
@@ -856,6 +1607,95 @@
   }
  },
  {
+  "id": "b10b",
+  "bloco": "Sistema prisional e reincidência",
+  "tema": "Trabalho, estudo e reintegração social de presos e egressos",
+  "textos": [
+   {
+    "texto": "A Lei de Execução Penal prevê que o condenado pode reduzir parte da pena pelo trabalho ou pelo estudo: um dia de pena a menos a cada três dias de trabalho ou a cada doze horas de estudo.",
+    "fonte": "Texto elaborado com base na Lei 7.210/1984, art. 126."
+   },
+   {
+    "texto": "Ao deixar a prisão, muitos egressos enfrentam dificuldades para conseguir emprego, documentos e moradia. Iniciativas como os Escritórios Sociais, apoiados pelo Conselho Nacional de Justiça, encaminham essas pessoas a serviços públicos e ao mercado de trabalho.",
+    "fonte": "Texto elaborado para fins didáticos."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "importância do trabalho e do estudo durante o cumprimento da pena",
+    "valor": "8,50"
+   },
+   {
+    "texto": "obstáculos enfrentados pelos egressos do sistema prisional",
+    "valor": "10,00"
+   },
+   {
+    "texto": "relação entre reintegração social e segurança pública",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "Quase 1 milhão",
+    "texto": "de presos no Brasil, com quase 300 mil vagas a menos do que o necessário. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "numero",
+    "titulo": "1 em cada 5",
+    "texto": "presos trabalha. O resto passa o dia sem fazer nada. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "STF, 2023 (ADPF 347)",
+    "texto": "reconheceu o \"estado de coisas inconstitucional\" nas prisões e mandou fazer um plano nacional: o Pena Justa."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "APAC (Minas Gerais)",
+    "texto": "presídios menores, sem facção, com trabalho, estudo e participação da família; menos reincidência."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Escritórios Sociais (CNJ)",
+    "texto": "ajudam o egresso com documentos, encaminhamento a emprego e atendimento."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"A prisão que não ressocializa devolve à sociedade alguém pior do que entrou.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "O Brasil tem quase 1 milhão de presos, e apenas 1 em cada 5 trabalha, segundo o Anuário Brasileiro de Segurança Pública.",
+    "A Lei de Execução Penal permite reduzir a pena pelo trabalho e pelo estudo.",
+    "A prisão deve punir e também preparar a volta do condenado à sociedade."
+   ],
+   "anuncia": [
+    "a importância do trabalho e do estudo durante a pena",
+    "os obstáculos enfrentados pelos egressos",
+    "apontar a relação entre reintegração social e segurança pública"
+   ],
+   "p1": [
+    "a remição: a cada 3 dias de trabalho ou 12 horas de estudo, 1 dia a menos de pena (Lei de Execução Penal)",
+    "só 1 em cada 5 presos trabalha, e o ócio facilita o recrutamento pelas facções",
+    "trabalho e estudo dão qualificação e rotina; a APAC (MG), com trabalho, estudo e família, tem menos reincidência"
+   ],
+   "p2": [
+    "falta de documentos, de emprego e de moradia",
+    "preconceito contra quem saiu da prisão, que fecha as portas do mercado de trabalho",
+    "sem apoio, o egresso volta ao crime: é a reincidência"
+   ],
+   "fim": [
+    "quem sai e consegue trabalho tem menos motivo para voltar ao crime, e cada reincidência evitada poupa novas vítimas",
+    "apoio ao egresso, como nos Escritórios Sociais do CNJ, e o Plano Pena Justa (2025)",
+    "síntese: a prisão que não ressocializa devolve à sociedade alguém pior do que entrou"
+   ],
+   "pronta": "O Brasil tem quase 1 milhão de presos, e apenas 1 em cada 5 trabalha, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar a importância do trabalho e do estudo durante o cumprimento da pena, expor os obstáculos enfrentados pelos egressos e apontar a relação entre reintegração social e segurança pública."
+  }
+ },
+ {
   "id": "b11a",
   "bloco": "Prevenção, juventude e escolas",
   "tema": "A prevenção da violência entre os jovens no Brasil",
@@ -887,7 +1727,7 @@
    {
     "tipo": "numero",
     "titulo": "4 em cada 10",
-    "texto": "vítimas de mortes violentas têm entre 18 e 29 anos. Anuário Brasileiro de Segurança Pública"
+    "texto": "vítimas de mortes violentas têm entre 18 e 29 anos. (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "lei",
@@ -940,6 +1780,90 @@
   }
  },
  {
+  "id": "b11b",
+  "bloco": "Prevenção, juventude e escolas",
+  "tema": "A violência no ambiente escolar e o papel da segurança pública",
+  "textos": [
+   {
+    "texto": "Em 2025, os registros de bullying contra crianças e adolescentes cresceram quase 70% no Brasil, e os de cyberbullying, cerca de 60%. Desde 2024, essas condutas são crime.",
+    "fonte": "Texto elaborado com dados do Anuário Brasileiro de Segurança Pública 2026 (FBSP)."
+   },
+   {
+    "texto": "A Lei 14.811/2024 incluiu no Código Penal o crime de intimidação sistemática (bullying), com pena maior quando praticado pela internet, e criou medidas de proteção à criança e ao adolescente contra a violência nas escolas.",
+    "fonte": "Texto elaborado com base na Lei 14.811/2024."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "formas de violência presentes no ambiente escolar atualmente",
+    "valor": "8,50"
+   },
+   {
+    "texto": "fatores que contribuem para essa violência",
+    "valor": "10,00"
+   },
+   {
+    "texto": "medidas de prevenção e papel das escolas e das forças de segurança",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "4 em cada 10",
+    "texto": "vítimas de mortes violentas têm entre 18 e 29 anos. (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "Lei do bullying (2024)",
+    "texto": "bullying e cyberbullying viraram crime. (Lei 14.811/2024)"
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Fica Vivo! (MG, 2002)",
+    "texto": "oficinas de esporte, cultura e trabalho para jovens dos bairros mais violentos, mais polícia focada nos autores de homicídio; os homicídios caíram nas áreas atendidas."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Estado Presente (ES, 2011)",
+    "texto": "levou policiamento e serviços sociais, juntos, aos bairros mais violentos do Espírito Santo."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"Prevenir custa menos que punir e salva vidas antes da tragédia.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Em 2025, os registros de bullying contra crianças e adolescentes cresceram quase 70% no Brasil, segundo o Anuário Brasileiro de Segurança Pública.",
+    "Desde 2024, o bullying e o cyberbullying são crime no Brasil.",
+    "A escola protege os jovens, mas também sofre com bullying, ameaças e ataques."
+   ],
+   "anuncia": [
+    "as formas de violência presentes nas escolas",
+    "os fatores que contribuem para essa violência",
+    "propor medidas de prevenção, com o papel das escolas e das forças de segurança"
+   ],
+   "p1": [
+    "bullying, que cresceu quase 70% em 2025, e cyberbullying, que cresceu cerca de 60%",
+    "ameaças e ataques às escolas",
+    "aliciamento de crianças e adolescentes, para o tráfico ou para crimes sexuais"
+   ],
+   "p2": [
+    "violência em casa e falta de acompanhamento da família",
+    "uso da internet sem supervisão, que espalha o cyberbullying",
+    "falta de apoio psicológico e de canais de denúncia nas escolas"
+   ],
+   "fim": [
+    "escola: combate ao bullying, apoio psicológico e canais de denúncia, como prevê a lei de 2024",
+    "forças de segurança: a Polícia Civil apura o bullying e o cyberbullying, investiga quem alicia e encaminha as vítimas ao Conselho Tutelar",
+    "síntese: prevenir custa menos que punir e salva vidas antes da tragédia"
+   ],
+   "pronta": "Em 2025, os registros de bullying contra crianças e adolescentes cresceram quase 70% no Brasil, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar as formas de violência presentes no ambiente escolar, expor os fatores que contribuem para essa violência e propor medidas de prevenção, destacando o papel das escolas e das forças de segurança."
+  }
+ },
+ {
   "id": "b12a",
   "bloco": "Valorização e saúde mental do policial",
   "tema": "A saúde mental dos profissionais de segurança pública",
@@ -971,7 +1895,7 @@
    {
     "tipo": "numero",
     "titulo": "Quase o mesmo número",
-    "texto": "de policiais morreu por suicídio e por assassinato em 2025 (cerca de 110 e 140). Anuário Brasileiro de Segurança Pública"
+    "texto": "de policiais morreu por suicídio e por assassinato em 2025 (cerca de 110 e 140). (fonte: Anuário Brasileiro de Segurança Pública)"
    },
    {
     "tipo": "lei",
@@ -1026,6 +1950,95 @@
     "síntese: cuidar de quem protege é cuidar da segurança de todos"
    ],
    "pronta": "Em 2025, quase tantos policiais morreram por suicídio quanto foram assassinados no Brasil, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar os fatores que adoecem os profissionais de segurança, expor as consequências desse adoecimento e propor medidas de prevenção e de valorização."
+  }
+ },
+ {
+  "id": "b12b",
+  "bloco": "Valorização e saúde mental do policial",
+  "tema": "A valorização dos profissionais de segurança pública como estratégia de combate à criminalidade",
+  "textos": [
+   {
+    "texto": "Em 2023, foram aprovadas a Lei Orgânica Nacional das Polícias Civis e a Lei Orgânica Nacional das Polícias Militares e dos Corpos de Bombeiros Militares, que estabelecem normas gerais sobre carreira, direitos e deveres desses profissionais em todo o país.",
+    "fonte": "Texto elaborado com base nas Leis 14.735/2023 e 14.751/2023."
+   },
+   {
+    "texto": "Efetivos reduzidos, longas jornadas, baixa remuneração e falta de equipamentos estão entre as queixas frequentes dos profissionais de segurança pública, que também apontam a necessidade de formação continuada e de reconhecimento social.",
+    "fonte": "Texto elaborado para fins didáticos."
+   }
+  ],
+  "aspectos": [
+   {
+    "texto": "situação atual das condições de trabalho dos profissionais de segurança pública",
+    "valor": "8,50"
+   },
+   {
+    "texto": "relação entre a valorização profissional e a qualidade do serviço prestado",
+    "valor": "10,00"
+   },
+   {
+    "texto": "medidas de valorização que podem ser adotadas pelo poder público",
+    "valor": "10,00"
+   }
+  ],
+  "decorar": [
+   {
+    "tipo": "numero",
+    "titulo": "Quase o mesmo número",
+    "texto": "de policiais morreu por suicídio e por assassinato em 2025 (cerca de 110 e 140). (fonte: Anuário Brasileiro de Segurança Pública)"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "Lei de prevenção ao suicídio de policiais (2023)",
+    "texto": "apoio psicológico e registro de dados sobre o adoecimento dos profissionais de segurança. (Lei 14.531/2023)"
+   },
+   {
+    "tipo": "lei",
+    "titulo": "Leis orgânicas nacionais das polícias (2023)",
+    "texto": "carreira, direitos e deveres das polícias civis e militares padronizados no país."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Pró-Vida (programa nacional, 2018, ampliado em 2023)",
+    "texto": "atenção psicológica aos profissionais de segurança e coleta de dados sobre adoecimento e suicídio, que antes nem eram contados."
+   },
+   {
+    "tipo": "exemplo",
+    "titulo": "Apoio psicológico após ocorrências críticas",
+    "texto": "atendimento oferecido pelas polícias estaduais depois de confrontos e mortes de colegas."
+   },
+   {
+    "tipo": "frase",
+    "titulo": "\"Cuidar de quem protege é cuidar da segurança de todos.\"",
+    "texto": ""
+   }
+  ],
+  "esqueleto": {
+   "abre": [
+    "Em 2025, quase tantos policiais morreram por suicídio quanto foram assassinados no Brasil, segundo o Anuário Brasileiro de Segurança Pública.",
+    "Desde 2023, leis orgânicas nacionais definem carreira, direitos e deveres das polícias civis e militares.",
+    "Efetivos reduzidos e longas jornadas estão entre as principais queixas dos profissionais de segurança pública."
+   ],
+   "anuncia": [
+    "as condições de trabalho dos profissionais de segurança",
+    "a relação entre valorização profissional e qualidade do serviço",
+    "propor medidas de valorização pelo poder público"
+   ],
+   "p1": [
+    "efetivos reduzidos e longas jornadas, com o \"bico\" para completar a renda",
+    "baixa remuneração e falta de equipamentos",
+    "adoecimento: em 2025, quase tantos policiais morreram por suicídio quanto foram assassinados"
+   ],
+   "p2": [
+    "policial descansado, bem formado e equipado decide melhor sob pressão",
+    "policial adoecido pode usar a força em excesso e atender pior a população",
+    "equipe completa reduz a sobrecarga e melhora a investigação, com mais crimes esclarecidos"
+   ],
+   "fim": [
+    "concursos regulares, salário adequado e escalas que respeitem o descanso, como no Juntos pela Segurança (PE), que prevê milhares de novos policiais",
+    "formação continuada, equipamentos e atendimento psicológico, como no programa Pró-Vida e na lei de prevenção ao suicídio de policiais (2023)",
+    "síntese: cuidar de quem protege é cuidar da segurança de todos"
+   ],
+   "pronta": "Em 2025, quase tantos policiais morreram por suicídio quanto foram assassinados no Brasil, segundo o Anuário Brasileiro de Segurança Pública. Nesse sentido, vale citar as condições de trabalho dos profissionais de segurança pública, expor a relação entre a valorização profissional e a qualidade do serviço prestado e propor medidas de valorização que podem ser adotadas pelo poder público."
   }
  },
  {
