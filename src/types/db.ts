@@ -232,6 +232,7 @@ export type Database = {
           riscada: boolean
           topicos_incluidos: string[] | null
           topicos_riscados: string[]
+          proximo_estudo: string
           user_id: string
         }
         Insert: {
@@ -247,6 +248,7 @@ export type Database = {
           riscada?: boolean
           topicos_incluidos?: string[] | null
           topicos_riscados?: string[]
+          proximo_estudo?: string
           user_id?: string
         }
         Update: {
@@ -262,6 +264,7 @@ export type Database = {
           riscada?: boolean
           topicos_incluidos?: string[] | null
           topicos_riscados?: string[]
+          proximo_estudo?: string
           user_id?: string
         }
         Relationships: [
@@ -284,6 +287,8 @@ export type Database = {
       concursos: {
         Row: {
           banca: string | null
+          ciclo_fila: Json
+          ciclo_volta: number
           ciclo_plano_inicio: string | null
           ciclo_plano_ordem: string[] | null
           questoes_filtro_padrao: Json | null
@@ -310,6 +315,8 @@ export type Database = {
         }
         Insert: {
           banca?: string | null
+          ciclo_fila?: Json
+          ciclo_volta?: number
           ciclo_plano_inicio?: string | null
           ciclo_plano_ordem?: string[] | null
           questoes_filtro_padrao?: Json | null
@@ -336,6 +343,8 @@ export type Database = {
         }
         Update: {
           banca?: string | null
+          ciclo_fila?: Json
+          ciclo_volta?: number
           ciclo_plano_inicio?: string | null
           ciclo_plano_ordem?: string[] | null
           questoes_filtro_padrao?: Json | null
@@ -606,6 +615,8 @@ export type Database = {
           hora: number
           id: string
           materia_id: string | null
+          ciclo_item: string | null
+          ciclo_volta: number | null
           minutos: number
           nota: string
           user_id: string
@@ -618,6 +629,8 @@ export type Database = {
           hora: number
           id?: string
           materia_id?: string | null
+          ciclo_item?: string | null
+          ciclo_volta?: number | null
           minutos?: number
           nota?: string
           user_id?: string
@@ -630,6 +643,8 @@ export type Database = {
           hora?: number
           id?: string
           materia_id?: string | null
+          ciclo_item?: string | null
+          ciclo_volta?: number | null
           minutos?: number
           nota?: string
           user_id?: string

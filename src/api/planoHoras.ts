@@ -109,6 +109,8 @@ export function useSalvarHora() {
           user_id: "",
           feita: c.feita ?? false,
           minutos: c.minutos ?? 30,
+          ciclo_item: null,
+          ciclo_volta: null,
           created_at: new Date().toISOString(),
         };
         return [...linhas, nova];

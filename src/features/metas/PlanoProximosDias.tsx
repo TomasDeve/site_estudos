@@ -49,6 +49,7 @@ import {
   useDiasConcluidos,
 } from "@/api/diasConcluidos";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
+import { useSalvarProximoEstudo } from "@/api/cicloFila";
 import { fmtMinutos, hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Field";
@@ -57,6 +58,8 @@ import { Modal } from "@/components/Modal";
 import { Spinner } from "@/components/Spinner";
 import { celebrar } from "./celebration";
 import { CicloDasMaterias, PontoDoRank } from "./CicloDasMaterias";
+import { CicloDeEstudos } from "./CicloDeEstudos";
+import { diaDeEstudo } from "./cicloFila";
 import type { ContagemCiclo, DesempenhoCiclo } from "./cicloPlano";
 import { useCicloDoPlano } from "./useCicloDoPlano";
 import {
@@ -145,6 +148,8 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const desfazerDia = useDesfazerDia();
   // Sequência mostrada no modal de comemoração (nulo = fechado).
   const [modalStreak, setModalStreak] = useState<number | null>(null);
+  // Matéria do bloco que acabou de ser marcado feito: pergunta o recado pra próxima vez.
+  const [recadoDe, setRecadoDe] = useState<Materia | null>(null);
 
   // Arrastar blocos: mouse começa a arrastar depois de mexer 6px (um clique curto
   // continua abrindo o bloco); no toque, segurar um instante — assim rolar a
@@ -364,12 +369,15 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
                     onExtras={(n) => setExtras((x) => ({ ...x, [d]: n }))}
                     materiaPorId={materiaPorId}
                     onEditar={(hora, linha) => setEditando({ data: d, hora, linha })}
-                    onFeita={(l) =>
+                    onFeita={(l) => {
                       marcarFeita.mutate(
                         { data: l.data, hora: l.hora, feita: !l.feita },
                         { onError: erro }
-                      )
-                    }
+                      );
+                      // Concluiu um bloco de matéria do concurso: recado opcional pra próxima vez.
+                      const m = l.materia_id ? materiaPorId.get(l.materia_id) : undefined;
+                      if (!l.feita && m && materiasDoConcurso.some((x) => x.id === m.id)) setRecadoDe(m);
+                    }}
                     onApagar={apagar}
                     onTempo={(l, minutos) =>
                       tempoHora.mutate({ data: l.data, hora: l.hora, minutos }, { onError: erro })
@@ -397,6 +405,9 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
               </DragOverlay>
             </DndContext>
 
+            {/* A fila do ciclo: sobe o próximo item para o dia de estudo */}
+            <CicloDeEstudos materiaPorId={materiaPorId} />
+
             {/* O ciclo das matérias: o que já entrou no plano, na ordem do ciclo */}
             <CicloDasMaterias ciclo={ciclo} />
           </>
@@ -417,6 +428,21 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           onSalvo={setUltimaAtividade}
           onErro={erro}
           onClose={() => setEditando(null)}
+        />
+      )}
+
+      {recadoDe && (
+        <RecadoModal
+          key={recadoDe.id}
+          concursoId={concursoId}
+          materia={recadoDe}
+          atual={
+            vinculos?.find((v) => v.concurso_id === concursoId && v.materia_id === recadoDe.id)
+              ?.proximo_estudo ?? ""
+          }
+          desde={diaDeEstudo(new Date(), new Set((diasConcluidos ?? []).map((d) => d.data)))}
+          onErro={erro}
+          onClose={() => setRecadoDe(null)}
         />
       )}
 
@@ -1225,6 +1251,87 @@ function EditarHoraModal({
           </p>
         </section>
       </div>
+    </Modal>
+  );
+}
+
+/**
+ * Ao marcar um bloco de matéria como feito: um recado opcional para a próxima vez
+ * que estudar essa matéria ("parei na p. 40, fazer as questões do bloco 3"). Ele
+ * aparece na fila do ciclo e vira o detalhe do próximo bloco dela.
+ */
+function RecadoModal({
+  concursoId,
+  materia,
+  atual,
+  desde,
+  onErro,
+  onClose,
+}: {
+  concursoId: string;
+  materia: Materia;
+  /** O recado que já estava gravado (vem preenchido). */
+  atual: string;
+  /** Dia de estudo: os blocos dela daqui pra frente recebem o recado novo. */
+  desde: string;
+  onErro: (err: unknown) => void;
+  onClose: () => void;
+}) {
+  const salvar = useSalvarProximoEstudo();
+  const [texto, setTexto] = useState(atual);
+
+  function onSalvar() {
+    const novo = texto.trim();
+    if (novo !== atual)
+      salvar.mutate(
+        { concursoId, materiaId: materia.id, texto: novo, anterior: atual, desde },
+        {
+          onError: onErro,
+          onSuccess: () => toast.success(novo ? "Recado guardado pra próxima vez" : "Recado apagado"),
+        }
+      );
+    onClose();
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      width="max-w-md"
+      title={
+        <>
+          ✓ {materia.icone} {materia.nome}
+        </>
+      }
+      footer={
+        <div className="flex w-full items-center justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Agora não
+          </Button>
+          <Button size="sm" onClick={onSalvar}>
+            Salvar recado
+          </Button>
+        </div>
+      }
+    >
+      <label htmlFor="recado-proxima" className="mb-2 block text-sm text-dim">
+        Quer deixar um recado para a próxima vez que estudar esta matéria?{" "}
+        <span className="text-mut">(opcional)</span>
+      </label>
+      <Input
+        id="recado-proxima"
+        autoFocus
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") onSalvar();
+        }}
+        placeholder="Ex.: parei na p. 40, começar pelas questões do bloco 3"
+        maxLength={160}
+      />
+      <p className="mt-2 text-[11px] text-mut">
+        Aparece na fila do ciclo e vira o detalhe do próximo bloco de {materia.nome}.
+      </p>
     </Modal>
   );
 }
