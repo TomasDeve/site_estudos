@@ -7,11 +7,9 @@ import { useDevolverAoCiclo, useLinhasDoCiclo, useSubirDoCiclo } from "@/api/cic
 import { useDiasConcluidos } from "@/api/diasConcluidos";
 import { useConcursoMaterias } from "@/api/materias";
 import { fmtMinutos, hojeISO } from "@/lib/dates";
-import { MenuMais } from "@/components/MenuMais";
 import { atividadeDe, rotuloDoDia } from "./planoDias";
 import {
   HORA_DA_VIRADA,
-  TEMPOS_AO_SUBIR,
   diaDeEstudo,
   lerFila,
   situacaoDoCiclo,
@@ -32,10 +30,11 @@ function abertoSalvo(): boolean {
 
 /**
  * Ciclo de estudos, logo abaixo da grade do plano: a fila fixa do concurso,
- * numerada. Cada item na fila tem "Subir" (escolhendo o tempo): ele vira um bloco
- * no dia de estudo — hoje, ou o próximo dia aberto se hoje já foi concluído (até
- * as 6h ainda vale o dia anterior). Feito, o item fica verde; o dia acabou sem
- * fazer, o bloco sai do dia e o item volta pra fila. Todos feitos = nova volta.
+ * numerada. Cada item na fila tem "Subir": ele vira um bloco no dia de estudo —
+ * hoje, ou o próximo dia aberto se hoje já foi concluído (até as 6h ainda vale o
+ * dia anterior). O tempo você ajusta no bloco, estudando; a fila mostra o que
+ * ficou nele. Feito, o item fica verde; o dia acabou sem fazer, o bloco sai do
+ * dia e o item volta pra fila. Todos feitos = nova volta.
  */
 export function CicloDeEstudos({ materiaPorId }: { materiaPorId: Map<string, Materia> }) {
   const concurso = useConcursoAtual();
@@ -88,6 +87,11 @@ export function CicloDeEstudos({ materiaPorId }: { materiaPorId: Map<string, Mat
 
   if (fila.length === 0) return null;
 
+  // Tempo real dos blocos feitos nesta volta (o que ficou no bloco do dia).
+  const minFeitos = [...situacao.estados.values()].reduce(
+    (s, e) => s + (e.tipo === "feito" ? e.linha.minutos : 0),
+    0
+  );
   const destino = rotuloDoDia(diaBase, hoje);
   const destinoTexto = `${destino.nome.toLowerCase()} (${destino.data})`;
 
@@ -105,7 +109,9 @@ export function CicloDeEstudos({ materiaPorId }: { materiaPorId: Map<string, Mat
     }
   }
 
-  function subirItem(item: ItemCiclo, minutos: number) {
+  // O tempo não se escolhe ao subir: o bloco entra com o sugerido e você ajusta
+  // no dia, enquanto estuda; a fila mostra o tempo que ficou no bloco.
+  function subirItem(item: ItemCiclo) {
     const nome = materiaPorId.get(item.materia_id)?.nome ?? "Matéria";
     subir.mutate(
       {
@@ -114,12 +120,12 @@ export function CicloDeEstudos({ materiaPorId }: { materiaPorId: Map<string, Mat
         volta: situacao.volta,
         voltaGravada,
         data: diaBase,
-        minutos,
+        minutos: item.minutos,
         nota: recados.get(item.materia_id) ?? "",
       },
       {
         onError: erro,
-        onSuccess: () => toast.success(`${nome} (${fmtMinutos(minutos)}) foi para ${destinoTexto}`),
+        onSuccess: () => toast.success(`${nome} foi para ${destinoTexto}`),
       }
     );
   }
@@ -147,6 +153,12 @@ export function CicloDeEstudos({ materiaPorId }: { materiaPorId: Map<string, Mat
       <p className="mt-0.5 pl-5 text-xs text-mut">
         <strong className="text-dim">Volta {situacao.volta}</strong> · {situacao.feitos} de {fila.length}{" "}
         feitos
+        {minFeitos > 0 && (
+          <>
+            {" "}
+            · <span className="text-green">{fmtMinutos(minFeitos)} estudadas</span>
+          </>
+        )}
         {situacao.volta > 1 && (
           <>
             {" "}
@@ -180,7 +192,7 @@ export function CicloDeEstudos({ materiaPorId }: { materiaPorId: Map<string, Mat
               hoje={hoje}
               destino={destinoTexto}
               ocupado={subir.isPending}
-              onSubir={(min) => subirItem(item, min)}
+              onSubir={() => subirItem(item)}
             />
           ))}
         </ol>
@@ -210,7 +222,7 @@ function LinhaDaFila({
   hoje: string;
   destino: string;
   ocupado: boolean;
-  onSubir: (minutos: number) => void;
+  onSubir: () => void;
 }) {
   const at = atividadeDe(item.atividade);
   const feito = estado.tipo === "feito";
@@ -240,7 +252,12 @@ function LinhaDaFila({
         </span>
         <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px]">
           <span className={`shrink-0 font-bold uppercase tracking-wide ${at.texto}`}>{at.label}</span>
-          <span className="shrink-0 text-mut">· {fmtMinutos(item.minutos)}</span>
+          {/* O tempo é o do bloco no dia (o que você estudou); na fila, ainda não tem */}
+          {estado.tipo !== "fila" && (
+            <span className={`shrink-0 font-semibold ${feito ? "text-green" : "text-dim"}`}>
+              · {fmtMinutos(estado.linha.minutos)}
+            </span>
+          )}
           {recado && !feito && <span className="truncate text-dim">· 📝 {recado}</span>}
         </span>
       </span>
@@ -260,22 +277,17 @@ function LinhaDaFila({
           <Clock className="size-3" /> {rotuloDoDia(estado.linha.data, hoje).nome}
         </span>
       ) : (
-        <span className={ocupado ? "pointer-events-none opacity-60" : ""}>
-          <MenuMais
-            aria={`Subir ${materia?.nome ?? "item"} para ${destino}`}
-            rotulo={
-              <>
-                <ArrowUp className="size-3.5" />
-                {proximo ? "Subir" : <span className="max-sm:hidden">Subir</span>}
-              </>
-            }
-            itens={TEMPOS_AO_SUBIR.map((t) => ({
-              icone: <Clock className="size-3.5" />,
-              label: `${fmtMinutos(t)} para ${destino}${t === item.minutos ? " ★" : ""}`,
-              onClick: () => onSubir(t),
-            }))}
-          />
-        </span>
+        <button
+          type="button"
+          onClick={onSubir}
+          disabled={ocupado}
+          aria-label={`Subir ${materia?.nome ?? "item"} para ${destino}`}
+          title={`Subir para ${destino}; o tempo você ajusta no dia`}
+          className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-line/60 px-2.5 py-1.5 text-xs font-medium text-dim transition-colors hover:border-line hover:bg-navy-700/60 hover:text-txt disabled:cursor-wait disabled:opacity-60"
+        >
+          <ArrowUp className="size-3.5" />
+          {proximo ? "Subir" : <span className="max-sm:hidden">Subir</span>}
+        </button>
       )}
     </li>
   );

@@ -13,13 +13,10 @@ import { ATIVIDADES, somarDias, type AtividadeChave } from "./planoDias";
 export interface ItemCiclo {
   id: string;
   materia_id: string;
-  /** Tempo sugerido; na hora de subir você escolhe outro. */
+  /** Tempo com que o bloco entra no dia; o real você ajusta no bloco, estudando. */
   minutos: number;
   atividade: AtividadeChave;
 }
-
-/** Tempos oferecidos ao subir um item para o dia. */
-export const TEMPOS_AO_SUBIR = [30, 60, 90, 120] as const;
 
 /** Lê a fila gravada no concurso, descartando o que não tiver o formato certo. */
 export function lerFila(json: Json | null | undefined): ItemCiclo[] {
