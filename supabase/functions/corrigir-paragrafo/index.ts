@@ -28,7 +28,7 @@ interface Payload {
   linhas: number;
   /** Faixa de linhas pedida para o tipo de parágrafo, ex.: [8, 9]. */
   meta: [number, number];
-  /** Caracteres que cabem numa linha da folha, na letra do aluno (o site manda; padrão 62). */
+  /** Caracteres que cabem numa linha da folha, na letra do aluno (o site manda; padrão 66). */
   caracteresPorLinha?: number;
   /** Pontos de repertório já conferidos para esse parágrafo (fonte da reescrita). */
   repertorio?: string[];
@@ -125,7 +125,7 @@ function pedido(p: Payload): string {
         ? `a CONCLUSÃO, que responde ao aspecto 3: "${p.aspectos[2]}"`
         : `o ${(p.aspecto ?? 0) + 1}º parágrafo de DESENVOLVIMENTO, que responde ao aspecto ${(p.aspecto ?? 0) + 1}: "${p.aspectos[p.aspecto ?? 0]}"`;
   linhas.push(`O aluno escreveu ${qual}.`);
-  const cpl = p.caracteresPorLinha && p.caracteresPorLinha > 30 ? p.caracteresPorLinha : 62;
+  const cpl = p.caracteresPorLinha && p.caracteresPorLinha > 30 ? p.caracteresPorLinha : 66;
   linhas.push(`Meta: ${p.meta[0]} a ${p.meta[1]} linhas. Linhas que o parágrafo do aluno ocupa na folha: ${p.linhas}.`);
   linhas.push(
     `Tamanho da reescrita: entre ${p.meta[0] * cpl} e ${p.meta[1] * cpl} caracteres, contando espaços (${cpl} caracteres por linha da folha).`,

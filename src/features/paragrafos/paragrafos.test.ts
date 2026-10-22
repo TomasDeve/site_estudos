@@ -47,10 +47,10 @@ describe("tipoDoAspecto", () => {
 });
 
 describe("linhas e nota", () => {
-  it("estima as linhas pela folha (62 caracteres por linha, com recuo)", () => {
+  it("estima as linhas pela folha (66 caracteres por linha, com recuo)", () => {
     expect(linhasNaFolha("")).toBe(0);
-    expect(linhasNaFolha("a".repeat(59))).toBe(1);
-    expect(linhasNaFolha("a".repeat(60))).toBe(2);
+    expect(linhasNaFolha("a".repeat(63))).toBe(1);
+    expect(linhasNaFolha("a".repeat(64))).toBe(2);
   });
 
   it("desconta erros como a Cebraspe, em escala 10", () => {
