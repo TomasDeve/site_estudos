@@ -71,7 +71,7 @@ export interface InfoConcurso {
 }
 
 const PC_PE: InfoConcurso = {
-  edital: "Edital nº 1 – PCPE, de 2 de outubro de 2026 · Cebraspe",
+  edital: "Edital nº 1 – PCPE, de 2 de outubro de 2026 (retificado pelo Edital nº 2, de 15/10/2026) · Cebraspe",
   site: "https://www.cebraspe.org.br/concursos/pc_pe_26",
   destaques: [
     { icone: "👮", rotulo: "Vagas (Agente)", valor: "1.200", sub: "780 de ampla concorrência" },
