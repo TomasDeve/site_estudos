@@ -40,7 +40,7 @@ export const TIPOS: Record<
   desenvolvimento: {
     nome: "Desenvolvimento",
     meta: [8, 9],
-    abertura: "“Inicialmente, cabe destacar que…” / “Posteriormente, vale dissertar sobre…”",
+    abertura: "“Inicialmente, cabe destacar que…” / “Em seguida, vale dissertar sobre…”",
     descricao: "Responde ao 1º ou ao 2º aspecto com 2 pontos",
   },
   conclusao: {
@@ -77,7 +77,7 @@ export function aspectoDoParagrafo(tipo: TipoParagrafo, aspecto: number | null):
 /** A abertura do esqueleto dele para aquele parágrafo. */
 export function aberturaDoParagrafo(tipo: TipoParagrafo, aspecto: number | null): string {
   if (tipo !== "desenvolvimento") return TIPOS[tipo].abertura;
-  return aspecto === 1 ? "“Posteriormente, vale dissertar sobre…”" : "“Inicialmente, cabe destacar que…”";
+  return aspecto === 1 ? "“Em seguida, vale dissertar sobre…”" : "“Inicialmente, cabe destacar que…”";
 }
 
 /** O parágrafo modelo daquela parte da redação. */

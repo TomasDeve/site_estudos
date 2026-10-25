@@ -12,7 +12,7 @@ describe("banco de temas", () => {
       expect(t.esqueleto.fim.length).toBeGreaterThan(0);
       for (const parte of [t.modelo.intro, t.modelo.p1, t.modelo.p2, t.modelo.fim]) expect(parte.length).toBeGreaterThan(150);
       expect(t.modelo.p1.startsWith("Inicialmente, cabe destacar")).toBe(true);
-      expect(t.modelo.p2.startsWith("Posteriormente, vale dissertar")).toBe(true);
+      expect(t.modelo.p2.startsWith("Em seguida, vale dissertar")).toBe(true);
       expect(t.modelo.fim.startsWith("Por fim, é preciso")).toBe(true);
       for (const parte of ["p1", "p2", "fim"] as const) {
         expect(t.embasamento[parte]).toHaveLength(t.esqueleto[parte].length);

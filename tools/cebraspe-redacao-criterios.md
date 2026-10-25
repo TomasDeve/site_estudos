@@ -116,7 +116,7 @@ Os erros descontam pela conta da banca (2 × NE ÷ TL, em escala 10). Os critér
 - **Texto expositivo em 3ª pessoa,** sem "eu", sem opinião e sem conversar com o leitor.
 - **Abertura com as palavras do aspecto,** para o corretor achar o quesito, seguindo o esqueleto dele:
   - "Inicialmente, cabe destacar que…";
-  - "Posteriormente, vale dissertar sobre…";
+  - "Em seguida, vale dissertar sobre…";
   - "Por fim, é preciso…".
 - **Desenvolver = afirmar + explicar com informação concreta + fechar ligando ao tema.** Informação concreta é lei pelo nome e ano, dado redondo com fonte ou exemplo com nome, lugar e resultado. Só mencionar dá conceito 1.
 - **Aspecto de exemplo:** pelo menos 2 exemplos **já implementados**, com nome, lugar e efeito.

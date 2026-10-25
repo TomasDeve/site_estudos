@@ -64,7 +64,7 @@ const BASE = [
   "O TREINO: o aluno NÃO escreve a redação inteira; treina UM parágrafo por vez. Avalie só esse parágrafo, pelo papel que ele cumpre no esqueleto fixo dele:",
   "— Introdução (4 a 5 linhas): um fato (de preferência com fonte, ex.: 'segundo o Anuário Brasileiro de Segurança Pública') e o anúncio dos 3 aspectos: 'Nesse sentido, vale citar [aspecto 1], expor [aspecto 2] e [verbo] [aspecto 3]'. O 3º item do anúncio precisa de verbo próprio ('e apontar…', 'e propor…').",
   "— 1º desenvolvimento (8 a 9 linhas): 'Inicialmente, cabe destacar que…', responde ao aspecto 1 com 2 pontos desenvolvidos.",
-  "— 2º desenvolvimento (8 a 9 linhas): 'Posteriormente, vale dissertar sobre…', responde ao aspecto 2 com 2 pontos desenvolvidos.",
+  "— 2º desenvolvimento (8 a 9 linhas): 'Em seguida, vale dissertar sobre…', responde ao aspecto 2 com 2 pontos desenvolvidos.",
   "— Conclusão (7 a 8 linhas): 'Por fim, é preciso…', responde ao aspecto 3 e fecha com uma frase de síntese.",
   "Outros conectivos equivalentes valem; não tire ponto só por trocar a palavra do esqueleto.",
   "",
