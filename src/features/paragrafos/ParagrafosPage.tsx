@@ -318,6 +318,7 @@ export function ParagrafosPage() {
             corrigindo={corrigindo}
             onLinhas={guardarLinhas}
             nivel={nivel}
+            onNivel={setNivel}
             respostaAberta={respostaAberta}
             onVerResposta={() => {
               setRespostaAberta((v) => !v);
@@ -621,6 +622,52 @@ function CartaoNivel({ nivel, ativo, onEscolher }: { nivel: NivelCorrecao; ativo
   );
 }
 
+/** Escolha rápida do modelo, logo abaixo do "Corrigir com IA" (o mesmo nível da tela inicial). */
+function SeletorNivel({
+  nivel,
+  onNivel,
+  disabled,
+}: {
+  nivel: NivelCorrecao;
+  onNivel: (n: NivelCorrecao) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="mt-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-mut">Quem corrige</p>
+      <div role="radiogroup" aria-label="Modelo da correção" className="mt-1.5 grid grid-cols-3 gap-1.5 sm:max-w-xl">
+        {(Object.keys(NIVEIS) as NivelCorrecao[]).map((n) => {
+          const info = NIVEIS[n];
+          const ativo = n === nivel;
+          return (
+            <button
+              key={n}
+              role="radio"
+              aria-checked={ativo}
+              disabled={disabled}
+              onClick={() => onNivel(n)}
+              title={info.descricao}
+              className={`cursor-pointer rounded-lg border px-2.5 py-1.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                ativo ? "border-gold/60 bg-gold/10" : "border-line/50 bg-navy-900/60 hover:border-line"
+              }`}
+            >
+              <span className={`block text-xs font-bold ${ativo ? "text-gold" : "text-txt"}`}>{info.nome}</span>
+              <span className="block text-[11px] text-mut">{info.rotulo}</span>
+              <span className="mt-0.5 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
+                <span className="whitespace-nowrap text-[11px] tabular-nums text-dim">~{fmtUSD(info.custo)}</span>
+                <span className="text-[9px] tracking-[0.15em] text-gold" aria-label={`precisão ${info.precisao} de 5`}>
+                  {"●".repeat(info.precisao)}
+                  <span className="text-line">{"●".repeat(5 - info.precisao)}</span>
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Escrevendo({
   sorteio,
   texto,
@@ -628,6 +675,7 @@ function Escrevendo({
   corrigindo,
   onLinhas,
   nivel,
+  onNivel,
   respostaAberta,
   onVerResposta,
   onCorrigir,
@@ -640,6 +688,7 @@ function Escrevendo({
   corrigindo: boolean;
   onLinhas: (n: number) => void;
   nivel: NivelCorrecao;
+  onNivel: (n: NivelCorrecao) => void;
   respostaAberta: boolean;
   onVerResposta: () => void;
   onCorrigir: () => void;
@@ -716,10 +765,7 @@ function Escrevendo({
             </>
           )}
         </div>
-        <p className="mt-2 text-[11px] text-mut">
-          Correção {NIVEIS[nivel].nome.toLowerCase()} ({NIVEIS[nivel].rotulo}, ~{fmtUSD(NIVEIS[nivel].custo)}). Troque o
-          nível na tela inicial.
-        </p>
+        <SeletorNivel nivel={nivel} onNivel={onNivel} disabled={corrigindo} />
       </section>
 
       {respostaAberta && (
