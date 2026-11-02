@@ -6,6 +6,7 @@ import {
   Check,
   Eye,
   EyeOff,
+  ListChecks,
   MessageCircleQuestion,
   NotebookPen,
   Printer,
@@ -494,16 +495,26 @@ export function ImpressaoPage() {
         >
           <ArrowLeft className="size-4" />
         </button>
-        <Printer className="size-4 shrink-0 text-gold" />
+        {/* No celular o ícone sai para o título caber ao lado do link das Baterias */}
+        <Printer className="size-4 shrink-0 text-gold max-sm:hidden" />
         <h1 className="min-w-0 truncate text-base font-semibold text-txt">Impressão</h1>
         {marcadas.length > 0 && (
           <span className="shrink-0 text-xs tabular-nums text-mut max-sm:hidden">
             {marcadas.length} {marcadas.length === 1 ? "marcada" : "marcadas"}
           </span>
         )}
+        {/* As provas separadas para resolver de uma vez (no celular não cabem no menu de baixo) */}
+        <a
+          href="/baterias"
+          className="ml-auto flex shrink-0 items-center gap-1.5 rounded-lg border border-line/60 px-2.5 py-1.5 text-xs font-medium text-dim transition-colors hover:border-line hover:bg-navy-700/60 hover:text-txt"
+          title="Baterias: provas separadas para resolver de uma vez e corrigir pelo número"
+        >
+          <ListChecks className="size-3.5 text-gold" />
+          Baterias
+        </a>
         <Button
           size="sm"
-          className="ml-auto shrink-0"
+          className="shrink-0"
           onClick={() => window.print()}
           disabled={visiveis.length === 0}
           title="Imprimir (ou salvar em PDF) as questões mostradas"
@@ -833,8 +844,8 @@ interface CardProps {
   /** Risca/desrisca (elimina) uma alternativa da múltipla escolha. */
   onToggleRisco: (letra: string) => void;
   onRefazer: (q: TopicoQuestao, marcar: boolean) => void;
-  /** Desmarca a questão da impressão (a caixinha, já marcada aqui). */
-  onTirar: () => void;
+  /** Desmarca a questão da impressão (a caixinha, já marcada aqui). Sem ele (Baterias), não há caixinha. */
+  onTirar?: () => void;
   /** A questão original, quando esta é uma reformulação (revelada só após responder). */
   origem?: TopicoQuestao;
   onDuvida: () => void;
@@ -847,8 +858,11 @@ interface CardProps {
   onVerResumo: () => void;
 }
 
-/** Card da correção: o número da folha no topo e, depois de responder, tudo do caderno. */
-function QuestaoImpressaoCard({
+/**
+ * Card da correção: o número da folha no topo e, depois de responder, tudo do caderno.
+ * As Baterias usam o mesmo card, com o número da questão na prova.
+ */
+export function QuestaoImpressaoCard({
   questao: q,
   numero,
   onResponder,
@@ -878,7 +892,7 @@ function QuestaoImpressaoCard({
               Arquivada
             </span>
           )}
-          <CaixaImpressao className="ml-auto" marcada onToggle={onTirar} />
+          {onTirar && <CaixaImpressao className="ml-auto" marcada onToggle={onTirar} />}
         </div>
         {q.fonte && <FonteQuestao fonte={q.fonte} />}
       </div>

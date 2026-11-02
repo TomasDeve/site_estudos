@@ -8,6 +8,7 @@ import {
   Info,
   LayoutDashboard,
   LayoutGrid,
+  ListChecks,
   LogOut,
   PenLine,
   Printer,
@@ -39,13 +40,24 @@ export function useConcursoAtual(): Concurso {
 }
 
 // `curto`: rótulo da aba do celular quando o nome inteiro não cabe na coluna.
-const NAV: { to: string; label: string; curto?: string; icon: LucideIcon; end: boolean; novaAba?: boolean }[] = [
+// `soComputador`: fica fora das abas do celular (oito colunas não cabem); lá se chega pela Impressão.
+const NAV: {
+  to: string;
+  label: string;
+  curto?: string;
+  icon: LucideIcon;
+  end: boolean;
+  novaAba?: boolean;
+  soComputador?: boolean;
+}[] = [
   { to: ".", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
   // modo misturado: todas as questões do site, em aba própria como o caderno
   { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },
   // questões marcadas (a caixinha 🖨 do card): folha para imprimir + correção, em aba própria
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
+  // provas separadas para resolver de uma vez e corrigir pelo número, em aba própria
+  { to: "/baterias", label: "Baterias", icon: ListChecks, end: false, novaAba: true, soComputador: true },
   // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki, em aba própria
   { to: "/resumo", label: "Resumo", icon: LayoutGrid, end: false, novaAba: true },
   // treino de redação no padrão Cebraspe, um parágrafo por vez, em aba própria
@@ -160,7 +172,8 @@ export function ConcursoLayout() {
   // Abas do celular: uma coluna por item, ícone em cima e rótulo curto embaixo.
   const itemMobile =
     "relative flex min-w-0 flex-col items-center justify-center gap-1 whitespace-nowrap pb-2 pt-2 text-[10px] font-semibold leading-none tracking-tight transition-colors";
-  const abasMobile = NAV.map(({ to, label, curto, icon: Icon, end, novaAba }) => {
+  const navMobile = NAV.filter((n) => !n.soComputador);
+  const abasMobile = navMobile.map(({ to, label, curto, icon: Icon, end, novaAba }) => {
     if (novaAba) {
       const contagem = contagemDaAba[to];
       return (
@@ -516,7 +529,7 @@ export function ConcursoLayout() {
       {/* ===== Tab bar mobile — uma coluna por item (sem sobrar espaço vazio) ===== */}
       <nav
         className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line/40 bg-navy-900/85 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
-        style={{ gridTemplateColumns: `repeat(${NAV.length}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${navMobile.length}, minmax(0, 1fr))` }}
       >
         {abasMobile}
       </nav>

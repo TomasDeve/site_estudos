@@ -16,6 +16,7 @@ const QuestoesPage = lazy(() => import("@/features/conteudos/QuestoesPage").then
 const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMistasPage").then((m) => ({ default: m.QuestoesMistasPage })));
 const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
 const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
+const BateriasPage = lazy(() => import("@/features/baterias/BateriasPage").then((m) => ({ default: m.BateriasPage })));
 const ResumoPage = lazy(() => import("@/features/resumo/ResumoPage").then((m) => ({ default: m.ResumoPage })));
 const ParagrafosPage = lazy(() => import("@/features/paragrafos/ParagrafosPage").then((m) => ({ default: m.ParagrafosPage })));
 
@@ -44,6 +45,9 @@ export const router = createBrowserRouter([
       { path: "banco", element: <Navigate to="/" replace /> },
       // questões marcadas para impressão: folha pronta + correção (aba própria, sem sidebar)
       { path: "impressao", element: pagina(<ImpressaoPage />) },
+      // baterias: provas separadas para resolver de uma vez e corrigir pelo número (aba própria)
+      { path: "baterias", element: pagina(<BateriasPage />) },
+      { path: "baterias/:bateriaId", element: pagina(<BateriasPage />) },
       // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki (aba própria)
       { path: "resumo", element: pagina(<ResumoPage />) },
       // treino de redação no padrão Cebraspe: um parágrafo por vez, tema sorteado, correção da IA,

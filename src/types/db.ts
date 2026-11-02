@@ -104,6 +104,30 @@ export type Database = {
           },
         ]
       }
+      baterias: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          origem: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          origem?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          origem?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocos_dia: {
         Row: {
           concluido: boolean
@@ -1191,6 +1215,8 @@ export type Database = {
       topico_questoes: {
         Row: {
           alternativas: Json
+          bateria_id: string | null
+          bateria_numero: number | null
           categoria: string
           comentario: string
           contexto: string | null
@@ -1219,6 +1245,8 @@ export type Database = {
         }
         Insert: {
           alternativas?: Json
+          bateria_id?: string | null
+          bateria_numero?: number | null
           categoria?: string
           comentario?: string
           contexto?: string | null
@@ -1247,6 +1275,8 @@ export type Database = {
         }
         Update: {
           alternativas?: Json
+          bateria_id?: string | null
+          bateria_numero?: number | null
           categoria?: string
           comentario?: string
           contexto?: string | null
@@ -1274,6 +1304,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "topico_questoes_bateria_id_fkey"
+            columns: ["bateria_id"]
+            isOneToOne: false
+            referencedRelation: "baterias"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "topico_questoes_topico_id_fkey"
             columns: ["topico_id"]
@@ -1577,6 +1614,7 @@ export type Nota = Tables<"notas">
 export type Ferramenta = Tables<"ferramentas">
 export type Audio = Tables<"audios">
 export type AudioGrupo = Tables<"audio_grupos">
+export type Bateria = Tables<"baterias">
 export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
 export type PlanoHora = Tables<"plano_horas">
