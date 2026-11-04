@@ -101,7 +101,7 @@ export function RedacoesPanel({ concursoId, materiaId, cor, vinculo, redacoes, r
             {regra && (
               <p className="mt-0.5 text-xs text-mut">
                 Vale {regra.notaMax} pontos · mínimo {regra.minimo} · até {regra.linhas} linhas
-                {regra.formulaCebraspe && " · nota = conteúdo − 6 × erros ÷ linhas"}
+                {regra.formulaCebraspe && ` · nota = conteúdo − ${regra.pesoErro ?? 6} × erros ÷ linhas`}
               </p>
             )}
           </div>
@@ -461,7 +461,7 @@ function RedacaoFormModal({ concursoId, materiaId, proximoNumero, redacao, regra
 
   // Com NC, NE e TL preenchidos, a nota sai da fórmula do Cebraspe.
   const notaFormula = regra?.formulaCebraspe && detalhar
-    ? notaCebraspe(parseNum(nc), parseNum(ne), parseNum(tl), regra.notaMax)
+    ? notaCebraspe(parseNum(nc), parseNum(ne), parseNum(tl), regra.notaMax, regra.pesoErro)
     : null;
 
   function adicionarFotos(lista: FileList | null) {
@@ -618,7 +618,7 @@ function RedacaoFormModal({ concursoId, materiaId, proximoNumero, redacao, regra
                 aria-expanded={detalhar}
               >
                 <ChevronRight className={`size-3.5 transition-transform ${detalhar ? "rotate-90" : ""}`} />
-                Detalhar pela fórmula do Cebraspe (opcional): NC − 6 × NE ÷ TL
+                Detalhar pela fórmula do Cebraspe (opcional): NC − {regra.pesoErro ?? 6} × NE ÷ TL
               </button>
               {detalhar && (
                 <div className="mt-2 grid grid-cols-3 gap-2">
