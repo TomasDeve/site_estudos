@@ -49,6 +49,10 @@ import { QuestaoImpressaoCard } from "@/features/impressao/ImpressaoPage";
 import { FolhaImpressao } from "@/features/impressao/FolhaImpressao";
 import { useOpcoesFolha } from "@/features/impressao/opcoes";
 import type { MateriaImpressao } from "@/features/impressao/organizar";
+import {
+  avisarQuestaoRespondida,
+  TemporizadorQuestao,
+} from "@/features/conteudos/TemporizadorQuestao";
 
 /**
  * Seção "Baterias": cada bateria é uma prova (ou parte dela) separada para resolver de
@@ -91,8 +95,11 @@ function Cabecalho({
       >
         <ArrowLeft className="size-4" />
       </button>
-      <ListChecks className="size-4 shrink-0 text-gold" />
-      <h1 className="min-w-0 truncate text-base font-semibold text-txt">{titulo}</h1>
+      <ListChecks className="size-4 shrink-0 text-gold max-sm:hidden" />
+      {/* No celular o nome vai em até 2 linhas: o espaço é do cronômetro e do Imprimir */}
+      <h1 className="min-w-0 text-sm font-semibold leading-snug text-txt max-sm:line-clamp-2 sm:truncate sm:text-base">
+        {titulo}
+      </h1>
       {children}
     </header>
   );
@@ -331,6 +338,8 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
   /** `valor: null` é o "responder de novo"; boolean = Certo/Errado; string = letra. */
   async function onResponder(q: TopicoQuestao, valor: boolean | string | null) {
     const estreia = valor !== null && !estaResolvida(q);
+    // Igual às Questões: responder com o cronômetro de 3 min rodando pausa ele.
+    if (estreia) avisarQuestaoRespondida();
     try {
       await responder.mutateAsync({
         id: q.id,
@@ -402,16 +411,19 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
     <div className="flex min-h-dvh flex-col print:block print:min-h-0">
       <GrifosLayer />
       <Cabecalho titulo={bateria.nome} onVoltar={irParaLista}>
-        <Button
-          size="sm"
-          className="ml-auto shrink-0"
-          onClick={() => window.print()}
-          disabled={lista.length === 0}
-          title="Imprimir (ou salvar em PDF) a bateria, só com as questões"
-        >
-          <Printer className="size-4" />
-          Imprimir
-        </Button>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <TemporizadorQuestao />
+          <Button
+            size="sm"
+            className="shrink-0"
+            onClick={() => window.print()}
+            disabled={lista.length === 0}
+            title="Imprimir (ou salvar em PDF) a bateria, só com as questões"
+          >
+            <Printer className="size-4" />
+            Imprimir
+          </Button>
+        </div>
       </Cabecalho>
 
       <div className="flex-1">
