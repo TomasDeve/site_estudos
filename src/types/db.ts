@@ -972,6 +972,33 @@ export type Database = {
         }
         Relationships: []
       }
+      redacao_semanas: {
+        Row: {
+          created_at: string
+          feitos: string[]
+          id: string
+          semana: string
+          tema_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feitos?: string[]
+          id?: string
+          semana: string
+          tema_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          feitos?: string[]
+          id?: string
+          semana?: string
+          tema_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       redacoes: {
         Row: {
           concurso_id: string
@@ -1621,6 +1648,7 @@ export type PlanoHora = Tables<"plano_horas">
 export type RotinaBloco = Tables<"rotina_blocos">
 export type QuestaoAnki = Tables<"questoes_anki">
 export type RedacaoParagrafo = Tables<"redacao_paragrafos">
+export type RedacaoSemana = Tables<"redacao_semanas">
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "arquivada"

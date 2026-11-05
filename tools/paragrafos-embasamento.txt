@@ -84,7 +84,7 @@ p1: Lei 13.756/2018: o Fundo Nacional de Segurança Pública recebe parte da arr
 p2: Em 2022, a segurança consumiu 1,26% do PIB, cerca de um terço do gasto com saúde pública (Anuário 2023, citado na prova da PC PE de 2024).
 p2: O Pacto pela Vida perdeu força a partir de 2014, e PE chegou ao pior ano em 2017, com 5.427 mortes: retrato da descontinuidade.
 p2: Lei 13.675/2018 (SUSP): a política nacional exige metas e avaliação de resultados das ações de segurança.
-fim: PEC 18/2025 (PEC da Segurança): leva o SUSP para a Constituição e discute o financiamento; aprovada na Câmara, estava no Senado em outubro de 2026 (confira antes da prova).
+fim: PEC 18/2025 (PEC da Segurança): leva o SUSP para a Constituição e manda repassar a estados e municípios metade do Fundo Nacional de Segurança Pública; aprovada pelo Congresso em novembro de 2026 (confira antes da prova).
 fim: Lei 15.358/2026: os bens perdidos pelas facções vão para os fundos de segurança e podem equipar a polícia.
 fim: Pacto pela Vida: queda de quase 40% dos homicídios em PE entre 2007 e 2013, enquanto teve continuidade (UFPE).
 @fim
@@ -347,7 +347,7 @@ p1: A União gastou R$ 18 bi; o Fundo Nacional de Segurança Pública, R$ 2,2 bi
 p1: CF, art. 144, § 8º: guardas municipais; em 2025 já eram 107,5 mil guardas, mais do que os policiais civis (FBSP, 2026).
 p2: O Anuário 2026 liga a violência do Norte e do Nordeste à expansão de facções que atuam em vários estados.
 p2: Lei 15.358/2026, art. 29 (banco nacional das facções) e Lei 13.675/2018 (Sinesp).
-p2: PEC 18/2025: aprovada na Câmara em março de 2026; na CCJ do Senado em outubro de 2026 (confira antes da prova).
+p2: PEC 18/2025: aprovada pela Câmara (mar. 2026) e pelo Senado (3/11/2026, 75 votos a 0); foi à promulgação (confira o número da emenda antes da prova).
 fim: Lei 13.675/2018 (SUSP): União, estados e municípios atuando de forma integrada, com metas.
 fim: Lei 13.756/2018: repasses do Fundo Nacional de Segurança Pública aos fundos estaduais.
 fim: CF, art. 144: a segurança é dever do Estado, de todos os entes, cada um com o seu papel.

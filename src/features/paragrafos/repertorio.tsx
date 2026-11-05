@@ -21,7 +21,7 @@ const ESTILO: Record<TipoInformacao, { nome: string; Icone: LucideIcon; cor: str
   info: { nome: "Essencial", Icone: Info, cor: "text-dim", fundo: "bg-navy-700/60", borda: "border-line" },
 };
 
-function Selo({ tipo }: { tipo: TipoInformacao }) {
+export function Selo({ tipo }: { tipo: TipoInformacao }) {
   const { nome, Icone, cor, fundo } = ESTILO[tipo];
   return (
     <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${cor} ${fundo}`}>
@@ -32,7 +32,7 @@ function Selo({ tipo }: { tipo: TipoInformacao }) {
 }
 
 /** Uma informação: selo do tipo, rótulo em destaque, texto e fonte em letra menor. */
-function Prova({ info }: { info: Informacao }) {
+export function Prova({ info }: { info: Informacao }) {
   return (
     <div className={`rounded-lg border-l-[3px] bg-navy-900/50 py-2 pl-3 pr-2.5 ${ESTILO[info.tipo].borda}`}>
       <Selo tipo={info.tipo} />
@@ -46,7 +46,7 @@ function Prova({ info }: { info: Informacao }) {
 }
 
 /** Título de bloco numerado, como os títulos grandes de um resumo bem organizado. */
-function Bloco({
+export function Bloco({
   id,
   numero,
   titulo,
@@ -80,6 +80,13 @@ function Bloco({
   );
 }
 
+/** O "Para decorar" do tema, já separado em tipo, rótulo, texto e fonte. */
+export function decorarDoTema(tema: TemaParagrafo): Informacao[] {
+  return tema.decorar.map((d) =>
+    lerInformacao(d.texto || d.titulo, { rotulo: d.texto ? d.titulo : undefined, tipoDado: d.tipo === "essencial" ? undefined : d.tipo })
+  );
+}
+
 /**
  * O repertório daquele parágrafo, organizado para bater o olho: atalhos no topo, pontos em
  * cartões com a prova separada por tipo (dado, lei, caso), "Para decorar" e coringas em grade,
@@ -92,9 +99,7 @@ export function Repertorio({ tema, tipo, aspecto }: { tema: TemaParagrafo; tipo:
   const tipoAsp = tipo === "introducao" ? "cenario" : tipoDoAspecto(tema.aspectos[aspecto ?? 0].texto);
   const coringas = CORINGAS.filter((c) => c.frases[tipoAsp]);
   const e = tema.esqueleto;
-  const decorar = tema.decorar.map((d) =>
-    lerInformacao(d.texto || d.titulo, { rotulo: d.texto ? d.titulo : undefined, tipoDado: d.tipo === "essencial" ? undefined : d.tipo })
-  );
+  const decorar = decorarDoTema(tema);
 
   const blocos = [
     { id: `${base}-pontos`, nome: tipo === "introducao" ? "Fatos para abrir" : "Pontos" },

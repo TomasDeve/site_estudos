@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Eye, EyeOff, PenLine, RotateCcw, Shuffle, Timer, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Eye, EyeOff, PenLine, RotateCcw, Shuffle, Timer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { RedacaoParagrafo } from "@/types/db";
 import {
@@ -11,6 +11,7 @@ import {
   useSalvarParagrafo,
   type CorrecaoParagrafo,
 } from "@/api/paragrafos";
+import { useEscolherTemaSemana, useMarcarDiaSemana, useSemanasRedacao } from "@/api/redacaoSemanas";
 import { Button } from "@/components/Button";
 import { Spinner } from "@/components/Spinner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -27,12 +28,15 @@ import {
   pontosDoParagrafo,
   sortear,
   type Sorteio,
+  type TemaParagrafo,
   type TipoParagrafo,
 } from "./paragrafos";
 import { Correcao, GastoIA, Proposta, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
 import { Repertorio } from "./repertorio";
 import { FolhaRedacao } from "./FolhaRedacao";
 import { NIVEIS, PARAGRAFOS_POR_MES, useNivelCorrecao, type NivelCorrecao } from "./modelos";
+import { EstudoDoTema, PropostasDaSemana, TemaDaSemana } from "./semana";
+import { semanaDe, type DiaPlano } from "./semanas";
 
 /** Um parágrafo corrigido em tela (o que acabou de sair da IA ou um do histórico). */
 interface Resultado {
@@ -48,6 +52,7 @@ interface Resultado {
 
 type Etapa =
   | { tipo: "inicio" }
+  | { tipo: "estudo"; temaId: string; ancora?: string }
   | { tipo: "escrevendo"; sorteio: Sorteio }
   | { tipo: "corrigido"; sorteio: Sorteio; resultado: Resultado; doHistorico: boolean };
 
@@ -94,6 +99,12 @@ export function ParagrafosPage() {
   const { data: historico, isLoading } = useParagrafosRecentes();
   const salvar = useSalvarParagrafo();
   const excluir = useExcluirParagrafo();
+  const semanas = useSemanasRedacao();
+  const escolherTema = useEscolherTemaSemana();
+  const marcarDia = useMarcarDiaSemana();
+  const semanaAtual = semanas.data?.find((s) => s.semana === semanaDe());
+  // "Trocar tema": abre a lista das 15 propostas mesmo com o tema da semana já escolhido.
+  const [listaAberta, setListaAberta] = useState(false);
 
   const rascunhoInicial = useMemo(lerRascunho, []);
   const [etapa, setEtapa] = useState<Etapa>(() =>
@@ -165,6 +176,34 @@ export function ParagrafosPage() {
     abortRef.current?.abort();
     gravarRascunho(null);
     setEtapa({ tipo: "inicio" });
+  }
+
+  function estudar(tema: TemaParagrafo, ancora?: string) {
+    setEtapa({ tipo: "estudo", temaId: tema.id, ancora });
+  }
+
+  function escolher(temaId: string) {
+    escolherTema.mutate(
+      { semana: semanaDe(), temaId },
+      {
+        onSuccess: () => {
+          setListaAberta(false);
+          toast.success("Tema da semana escolhido");
+        },
+        onError: (e) => toast.error(`Não deu para escolher o tema: ${e.message}`),
+      }
+    );
+  }
+
+  function marcar(dia: DiaPlano, feito: boolean) {
+    if (!semanaAtual) return;
+    const feitos = feito ? [...new Set([...semanaAtual.feitos, dia])] : semanaAtual.feitos.filter((d) => d !== dia);
+    marcarDia.mutate({ id: semanaAtual.id, feitos }, { onError: (e) => toast.error(e.message) });
+  }
+
+  function trocarTema() {
+    setListaAberta(true);
+    window.setTimeout(() => document.getElementById("propostas-da-semana")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
 
   function voltar() {
@@ -272,7 +311,11 @@ export function ParagrafosPage() {
   const titulo =
     etapa.tipo === "inicio"
       ? "Redação"
-      : `${TIPOS[etapa.sorteio.tipo].nome}${
+      : etapa.tipo === "estudo"
+        ? semanaAtual?.tema_id === etapa.temaId
+          ? "Tema da semana"
+          : "Estudar o tema"
+        : `${TIPOS[etapa.sorteio.tipo].nome}${
           etapa.sorteio.tipo === "desenvolvimento" ? ` · aspecto ${(etapa.sorteio.aspecto ?? 0) + 1}` : ""
         }`;
 
@@ -307,8 +350,64 @@ export function ParagrafosPage() {
             onNivel={setNivel}
             onAbrir={abrirDoHistorico}
             onApagar={setApagar}
+            semanaDaVez={
+              <>
+                {semanas.error ? (
+                  <Secao titulo="Tema da semana">
+                    <p className="text-sm text-red">Não consegui carregar o tema da semana: {semanas.error.message}</p>
+                  </Secao>
+                ) : semanas.isLoading ? (
+                  <div className="flex justify-center py-4">
+                    <Spinner className="size-5" />
+                  </div>
+                ) : semanaAtual ? (
+                  <TemaDaSemana
+                    semana={semanaAtual}
+                    historico={historico ?? []}
+                    onEstudar={estudar}
+                    onEscrever={recomecar}
+                    onMarcar={marcar}
+                    onTrocar={trocarTema}
+                  />
+                ) : (
+                  <section className="rounded-card border border-gold/45 bg-gold/5 px-4 py-4 sm:px-5">
+                    <h2 className="text-lg font-bold text-txt">Escolha o tema desta semana</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-dim">
+                      30 min por dia: na segunda você estuda o tema e passa o "Para decorar" para o Anki; de terça a sexta
+                      escreve um parágrafo por dia aqui; no domingo, a redação inteira na folha.
+                    </p>
+                  </section>
+                )}
+                {!semanas.error && !semanas.isLoading && (
+                  <PropostasDaSemana
+                    semanas={semanas.data ?? []}
+                    atual={semanaAtual}
+                    abertaDeInicio={!semanaAtual || listaAberta}
+                    onEstudar={estudar}
+                    onEscolher={escolher}
+                    escolhendo={escolherTema.isPending}
+                  />
+                )}
+              </>
+            }
           />
         )}
+
+        {etapa.tipo === "estudo" &&
+          (() => {
+            const tema = TEMAS.find((t) => t.id === etapa.temaId);
+            if (!tema) return null;
+            return (
+              <EstudoDoTema
+                tema={tema}
+                ancora={etapa.ancora}
+                ehDaSemana={semanaAtual?.tema_id === tema.id}
+                onEscrever={recomecar}
+                onEscolher={() => escolher(tema.id)}
+                escolhendo={escolherTema.isPending}
+              />
+            );
+          })()}
 
         {etapa.tipo === "escrevendo" && (
           <Escrevendo
@@ -339,10 +438,17 @@ export function ParagrafosPage() {
             <Correcao {...etapa.resultado} meta={TIPOS[etapa.sorteio.tipo].meta} />
             <Repertorio tema={etapa.sorteio.tema} tipo={etapa.sorteio.tipo} aspecto={etapa.sorteio.aspecto} />
             <div className="sticky bottom-3 z-10 flex flex-wrap justify-center gap-2 rounded-2xl border border-line/50 bg-navy-900/90 p-2 shadow-card backdrop-blur-sm">
-              <Button onClick={() => comecar(etapa.sorteio.tipo)}>
-                <Shuffle className="size-4" />
-                Novo tema ({TIPOS[etapa.sorteio.tipo].nome.toLowerCase()})
-              </Button>
+              {semanaAtual?.tema_id === etapa.sorteio.tema.id ? (
+                <Button onClick={irParaInicio}>
+                  <CalendarCheck className="size-4" />
+                  Voltar à semana
+                </Button>
+              ) : (
+                <Button onClick={() => comecar(etapa.sorteio.tipo)}>
+                  <Shuffle className="size-4" />
+                  Novo tema ({TIPOS[etapa.sorteio.tipo].nome.toLowerCase()})
+                </Button>
+              )}
               <Button variant="secondary" onClick={() => recomecar(etapa.sorteio)}>
                 <RotateCcw className="size-4" />
                 Refazer este
@@ -394,6 +500,7 @@ function Inicio({
   onNivel,
   onAbrir,
   onApagar,
+  semanaDaVez,
 }: {
   historico: RedacaoParagrafo[];
   carregando: boolean;
@@ -402,16 +509,20 @@ function Inicio({
   onNivel: (n: NivelCorrecao) => void;
   onAbrir: (p: RedacaoParagrafo) => void;
   onApagar: (p: RedacaoParagrafo) => void;
+  /** O tema da semana e a lista das 15 propostas (vêm prontos da página). */
+  semanaDaVez: ReactNode;
 }) {
   const tipos = Object.keys(TIPOS) as TipoParagrafo[];
   const { data: gasto } = useGastoIAMes();
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold tracking-tight text-txt">Um parágrafo por vez</h2>
+      {semanaDaVez}
+
+      <div className="pt-2">
+        <h2 className="text-xl font-bold tracking-tight text-txt">Treino livre</h2>
         <p className="mt-1 text-sm leading-relaxed text-dim">
-          Escolha o tipo, sorteie um tema no estilo Cebraspe e escreva só aquele parágrafo. A IA corrige e dá a nota, e
-          depois aparece o repertório coringa para você ver como poderia ter feito.
+          Fora do tema da semana: escolha o tipo, sorteie um tema no estilo Cebraspe e escreva só aquele parágrafo. A IA
+          corrige e dá a nota, e depois aparece o repertório para você ver como poderia ter feito.
         </p>
       </div>
 
