@@ -147,3 +147,37 @@ export function useSalvarProximoEstudo() {
     },
   });
 }
+
+/**
+ * Grava as "Observações do estudo" da matéria neste concurso. Ficam na matéria
+ * (não no bloco): aparecem em todos os blocos dela até serem apagadas.
+ */
+export function useSalvarObservacoes() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { concursoId: string; materiaId: string; texto: string }) => {
+      const { error } = await supabase
+        .from("concurso_materias")
+        .update({ observacoes_estudo: v.texto })
+        .eq("concurso_id", v.concursoId)
+        .eq("materia_id", v.materiaId);
+      if (error) throw error;
+    },
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: ["concurso_materias"] });
+      const prev = qc.getQueryData<ConcursoMateria[]>(["concurso_materias"]);
+      qc.setQueryData<ConcursoMateria[]>(["concurso_materias"], (old) =>
+        old?.map((c) =>
+          c.concurso_id === v.concursoId && c.materia_id === v.materiaId
+            ? { ...c, observacoes_estudo: v.texto }
+            : c
+        )
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["concurso_materias"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["concurso_materias"] }),
+  });
+}

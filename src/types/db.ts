@@ -257,6 +257,7 @@ export type Database = {
           topicos_incluidos: string[] | null
           topicos_riscados: string[]
           proximo_estudo: string
+          observacoes_estudo: string
           user_id: string
         }
         Insert: {
@@ -273,6 +274,7 @@ export type Database = {
           topicos_incluidos?: string[] | null
           topicos_riscados?: string[]
           proximo_estudo?: string
+          observacoes_estudo?: string
           user_id?: string
         }
         Update: {
@@ -289,6 +291,7 @@ export type Database = {
           topicos_incluidos?: string[] | null
           topicos_riscados?: string[]
           proximo_estudo?: string
+          observacoes_estudo?: string
           user_id?: string
         }
         Relationships: [

@@ -7,7 +7,7 @@ import { useDevolverAoCiclo, useLinhasDoCiclo, useSubirDoCiclo } from "@/api/cic
 import { useDiasConcluidos } from "@/api/diasConcluidos";
 import { useConcursoMaterias } from "@/api/materias";
 import { fmtMinutos, hojeISO } from "@/lib/dates";
-import { atividadeDe, rotuloDoDia } from "./planoDias";
+import { atividadeDe, primeiraLinha, rotuloDoDia } from "./planoDias";
 import {
   HORA_DA_VIRADA,
   diaDeEstudo,
@@ -258,7 +258,7 @@ function LinhaDaFila({
               · {fmtMinutos(estado.linha.minutos)}
             </span>
           )}
-          {recado && !feito && <span className="truncate text-dim">· 📝 {recado}</span>}
+          {recado && !feito && <span className="truncate text-dim">· 📝 {primeiraLinha(recado)}</span>}
         </span>
       </span>
 

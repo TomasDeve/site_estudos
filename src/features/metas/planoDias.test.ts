@@ -10,6 +10,7 @@ import {
   fmtTempo,
   lerMinutos,
   minutosDe,
+  primeiraLinha,
   primeiraLivre,
   tituloDoBloco,
   rotuloDoDia,
@@ -56,6 +57,16 @@ describe("plano dos próximos dias", () => {
     expect(tituloDoBloco({ atividade: "simulado", nota: "Simulado DSO 3" }, undefined)).toBe(
       "Simulado DSO 3"
     );
+    // Texto em várias linhas: o título é a 1ª linha com texto
+    expect(tituloDoBloco({ atividade: "livre", nota: "\n Revisar PDFs \n• Penal\n• PP" }, undefined)).toBe(
+      "Revisar PDFs"
+    );
+  });
+
+  it("primeira linha do detalhe: pula as vazias e apara", () => {
+    expect(primeiraLinha("Págs. 92 → 99\n• Desvio padrão\n• Atalhos")).toBe("Págs. 92 → 99");
+    expect(primeiraLinha("\n\n  só esta  ")).toBe("só esta");
+    expect(primeiraLinha("")).toBe("");
   });
 
   it("escrever sem marcar matéria vira texto livre, a não ser que a atividade seja escolhida", () => {

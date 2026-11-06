@@ -56,16 +56,29 @@ export const ATIVIDADES: Atividade[] = [
 ];
 
 /**
- * Título do bloco na grade: a matéria; sem matéria, o que você escreveu; sem
- * nada escrito, a atividade.
+ * A 1ª linha com texto de um detalhe que pode ter várias linhas (o "O que vai
+ * estudar?" é uma caixa): é o resumo que cabe na grade e na fila do ciclo.
+ */
+export function primeiraLinha(texto: string): string {
+  return (
+    texto
+      .split("\n")
+      .map((l) => l.trim())
+      .find(Boolean) ?? ""
+  );
+}
+
+/**
+ * Título do bloco na grade: a matéria; sem matéria, o que você escreveu (a 1ª
+ * linha); sem nada escrito, a atividade.
  */
 export function tituloDoBloco(
   bloco: { atividade: string; nota: string },
   materia: { nome: string } | undefined
 ): string {
-  if (bloco.atividade === "livre") return bloco.nota.trim() || "Texto livre";
+  if (bloco.atividade === "livre") return primeiraLinha(bloco.nota) || "Texto livre";
   if (materia) return materia.nome;
-  return bloco.nota.trim() || atividadeDe(bloco.atividade).label;
+  return primeiraLinha(bloco.nota) || atividadeDe(bloco.atividade).label;
 }
 
 /**

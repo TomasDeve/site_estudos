@@ -49,10 +49,10 @@ import {
   useDiasConcluidos,
 } from "@/api/diasConcluidos";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
-import { useSalvarProximoEstudo } from "@/api/cicloFila";
+import { useSalvarObservacoes, useSalvarProximoEstudo } from "@/api/cicloFila";
 import { fmtMinutos, hojeISO } from "@/lib/dates";
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Field";
+import { Textarea } from "@/components/Field";
 import { MenuMais } from "@/components/MenuMais";
 import { Modal } from "@/components/Modal";
 import { Spinner } from "@/components/Spinner";
@@ -77,6 +77,7 @@ import {
   minutosDe,
   ROTULO_BLOCO,
   rotuloDoDia,
+  primeiraLinha,
   somarDias,
   tituloDoBloco,
   OPCOES_DIAS,
@@ -89,6 +90,15 @@ const CHAVE_QUANTOS = "plano.diasVisiveis";
 
 /** As atividades do modal: o texto livre é o campo "O que vai estudar?" do topo. */
 const ATIVIDADES_DO_BLOCO = ATIVIDADES.filter((a) => a.chave !== "livre");
+
+/**
+ * Altura das caixas de texto do modal: cresce com o texto (linhas e quebras de
+ * uma linha longa, ~60 letras cada) entre um mínimo e 10 linhas; depois rola.
+ */
+function linhasDaCaixa(texto: string, minimo: number): number {
+  const linhas = texto.split("\n").reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 60)), 0);
+  return Math.min(10, Math.max(minimo, linhas));
+}
 
 function quantosSalvo(): QuantosDias {
   try {
@@ -422,6 +432,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           contagem={ciclo.contagem}
           desempenho={ciclo.desempenho}
           atividadePadrao={ultimaAtividade}
+          concursoPlano={concursoId}
           podeReplicar={
             blocosQueDescem([...(porDia.get(editando.data)?.keys() ?? [])], editando.hora) !== null
           }
@@ -933,7 +944,7 @@ function LinhaPreenchida({
                 <span className={`shrink-0 font-bold uppercase tracking-wide ${at.texto}`}>
                   {at.label}
                 </span>
-                {materia && l.nota && <span className="truncate text-mut">· {l.nota}</span>}
+                {materia && l.nota && <span className="truncate text-mut">· {primeiraLinha(l.nota)}</span>}
               </span>
             )}
           </span>
@@ -992,6 +1003,7 @@ function EditarHoraModal({
   contagem,
   desempenho,
   atividadePadrao,
+  concursoPlano,
   podeReplicar,
   onSalvo,
   onErro,
@@ -1004,6 +1016,8 @@ function EditarHoraModal({
   contagem: Map<string, ContagemCiclo>;
   desempenho: Map<string, DesempenhoCiclo>;
   atividadePadrao: AtividadeChave;
+  /** O concurso do plano: as observações do estudo ficam na matéria dentro dele. */
+  concursoPlano: string;
   /** Falso quando o dia já está cheio (16 blocos) até embaixo. */
   podeReplicar: boolean;
   onSalvo: (atividade: AtividadeChave) => void;
@@ -1024,13 +1038,23 @@ function EditarHoraModal({
   });
   const [materiaId, setMateriaId] = useState<string | null>(linha?.materia_id ?? null);
   const [nota, setNota] = useState(linha?.nota ?? "");
+  // Observações do estudo: ficam na matéria (valem para todos os blocos dela).
+  // Guarda o que foi editado por matéria, pra trocar de matéria sem perder.
+  const { data: vinculos } = useConcursoMaterias();
+  const salvarObs = useSalvarObservacoes();
+  const [obsEditadas, setObsEditadas] = useState<Record<string, string>>({});
+  const vinculoDe = (id: string) =>
+    vinculos?.find((v) => v.concurso_id === concursoPlano && v.materia_id === id);
+  const obsGravada = (id: string) => vinculoDe(id)?.observacoes_estudo ?? "";
+  const obs = materiaId ? (obsEditadas[materiaId] ?? obsGravada(materiaId)) : "";
+  const mudouObs = materiaId !== null && obs.trim() !== obsGravada(materiaId);
   const { nome, data: dataCurta } = rotuloDoDia(data, hoje);
   const atividade = atividadeDoBloco(escolhida, atividadePadrao, materiaId !== null, nota);
   // Texto livre: sem matéria; o texto (obrigatório) é o título do bloco.
   const livre = atividade === "livre";
   const podeSalvar = !livre || nota.trim() !== "";
   const materiaEscolhida = materias.find((m) => m.id === materiaId);
-  // No computador o cursor já abre no texto (é só escrever e dar Enter); no
+  // No computador o cursor já abre no texto (é só escrever e dar Ctrl+Enter); no
   // celular não, pra o teclado não cobrir as matérias.
   const focarTexto = window.matchMedia?.("(pointer: fine)").matches ?? false;
 
@@ -1046,6 +1070,11 @@ function EditarHoraModal({
       },
       { onError: onErro }
     );
+    if (!livre && materiaId && mudouObs)
+      salvarObs.mutate(
+        { concursoId: concursoPlano, materiaId, texto: obs.trim() },
+        { onError: onErro }
+      );
     // Texto livre não vira o padrão do próximo bloco vazio.
     if (!livre) onSalvo(atividade);
     onClose();
@@ -1069,7 +1098,7 @@ function EditarHoraModal({
       editado.atividade !== linha.atividade ||
       editado.materia_id !== linha.materia_id ||
       editado.nota !== linha.nota;
-    if (mudou) onSalvar();
+    if (mudou || mudouObs) onSalvar();
     else onClose();
     replicar.mutate(editado, { onError: onErro });
   }
@@ -1141,27 +1170,63 @@ function EditarHoraModal({
           >
             O que vai estudar?
           </label>
-          <Input
+          {/* Caixa (não linha): o detalhe pode vir organizado em linhas — páginas
+              na 1ª, que é a que aparece na grade, e os itens embaixo. */}
+          <Textarea
             id="bloco-texto"
             autoFocus={focarTexto}
             value={nota}
             onChange={(e) => setNota(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") onSalvar();
+              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) onSalvar();
             }}
             placeholder={
-              materiaId ? "Ex.: crimes contra a pessoa, 30 questões" : "Ex.: Revisar PDFs"
+              materiaId
+                ? "Ex.: Págs. 40 → 52\n• Crimes contra a pessoa\n• 30 questões"
+                : "Ex.: Revisar PDFs"
             }
-            maxLength={120}
+            rows={linhasDaCaixa(nota, 3)}
+            maxLength={1500}
+            className="resize-y leading-relaxed"
           />
           <p className="mt-2 text-[11px] text-mut">
             {materiaId
-              ? `Detalhe do bloco de ${materiaEscolhida?.nome ?? "matéria"} (opcional).`
+              ? `Detalhe do bloco de ${materiaEscolhida?.nome ?? "matéria"} (opcional). A 1ª linha aparece na grade.`
               : nota.trim()
-                ? "Sem matéria: esse texto vira o título do bloco. Feito, conta tempo de estudo normal."
+                ? "Sem matéria: a 1ª linha vira o título do bloco. Feito, conta tempo de estudo normal."
                 : "Só escrever já basta — atividade e matéria são opcionais."}
           </p>
         </section>
+
+        {/* Observações do estudo: o que vale lembrar sobre a matéria (dificuldade,
+            algo para voltar depois). Ficam na matéria, então aparecem em todos os
+            blocos dela até você apagar. */}
+        {!livre && materiaId && vinculoDe(materiaId) && (
+          <section>
+            <label
+              htmlFor="bloco-obs"
+              className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-mut"
+            >
+              Observações do estudo
+            </label>
+            <Textarea
+              id="bloco-obs"
+              value={obs}
+              onChange={(e) => setObsEditadas((o) => ({ ...o, [materiaId]: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) onSalvar();
+              }}
+              placeholder="Ex.: dificuldade em desvio padrão; avançar e voltar nos macetes depois"
+              rows={linhasDaCaixa(obs, 2)}
+              maxLength={1500}
+              className="resize-y leading-relaxed"
+            />
+            <p className="mt-2 text-[11px] text-mut">
+              Fica na matéria: aparece em todos os blocos de {materiaEscolhida?.nome ?? "matéria"} até
+              você apagar. Ctrl+Enter salva.
+            </p>
+          </section>
+        )}
 
         <section>
           <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mut">
@@ -1318,19 +1383,21 @@ function RecadoModal({
         Quer deixar um recado para a próxima vez que estudar esta matéria?{" "}
         <span className="text-mut">(opcional)</span>
       </label>
-      <Input
+      <Textarea
         id="recado-proxima"
         autoFocus
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") onSalvar();
+          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) onSalvar();
         }}
         placeholder="Ex.: parei na p. 40, começar pelas questões do bloco 3"
-        maxLength={160}
+        rows={linhasDaCaixa(texto, 3)}
+        maxLength={1500}
+        className="resize-y leading-relaxed"
       />
       <p className="mt-2 text-[11px] text-mut">
-        Aparece na fila do ciclo e vira o detalhe do próximo bloco de {materia.nome}.
+        Aparece na fila do ciclo e vira o detalhe do próximo bloco de {materia.nome}. Ctrl+Enter salva.
       </p>
     </Modal>
   );
