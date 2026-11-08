@@ -8,9 +8,10 @@ import { useConcursoMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { useSessoesJanela } from "@/api/sessoes";
 import { useQuestaoLogsTodos } from "@/api/questaoLogs";
+import { diaEstaConcluido, useDiasConcluidos } from "@/api/diasConcluidos";
 import { desempenhoGeral } from "@/features/conteudos/desempenho";
 import { progressoConcurso, topicosDoConcurso } from "@/lib/progresso";
-import { fmtMinutos, hojeISO, ultimos7DiasISO } from "@/lib/dates";
+import { diasAtrasISO, fmtMinutos, hojeISO } from "@/lib/dates";
 import { Card, CardBody } from "@/components/Card";
 import { ProgressBar } from "@/components/ProgressBar";
 import { PlanoProximosDias } from "@/features/metas/PlanoProximosDias";
@@ -27,13 +28,19 @@ function saudacao(hora: number): string {
 export function DashboardPage() {
   const concurso = useConcursoAtual();
   const hoje = hojeISO();
-  const semana = ultimos7DiasISO();
 
   const { data: vinculos } = useConcursoMaterias();
   const { data: topicos } = useTopicos();
-  // A mesma janela do gráfico: a consulta é uma só (cache), não duas.
-  const { data: sessoes } = useSessoesJanela(semana[0], semana[6]);
+  // 8 dias (de 7 dias atrás até hoje): cobre o "Hoje" e as duas janelas do "7 dias".
+  const { data: sessoes } = useSessoesJanela(diasAtrasISO(7), hoje);
   const { data: logs } = useQuestaoLogsTodos();
+  const { data: diasConcluidos } = useDiasConcluidos();
+
+  // "7 dias" conta só dias encerrados: hoje entra quando o dia é concluído;
+  // até lá, a janela são os 7 dias antes de hoje.
+  const hojeFechado = diaEstaConcluido(diasConcluidos, hoje);
+  const janelaInicio = diasAtrasISO(hojeFechado ? 6 : 7);
+  const janelaFim = hojeFechado ? hoje : diasAtrasISO(1);
 
   const progresso = useMemo(
     () =>
@@ -46,7 +53,9 @@ export function DashboardPage() {
   );
 
   const minutosHoje = (sessoes ?? []).filter((s) => s.data === hoje).reduce((s, x) => s + x.minutos, 0);
-  const minutosSemana = (sessoes ?? []).reduce((s, x) => s + x.minutos, 0);
+  const minutosSemana = (sessoes ?? [])
+    .filter((s) => s.data >= janelaInicio && s.data <= janelaFim)
+    .reduce((s, x) => s + x.minutos, 0);
   const questoesHoje = desempenhoGeral((logs ?? []).filter((l) => l.data === hoje));
 
   const agora = new Date();
@@ -102,7 +111,7 @@ export function DashboardPage() {
             cor="#4f9dde"
             rotulo="7 dias"
             valor={fmtMinutos(minutosSemana) || "0min"}
-            detalhe={`média de ${fmtMinutos(Math.round(minutosSemana / 7)) || "0min"}/dia`}
+            detalhe={`média de ${fmtMinutos(Math.round(minutosSemana / 7)) || "0min"}/dia${hojeFechado ? "" : " · até ontem"}`}
           />
         </div>
       </section>
