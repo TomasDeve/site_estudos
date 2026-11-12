@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Sparkles } from "lucide-react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import type { CorrecaoParagrafo, CorrecaoRedacao, UsoIA } from "@/api/paragrafos";
 import { rotuloDoModelo } from "./modelos";
 import {
@@ -86,6 +86,82 @@ export function Proposta({
         })}
       </ol>
     </Secao>
+  );
+}
+
+const CHAVE_LEMBRETE = "redacao_lembrete_recolhido";
+
+/**
+ * O tema e os aspectos presos logo abaixo do cabeçalho enquanto escreve: aparece quando a
+ * proposta sai do alto da tela. Fica pendurado no cabeçalho (absolute), então não empurra o
+ * texto; o botão recolhe para uma linha só (lembra a escolha neste aparelho).
+ */
+export function LembreteProposta({ tema, tipo, aspecto }: { tema: TemaParagrafo; tipo: TipoParagrafo; aspecto: number | null }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [recolhido, setRecolhido] = useState(() => {
+    try {
+      return localStorage.getItem(CHAVE_LEMBRETE) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const alternar = () => {
+    const novo = !recolhido;
+    setRecolhido(novo);
+    try {
+      localStorage.setItem(CHAVE_LEMBRETE, novo ? "1" : "0");
+    } catch {
+      /* sem armazenamento: vale só nesta tela */
+    }
+  };
+
+  // O que a página rola até a vista (o cursor, a resposta aberta) para abaixo da faixa, não por baixo dela.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const raiz = document.documentElement;
+    const ajustar = () => {
+      raiz.style.scrollPaddingTop = `${Math.ceil(el.getBoundingClientRect().bottom) + 8}px`;
+    };
+    ajustar();
+    const obs = new ResizeObserver(ajustar);
+    obs.observe(el);
+    return () => {
+      obs.disconnect();
+      raiz.style.scrollPaddingTop = "";
+    };
+  }, []);
+
+  return (
+    <div ref={ref} className="absolute inset-x-0 top-full border-b border-line/50 bg-navy-900 shadow-card">
+      <div className="mx-auto flex max-w-3xl items-start gap-2 px-3 py-2 sm:px-6">
+        <div className="min-w-0 flex-1">
+          <p className={`text-[13px] font-semibold leading-snug text-txt ${recolhido ? "truncate" : ""}`}>{tema.tema}</p>
+          {!recolhido && (
+            <ol className="mt-1 space-y-0.5">
+              {tema.aspectos.map((a, i) => {
+                const alvo = tipo === "introducao" || tipo === "redacao" || i === aspecto;
+                return (
+                  <li key={i} className={`flex gap-1.5 text-xs leading-snug ${alvo ? "text-dim" : "text-mut"}`}>
+                    <span className={`font-bold tabular-nums ${alvo ? "text-gold" : ""}`}>{i + 1}</span>
+                    <span className="min-w-0 flex-1">{a.texto}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
+        <button
+          onClick={alternar}
+          aria-expanded={!recolhido}
+          title={recolhido ? "Mostrar os aspectos" : "Recolher"}
+          aria-label={recolhido ? "Mostrar os aspectos" : "Recolher o tema"}
+          className="shrink-0 cursor-pointer rounded-lg p-1.5 text-mut transition-colors hover:bg-navy-700 hover:text-txt"
+        >
+          {recolhido ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+        </button>
+      </div>
+    </div>
   );
 }
 

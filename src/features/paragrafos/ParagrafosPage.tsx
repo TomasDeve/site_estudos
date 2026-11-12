@@ -40,7 +40,7 @@ import {
   type TemaParagrafo,
   type TipoParagrafo,
 } from "./paragrafos";
-import { Correcao, CorrecaoDaRedacao, GastoIA, Proposta, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
+import { Correcao, CorrecaoDaRedacao, GastoIA, LembreteProposta, Proposta, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
 import { Repertorio } from "./repertorio";
 import { FolhaRedacao } from "./FolhaRedacao";
 import { NIVEIS, PARAGRAFOS_POR_MES, useNivelCorrecao, type NivelCorrecao } from "./modelos";
@@ -129,6 +129,8 @@ export function ParagrafosPage() {
   // "Ver resposta": o repertório aberto durante a escrita. `consultou` fica marcado no
   // histórico, para separar o parágrafo feito de cabeça do feito com a resposta à vista.
   const [respostaAberta, setRespostaAberta] = useState(false);
+  // A proposta rolou para fora da tela: o tema e os aspectos ficam presos no cabeçalho.
+  const [propostaFora, setPropostaFora] = useState(false);
   const [consultou, setConsultou] = useState(rascunhoInicial?.consultou ?? false);
   // O que apagar: uma linha do histórico, ou a correção aberta na tela (aí volta ao início).
   const [apagar, setApagar] = useState<{ id: string; daTela?: boolean } | null>(null);
@@ -432,6 +434,9 @@ export function ParagrafosPage() {
             {fmtTempo(Math.max(0, Math.round((agora - inicio) / 1000)))}
           </span>
         )}
+        {etapa.tipo === "escrevendo" && propostaFora && (
+          <LembreteProposta tema={etapa.sorteio.tema} tipo={etapa.sorteio.tipo} aspecto={etapa.sorteio.aspecto} />
+        )}
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-3 pb-24 pt-4 sm:px-6 sm:py-6">
@@ -522,6 +527,8 @@ export function ParagrafosPage() {
               setEtapa((atual) => (atual.tipo === "escrevendo" ? { ...atual, sorteio: { ...atual.sorteio, partes } } : atual))
             }
             onTrocar={() => comecar(etapa.sorteio.tipo)}
+            propostaFora={propostaFora}
+            onPropostaFora={setPropostaFora}
             onCancelar={() => {
               abortRef.current?.abort();
               setCorrigindo(false);
@@ -918,6 +925,8 @@ function Escrevendo({
   onCorrigir,
   onPartes,
   onTrocar,
+  propostaFora,
+  onPropostaFora,
   onCancelar,
 }: {
   sorteio: Sorteio;
@@ -932,6 +941,8 @@ function Escrevendo({
   onCorrigir: () => void;
   onPartes: (partes: ParteRedacao[]) => void;
   onTrocar: () => void;
+  propostaFora: boolean;
+  onPropostaFora: (fora: boolean) => void;
   onCancelar: () => void;
 }) {
   const { tema, tipo, aspecto } = sorteio;
@@ -955,11 +966,39 @@ function Escrevendo({
   const dentro = linhas >= meta[0] && linhas <= meta[1];
   const abertura = aberturaDoParagrafo(tipo, aspecto);
   const respostaRef = useRef<HTMLDivElement>(null);
+  const propostaRef = useRef<HTMLDivElement>(null);
 
-  // Abriu a resposta: rola até ela (o campo de escrita continua logo acima).
+  // A proposta passou por baixo do cabeçalho (rolou para cima): avisa a página para prender
+  // o tema e os aspectos no alto. Ao sair da tela de escrever, solta.
   useEffect(() => {
-    if (respostaAberta) respostaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [respostaAberta]);
+    const el = propostaRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => onPropostaFora(!e.isIntersecting && e.boundingClientRect.top < (e.rootBounds?.top ?? 0)),
+      { rootMargin: "-64px 0px 0px 0px" }
+    );
+    obs.observe(el);
+    return () => {
+      obs.disconnect();
+      onPropostaFora(false);
+    };
+  }, [onPropostaFora]);
+
+  // Abriu a resposta: rola até ela (o campo de escrita continua logo acima). A resposta fica
+  // abaixo da proposta, então o tema vai para o alto já antes de rolar: assim a rolagem para
+  // logo abaixo da faixa (scroll-padding), e não com o começo da resposta escondido por ela.
+  const [rolarAteResposta, setRolarAteResposta] = useState(false);
+  useEffect(() => {
+    if (!respostaAberta) return;
+    onPropostaFora(true);
+    setRolarAteResposta(true);
+  }, [respostaAberta, onPropostaFora]);
+  useEffect(() => {
+    // com a faixa já na tela (o scroll-padding dela já vale), rola
+    if (!rolarAteResposta || !propostaFora) return;
+    setRolarAteResposta(false);
+    respostaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [rolarAteResposta, propostaFora]);
   const pedido =
     tipo === "introducao"
       ? "Escreva só a introdução: apresente o tema e anuncie os 3 aspectos."
@@ -976,7 +1015,9 @@ function Escrevendo({
 
   return (
     <div className="space-y-4">
-      <Proposta tema={tema} tipo={tipo === "redacao" ? "introducao" : tipo} aspecto={aspecto} />
+      <div ref={propostaRef}>
+        <Proposta tema={tema} tipo={tipo === "redacao" ? "introducao" : tipo} aspecto={aspecto} />
+      </div>
 
       <section className="rounded-card border border-gold/40 bg-navy-800/80 px-4 py-4 shadow-card sm:px-5">
         <p className="text-sm font-semibold text-txt">{pedido}</p>
@@ -1070,7 +1111,7 @@ function Escrevendo({
       </section>
 
       {respostaAberta && (
-        <div ref={respostaRef} className="scroll-mt-20">
+        <div ref={respostaRef} className="scroll-mt-2">
           {tipo === "redacao" ? (
             <EstudoDoTema tema={tema} ehDaSemana compacto />
           ) : (
