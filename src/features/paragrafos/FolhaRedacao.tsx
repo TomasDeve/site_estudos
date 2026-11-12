@@ -42,12 +42,14 @@ export function FolhaRedacao({
   disabled,
   meta,
   onLinhas,
+  placeholder = "Escreva o parágrafo aqui…",
 }: {
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
   meta: [number, number];
   onLinhas: (n: number) => void;
+  placeholder?: string;
 }) {
   const caixaRef = useRef<HTMLDivElement>(null);
   const textoRef = useRef<HTMLTextAreaElement>(null);
@@ -219,7 +221,7 @@ export function FolhaRedacao({
           }}
           lang="pt-BR"
           disabled={disabled}
-          placeholder="Escreva o parágrafo aqui…"
+          placeholder={placeholder}
           spellCheck={false}
           className="folha-paragrafo block resize-none overflow-hidden rounded-lg border border-line bg-navy-900 text-txt outline-none transition-colors placeholder:text-mut focus:border-gold/60 focus:ring-2 focus:ring-gold/15 disabled:opacity-60"
           style={

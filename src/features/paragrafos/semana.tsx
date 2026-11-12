@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   Check,
   ChevronDown,
+  FileText,
   Flame,
   PenLine,
   Repeat2,
@@ -98,6 +99,7 @@ export function TemaDaSemana({
   );
   if (!proposta || !tema) return null;
   const hoje = diaDoPlano();
+  const notaRedacao = notas.get("redacao:");
   const feito = (p: PassoSemana) => (p.parte ? notas.has(chaveDaParte(p.parte)) : semana.feitos.includes(p.dia));
   const total = PLANO_SEMANA.filter(feito).length;
 
@@ -188,6 +190,30 @@ export function TemaDaSemana({
           );
         })}
       </ol>
+
+      {/* opcional: a redação inteira no site, fora da conta da semana */}
+      <div className="mt-2 flex items-center gap-3 rounded-xl border border-dashed border-line/60 px-3 py-2.5">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-navy-700 text-mut">
+          <FileText className="size-3.5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-txt">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-mut">Opcional</span> · Redação completa no site
+          </p>
+          <p className="text-xs leading-snug text-dim">
+            Os 4 parágrafos de uma vez, ou só os que der tempo. A IA dá a nota como a banca (escala de 30). Não conta na semana.
+          </p>
+        </div>
+        {notaRedacao != null && (
+          <span className={`shrink-0 text-sm font-extrabold tabular-nums ${corDaNota(notaRedacao / 3)}`}>
+            {notaRedacao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}
+            <span className="text-[11px] font-semibold text-mut">/30</span>
+          </span>
+        )}
+        <Button size="sm" variant="ghost" onClick={() => onEscrever({ tema, tipo: "redacao", aspecto: null })}>
+          {notaRedacao != null ? "Refazer" : "Escrever"}
+        </Button>
+      </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button variant="secondary" onClick={() => onEstudar(tema)}>
@@ -308,13 +334,16 @@ export function EstudoDoTema({
   onEscrever,
   onEscolher,
   escolhendo,
+  compacto = false,
 }: {
   tema: TemaParagrafo;
   ancora?: string;
   ehDaSemana: boolean;
-  onEscrever: (s: Sorteio) => void;
-  onEscolher: () => void;
-  escolhendo: boolean;
+  onEscrever?: (s: Sorteio) => void;
+  onEscolher?: () => void;
+  escolhendo?: boolean;
+  /** Só o repertório (Para decorar, esqueleto e modelo): para o "Ver resposta" da redação inteira. */
+  compacto?: boolean;
 }) {
   const proposta = propostaDe(tema.id);
   const decorar = decorarDoTema(tema);
@@ -334,8 +363,12 @@ export function EstudoDoTema({
   ];
   const ir = (id: string) => document.getElementById(`estudo-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  // no modo compacto a proposta já está na tela: a numeração começa no "Para decorar"
+  const n = (i: number) => (compacto ? i - 1 : i);
+
   return (
     <div className="space-y-4">
+      {!compacto && (
       <div>
         <div className="flex flex-wrap items-center gap-2">
           {proposta && (
@@ -368,13 +401,16 @@ export function EstudoDoTema({
           ))}
         </nav>
       </div>
+      )}
 
-      <div id="estudo-proposta" className="scroll-mt-20">
-        <Proposta tema={tema} tipo="introducao" aspecto={null} />
-      </div>
+      {!compacto && (
+        <div id="estudo-proposta" className="scroll-mt-20">
+          <Proposta tema={tema} tipo="introducao" aspecto={null} />
+        </div>
+      )}
 
       {decorar.length > 0 && (
-        <Bloco id="estudo-decorar" numero={2} titulo="Para decorar → Anki" dica="Cada item vira um card: o número, a lei pelo nome e ano, o exemplo" Icone={Shapes} cor="text-blue">
+        <Bloco id="estudo-decorar" numero={n(2)} titulo="Para decorar → Anki" dica="Cada item vira um card: o número, a lei pelo nome e ano, o exemplo" Icone={Shapes} cor="text-blue">
           <div className="grid gap-2.5 sm:grid-cols-2">
             {decorar.map((info, i) => (
               <Prova key={i} info={info} />
@@ -383,7 +419,7 @@ export function EstudoDoTema({
         </Bloco>
       )}
 
-      <Bloco id="estudo-esqueleto" numero={3} titulo="Esqueleto da redação" dica="Parágrafo por parágrafo, com a prova de cada ponto" Icone={BookOpenCheck} cor="text-gold">
+      <Bloco id="estudo-esqueleto" numero={n(3)} titulo="Esqueleto da redação" dica="Parágrafo por parágrafo, com a prova de cada ponto" Icone={BookOpenCheck} cor="text-gold">
         <div className="mb-3 flex flex-wrap gap-1.5">
           {(["dado", "lei", "caso"] as const).map((t) => (
             <Selo key={t} tipo={t} />
@@ -402,10 +438,12 @@ export function EstudoDoTema({
                       {TIPOS[parte.tipo].meta[0]} a {TIPOS[parte.tipo].meta[1]} linhas
                     </span>
                   </p>
-                  <Button size="sm" variant="ghost" onClick={() => onEscrever({ tema, tipo: parte.tipo, aspecto: parte.aspecto })}>
-                    <PenLine className="size-3.5" />
-                    Escrever
-                  </Button>
+                  {onEscrever && (
+                    <Button size="sm" variant="ghost" onClick={() => onEscrever({ tema, tipo: parte.tipo, aspecto: parte.aspecto })}>
+                      <PenLine className="size-3.5" />
+                      Escrever
+                    </Button>
+                  )}
                 </div>
                 {parte.aspecto != null && (
                   <p className="mt-0.5 text-xs text-dim">
@@ -444,7 +482,7 @@ export function EstudoDoTema({
         </div>
       </Bloco>
 
-      <Bloco id="estudo-modelo" numero={4} titulo="Redação modelo · nota máxima" dica="Releia na sexta e antes da redação de domingo" Icone={BadgeCheck} cor="text-green">
+      <Bloco id="estudo-modelo" numero={n(4)} titulo="Redação modelo · nota máxima" dica="Releia na sexta e antes da redação de domingo" Icone={BadgeCheck} cor="text-green">
         <div className="space-y-3 rounded-xl border border-green/30 bg-navy-900/40 p-3 sm:p-4">
           {[tema.modelo.intro, tema.modelo.p1, tema.modelo.p2, tema.modelo.fim].map((par, i) => (
             <p key={i} className="indent-6 text-[15px] leading-relaxed text-txt">
@@ -458,9 +496,9 @@ export function EstudoDoTema({
         </p>
       </Bloco>
 
-      {!ehDaSemana && (
+      {!ehDaSemana && !compacto && onEscolher && (
         <div className="sticky bottom-3 z-10 flex justify-center rounded-2xl border border-line/50 bg-navy-900/90 p-2 shadow-card backdrop-blur-sm">
-          <Button onClick={onEscolher} loading={escolhendo}>
+          <Button onClick={onEscolher} loading={escolhendo ?? false}>
             <CalendarCheck className="size-4" />
             Escolher para esta semana
           </Button>

@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, CalendarCheck, Eye, EyeOff, PenLine, RotateCcw, Shuffle, Timer, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Check, Eye, EyeOff, PenLine, RotateCcw, Shuffle, Timer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { RedacaoParagrafo } from "@/types/db";
 import {
   corrigirParagrafo,
+  corrigirRedacao,
   useExcluirParagrafo,
   useGastoIAMes,
   useParagrafosRecentes,
   useSalvarParagrafo,
   type CorrecaoParagrafo,
+  type CorrecaoRedacao,
 } from "@/api/paragrafos";
 import { useEscolherTemaSemana, useMarcarDiaSemana, useSemanasRedacao } from "@/api/redacaoSemanas";
 import { Button } from "@/components/Button";
@@ -19,19 +21,26 @@ import {
   TEMAS,
   CARACTERES_POR_LINHA,
   TIPOS,
+  PARTES_REDACAO,
+  TIPOS_DE_PARAGRAFO,
+  TODAS_AS_PARTES,
   aberturaDoParagrafo,
   embasamentoDoParagrafo,
   linhasNaFolha,
+  metaDasPartes,
   modeloDoParagrafo,
+  notaDaRedacao,
   notaDoConceito,
   notaFinal,
   pontosDoParagrafo,
   sortear,
+  valorDoAspecto,
+  type ParteRedacao,
   type Sorteio,
   type TemaParagrafo,
   type TipoParagrafo,
 } from "./paragrafos";
-import { Correcao, GastoIA, Proposta, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
+import { Correcao, CorrecaoDaRedacao, GastoIA, Proposta, Secao, corDaNota, fmtTempo, fmtUSD } from "./partes";
 import { Repertorio } from "./repertorio";
 import { FolhaRedacao } from "./FolhaRedacao";
 import { NIVEIS, PARAGRAFOS_POR_MES, useNivelCorrecao, type NivelCorrecao } from "./modelos";
@@ -42,7 +51,8 @@ import { semanaDe, type DiaPlano } from "./semanas";
 interface Resultado {
   /** Linha do histórico (chega quando o salvamento termina; do histórico já vem pronta). */
   id?: string;
-  correcao: CorrecaoParagrafo;
+  /** Da redação inteira (tipo "redacao") vem CorrecaoRedacao; dos parágrafos, CorrecaoParagrafo. */
+  correcao: CorrecaoParagrafo | CorrecaoRedacao;
   texto: string;
   nota: number;
   notaConteudo: number;
@@ -66,6 +76,8 @@ interface Rascunho {
   inicio: number;
   /** Abriu o "Ver resposta" (o repertório) antes de mandar corrigir. */
   consultou?: boolean;
+  /** Redação completa: os parágrafos marcados. */
+  partes?: ParteRedacao[];
 }
 
 function lerRascunho(): Rascunho | null {
@@ -86,7 +98,7 @@ function gravarRascunho(r: Rascunho | null) {
 }
 
 function sorteioDoRascunho(r: Rascunho): Sorteio {
-  return { tipo: r.tipo, tema: TEMAS.find((t) => t.id === r.temaId)!, aspecto: r.aspecto };
+  return { tipo: r.tipo, tema: TEMAS.find((t) => t.id === r.temaId)!, aspecto: r.aspecto, partes: r.partes };
 }
 
 /**
@@ -147,7 +159,7 @@ export function ParagrafosPage() {
   useEffect(() => {
     if (etapa.tipo !== "escrevendo") return;
     const s = etapa.sorteio;
-    gravarRascunho({ tipo: s.tipo, temaId: s.tema.id, aspecto: s.aspecto, texto, inicio, consultou });
+    gravarRascunho({ tipo: s.tipo, temaId: s.tema.id, aspecto: s.aspecto, texto, inicio, consultou, partes: s.partes });
   }, [etapa, texto, inicio, consultou]);
 
   useEffect(() => {
@@ -226,6 +238,10 @@ export function ParagrafosPage() {
     abortRef.current = ctrl;
     setCorrigindo(true);
     try {
+      if (tipo === "redacao") {
+        await corrigirRedacaoInteira(sorteio, limpo, linhas, segundos, ctrl.signal);
+        return;
+      }
       const correcao = await corrigirParagrafo(
         {
           tipo,
@@ -286,6 +302,84 @@ export function ParagrafosPage() {
     } finally {
       setCorrigindo(false);
     }
+  }
+
+  /** A redação inteira: nota de 0 a 30 pela conta da Cebraspe, salva no mesmo histórico. */
+  async function corrigirRedacaoInteira(
+    sorteio: Sorteio,
+    limpo: string,
+    linhas: number,
+    segundos: number,
+    signal: AbortSignal
+  ) {
+    const { tema } = sorteio;
+    const partes = sorteio.partes ?? TODAS_AS_PARTES;
+    const correcao = await corrigirRedacao(
+      {
+        tipo: "redacao",
+        tema: tema.tema,
+        textos: tema.textos,
+        aspectos: tema.aspectos.map((a) => a.texto),
+        valores: tema.aspectos.map((a) => a.valor),
+        partes,
+        aspecto: null,
+        texto: limpo,
+        linhas,
+        meta: metaDasPartes(partes),
+        caracteresPorLinha: CARACTERES_POR_LINHA,
+        paragrafoModelo: modeloDoParagrafo(tema, "redacao", null),
+        modelo: NIVEIS[nivel].modelo,
+        esforco: NIVEIS[nivel].esforco,
+        repertorio: [
+          ...pontosDoParagrafo(tema, "redacao", null),
+          ...embasamentoDoParagrafo(tema, "redacao", null),
+          ...tema.decorar.map((d) => `${d.titulo} ${d.texto}`.trim()),
+        ],
+      },
+      signal
+    );
+    const r = notaDaRedacao(
+      [correcao.aspecto1.conceito, correcao.aspecto2.conceito, correcao.aspecto3.conceito],
+      tema.aspectos.map((a) => valorDoAspecto(a.valor)),
+      correcao.estrutura.situacao,
+      correcao.erros.length,
+      linhas,
+      partes
+    );
+    // no histórico e no card da semana, tudo na escala 30 (a parcial é proporcional)
+    const nota = r.nota30;
+    const notaConteudo = r.maximo > 0 ? Math.round(((r.notaConteudo * 30) / r.maximo) * 100) / 100 : 0;
+    gravarRascunho(null);
+    setEtapa({
+      tipo: "corrigido",
+      sorteio,
+      resultado: { correcao: { ...correcao, partes }, texto: limpo, nota, notaConteudo, linhas, segundos },
+      doHistorico: false,
+    });
+    salvar.mutate(
+      {
+        tipo: "redacao",
+        tema_id: tema.id,
+        aspecto: null,
+        texto: limpo,
+        linhas,
+        segundos,
+        conceito: null,
+        nota_conteudo: notaConteudo,
+        erros: correcao.erros.length,
+        nota,
+        correcao: { ...correcao, partes, consultou_repertorio: consultou } as unknown as CorrecaoParagrafo,
+      },
+      {
+        onSuccess: (linha) =>
+          setEtapa((atual) =>
+            atual.tipo === "corrigido" && !atual.resultado.id && atual.resultado.texto === limpo
+              ? { ...atual, resultado: { ...atual.resultado, id: linha.id } }
+              : atual
+          ),
+        onError: (e) => toast.error(`A correção não foi salva no histórico: ${e.message}`),
+      }
+    );
   }
 
   function abrirDoHistorico(p: RedacaoParagrafo) {
@@ -424,6 +518,9 @@ export function ParagrafosPage() {
               setConsultou(true);
             }}
             onCorrigir={corrigir}
+            onPartes={(partes) =>
+              setEtapa((atual) => (atual.tipo === "escrevendo" ? { ...atual, sorteio: { ...atual.sorteio, partes } } : atual))
+            }
             onTrocar={() => comecar(etapa.sorteio.tipo)}
             onCancelar={() => {
               abortRef.current?.abort();
@@ -434,9 +531,32 @@ export function ParagrafosPage() {
 
         {etapa.tipo === "corrigido" && (
           <div className="space-y-4">
-            <Proposta tema={etapa.sorteio.tema} tipo={etapa.sorteio.tipo} aspecto={etapa.sorteio.aspecto} recolherTextos />
-            <Correcao {...etapa.resultado} meta={TIPOS[etapa.sorteio.tipo].meta} />
-            <Repertorio tema={etapa.sorteio.tema} tipo={etapa.sorteio.tipo} aspecto={etapa.sorteio.aspecto} />
+            <Proposta
+              tema={etapa.sorteio.tema}
+              tipo={etapa.sorteio.tipo === "redacao" ? "introducao" : etapa.sorteio.tipo}
+              aspecto={etapa.sorteio.aspecto}
+              recolherTextos
+            />
+            {etapa.sorteio.tipo === "redacao" ? (
+              <>
+                <CorrecaoDaRedacao
+                  {...etapa.resultado}
+                  correcao={etapa.resultado.correcao as CorrecaoRedacao}
+                  aspectos={etapa.sorteio.tema.aspectos.map((a) => ({ texto: a.texto, valor: valorDoAspecto(a.valor) }))}
+                  partes={(etapa.resultado.correcao as CorrecaoRedacao).partes ?? TODAS_AS_PARTES}
+                />
+                <EstudoDoTema tema={etapa.sorteio.tema} ehDaSemana compacto />
+              </>
+            ) : (
+              <>
+                <Correcao
+                  {...etapa.resultado}
+                  correcao={etapa.resultado.correcao as CorrecaoParagrafo}
+                  meta={TIPOS[etapa.sorteio.tipo].meta}
+                />
+                <Repertorio tema={etapa.sorteio.tema} tipo={etapa.sorteio.tipo} aspecto={etapa.sorteio.aspecto} />
+              </>
+            )}
             <div className="sticky bottom-3 z-10 flex flex-wrap justify-center gap-2 rounded-2xl border border-line/50 bg-navy-900/90 p-2 shadow-card backdrop-blur-sm">
               {semanaAtual?.tema_id === etapa.sorteio.tema.id ? (
                 <Button onClick={irParaInicio}>
@@ -512,7 +632,7 @@ function Inicio({
   /** O tema da semana e a lista das 15 propostas (vêm prontos da página). */
   semanaDaVez: ReactNode;
 }) {
-  const tipos = Object.keys(TIPOS) as TipoParagrafo[];
+  const tipos = TIPOS_DE_PARAGRAFO;
   const { data: gasto } = useGastoIAMes();
   return (
     <div className="space-y-5">
@@ -609,13 +729,19 @@ function Inicio({
                     onClick={() => onAbrir(p)}
                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 py-2.5 text-left"
                   >
-                    <span className={`w-10 shrink-0 text-right text-base font-extrabold tabular-nums ${corDaNota(Number(p.nota ?? 0))}`}>
+                    <span
+                      className={`w-10 shrink-0 text-right text-base font-extrabold tabular-nums ${corDaNota(
+                        Number(p.nota ?? 0) / (p.tipo === "redacao" ? 3 : 1)
+                      )}`}
+                      title={p.tipo === "redacao" ? "Nota de 0 a 30" : "Nota de 0 a 10"}
+                    >
                       {Number(p.nota ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm text-txt">{tema?.tema ?? p.tema_id}</span>
                       <span className="block text-[11px] text-mut">
                         {TIPOS[p.tipo as TipoParagrafo]?.nome ?? p.tipo}
+                        {p.tipo === "redacao" && " · nota de 0 a 30"}
                         {p.tipo === "desenvolvimento" && ` · aspecto ${(p.aspecto ?? 0) + 1}`} ·{" "}
                         {new Date(p.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                         {(p.correcao as { consultou_repertorio?: boolean } | null)?.consultou_repertorio && (
@@ -790,6 +916,7 @@ function Escrevendo({
   respostaAberta,
   onVerResposta,
   onCorrigir,
+  onPartes,
   onTrocar,
   onCancelar,
 }: {
@@ -803,11 +930,20 @@ function Escrevendo({
   respostaAberta: boolean;
   onVerResposta: () => void;
   onCorrigir: () => void;
+  onPartes: (partes: ParteRedacao[]) => void;
   onTrocar: () => void;
   onCancelar: () => void;
 }) {
   const { tema, tipo, aspecto } = sorteio;
   const info = TIPOS[tipo];
+  const partes = sorteio.partes ?? TODAS_AS_PARTES;
+  const meta = tipo === "redacao" ? metaDasPartes(partes) : info.meta;
+  // pelo menos um parágrafo que responda a um aspecto (só a introdução não tem o que pontuar)
+  const temAspecto = PARTES_REDACAO.some((p) => p.aspecto != null && partes.includes(p.id));
+  const alternarParte = (id: ParteRedacao) => {
+    const novas = partes.includes(id) ? partes.filter((p) => p !== id) : [...partes, id];
+    onPartes(TODAS_AS_PARTES.filter((p) => novas.includes(p)));
+  };
   const [linhas, setLinhas] = useState(0);
   const contarLinhas = useCallback(
     (n: number) => {
@@ -816,7 +952,7 @@ function Escrevendo({
     },
     [onLinhas]
   );
-  const dentro = linhas >= info.meta[0] && linhas <= info.meta[1];
+  const dentro = linhas >= meta[0] && linhas <= meta[1];
   const abertura = aberturaDoParagrafo(tipo, aspecto);
   const respostaRef = useRef<HTMLDivElement>(null);
 
@@ -829,21 +965,71 @@ function Escrevendo({
       ? "Escreva só a introdução: apresente o tema e anuncie os 3 aspectos."
       : tipo === "conclusao"
         ? "Escreva só a conclusão, respondendo ao aspecto 3."
-        : `Escreva só o parágrafo do aspecto ${(aspecto ?? 0) + 1}.`;
+        : tipo === "redacao"
+          ? partes.length === TODAS_AS_PARTES.length
+            ? "Escreva a redação inteira: introdução, os 2 desenvolvimentos e a conclusão, um parágrafo por aspecto. Pule uma linha entre os parágrafos."
+            : `Escreva só: ${PARTES_REDACAO.filter((p) => partes.includes(p.id))
+                .map((p) => p.nome.toLowerCase())
+                .join(", ")
+                .replace(/, ([^,]*)$/, " e $1")}. Pule uma linha entre os parágrafos.`
+          : `Escreva só o parágrafo do aspecto ${(aspecto ?? 0) + 1}.`;
 
   return (
     <div className="space-y-4">
-      <Proposta tema={tema} tipo={tipo} aspecto={aspecto} />
+      <Proposta tema={tema} tipo={tipo === "redacao" ? "introducao" : tipo} aspecto={aspecto} />
 
       <section className="rounded-card border border-gold/40 bg-navy-800/80 px-4 py-4 shadow-card sm:px-5">
         <p className="text-sm font-semibold text-txt">{pedido}</p>
         <p className="mt-0.5 text-xs text-dim">
-          {info.meta[0]} a {info.meta[1]} linhas · abertura do seu esqueleto: {abertura}
+          {meta[0]} a {meta[1]} linhas · abertura do seu esqueleto: {abertura}
         </p>
-        <FolhaRedacao value={texto} onChange={setTexto} disabled={corrigindo} meta={info.meta} onLinhas={contarLinhas} />
+        {tipo === "redacao" && (
+          <fieldset className="mt-3">
+            <legend className="text-[11px] font-semibold uppercase tracking-wide text-mut">
+              Quais parágrafos você vai escrever?
+            </legend>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {PARTES_REDACAO.map((p) => {
+                const marcada = partes.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    role="checkbox"
+                    aria-checked={marcada}
+                    disabled={corrigindo}
+                    onClick={() => alternarParte(p.id)}
+                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed ${
+                      marcada ? "border-gold/60 bg-gold/10 text-txt" : "border-line/50 text-mut hover:border-line"
+                    }`}
+                  >
+                    <span
+                      className={`flex size-4 items-center justify-center rounded border ${
+                        marcada ? "border-gold bg-gold text-navy-950" : "border-line"
+                      }`}
+                    >
+                      {marcada && <Check className="size-3" strokeWidth={3} />}
+                    </span>
+                    {p.nome}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-[11px] text-mut">
+              A IA corrige só os marcados e não tira ponto pelo resto; a nota vem proporcional (escala de 30).
+            </p>
+          </fieldset>
+        )}
+        <FolhaRedacao
+          value={texto}
+          onChange={setTexto}
+          disabled={corrigindo}
+          meta={meta}
+          onLinhas={contarLinhas}
+          placeholder={tipo === "redacao" ? "Escreva a redação aqui. Pule uma linha entre os parágrafos…" : undefined}
+        />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
           <span className={`text-xs font-semibold tabular-nums ${linhas === 0 ? "text-mut" : dentro ? "text-green" : "text-amber"}`}>
-            {linhas} {linhas === 1 ? "linha" : "linhas"} · meta {info.meta[0]}–{info.meta[1]}
+            {linhas} {linhas === 1 ? "linha" : "linhas"} · meta {meta[0]}–{meta[1]}
           </span>
           <span className="text-[11px] text-mut">
             Cada linha cabe o que cabe numa linha da folha (cerca de {CARACTERES_POR_LINHA} caracteres). Corretor
@@ -862,7 +1048,11 @@ function Escrevendo({
             </>
           ) : (
             <>
-              <Button onClick={onCorrigir} disabled={!texto.trim()}>
+              <Button
+                onClick={onCorrigir}
+                disabled={!texto.trim() || (tipo === "redacao" && !temAspecto)}
+                title={tipo === "redacao" && !temAspecto ? "Marque pelo menos um desenvolvimento ou a conclusão" : undefined}
+              >
                 Corrigir com IA
               </Button>
               <Button variant="secondary" onClick={onVerResposta} title="Mostra o repertório deste parágrafo">
@@ -881,7 +1071,11 @@ function Escrevendo({
 
       {respostaAberta && (
         <div ref={respostaRef} className="scroll-mt-20">
-          <Repertorio tema={tema} tipo={tipo} aspecto={aspecto} />
+          {tipo === "redacao" ? (
+            <EstudoDoTema tema={tema} ehDaSemana compacto />
+          ) : (
+            <Repertorio tema={tema} tipo={tipo} aspecto={aspecto} />
+          )}
         </div>
       )}
     </div>

@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { CORINGAS, tipoDoAspecto } from "./coringas";
-import { TEMAS, linhasNaFolha, notaDoConceito, notaFinal, pontosDoParagrafo, sortear } from "./paragrafos";
+import {
+  TEMAS,
+  linhasNaFolha,
+  metaDasPartes,
+  notaDaRedacao,
+  notaDoConceito,
+  notaFinal,
+  pontosDoParagrafo,
+  sortear,
+} from "./paragrafos";
 
 describe("banco de temas", () => {
   it("tem os 34 temas com 3 aspectos e esqueleto", () => {
@@ -51,6 +60,25 @@ describe("linhas e nota", () => {
     expect(linhasNaFolha("")).toBe(0);
     expect(linhasNaFolha("a".repeat(63))).toBe(1);
     expect(linhasNaFolha("a".repeat(64))).toBe(2);
+  });
+
+  it("conta as linhas de cada parágrafo na redação inteira", () => {
+    expect(linhasNaFolha(`${"a".repeat(63)}\n\n${"b".repeat(64)}`)).toBe(3);
+  });
+
+  it("dá a nota da redação inteira de 0 a 30, como a Cebraspe", () => {
+    const valores = [8.5, 10, 10];
+    expect(notaDaRedacao([3, 3, 3], valores, "ok", 0, 28)).toEqual({ notaConteudo: 30, nota: 30, maximo: 30, nota30: 30 });
+    expect(notaDaRedacao([3, 2, 3], valores, "parcial", 3, 30)).toMatchObject({ notaConteudo: 25.92, nota: 25.32 });
+    expect(notaDaRedacao([0, 0, 0], valores, "faltou", 10, 20).nota).toBe(0);
+  });
+
+  it("só alguns parágrafos: conta os aspectos deles e traz para a escala 30", () => {
+    // introdução + 2 desenvolvimentos: aspectos 1 e 2 (8,50 + 10), sem a estrutura
+    const r = notaDaRedacao([3, 3, 0], [8.5, 10, 10], "ok", 0, 22, ["intro", "p1", "p2"]);
+    expect(r).toEqual({ notaConteudo: 18.5, nota: 18.5, maximo: 18.5, nota30: 30 });
+    expect(metaDasPartes(["intro", "p1", "p2"])).toEqual([20, 23]);
+    expect(metaDasPartes(["intro", "p1", "p2", "fim"])).toEqual([27, 30]);
   });
 
   it("desconta erros como a Cebraspe, em escala 10", () => {

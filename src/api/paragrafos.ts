@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/supabase";
 import type { Json, RedacaoParagrafo, TablesInsert } from "@/types/db";
-import type { TipoParagrafo } from "@/features/paragrafos/paragrafos";
+import type { ParteRedacao, TipoParagrafo } from "@/features/paragrafos/paragrafos";
 
 const CHAVE = ["redacao_paragrafos"] as const;
 
@@ -25,6 +25,27 @@ export interface CorrecaoParagrafo {
   consultou_repertorio?: boolean;
   /** Tokens e custo da correção (a edge function mede; a saída inclui o raciocínio da IA). */
   uso?: UsoIA;
+}
+
+/** Correção da redação inteira (tipo "redacao"): conceito de cada aspecto e da estrutura. */
+export interface CorrecaoRedacao {
+  veredito: string;
+  aspecto1: AspectoCorrigido;
+  aspecto2: AspectoCorrigido;
+  aspecto3: AspectoCorrigido;
+  estrutura: { situacao: "ok" | "parcial" | "faltou"; comentario: string };
+  acertos: string[];
+  melhorar: string[];
+  erros: { trecho: string; correcao: string; explicacao: string }[];
+  consultou_repertorio?: boolean;
+  /** Gravado pelo site: os parágrafos que ele escreveu (sem o campo = os 4). */
+  partes?: ParteRedacao[];
+  uso?: UsoIA;
+}
+
+export interface AspectoCorrigido {
+  conceito: 0 | 1 | 2 | 3;
+  comentario: string;
 }
 
 export interface UsoIA {
@@ -52,13 +73,24 @@ export interface PedidoCorrecao {
   /** Modelo e esforço da IA (o nível de correção escolhido no site). */
   modelo: string;
   esforco: "low" | "medium" | "high";
+  /** Só na redação inteira: valor de cada aspecto na proposta ("8,50", "10,00", "10,00"). */
+  valores?: string[];
+  /** Só na redação inteira: os parágrafos que ele escreveu (a IA não cobra os outros). */
+  partes?: ParteRedacao[];
+}
+
+/** Corrige um parágrafo (introdução, desenvolvimento ou conclusão). */
+export function corrigirParagrafo(pedido: PedidoCorrecao, signal?: AbortSignal): Promise<CorrecaoParagrafo> {
+  return chamarCorrecao<CorrecaoParagrafo>(pedido, signal);
+}
+
+/** Corrige a redação inteira (tipo "redacao"). */
+export function corrigirRedacao(pedido: PedidoCorrecao, signal?: AbortSignal): Promise<CorrecaoRedacao> {
+  return chamarCorrecao<CorrecaoRedacao>({ ...pedido, tipo: "redacao" }, signal);
 }
 
 /** Chama a Edge Function `corrigir-paragrafo` (resposta inteira em JSON, sem streaming). */
-export async function corrigirParagrafo(
-  pedido: PedidoCorrecao,
-  signal?: AbortSignal
-): Promise<CorrecaoParagrafo> {
+async function chamarCorrecao<T>(pedido: PedidoCorrecao, signal?: AbortSignal): Promise<T> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -78,7 +110,7 @@ export async function corrigirParagrafo(
     const detalhe = await res.text().catch(() => "");
     throw new Error(detalhe.trim() || `A IA não respondeu (HTTP ${res.status}).`);
   }
-  return (await res.json()) as CorrecaoParagrafo;
+  return (await res.json()) as T;
 }
 
 /** Os últimos parágrafos treinados (para o histórico e para o sorteio não repetir tema). */

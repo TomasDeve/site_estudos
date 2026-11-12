@@ -1,8 +1,16 @@
 import type { ReactNode } from "react";
 import { Sparkles } from "lucide-react";
-import type { CorrecaoParagrafo, UsoIA } from "@/api/paragrafos";
+import type { CorrecaoParagrafo, CorrecaoRedacao, UsoIA } from "@/api/paragrafos";
 import { rotuloDoModelo } from "./modelos";
-import type { TemaParagrafo, TipoParagrafo } from "./paragrafos";
+import {
+  PARTES_REDACAO,
+  TODAS_AS_PARTES,
+  metaDasPartes,
+  notaDaRedacao,
+  type ParteRedacao,
+  type TemaParagrafo,
+  type TipoParagrafo,
+} from "./paragrafos";
 
 /** Texto com **negrito** (o formato dos fontes do PDF). */
 export function Negrito({ texto }: { texto: string }) {
@@ -212,6 +220,157 @@ export function Correcao({
         className="ring-1 ring-gold/30"
       >
         <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-txt">{correcao.reescrita}</p>
+      </Secao>
+    </div>
+  );
+}
+
+const COR_CONCEITO = ["bg-red/15 text-red", "bg-red/15 text-red", "bg-amber/15 text-amber", "bg-green/15 text-green"];
+const PONTOS_ESTRUTURA = { ok: 1.5, parcial: 0.75, faltou: 0 } as const;
+const fmtPontos = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/**
+ * Correção da redação: conceito de cada aspecto e da estrutura, erros e a nota da Cebraspe.
+ * Se ele escreveu só alguns parágrafos, a nota é sobre o que dava para tirar com eles.
+ */
+export function CorrecaoDaRedacao({
+  correcao,
+  texto,
+  linhas,
+  segundos,
+  aspectos,
+  partes = TODAS_AS_PARTES,
+}: {
+  correcao: CorrecaoRedacao;
+  texto: string;
+  linhas: number;
+  segundos: number | null;
+  /** Texto e valor de cada aspecto da proposta. */
+  aspectos: { texto: string; valor: number }[];
+  /** Os parágrafos que ele escreveu. */
+  partes?: ParteRedacao[];
+}) {
+  const ne = correcao.erros.length;
+  const porAspecto = [correcao.aspecto1, correcao.aspecto2, correcao.aspecto3];
+  const estrutura = correcao.estrutura;
+  const completa = partes.length === TODAS_AS_PARTES.length;
+  const escrito = (i: number) => PARTES_REDACAO.some((p) => p.aspecto === i && partes.includes(p.id));
+  const r = notaDaRedacao(
+    porAspecto.map((a) => a.conceito),
+    aspectos.map((a) => a.valor),
+    estrutura.situacao,
+    ne,
+    linhas,
+    partes
+  );
+  const meta = metaDasPartes(partes);
+  return (
+    <div className="space-y-4">
+      <Secao titulo={completa ? "Nota da redação" : "Nota dos parágrafos escritos"}>
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+          <div>
+            <span className={`text-5xl font-extrabold tabular-nums ${corDaNota((r.nota30 || 0) / 3)}`}>
+              {r.nota.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
+            </span>
+            <span className="ml-1 text-sm text-mut">de {completa ? "30" : fmtPontos(r.maximo)}</span>
+          </div>
+          <dl className="grid grid-cols-2 gap-x-5 gap-y-1 text-xs sm:grid-cols-4">
+            <Dado rotulo="Conteúdo (NC)" valor={fmtPontos(r.notaConteudo)} />
+            <Dado rotulo="Erros (NE)" valor={String(ne)} />
+            <Dado rotulo="Linhas (TL)" valor={`${linhas} (meta ${meta[0]}–${meta[1]})`} alerta={linhas > 30 || linhas < meta[0] - 3} />
+            {segundos != null && <Dado rotulo="Tempo" valor={fmtTempo(segundos)} />}
+          </dl>
+        </div>
+        {!completa && (
+          <p className="mt-2 text-sm text-dim">
+            Você escreveu {partes.length} de 4 parágrafos. Na escala da prova, equivale a{" "}
+            <strong className={`font-bold ${corDaNota(r.nota30 / 3)}`}>
+              {r.nota30.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} de 30
+            </strong>
+            .
+          </p>
+        )}
+        <p className="mt-2 text-xs text-mut">
+          Como a Cebraspe: cada aspecto vale conceito ÷ 3 × o valor dele, a estrutura vale até 1,50, e a nota = NC − 6 ×
+          erros ÷ linhas. Aprova com 15 de 30.{linhas > 30 && " O que passa da linha 30 a banca não lê."}
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-txt">{correcao.veredito}</p>
+        {correcao.uso && (
+          <p className="mt-3 border-t border-line/40 pt-2 text-[11px] text-mut">
+            Gasto desta correção ({rotuloDoModelo(correcao.uso.modelo)}): <GastoIA uso={correcao.uso} />
+          </p>
+        )}
+      </Secao>
+
+      <Secao titulo="Os 3 aspectos e a estrutura">
+        <ul className="divide-y divide-line/40">
+          {porAspecto.map((a, i) =>
+            !escrito(i) ? (
+              <li key={i} className="py-2.5 opacity-60 first:pt-0">
+                <span className="text-sm text-mut">
+                  <span className="font-bold">{i + 1}</span> {aspectos[i]?.texto}
+                </span>
+                <p className="mt-0.5 text-xs text-mut">Parágrafo não escrito neste treino: não entra na nota.</p>
+              </li>
+            ) : (
+            <li key={i} className="py-2.5 first:pt-0">
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-sm text-txt">
+                  <span className="font-bold text-gold">{i + 1}</span> {aspectos[i]?.texto}
+                </span>
+                <span className="flex shrink-0 flex-col items-end gap-0.5">
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${COR_CONCEITO[a.conceito]}`}>
+                    conceito {a.conceito} de 3
+                  </span>
+                  <span className="text-[11px] tabular-nums text-mut">
+                    {fmtPontos((a.conceito * (aspectos[i]?.valor ?? 0)) / 3)} de {fmtPontos(aspectos[i]?.valor ?? 0)}
+                  </span>
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs leading-relaxed text-dim">{a.comentario}</p>
+            </li>
+            )
+          )}
+          <li className="pt-2.5">
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-sm font-semibold text-txt">Apresentação e estrutura</span>
+              <span className="flex shrink-0 flex-col items-end gap-0.5">
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${SITUACOES[estrutura.situacao].cor}`}>
+                  {SITUACOES[estrutura.situacao].rotulo}
+                </span>
+                <span className="text-[11px] tabular-nums text-mut">
+                  {completa ? `${fmtPontos(PONTOS_ESTRUTURA[estrutura.situacao])} de 1,50` : "só conta com os 4"}
+                </span>
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs leading-relaxed text-dim">{estrutura.comentario}</p>
+          </li>
+        </ul>
+      </Secao>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Secao titulo="O que funcionou">
+          <Lista itens={correcao.acertos} cor="text-green" vazio="Nada que se destaque ainda." />
+        </Secao>
+        <Secao titulo="O que melhorar">
+          <Lista itens={correcao.melhorar} cor="text-gold" vazio="Nada a melhorar." />
+        </Secao>
+      </div>
+
+      <Secao titulo={`Sua redação${ne ? ` · ${ne} ${ne === 1 ? "erro" : "erros"} de português` : ""}`}>
+        <TextoComErros texto={texto} erros={correcao.erros} />
+        {ne > 0 && (
+          <ul className="mt-4 space-y-2 border-t border-line/40 pt-3">
+            {correcao.erros.map((e, i) => (
+              <li key={i} className="text-sm leading-snug">
+                <span className="text-red line-through decoration-red/70">{e.trecho}</span>
+                <span className="mx-1.5 text-mut">→</span>
+                <span className="font-semibold text-green">{e.correcao}</span>
+                <p className="mt-0.5 text-xs text-mut">{e.explicacao}</p>
+              </li>
+            ))}
+          </ul>
+        )}
       </Secao>
     </div>
   );
