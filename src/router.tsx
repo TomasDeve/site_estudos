@@ -17,6 +17,7 @@ const QuestoesMistasPage = lazy(() => import("@/features/conteudos/QuestoesMista
 const InformacoesPage = lazy(() => import("@/features/informacoes/InformacoesPage").then((m) => ({ default: m.InformacoesPage })));
 const ImpressaoPage = lazy(() => import("@/features/impressao/ImpressaoPage").then((m) => ({ default: m.ImpressaoPage })));
 const BateriasPage = lazy(() => import("@/features/baterias/BateriasPage").then((m) => ({ default: m.BateriasPage })));
+const RevisaoSemanalPage = lazy(() => import("@/features/revisao/RevisaoSemanalPage").then((m) => ({ default: m.RevisaoSemanalPage })));
 const ResumoPage = lazy(() => import("@/features/resumo/ResumoPage").then((m) => ({ default: m.ResumoPage })));
 const ParagrafosPage = lazy(() => import("@/features/paragrafos/ParagrafosPage").then((m) => ({ default: m.ParagrafosPage })));
 
@@ -48,6 +49,10 @@ export const router = createBrowserRouter([
       // baterias: provas separadas para resolver de uma vez e corrigir pelo número (aba própria)
       { path: "baterias", element: pagina(<BateriasPage />) },
       { path: "baterias/:bateriaId", element: pagina(<BateriasPage />) },
+      // revisão ativa da semana: premissas Certo/Errado sobre o que errou ou ficou em dúvida
+      // nos cadernos, por matéria (aba própria)
+      { path: "revisao-semanal", element: pagina(<RevisaoSemanalPage />) },
+      { path: "revisao-semanal/:semana/:materiaId", element: pagina(<RevisaoSemanalPage />) },
       // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki (aba própria)
       { path: "resumo", element: pagina(<ResumoPage />) },
       // treino de redação no padrão Cebraspe: um parágrafo por vez, tema sorteado, correção da IA,

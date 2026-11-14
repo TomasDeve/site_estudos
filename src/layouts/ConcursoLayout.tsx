@@ -12,6 +12,7 @@ import {
   LogOut,
   PenLine,
   Printer,
+  Repeat2,
   Shuffle,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useTopicos } from "@/api/topicos";
 import { useContagemImpressao } from "@/api/topicoQuestoes";
 import { useResumoAnkiFaltam } from "@/api/questoesAnki";
+import { useRevisaoPendentes } from "@/api/revisaoSemanal";
 import { supabase } from "@/lib/supabase";
 import { setConcursoAtual } from "@/lib/currentConcurso";
 import { diasAte, fmtData, fmtMesesSemanasAte } from "@/lib/dates";
@@ -58,6 +60,16 @@ const NAV: {
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
   // provas separadas para resolver de uma vez e corrigir pelo número, em aba própria
   { to: "/baterias", label: "Baterias", icon: ListChecks, end: false, novaAba: true, soComputador: true },
+  // revisão ativa da semana (premissas sobre os erros e dúvidas dos cadernos), em aba própria;
+  // no celular fica como ícone no topo
+  {
+    to: "/revisao-semanal",
+    label: "Revisão semanal",
+    icon: Repeat2,
+    end: false,
+    novaAba: true,
+    soComputador: true,
+  },
   // o "Adicionar ao resumo" em quadradinhos: o que já foi e o que falta ir pro Anki, em aba própria
   { to: "/resumo", label: "Resumo", icon: LayoutGrid, end: false, novaAba: true },
   // treino de redação no padrão Cebraspe, um parágrafo por vez, em aba própria
@@ -81,7 +93,16 @@ export function ConcursoLayout() {
   // os numerozinhos ao lado dos itens.
   const { data: marcadasImpressao } = useContagemImpressao();
   const { data: faltamNoAnki } = useResumoAnkiFaltam();
+  const { data: revisaoPendentes } = useRevisaoPendentes();
   const contagemDaAba: Record<string, { n: number; titulo: string } | undefined> = {
+    "/revisao-semanal": revisaoPendentes
+      ? {
+          n: revisaoPendentes,
+          titulo: `${revisaoPendentes} ${
+            revisaoPendentes === 1 ? "premissa da revisão falta" : "premissas da revisão faltam"
+          } responder`,
+        }
+      : undefined,
     "/impressao": marcadasImpressao
       ? {
           n: marcadasImpressao,
@@ -508,6 +529,22 @@ export function ConcursoLayout() {
           </span>
         </Link>
         <div className="flex shrink-0 items-center gap-1.5">
+          {/* Revisão semanal: não cabe nas abas de baixo, fica aqui como ícone */}
+          <a
+            href="/revisao-semanal"
+            target="_blank"
+            rel="noreferrer"
+            className="relative rounded-lg p-2 text-dim transition-colors hover:text-txt"
+            aria-label="Revisão semanal"
+            title={contagemDaAba["/revisao-semanal"]?.titulo ?? "Revisão semanal"}
+          >
+            <Repeat2 className="size-5" />
+            {revisaoPendentes ? (
+              <span className="absolute -right-0.5 top-0.5 min-w-4 rounded-full bg-gold px-1 text-center text-[9px] font-bold leading-4 tabular-nums text-navy-950">
+                {revisaoPendentes > 99 ? "99+" : revisaoPendentes}
+              </span>
+            ) : null}
+          </a>
           <StreakBadge />
           <button
             onClick={() => supabase.auth.signOut()}

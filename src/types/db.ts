@@ -1002,6 +1002,63 @@ export type Database = {
         }
         Relationships: []
       }
+      revisao_semanal_itens: {
+        Row: {
+          created_at: string
+          complemento: string | null
+          explicacao: string
+          gabarito: boolean
+          id: string
+          imagem_url: string | null
+          materia_id: string
+          motivo: string
+          ordem: number
+          origem: string | null
+          premissa: string
+          respondida_em: string | null
+          resposta: boolean | null
+          semana: string
+          tema: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          complemento?: string | null
+          explicacao: string
+          gabarito: boolean
+          id?: string
+          imagem_url?: string | null
+          materia_id: string
+          motivo?: string
+          ordem?: number
+          origem?: string | null
+          premissa: string
+          respondida_em?: string | null
+          resposta?: boolean | null
+          semana: string
+          tema?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          complemento?: string | null
+          explicacao?: string
+          gabarito?: boolean
+          id?: string
+          imagem_url?: string | null
+          materia_id?: string
+          motivo?: string
+          ordem?: number
+          origem?: string | null
+          premissa?: string
+          respondida_em?: string | null
+          resposta?: boolean | null
+          semana?: string
+          tema?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       redacoes: {
         Row: {
           concurso_id: string
@@ -1652,6 +1709,9 @@ export type RotinaBloco = Tables<"rotina_blocos">
 export type QuestaoAnki = Tables<"questoes_anki">
 export type RedacaoParagrafo = Tables<"redacao_paragrafos">
 export type RedacaoSemana = Tables<"redacao_semanas">
+export type RevisaoSemanalItem = Tables<"revisao_semanal_itens">
+/** Por que a premissa entrou na revisão: errou a questão, ficou em dúvida ou reforço pedido. */
+export type RevisaoMotivo = "erro" | "duvida" | "reforco"
 
 export type TopicoStatus = "nao_estudado" | "estudando" | "revisar" | "concluido"
 export type QuestaoStatus = "ativa" | "arquivada"
