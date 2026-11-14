@@ -9,12 +9,18 @@ import {
   RotateCcw,
   Sparkles,
   Repeat2,
+  Star,
   X,
 } from "lucide-react";
 import { addDays, format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import type { Materia, RevisaoSemanalItem } from "@/types/db";
-import { useItensRevisao, useResponderRevisao, useZerarRevisao } from "@/api/revisaoSemanal";
+import {
+  useItensRevisao,
+  useMarcarCardAnki,
+  useResponderRevisao,
+  useZerarRevisao,
+} from "@/api/revisaoSemanal";
 import { useMaterias } from "@/api/materias";
 import { EmptyState } from "@/components/EmptyState";
 import { FullScreenSpinner } from "@/components/Spinner";
@@ -257,6 +263,7 @@ function ItemMateria({
   const p = placarDe(itens);
   const cor = p.pct !== null ? corDesempenho(p.pct) : null;
   const terminou = p.respondidas === p.total;
+  const paraAnki = itens.filter((i) => i.card_anki).length;
   return (
     <li>
       <Link
@@ -283,6 +290,11 @@ function ItemMateria({
                 {p.acertos} {p.acertos === 1 ? "acerto" : "acertos"} · {p.pct}%
               </span>
             )}
+            {paraAnki > 0 && (
+              <span className="flex items-center gap-1 font-semibold tabular-nums text-gold">
+                <Star className="size-3 fill-gold" /> {paraAnki} para o Anki
+              </span>
+            )}
           </p>
         </div>
         {terminou ? (
@@ -302,6 +314,7 @@ function Sessao({ semana, materiaId }: { semana: string; materiaId: string }) {
   const { data: materias, isLoading: carregandoMaterias } = useMaterias();
   const responder = useResponderRevisao();
   const zerar = useZerarRevisao();
+  const marcarAnki = useMarcarCardAnki();
 
   const itens = useMemo(
     () => (todos ?? []).filter((i) => i.semana === semana && i.materia_id === materiaId),
@@ -329,12 +342,14 @@ function Sessao({ semana, materiaId }: { semana: string; materiaId: string }) {
   const idx = atual ?? 0;
   const item = idx < itens.length ? itens[idx] : null;
 
-  // Teclado no computador: C = Certo, E = Errado, ← → navegam.
+  // Teclado no computador: C = Certo, E = Errado, A = card Anki (depois de responder), ← → navegam.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (item && item.resposta === null && (e.key === "c" || e.key === "C")) responderItem(true);
       else if (item && item.resposta === null && (e.key === "e" || e.key === "E")) responderItem(false);
+      else if (item && item.resposta !== null && (e.key === "a" || e.key === "A")) alternarAnki();
       else if (e.key === "ArrowRight") setAtual((a) => Math.min((a ?? 0) + 1, itens.length));
       else if (e.key === "ArrowLeft") setAtual((a) => Math.max((a ?? 0) - 1, 0));
     }
@@ -377,6 +392,11 @@ function Sessao({ semana, materiaId }: { semana: string; materiaId: string }) {
     responder.mutate({ id: item.id, resposta: valor }, { onError: erro });
   }
 
+  function alternarAnki() {
+    if (!item) return;
+    marcarAnki.mutate({ id: item.id, card_anki: !item.card_anki }, { onError: erro });
+  }
+
   function refazer(ids: string[], msg: string) {
     zerar.mutate(ids, {
       onSuccess: () => toast.success(msg),
@@ -388,6 +408,7 @@ function Sessao({ semana, materiaId }: { semana: string; materiaId: string }) {
 
   const placar = placarDe(itens);
   const erradas = itens.filter((i) => i.resposta !== null && i.resposta !== i.gabarito);
+  const paraAnki = itens.filter((i) => i.card_anki);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -426,7 +447,7 @@ function Sessao({ semana, materiaId }: { semana: string; materiaId: string }) {
       </Cabecalho>
 
       <main className="mx-auto w-full max-w-2xl flex-1 space-y-4 px-3 pb-24 pt-4 sm:px-6 sm:py-6">
-        {/* Uma bolinha por premissa: verde acertou, vermelha errou, cinza falta */}
+        {/* Uma bolinha por premissa: verde acertou, vermelha errou, cinza falta; estrela = card Anki */}
         <div className="flex flex-wrap gap-1.5">
           {itens.map((i, n) => {
             const feita = i.resposta !== null;
@@ -435,8 +456,10 @@ function Sessao({ semana, materiaId }: { semana: string; materiaId: string }) {
               <button
                 key={i.id}
                 onClick={() => setAtual(n)}
-                title={`Premissa ${n + 1}${feita ? (certo ? " · acertou" : " · errou") : ""}`}
-                className={`flex size-7 cursor-pointer items-center justify-center rounded-full border text-[11px] font-bold tabular-nums transition-all ${
+                title={`Premissa ${n + 1}${feita ? (certo ? " · acertou" : " · errou") : ""}${
+                  i.card_anki ? " · card Anki" : ""
+                }`}
+                className={`relative flex size-7 cursor-pointer items-center justify-center rounded-full border text-[11px] font-bold tabular-nums transition-all ${
                   n === idx ? "ring-2 ring-gold/70 ring-offset-1 ring-offset-navy-950" : ""
                 } ${
                   !feita
@@ -447,6 +470,12 @@ function Sessao({ semana, materiaId }: { semana: string; materiaId: string }) {
                 }`}
               >
                 {n + 1}
+                {i.card_anki && (
+                  <Star
+                    className="absolute -right-1 -top-1 size-3 fill-gold text-gold drop-shadow-[0_0_2px_rgba(0,0,0,0.9)]"
+                    aria-label="card Anki"
+                  />
+                )}
               </button>
             );
           })}
@@ -469,11 +498,13 @@ function Sessao({ semana, materiaId }: { semana: string; materiaId: string }) {
             total={itens.length}
             onResponder={responderItem}
             onRefazer={() => responder.mutate({ id: item.id, resposta: null }, { onError: erro })}
+            onCardAnki={alternarAnki}
           />
         ) : (
           <Placar
             placar={placar}
             erradas={erradas}
+            paraAnki={paraAnki}
             indice={(id) => itens.findIndex((i) => i.id === id)}
             onIr={setAtual}
             onRefazerErradas={() =>
@@ -518,12 +549,14 @@ function CartaoPremissa({
   total,
   onResponder,
   onRefazer,
+  onCardAnki,
 }: {
   item: RevisaoSemanalItem;
   numero: number;
   total: number;
   onResponder: (valor: boolean) => void;
   onRefazer: () => void;
+  onCardAnki: () => void;
 }) {
   const respondida = item.resposta !== null;
   const acertou = respondida && item.resposta === item.gabarito;
@@ -625,6 +658,20 @@ function CartaoPremissa({
               )}
             </>
           )}
+
+          <button
+            onClick={onCardAnki}
+            aria-pressed={item.card_anki}
+            title="Marcar para criar card no Anki (tecla A)"
+            className={`flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-colors active:scale-[0.98] ${
+              item.card_anki
+                ? "border-gold/50 bg-gold/15 text-gold hover:bg-gold/20"
+                : "border-line/60 text-dim hover:border-gold/40 hover:text-gold"
+            }`}
+          >
+            <Star className={`size-4 ${item.card_anki ? "fill-gold" : ""}`} />
+            {item.card_anki ? "Marcada para card Anki" : "Criar card Anki"}
+          </button>
         </div>
       )}
     </article>
@@ -634,6 +681,7 @@ function CartaoPremissa({
 function Placar({
   placar,
   erradas,
+  paraAnki,
   indice,
   onIr,
   onRefazerErradas,
@@ -641,6 +689,7 @@ function Placar({
 }: {
   placar: ReturnType<typeof placarDe>;
   erradas: RevisaoSemanalItem[];
+  paraAnki: RevisaoSemanalItem[];
   indice: (id: string) => number;
   onIr: (n: number) => void;
   onRefazerErradas: () => void;
@@ -671,6 +720,30 @@ function Placar({
                 >
                   <span className="line-clamp-2">
                     <span className="mr-1.5 font-bold tabular-nums text-red">{indice(i.id) + 1}.</span>
+                    {i.tema ? <strong className="text-txt">{i.tema}: </strong> : null}
+                    {i.premissa}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {paraAnki.length > 0 && (
+        <div className="space-y-1.5 text-left">
+          <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-gold">
+            <Star className="size-3 fill-gold" /> Para criar card Anki
+          </p>
+          <ul className="space-y-1.5">
+            {paraAnki.map((i) => (
+              <li key={i.id}>
+                <button
+                  onClick={() => onIr(indice(i.id))}
+                  className="w-full cursor-pointer rounded-lg border border-gold/25 bg-gold/5 px-3 py-2 text-left text-xs leading-snug text-dim transition-colors hover:bg-gold/10 hover:text-txt"
+                >
+                  <span className="line-clamp-2">
+                    <span className="mr-1.5 font-bold tabular-nums text-gold">{indice(i.id) + 1}.</span>
                     {i.tema ? <strong className="text-txt">{i.tema}: </strong> : null}
                     {i.premissa}
                   </span>

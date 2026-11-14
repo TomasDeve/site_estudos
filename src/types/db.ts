@@ -1004,6 +1004,7 @@ export type Database = {
       }
       revisao_semanal_itens: {
         Row: {
+          card_anki: boolean
           created_at: string
           complemento: string | null
           explicacao: string
@@ -1022,6 +1023,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          card_anki?: boolean
           created_at?: string
           complemento?: string | null
           explicacao: string
@@ -1040,6 +1042,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          card_anki?: boolean
           created_at?: string
           complemento?: string | null
           explicacao?: string

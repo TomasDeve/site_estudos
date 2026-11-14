@@ -79,6 +79,26 @@ export function useResponderRevisao() {
   });
 }
 
+/** Marca/desmarca a premissa para virar card no Anki (a estrela ao lado do número). */
+export function useMarcarCardAnki() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, card_anki }: { id: string; card_anki: boolean }) => {
+      const { error } = await supabase.from("revisao_semanal_itens").update({ card_anki }).eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, card_anki }) => {
+      await qc.cancelQueries({ queryKey: KEY, exact: true });
+      const antes = qc.getQueryData<RevisaoSemanalItem[]>(KEY);
+      qc.setQueryData<RevisaoSemanalItem[]>(KEY, (l) => patchLista(l, (i) => i.id === id, { card_anki }));
+      return { antes };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.antes) qc.setQueryData(KEY, ctx.antes);
+    },
+  });
+}
+
 /** Apaga as respostas das premissas indicadas, para refazer. */
 export function useZerarRevisao() {
   const qc = useQueryClient();
