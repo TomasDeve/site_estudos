@@ -256,8 +256,6 @@ function ItemMateria({
 }) {
   const p = placarDe(itens);
   const cor = p.pct !== null ? corDesempenho(p.pct) : null;
-  const erros = itens.filter((i) => i.motivo === "erro").length;
-  const duvidas = itens.filter((i) => i.motivo === "duvida").length;
   const terminou = p.respondidas === p.total;
   return (
     <li>
@@ -286,16 +284,6 @@ function ItemMateria({
               </span>
             )}
           </p>
-          {(erros > 0 || duvidas > 0) && (
-            <p className="mt-1 text-[11px] text-mut">
-              {[
-                erros && `${erros} do que você errou`,
-                duvidas && `${duvidas} do que ficou em dúvida`,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          )}
         </div>
         {terminou ? (
           <Check className="size-4 shrink-0 text-green" />
@@ -553,9 +541,12 @@ function CartaoPremissa({
             {item.tema}
           </span>
         )}
-        <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${motivo.classe}`}>
-          {motivo.rotulo}
-        </span>
+        {/* Se errou ou ficou em dúvida no caderno só aparece depois de responder, para não influenciar */}
+        {respondida && (
+          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${motivo.classe}`}>
+            {motivo.rotulo}
+          </span>
+        )}
       </div>
 
       <p className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed text-txt">{item.premissa}</p>
