@@ -315,6 +315,31 @@ export function useMarcarRefazer() {
 }
 
 /**
+ * Estrela "criar card Anki" da questão (a grade da bateria mostra a estrela no
+ * número). Patch otimista em todo cache de topico_questoes, como a resposta.
+ */
+export function useMarcarCardAnkiQuestao() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, card_anki }: { id: string; card_anki: boolean }) => {
+      const { error } = await supabase.from("topico_questoes").update({ card_anki }).eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, card_anki }) => {
+      await qc.cancelQueries({ queryKey: ["topico_questoes"] });
+      const anteriores = qc.getQueriesData({ queryKey: ["topico_questoes"] });
+      qc.setQueriesData<{ id: string }[]>({ queryKey: ["topico_questoes"] }, (lista) =>
+        Array.isArray(lista) ? lista.map((row) => (row?.id === id ? { ...row, card_anki } : row)) : lista
+      );
+      return { anteriores };
+    },
+    onError: (_err, _vars, ctx) => {
+      ctx?.anteriores?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+  });
+}
+
+/**
  * As questões marcadas para impressão (a caixinha 🖨 do card) — a seção "Impressão"
  * busca só elas, uma lista pequena. `staleTime: 0` porque a marcação costuma
  * acontecer em OUTRA aba (caderno/misturado): ao voltar o foco pra cá, as novas já vêm.

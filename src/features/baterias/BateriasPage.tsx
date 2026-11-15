@@ -11,6 +11,7 @@ import {
   useZerarBateria,
 } from "@/api/baterias";
 import {
+  useMarcarCardAnkiQuestao,
   useMarcarRefazer,
   useQuestoesPorIds,
   useResponderQuestao,
@@ -46,6 +47,7 @@ import {
   valorAcerta,
 } from "@/features/conteudos/questaoModelo";
 import { QuestaoImpressaoCard } from "@/features/impressao/ImpressaoPage";
+import { GradeBateria, ancoraQuestao } from "./GradeBateria";
 import { FolhaImpressao } from "@/features/impressao/FolhaImpressao";
 import { useOpcoesFolha } from "@/features/impressao/opcoes";
 import type { MateriaImpressao } from "@/features/impressao/organizar";
@@ -213,6 +215,7 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
 
   const responder = useResponderQuestao();
   const marcarRefazer = useMarcarRefazer();
+  const marcarAnki = useMarcarCardAnkiQuestao();
   const clique = useRegistrarClique();
   const salvarGrifos = useSalvarGrifos();
   const zerar = useZerarBateria();
@@ -448,6 +451,8 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
 
       <div className="flex-1">
         <main className="mx-auto w-full max-w-3xl space-y-4 px-3 pb-24 pt-4 sm:px-6 sm:py-6 print:hidden">
+          {lista.length > 0 && <GradeBateria lista={lista} numeroDe={numeroDe} />}
+
           {bateria.origem && <p className="text-xs text-mut">{bateria.origem}</p>}
 
           {/* Placar da correção */}
@@ -540,6 +545,8 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
                   resumindo={resumindoId === q.id}
                   naResumo={idsNoBanco.has(q.id) || adicionadas.has(q.id)}
                   onVerResumo={() => setVerResumoDe(q)}
+                  onCardAnki={(marcar) => marcarAnki.mutate({ id: q.id, card_anki: marcar }, { onError: erro })}
+                  ancora={ancoraQuestao(q.id)}
                 />
               ))}
             </ul>

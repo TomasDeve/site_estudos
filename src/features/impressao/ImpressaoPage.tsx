@@ -11,6 +11,7 @@ import {
   NotebookPen,
   Printer,
   RotateCcw,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { TopicoQuestao } from "@/types/db";
@@ -857,6 +858,10 @@ interface CardProps {
   /** A questão já tem um trecho no resumo — o botão vira "No resumo". */
   naResumo: boolean;
   onVerResumo: () => void;
+  /** Estrela "criar card Anki" (Baterias). Sem ele, o botão não aparece. */
+  onCardAnki?: (marcar: boolean) => void;
+  /** `id` do card, para a grade de números da bateria rolar até ele. */
+  ancora?: string;
 }
 
 /**
@@ -878,11 +883,13 @@ export function QuestaoImpressaoCard({
   resumindo,
   naResumo,
   onVerResumo,
+  onCardAnki,
+  ancora,
 }: CardProps) {
   const resolvida = estaResolvida(q);
 
   return (
-    <li className="rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
+    <li id={ancora} className="scroll-mt-20 rounded-xl border border-line/50 bg-navy-900/40 p-3.5">
       <div className="mb-2">
         <div className="flex items-center gap-2">
           <span className="shrink-0 whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-mut">
@@ -943,8 +950,23 @@ export function QuestaoImpressaoCard({
 
           {origem && <OrigemReformulada original={origem} />}
 
-          <div className="border-t border-line/30 pt-2.5">
+          <div className="space-y-2 border-t border-line/30 pt-2.5">
             <BotaoRefazer marcada={q.refazer} onToggle={(marcar) => onRefazer(q, marcar)} />
+            {onCardAnki && (
+              <button
+                onClick={() => onCardAnki(!q.card_anki)}
+                aria-pressed={q.card_anki}
+                title="Marcar para criar card no Anki (a estrela aparece no número, no topo)"
+                className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                  q.card_anki
+                    ? "border-gold/50 bg-gold/15 text-gold"
+                    : "border-line/60 text-dim hover:border-gold/40 hover:bg-gold/5 hover:text-gold"
+                }`}
+              >
+                <Star className={`size-3.5 ${q.card_anki ? "fill-gold" : ""}`} />
+                {q.card_anki ? "Marcada para card Anki ✓" : "Criar card Anki"}
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-1.5">

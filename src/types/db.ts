@@ -1309,6 +1309,7 @@ export type Database = {
           anotacao_imagem: string | null
           bateria_id: string | null
           bateria_numero: number | null
+          card_anki: boolean
           categoria: string
           comentario: string
           contexto: string | null
@@ -1321,6 +1322,7 @@ export type Database = {
           grifos: Json | null
           id: string
           imprimir_em: string | null
+          marca_prova: string | null
           impressao_numero: number | null
           ordem: number
           questao_base: string | null
@@ -1342,6 +1344,7 @@ export type Database = {
           anotacao_imagem?: string | null
           bateria_id?: string | null
           bateria_numero?: number | null
+          card_anki?: boolean
           categoria?: string
           comentario?: string
           contexto?: string | null
@@ -1354,6 +1357,7 @@ export type Database = {
           grifos?: Json | null
           id?: string
           imprimir_em?: string | null
+          marca_prova?: string | null
           impressao_numero?: number | null
           ordem?: number
           questao_base?: string | null
@@ -1375,6 +1379,7 @@ export type Database = {
           anotacao_imagem?: string | null
           bateria_id?: string | null
           bateria_numero?: number | null
+          card_anki?: boolean
           categoria?: string
           comentario?: string
           contexto?: string | null
@@ -1387,6 +1392,7 @@ export type Database = {
           grifos?: Json | null
           id?: string
           imprimir_em?: string | null
+          marca_prova?: string | null
           impressao_numero?: number | null
           ordem?: number
           questao_base?: string | null
