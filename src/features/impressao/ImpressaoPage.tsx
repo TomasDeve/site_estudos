@@ -51,6 +51,7 @@ import { ConferirNaLeiModal } from "@/features/conteudos/ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "@/features/conteudos/EditarTrechoResumoModal";
 import { idsNoResumo } from "@/features/conteudos/resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "@/features/conteudos/refazer";
+import { AnotacaoProva } from "@/features/conteudos/AnotacaoProva";
 import { AcaoQuestao, FonteQuestao, PillCategoria } from "@/features/conteudos/QuestoesPage";
 import {
   acertou as questaoAcertou,
@@ -937,6 +938,8 @@ export function QuestaoImpressaoCard({
               <ComentarioTexto texto={q.comentario} />
             </div>
           )}
+
+          <AnotacaoProva questao={q} />
 
           {origem && <OrigemReformulada original={origem} />}
 

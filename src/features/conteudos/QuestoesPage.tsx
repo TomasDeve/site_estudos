@@ -66,6 +66,7 @@ import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
+import { AnotacaoProva } from "./AnotacaoProva";
 import { agruparPorChave, embaralharPorAno, gerarSemente, ordenarPorAno } from "./embaralhar";
 import { acertou as questaoAcertou, ehMultipla, estaResolvida, valorAcerta } from "./questaoModelo";
 import { BotoesResposta, ResultadoResposta } from "./RespostaQuestao";
@@ -908,6 +909,8 @@ function QuestaoCard({
               <ComentarioTexto texto={q.comentario} />
             </div>
           )}
+
+          <AnotacaoProva questao={q} />
 
           {origem && <OrigemReformulada original={origem} />}
 

@@ -1305,6 +1305,8 @@ export type Database = {
       topico_questoes: {
         Row: {
           alternativas: Json
+          anotacao: string | null
+          anotacao_imagem: string | null
           bateria_id: string | null
           bateria_numero: number | null
           categoria: string
@@ -1321,6 +1323,7 @@ export type Database = {
           imprimir_em: string | null
           impressao_numero: number | null
           ordem: number
+          questao_base: string | null
           refazer: boolean
           reformulada_de: string | null
           respondida_em: string | null
@@ -1335,6 +1338,8 @@ export type Database = {
         }
         Insert: {
           alternativas?: Json
+          anotacao?: string | null
+          anotacao_imagem?: string | null
           bateria_id?: string | null
           bateria_numero?: number | null
           categoria?: string
@@ -1351,6 +1356,7 @@ export type Database = {
           imprimir_em?: string | null
           impressao_numero?: number | null
           ordem?: number
+          questao_base?: string | null
           refazer?: boolean
           reformulada_de?: string | null
           respondida_em?: string | null
@@ -1365,6 +1371,8 @@ export type Database = {
         }
         Update: {
           alternativas?: Json
+          anotacao?: string | null
+          anotacao_imagem?: string | null
           bateria_id?: string | null
           bateria_numero?: number | null
           categoria?: string
@@ -1381,6 +1389,7 @@ export type Database = {
           imprimir_em?: string | null
           impressao_numero?: number | null
           ordem?: number
+          questao_base?: string | null
           refazer?: boolean
           reformulada_de?: string | null
           respondida_em?: string | null

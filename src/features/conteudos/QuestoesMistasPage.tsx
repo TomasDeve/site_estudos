@@ -67,6 +67,7 @@ import { ConferirNaLeiModal } from "./ConferirNaLeiModal";
 import { EditarTrechoResumoModal } from "./EditarTrechoResumoModal";
 import { idsNoResumo } from "./resumoBlocos";
 import { BotaoRefazer, OrigemReformulada } from "./refazer";
+import { AnotacaoProva } from "./AnotacaoProva";
 import { CATEGORIAS_FILTRO } from "./categorias";
 import { FiltroMateriaAssunto, type GrupoFiltro } from "./FiltroMateriaAssunto";
 import { chaveFiltro, compilarFiltro, FILTRO_VAZIO, type FiltroQuestoes } from "./filtroQuestoes";
@@ -1066,6 +1067,8 @@ function QuestaoMistaCard({
               <ComentarioTexto texto={q.comentario} />
             </div>
           )}
+
+          <AnotacaoProva questao={q} />
 
           {origem && <OrigemReformulada original={origem} />}
 
