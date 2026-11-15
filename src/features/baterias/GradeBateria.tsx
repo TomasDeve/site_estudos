@@ -9,22 +9,23 @@ export const ancoraQuestao = (id: string) => `q-${id}`;
  * Grade de números no topo da bateria (igual à da revisão semanal): verde acertou,
  * vermelho errou, cinza falta. Como na folha da prova, o número CIRCULADO é dúvida
  * e o número no QUADRADO é chute (`marca_prova`); a estrela é "criar card Anki".
- * Tocar no número rola até a questão.
+ * Tocar no número abre só aquela questão; "Placar" volta para o placar e todas.
  */
 export function GradeBateria({
   lista,
   numeroDe,
+  atual,
+  onSelecionar,
 }: {
   lista: TopicoQuestao[];
   numeroDe: Map<string, number>;
+  /** Questão aberta (anel dourado); null = placar com todas. */
+  atual: string | null;
+  onSelecionar: (id: string | null) => void;
 }) {
   const temDuvida = lista.some((q) => q.marca_prova === "duvida");
   const temChute = lista.some((q) => q.marca_prova === "chute");
   const comEstrela = lista.filter((q) => q.card_anki).length;
-
-  function ir(id: string) {
-    document.getElementById(ancoraQuestao(id))?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
 
   return (
     <div>
@@ -37,7 +38,8 @@ export function GradeBateria({
           return (
             <button
               key={q.id}
-              onClick={() => ir(q.id)}
+              onClick={() => onSelecionar(q.id)}
+              aria-current={q.id === atual}
               title={`Questão ${n}${feita ? (certo ? " · acertou" : " · errou") : ""}${marca ? ` · ${marca}` : ""}${
                 q.card_anki ? " · card Anki" : ""
               }`}
@@ -53,6 +55,8 @@ export function GradeBateria({
               )}
               <span
                 className={`flex size-[30px] items-center justify-center rounded-full border text-[11px] font-bold tabular-nums transition-colors ${
+                  q.id === atual ? "ring-2 ring-gold/80 ring-offset-1 ring-offset-navy-950" : ""
+                } ${
                   !feita
                     ? "border-line/60 bg-navy-800 text-dim hover:text-txt"
                     : certo
@@ -71,6 +75,15 @@ export function GradeBateria({
             </button>
           );
         })}
+        <button
+          onClick={() => onSelecionar(null)}
+          title="Placar e todas as questões"
+          className={`my-[5px] ml-1 flex h-[30px] cursor-pointer items-center rounded-full border border-line/60 px-3 text-[11px] font-semibold text-dim transition-colors hover:text-txt ${
+            atual === null ? "ring-2 ring-gold/80 ring-offset-1 ring-offset-navy-950" : ""
+          }`}
+        >
+          Placar
+        </button>
       </div>
 
       {(temDuvida || temChute || comEstrela > 0) && (

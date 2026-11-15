@@ -225,6 +225,8 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
   const [duvida, setDuvida] = useState<TopicoQuestao | null>(null);
   const [naLei, setNaLei] = useState<TopicoQuestao | null>(null);
   const [verResumoDe, setVerResumoDe] = useState<TopicoQuestao | null>(null);
+  // Questão aberta pela grade de números: mostra só ela (null = placar + todas).
+  const [foco, setFoco] = useState<string | null>(null);
 
   const { data: comLei } = useTopicosComLei();
   const {
@@ -428,6 +430,7 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
   }
 
   const placar = placarDe(lista);
+  const questaoFoco = foco ? lista.find((q) => q.id === foco) : undefined;
   const cor = placar.pct !== null ? corDesempenho(placar.pct) : null;
 
   return (
@@ -451,8 +454,20 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
 
       <div className="flex-1">
         <main className="mx-auto w-full max-w-3xl space-y-4 px-3 pb-24 pt-4 sm:px-6 sm:py-6 print:hidden">
-          {lista.length > 0 && <GradeBateria lista={lista} numeroDe={numeroDe} />}
+          {lista.length > 0 && (
+            <GradeBateria
+              lista={lista}
+              numeroDe={numeroDe}
+              atual={questaoFoco?.id ?? null}
+              onSelecionar={(id) => {
+                setFoco(id);
+                window.scrollTo({ top: 0 });
+              }}
+            />
+          )}
 
+          {!questaoFoco && (
+            <>
           {bateria.origem && <p className="text-xs text-mut">{bateria.origem}</p>}
 
           {/* Placar da correção */}
@@ -515,11 +530,14 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
             </div>
           )}
 
+            </>
+          )}
+
           {lista.length === 0 ? (
             <p className="py-8 text-center text-sm text-mut">Esta bateria está vazia.</p>
           ) : (
             <ul className="space-y-3">
-              {lista.map((q) => (
+              {(questaoFoco ? [questaoFoco] : lista).map((q) => (
                 <QuestaoImpressaoCard
                   key={q.id}
                   questao={q}
