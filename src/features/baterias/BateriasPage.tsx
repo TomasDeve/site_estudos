@@ -305,6 +305,26 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
     return out;
   }, [lista, topicoPorId, materiaPorId, bateria, bateriaId]);
 
+  // Placar por matéria, na ordem da prova (num simulado, mostra onde se perdeu ponto).
+  const porMateria = useMemo(() => {
+    const out: { id: string; nome: string; icone: string; total: number; respondidas: number; acertos: number }[] = [];
+    for (const q of lista) {
+      const mId = topicoPorId.get(q.topico_id)?.materia_id ?? "";
+      let g = out.find((x) => x.id === mId);
+      if (!g) {
+        const m = materiaPorId.get(mId);
+        g = { id: mId, nome: m?.nome ?? "Questões", icone: m?.icone ?? "📋", total: 0, respondidas: 0, acertos: 0 };
+        out.push(g);
+      }
+      g.total++;
+      if (estaResolvida(q)) {
+        g.respondidas++;
+        if (questaoAcertou(q)) g.acertos++;
+      }
+    }
+    return out;
+  }, [lista, topicoPorId, materiaPorId]);
+
   if (carregandoBaterias || carregandoQuestoes || carregandoTopicos || carregandoMaterias) {
     return <FullScreenSpinner />;
   }
@@ -461,6 +481,34 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
               />
             </div>
           </div>
+
+          {porMateria.length > 1 && placar.respondidas > 0 && (
+            <div className="rounded-xl border border-line/50 bg-navy-900/60 px-3 py-2.5">
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-mut">Por matéria</p>
+              <ul className="grid gap-x-5 gap-y-1 sm:grid-cols-2">
+                {porMateria.map((g) => {
+                  const pct = g.respondidas ? Math.round((g.acertos / g.respondidas) * 100) : null;
+                  const c = pct !== null ? corDesempenho(pct) : null;
+                  return (
+                    <li key={g.id} className="flex items-center gap-2 text-xs">
+                      <span className="shrink-0">{g.icone}</span>
+                      <span className="min-w-0 flex-1 truncate text-dim" title={g.nome}>
+                        {g.nome}
+                      </span>
+                      <span className={`shrink-0 font-semibold tabular-nums ${c ? c.texto : "text-mut"}`}>
+                        {g.acertos}/{g.total}
+                      </span>
+                      {g.respondidas < g.total && (
+                        <span className="shrink-0 text-[10px] tabular-nums text-mut">
+                          ({g.respondidas} corr.)
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
           {lista.length === 0 ? (
             <p className="py-8 text-center text-sm text-mut">Esta bateria está vazia.</p>
