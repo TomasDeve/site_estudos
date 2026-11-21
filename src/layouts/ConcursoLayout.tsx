@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   ListChecks,
   LogOut,
+  MonitorPlay,
   PenLine,
   Printer,
   Repeat2,
@@ -74,6 +75,8 @@ const NAV: {
   { to: "/resumo", label: "Resumo", icon: LayoutGrid, end: false, novaAba: true },
   // treino de redação no padrão Cebraspe, um parágrafo por vez, em aba própria
   { to: "/redacao", label: "Redação", icon: PenLine, end: false, novaAba: true },
+  // aulas para assistir no tempo livre, em aba própria; no celular fica como ícone no topo
+  { to: "/aulas", label: "Aulas", icon: MonitorPlay, end: false, novaAba: true, soComputador: true },
   { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
 ];
 
@@ -544,6 +547,17 @@ export function ConcursoLayout() {
                 {revisaoPendentes > 99 ? "99+" : revisaoPendentes}
               </span>
             ) : null}
+          </a>
+          {/* Aulas: também não cabe nas abas de baixo */}
+          <a
+            href="/aulas"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg p-2 text-dim transition-colors hover:text-txt"
+            aria-label="Aulas"
+            title="Aulas"
+          >
+            <MonitorPlay className="size-5" />
           </a>
           <StreakBadge />
           <button

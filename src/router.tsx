@@ -20,6 +20,7 @@ const BateriasPage = lazy(() => import("@/features/baterias/BateriasPage").then(
 const RevisaoSemanalPage = lazy(() => import("@/features/revisao/RevisaoSemanalPage").then((m) => ({ default: m.RevisaoSemanalPage })));
 const ResumoPage = lazy(() => import("@/features/resumo/ResumoPage").then((m) => ({ default: m.ResumoPage })));
 const ParagrafosPage = lazy(() => import("@/features/paragrafos/ParagrafosPage").then((m) => ({ default: m.ParagrafosPage })));
+const AulasPage = lazy(() => import("@/features/aulas/AulasPage").then((m) => ({ default: m.AulasPage })));
 
 function pagina(node: ReactNode) {
   return <Suspense fallback={<FullScreenSpinner />}>{node}</Suspense>;
@@ -59,6 +60,8 @@ export const router = createBrowserRouter([
       // parágrafo modelo e repertório (aba própria). O link antigo /paragrafos cai aqui.
       { path: "redacao", element: pagina(<ParagrafosPage />) },
       { path: "paragrafos", element: <Navigate to="/redacao" replace /> },
+      // aulas para assistir no tempo livre: links por matéria, onde parou e concluída (aba própria)
+      { path: "aulas", element: pagina(<AulasPage />) },
       // tudo abaixo vive dentro do concurso ativo
       {
         path: "concurso/:concursoId",

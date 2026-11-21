@@ -104,6 +104,53 @@ export type Database = {
           },
         ]
       }
+      aulas: {
+        Row: {
+          concluida: boolean
+          concluida_em: string | null
+          created_at: string
+          id: string
+          materia_id: string | null
+          ordem: number
+          parei_seg: number
+          titulo: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          concluida?: boolean
+          concluida_em?: string | null
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          ordem?: number
+          parei_seg?: number
+          titulo?: string
+          url: string
+          user_id?: string
+        }
+        Update: {
+          concluida?: boolean
+          concluida_em?: string | null
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          ordem?: number
+          parei_seg?: number
+          titulo?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aulas_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       baterias: {
         Row: {
           created_at: string
@@ -1719,6 +1766,7 @@ export type Nota = Tables<"notas">
 export type Ferramenta = Tables<"ferramentas">
 export type Audio = Tables<"audios">
 export type AudioGrupo = Tables<"audio_grupos">
+export type Aula = Tables<"aulas">
 export type Bateria = Tables<"baterias">
 export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
