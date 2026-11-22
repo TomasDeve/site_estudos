@@ -46,7 +46,13 @@ function lerAlternativas(valor: unknown): AlternativaQC[] {
     if (!x || typeof x !== "object") continue;
     const letra = lerTexto((x as Record<string, unknown>).letra);
     const texto = lerTexto((x as Record<string, unknown>).texto);
-    if (letra && texto) out.push({ letra: letra.toUpperCase(), texto });
+    const explicacao = lerTexto((x as Record<string, unknown>).explicacao);
+    if (letra && texto)
+      out.push(
+        explicacao
+          ? { letra: letra.toUpperCase(), texto, explicacao }
+          : { letra: letra.toUpperCase(), texto }
+      );
   }
   return out;
 }

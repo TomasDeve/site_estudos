@@ -21,7 +21,13 @@ export function alternativasDe(q: Pick<TopicoQuestao, "alternativas">): Alternat
     if (!x || typeof x !== "object" || Array.isArray(x)) continue;
     const letra = (x as Record<string, unknown>).letra;
     const texto = (x as Record<string, unknown>).texto;
-    if (typeof letra === "string" && typeof texto === "string") out.push({ letra, texto });
+    const explicacao = (x as Record<string, unknown>).explicacao;
+    if (typeof letra !== "string" || typeof texto !== "string") continue;
+    out.push(
+      typeof explicacao === "string" && explicacao.trim()
+        ? { letra, texto, explicacao: explicacao.trim() }
+        : { letra, texto }
+    );
   }
   return out;
 }

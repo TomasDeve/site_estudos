@@ -1798,4 +1798,6 @@ export type NivelEscolaridade = "fundamental" | "medio" | "superior"
 export interface AlternativaQC {
   letra: string
   texto: string
+  /** Por que esta alternativa está certa ou errada (aparece depois de responder). */
+  explicacao?: string
 }

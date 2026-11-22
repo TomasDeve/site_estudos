@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Scissors, X } from "lucide-react";
+import { Check, Info, Scissors, X } from "lucide-react";
 import type { TopicoQuestao } from "@/types/db";
 import { alternativasRiscadas } from "./grifos";
 import { acertou, alternativasDe, ehMultipla } from "./questaoModelo";
@@ -196,6 +196,15 @@ export function ResultadoResposta({ questao: q }: { questao: TopicoQuestao }) {
   // As alternativas que o aluno riscou ficam à mostra (line-through) mesmo depois
   // de responder — assim ele vê o que eliminou (as demais ficaram "em dúvida").
   const riscadas = ehMultipla(q) ? new Set(alternativasRiscadas(q.grifos)) : null;
+  // Alternativas com a explicação aberta (o ícone ⓘ à direita abre e fecha).
+  const [abertas, setAbertas] = useState<Set<string>>(() => new Set());
+  const alternarExplicacao = (letra: string) =>
+    setAbertas((prev) => {
+      const nova = new Set(prev);
+      if (nova.has(letra)) nova.delete(letra);
+      else nova.add(letra);
+      return nova;
+    });
   return (
     <>
       <div
@@ -219,6 +228,7 @@ export function ResultadoResposta({ questao: q }: { questao: TopicoQuestao }) {
             const correta = a.letra === q.gabarito_letra;
             const marcadaErrada = a.letra === q.resposta_letra && !correta;
             const riscada = riscadas?.has(a.letra) ?? false;
+            const aberta = abertas.has(a.letra);
             return (
               <li
                 key={a.letra}
@@ -237,20 +247,66 @@ export function ResultadoResposta({ questao: q }: { questao: TopicoQuestao }) {
                 >
                   {a.letra}
                 </span>
-                <span
-                  className={`leading-relaxed ${
-                    riscada ? "line-through decoration-red/60 decoration-2 opacity-60" : ""
-                  }`}
-                >
-                  {a.texto}
-                </span>
-                {correta && <Check className="ml-auto size-4 shrink-0" />}
-                {marcadaErrada && <X className="ml-auto size-4 shrink-0" />}
+                <div className="min-w-0 flex-1">
+                  <span
+                    className={`leading-relaxed ${
+                      riscada ? "line-through decoration-red/60 decoration-2 opacity-60" : ""
+                    }`}
+                  >
+                    {a.texto}
+                  </span>
+                  {aberta && a.explicacao && (
+                    <ExplicacaoAlternativa correta={correta} texto={a.explicacao} />
+                  )}
+                </div>
+                {(correta || marcadaErrada || a.explicacao) && (
+                  <span className="flex shrink-0 items-center gap-1">
+                    {correta && <Check className="size-4" />}
+                    {marcadaErrada && <X className="size-4" />}
+                    {a.explicacao && (
+                      <button
+                        type="button"
+                        onClick={() => alternarExplicacao(a.letra)}
+                        aria-expanded={aberta}
+                        aria-label={`${aberta ? "Esconder" : "Ver"} por que a ${a.letra} está ${correta ? "certa" : "errada"}`}
+                        title={correta ? "Por que está certa" : "Por que está errada"}
+                        className={`-my-1 -mr-1.5 flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors ${
+                          aberta
+                            ? "bg-navy-700/80 text-gold"
+                            : "text-current opacity-70 hover:bg-navy-700/60 hover:opacity-100"
+                        }`}
+                      >
+                        <Info className="size-4" />
+                      </button>
+                    )}
+                  </span>
+                )}
               </li>
             );
           })}
         </ul>
       )}
     </>
+  );
+}
+
+/** Caixinha com o motivo de a alternativa estar certa ou errada, logo abaixo do texto dela. */
+function ExplicacaoAlternativa({ correta, texto }: { correta: boolean; texto: string }) {
+  return (
+    <div
+      className={`mt-2 rounded-md border-l-2 bg-navy-950/60 px-2.5 py-1.5 ${
+        correta ? "border-green/70" : "border-red/60"
+      }`}
+    >
+      <span
+        className={`mb-0.5 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${
+          correta ? "text-green" : "text-red"
+        }`}
+      >
+        {correta ? <Check className="size-3" /> : <X className="size-3" />}
+        {correta ? "Por que está certa" : "Por que está errada"}
+      </span>
+      <p className="text-[13px] leading-relaxed text-txt">{texto}</p>
+    </div>
   );
 }
