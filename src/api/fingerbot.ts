@@ -113,8 +113,9 @@ export interface FingerbotCelular {
   bateria: number | null;
 }
 
-/** Quando o app do celular baixou os horários pela última vez e a bateria do cubo. */
-export function useFingerbotCelular() {
+/** Quando o app do celular baixou os horários pela última vez e a bateria do cubo.
+ *  `rapido`: confere a cada 3 s (logo depois de agendar um avulso, para o "✓ no celular" aparecer na hora). */
+export function useFingerbotCelular(rapido = false) {
   return useQuery({
     queryKey: [...CHAVE_CONFIG, "celular"],
     queryFn: async (): Promise<FingerbotCelular> => {
@@ -125,7 +126,7 @@ export function useFingerbotCelular() {
       if (error) throw error;
       return { vistoEm: data?.celular_visto_em ?? null, bateria: data?.celular_bateria ?? null };
     },
-    refetchInterval: 60_000,
+    refetchInterval: rapido ? 3_000 : 60_000,
   });
 }
 

@@ -141,7 +141,9 @@ export function FingerbotPage() {
 /** Apertos avulsos: "Testar em 1 minuto" e "daqui X h Y min" (ex.: desligar o disjuntor da caixa). */
 function Avulsos() {
   const { data: avulsos } = useFingerbotAvulsos();
-  const { data: celular } = useFingerbotCelular();
+  // nos 2 primeiros minutos depois de agendar, confere a cada 3 s se o celular já recebeu
+  const recemCriado = !!avulsos?.some((a) => Date.now() - new Date(a.criado_em).getTime() < 120_000);
+  const { data: celular } = useFingerbotCelular(recemCriado);
   const agendar = useAgendarAvulso();
   const cancelar = useCancelarAvulso();
   const [horas, setHoras] = useState("0");
