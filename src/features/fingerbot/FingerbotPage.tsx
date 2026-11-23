@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Check, Clock, Link2, Plus, Pointer, Smartphone, Trash2, X, Zap } from "lucide-react";
+import { ArrowLeft, CalendarClock, Check, Clock, Link2, Plus, Pointer, Smartphone, Timer, Trash2, X, Zap } from "lucide-react";
 import { toast } from "sonner";
 import type { FingerbotHorario } from "@/types/db";
 import {
+  useAgendarAvulso,
   useApertarAgora,
   useAtualizarFingerbotHorario,
+  useCancelarAvulso,
   useCriarFingerbotHorario,
   useExcluirFingerbotHorario,
+  useFingerbotAvulsos,
   useFingerbotCelular,
   useFingerbotConfigurado,
   useFingerbotDisparos,
@@ -93,6 +96,8 @@ export function FingerbotPage() {
       <main className="mx-auto w-full max-w-2xl flex-1 space-y-5 px-3 pb-24 pt-4 sm:px-6 sm:py-6">
         {!configurado && <ConfigWebhook obrigatorio />}
 
+        {configurado && <Avulsos />}
+
         <section className="space-y-2">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-bold uppercase tracking-wide text-mut">
@@ -120,8 +125,8 @@ export function FingerbotPage() {
             </ul>
           )}
           <p className="px-1 text-[11px] text-mut">
-            Horários no fuso de Recife ({FUSO}). Cada aperto leva uns 30 s: o celular acorda, abre o Smart
-            Life, conecta no cubo e toca no botão.
+            Horários no fuso de Recife ({FUSO}). O celular guarda os horários e aperta o cubo direto pelo
+            Bluetooth em uns 5–15 s, mesmo sem internet.
           </p>
         </section>
 
@@ -130,6 +135,167 @@ export function FingerbotPage() {
         {configurado && <ConfigWebhook />}
       </main>
     </div>
+  );
+}
+
+/** Apertos avulsos: "Testar em 1 minuto" e "daqui X h Y min" (ex.: desligar o disjuntor da caixa). */
+function Avulsos() {
+  const { data: avulsos } = useFingerbotAvulsos();
+  const { data: celular } = useFingerbotCelular();
+  const agendar = useAgendarAvulso();
+  const cancelar = useCancelarAvulso();
+  const [horas, setHoras] = useState("0");
+  const [minutos, setMinutos] = useState("30");
+  const [rotulo, setRotulo] = useState("Desligar disjuntor da caixa");
+  const [agora, setAgora] = useState(() => Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const total = Math.max(0, Math.floor(Number(horas) || 0)) * 60 + Math.max(0, Math.floor(Number(minutos) || 0));
+  const quandoTexto = (ms: number, seg = false) =>
+    new Intl.DateTimeFormat("pt-BR", {
+      timeZone: FUSO,
+      weekday: "short",
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      ...(seg ? { second: "2-digit" as const } : {}),
+    }).format(new Date(ms));
+
+  function criar(min: number, rot: string, msg: string) {
+    agendar.mutate(
+      { minutos: min, rotulo: rot },
+      {
+        onSuccess: () => toast.success(msg),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Não deu para agendar"),
+      }
+    );
+  }
+
+  function enviar(e: FormEvent) {
+    e.preventDefault();
+    if (total < 1) {
+      toast.error("Escolha pelo menos 1 minuto");
+      return;
+    }
+    criar(total, rotulo.trim(), `Agendado para ${quandoTexto(Date.now() + total * 60_000)}`);
+  }
+
+  return (
+    <section className="space-y-2">
+      <h2 className="px-1 text-xs font-bold uppercase tracking-wide text-mut">Aperto avulso (uma vez só)</h2>
+      <div className="space-y-3 rounded-xl border border-line/50 bg-navy-800 p-3">
+        <button
+          onClick={() =>
+            criar(
+              1,
+              "Teste 1 min",
+              "Agendado para daqui 1 minuto. Quando aparecer “✓ no celular”, pode desligar a internet do A50."
+            )
+          }
+          disabled={agendar.isPending}
+          className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-gold/50 px-3 py-2 text-xs font-bold text-gold hover:bg-gold/10 disabled:opacity-50"
+        >
+          <Timer className="size-3.5" /> Testar em 1 minuto (dá para desligar a internet do celular)
+        </button>
+
+        <form onSubmit={enviar} className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-dim">
+            <CalendarClock className="size-4 text-gold" />
+            Daqui
+            <input
+              type="number"
+              min={0}
+              max={167}
+              value={horas}
+              onChange={(e) => setHoras(e.target.value)}
+              className={`${campo} w-16 text-center tabular-nums`}
+              aria-label="Horas"
+            />
+            h
+            <input
+              type="number"
+              min={0}
+              max={59}
+              value={minutos}
+              onChange={(e) => setMinutos(e.target.value)}
+              className={`${campo} w-16 text-center tabular-nums`}
+              aria-label="Minutos"
+            />
+            min
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={rotulo}
+              onChange={(e) => setRotulo(e.target.value)}
+              placeholder="Para quê? (opcional)"
+              maxLength={80}
+              className={campo}
+            />
+            <button
+              type="submit"
+              disabled={agendar.isPending || total < 1}
+              className="shrink-0 cursor-pointer rounded-lg bg-gold px-4 text-xs font-bold text-navy-950 disabled:opacity-50"
+            >
+              Agendar
+            </button>
+          </div>
+          <p className="text-[11px] text-mut">
+            {total >= 1
+              ? `Vai apertar ${quandoTexto(agora + total * 60_000)} (horário de Recife).`
+              : "Escolha pelo menos 1 minuto."}
+          </p>
+        </form>
+      </div>
+
+      {!!avulsos?.length && (
+        <ul className="divide-y divide-line/40 rounded-xl border border-line/50 bg-navy-800">
+          {avulsos.map((a) => {
+            const alvo = new Date(a.quando).getTime();
+            const falta = Math.round((alvo - agora) / 1000);
+            const noCelular = !!celular?.vistoEm && new Date(celular.vistoEm) >= new Date(a.criado_em);
+            const contagem =
+              falta <= 0
+                ? "apertando…"
+                : falta < 120
+                  ? `em ${falta} s`
+                  : falta < 7200
+                    ? `em ${Math.round(falta / 60)} min`
+                    : `em ${Math.floor(falta / 3600)} h ${Math.round((falta % 3600) / 60)} min`;
+            return (
+              <li key={a.id} className="flex items-center gap-2 px-3 py-2 text-xs">
+                <Timer className="size-3.5 shrink-0 text-gold" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-txt">
+                    {quandoTexto(alvo, true)} · <span className="text-mut">{a.rotulo || "Avulso"}</span>
+                  </p>
+                  <p className={noCelular ? "text-green" : "text-mut"}>
+                    {contagem} · {noCelular ? "✓ no celular" : "enviando ao celular…"}
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    cancelar.mutate(a.id, {
+                      onSuccess: () => toast.success("Cancelado"),
+                      onError: (e) => toast.error(e instanceof Error ? e.message : "Não deu para cancelar"),
+                    })
+                  }
+                  className="cursor-pointer rounded-lg p-1.5 text-mut hover:bg-red/10 hover:text-red"
+                  aria-label="Cancelar aperto"
+                  title="Cancelar"
+                >
+                  <X className="size-4" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -369,7 +535,7 @@ function LinhaDisparo({ d, horario }: { d: FingerbotDisparo; horario?: Fingerbot
         <Smartphone className="size-3.5 shrink-0 text-green" />
         <span className="tabular-nums text-dim">{quando}</span>
         <span className="min-w-0 flex-1 truncate text-mut">
-          {horario ? horario.rotulo || `Horário ${hhmm(horario.hora)}` : "Celular"}
+          {d.avulso_rotulo ?? (horario ? horario.rotulo || `Horário ${hhmm(horario.hora)}` : "Celular")}
           {d.bateria !== null && ` · bateria ${d.bateria}%`}
         </span>
         <span className={`shrink-0 font-semibold ${apertou ? "text-green" : "text-red"}`}>

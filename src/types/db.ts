@@ -516,6 +516,36 @@ export type Database = {
           },
         ]
       }
+      fingerbot_avulsos: {
+        Row: {
+          cancelado: boolean
+          criado_em: string
+          feito_em: string | null
+          id: string
+          quando: string
+          rotulo: string
+          user_id: string
+        }
+        Insert: {
+          cancelado?: boolean
+          criado_em?: string
+          feito_em?: string | null
+          id?: string
+          quando: string
+          rotulo?: string
+          user_id?: string
+        }
+        Update: {
+          cancelado?: boolean
+          criado_em?: string
+          feito_em?: string | null
+          id?: string
+          quando?: string
+          rotulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       fingerbot_config: {
         Row: {
           celular_bateria: number | null
@@ -545,6 +575,7 @@ export type Database = {
       }
       fingerbot_disparos: {
         Row: {
+          avulso_id: string | null
           bateria: number | null
           criado_em: string
           detalhe: string
@@ -556,6 +587,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avulso_id?: string | null
           bateria?: number | null
           criado_em?: string
           detalhe?: string
@@ -567,6 +599,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avulso_id?: string | null
           bateria?: number | null
           criado_em?: string
           detalhe?: string
@@ -1683,9 +1716,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fingerbot_agendar_avulso: {
+        Args: { p_minutos: number; p_rotulo?: string }
+        Returns: string
+      }
       fingerbot_apertar_agora: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      fingerbot_cancelar_avulso: {
+        Args: { p_id: string }
+        Returns: undefined
       }
       fingerbot_celular_agenda: {
         Args: { p_token: string }
@@ -1699,6 +1740,7 @@ export type Database = {
           p_horario?: string
           p_detalhe?: string
           p_quando?: string
+          p_avulso?: string
         }
         Returns: undefined
       }
@@ -1714,6 +1756,7 @@ export type Database = {
           resultado: string | null
           bateria: number | null
           detalhe: string | null
+          avulso_rotulo: string | null
         }[]
       }
       relogio_questoes: {
@@ -1894,6 +1937,7 @@ export type Audio = Tables<"audios">
 export type AudioGrupo = Tables<"audio_grupos">
 export type Aula = Tables<"aulas">
 export type FingerbotHorario = Tables<"fingerbot_horarios">
+export type FingerbotAvulso = Tables<"fingerbot_avulsos">
 export type Bateria = Tables<"baterias">
 export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
