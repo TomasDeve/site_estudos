@@ -21,6 +21,7 @@ const RevisaoSemanalPage = lazy(() => import("@/features/revisao/RevisaoSemanalP
 const ResumoPage = lazy(() => import("@/features/resumo/ResumoPage").then((m) => ({ default: m.ResumoPage })));
 const ParagrafosPage = lazy(() => import("@/features/paragrafos/ParagrafosPage").then((m) => ({ default: m.ParagrafosPage })));
 const AulasPage = lazy(() => import("@/features/aulas/AulasPage").then((m) => ({ default: m.AulasPage })));
+const FingerbotPage = lazy(() => import("@/features/fingerbot/FingerbotPage").then((m) => ({ default: m.FingerbotPage })));
 
 function pagina(node: ReactNode) {
   return <Suspense fallback={<FullScreenSpinner />}>{node}</Suspense>;
@@ -62,6 +63,8 @@ export const router = createBrowserRouter([
       { path: "paragrafos", element: <Navigate to="/redacao" replace /> },
       // aulas para assistir no tempo livre: links por matéria, onde parou e concluída (aba própria)
       { path: "aulas", element: pagina(<AulasPage />) },
+      // horários do Fingerbot (cubo que aperta o botão via celular A50 + MacroDroid) e "Apertar agora"
+      { path: "fingerbot", element: pagina(<FingerbotPage />) },
       // tudo abaixo vive dentro do concurso ativo
       {
         path: "concurso/:concursoId",

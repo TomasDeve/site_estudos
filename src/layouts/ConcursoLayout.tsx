@@ -12,6 +12,7 @@ import {
   LogOut,
   MonitorPlay,
   PenLine,
+  Pointer,
   Printer,
   Repeat2,
   Shuffle,
@@ -77,6 +78,8 @@ const NAV: {
   { to: "/redacao", label: "Redação", icon: PenLine, end: false, novaAba: true },
   // aulas para assistir no tempo livre, em aba própria; no celular fica como ícone no topo
   { to: "/aulas", label: "Aulas", icon: MonitorPlay, end: false, novaAba: true, soComputador: true },
+  // horários do cubo que aperta o botão (via celular + MacroDroid), em aba própria; no celular fica no topo
+  { to: "/fingerbot", label: "Fingerbot", icon: Pointer, end: false, novaAba: true, soComputador: true },
   { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
 ];
 
@@ -558,6 +561,17 @@ export function ConcursoLayout() {
             title="Aulas"
           >
             <MonitorPlay className="size-5" />
+          </a>
+          {/* Fingerbot: horários do cubo, também fora das abas de baixo */}
+          <a
+            href="/fingerbot"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg p-2 text-dim transition-colors hover:text-txt"
+            aria-label="Fingerbot"
+            title="Fingerbot"
+          >
+            <Pointer className="size-5" />
           </a>
           <StreakBadge />
           <button

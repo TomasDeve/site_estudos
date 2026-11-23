@@ -516,6 +516,81 @@ export type Database = {
           },
         ]
       }
+      fingerbot_config: {
+        Row: {
+          updated_at: string
+          user_id: string
+          webhook_url: string
+        }
+        Insert: {
+          updated_at?: string
+          user_id?: string
+          webhook_url: string
+        }
+        Update: {
+          updated_at?: string
+          user_id?: string
+          webhook_url?: string
+        }
+        Relationships: []
+      }
+      fingerbot_disparos: {
+        Row: {
+          criado_em: string
+          horario_id: string | null
+          id: number
+          origem: string
+          request_id: number | null
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          horario_id?: string | null
+          id?: never
+          origem: string
+          request_id?: number | null
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          horario_id?: string | null
+          id?: never
+          origem?: string
+          request_id?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fingerbot_horarios: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          dias: number[]
+          hora: string
+          id: string
+          rotulo: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          dias?: number[]
+          hora: string
+          id?: string
+          rotulo?: string
+          user_id?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          dias?: number[]
+          hora?: string
+          id?: string
+          rotulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ferramentas: {
         Row: {
           created_at: string
@@ -1590,6 +1665,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fingerbot_apertar_agora: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      fingerbot_ultimos_disparos: {
+        Args: { p_limite?: number }
+        Returns: {
+          id: number
+          origem: string
+          horario_id: string | null
+          criado_em: string
+          status_code: number | null
+          erro: string | null
+        }[]
+      }
       relogio_questoes: {
         Args: { acao?: string }
         Returns: Json
@@ -1767,6 +1857,7 @@ export type Ferramenta = Tables<"ferramentas">
 export type Audio = Tables<"audios">
 export type AudioGrupo = Tables<"audio_grupos">
 export type Aula = Tables<"aulas">
+export type FingerbotHorario = Tables<"fingerbot_horarios">
 export type Bateria = Tables<"baterias">
 export type Redacao = Tables<"redacoes">
 export type QuestaoImportada = Tables<"questoes_importadas">
