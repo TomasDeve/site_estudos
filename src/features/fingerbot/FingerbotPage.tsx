@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Check, Clock, Link2, Plus, Pointer, Trash2, X, Zap } from "lucide-react";
+import { ArrowLeft, Check, Clock, Link2, Plus, Pointer, Smartphone, Trash2, X, Zap } from "lucide-react";
 import { toast } from "sonner";
 import type { FingerbotHorario } from "@/types/db";
 import {
@@ -8,6 +8,7 @@ import {
   useAtualizarFingerbotHorario,
   useCriarFingerbotHorario,
   useExcluirFingerbotHorario,
+  useFingerbotCelular,
   useFingerbotConfigurado,
   useFingerbotDisparos,
   useFingerbotHorarios,
@@ -18,9 +19,11 @@ import { FullScreenSpinner } from "@/components/Spinner";
 import { DIAS_CURTOS, DIAS_NOMES, FUSO, descreverDias, hhmm, proximoAperto } from "./agenda";
 
 /**
- * Seção "Fingerbot": horários para o cubo apertar o botão sozinho. O banco (pg_cron, fuso
- * de Recife) chama na hora certa o link do MacroDroid no celular A50, que abre o Smart Life
- * e toca no interruptor. Também tem "Apertar agora" e o histórico. Abre em aba própria.
+ * Seção "Fingerbot": horários para o cubo apertar o botão sozinho. O app "Fingerbot Hub" no
+ * celular A50 baixa estes horários, guarda e aperta o cubo direto pelo Bluetooth na hora
+ * certa (mesmo sem internet), registrando o resultado aqui. Se o celular sumir por mais de
+ * 2 h, o banco (pg_cron, fuso de Recife) volta a chamar o link do MacroDroid nos horários.
+ * Também tem "Apertar agora" (pelo link) e o histórico. Abre em aba própria.
  */
 export function FingerbotPage() {
   const navigate = useNavigate();
@@ -51,7 +54,7 @@ export function FingerbotPage() {
 
   function apertarAgora() {
     apertar.mutate(undefined, {
-      onSuccess: () => toast.success("Enviado! O celular leva uns 30 s para apertar."),
+      onSuccess: () => toast.success("Enviado! O celular aperta em uns 10 s."),
       onError: (e) => toast.error(e instanceof Error ? e.message : "Não deu para enviar"),
     });
   }
@@ -317,6 +320,7 @@ function Historico() {
   return (
     <section className="space-y-2">
       <h2 className="px-1 text-xs font-bold uppercase tracking-wide text-mut">Últimos apertos</h2>
+      <StatusCelular />
       {!disparos?.length ? (
         <p className="px-1 text-xs text-mut">Nenhum ainda.</p>
       ) : (
@@ -330,6 +334,26 @@ function Historico() {
   );
 }
 
+/** "Celular: horários baixados há X min · bateria do cubo Y%". */
+function StatusCelular() {
+  const { data } = useFingerbotCelular();
+  if (!data?.vistoEm) {
+    return <p className="px-1 text-[11px] text-mut">Celular ainda não baixou os horários.</p>;
+  }
+  const min = Math.max(0, Math.round((Date.now() - new Date(data.vistoEm).getTime()) / 60_000));
+  const sumido = min > 120;
+  return (
+    <p className={`flex items-center gap-1.5 px-1 text-[11px] ${sumido ? "text-red" : "text-mut"}`}>
+      <Smartphone className="size-3.5" />
+      Celular: horários baixados {min < 1 ? "agora" : `há ${min} min`}
+      {sumido && " (sumido: o site voltou a disparar pelo link)"}
+      {data.bateria !== null && (
+        <span className={data.bateria <= 20 ? "font-semibold text-red" : ""}>· bateria do cubo {data.bateria}%</span>
+      )}
+    </p>
+  );
+}
+
 function LinhaDisparo({ d, horario }: { d: FingerbotDisparo; horario?: FingerbotHorario }) {
   const quando = new Intl.DateTimeFormat("pt-BR", {
     timeZone: FUSO,
@@ -338,6 +362,22 @@ function LinhaDisparo({ d, horario }: { d: FingerbotDisparo; horario?: Fingerbot
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(d.criado_em));
+  if (d.origem === "celular") {
+    const apertou = d.resultado === "apertou";
+    return (
+      <li className="flex items-center gap-2 px-3 py-2 text-xs" title={d.detalhe ?? undefined}>
+        <Smartphone className="size-3.5 shrink-0 text-green" />
+        <span className="tabular-nums text-dim">{quando}</span>
+        <span className="min-w-0 flex-1 truncate text-mut">
+          {horario ? horario.rotulo || `Horário ${hhmm(horario.hora)}` : "Celular"}
+          {d.bateria !== null && ` · bateria ${d.bateria}%`}
+        </span>
+        <span className={`shrink-0 font-semibold ${apertou ? "text-green" : "text-red"}`}>
+          {apertou ? "Apertou" : "Falhou"}
+        </span>
+      </li>
+    );
+  }
   const ok = d.status_code !== null && d.status_code >= 200 && d.status_code < 300;
   const falhou = !!d.erro || (d.status_code !== null && !ok);
   return (

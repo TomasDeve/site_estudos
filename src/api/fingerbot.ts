@@ -99,9 +99,34 @@ export interface FingerbotDisparo {
   criado_em: string;
   status_code: number | null;
   erro: string | null;
+  /** Só nos registros vindos do celular (origem "celular"). */
+  resultado: string | null;
+  bateria: number | null;
+  detalhe: string | null;
 }
 
-/** Últimos disparos (agenda e manual) com o resultado do pedido ao MacroDroid. */
+export interface FingerbotCelular {
+  vistoEm: string | null;
+  bateria: number | null;
+}
+
+/** Quando o app do celular baixou os horários pela última vez e a bateria do cubo. */
+export function useFingerbotCelular() {
+  return useQuery({
+    queryKey: [...CHAVE_CONFIG, "celular"],
+    queryFn: async (): Promise<FingerbotCelular> => {
+      const { data, error } = await supabase
+        .from("fingerbot_config")
+        .select("celular_visto_em, celular_bateria")
+        .maybeSingle();
+      if (error) throw error;
+      return { vistoEm: data?.celular_visto_em ?? null, bateria: data?.celular_bateria ?? null };
+    },
+    refetchInterval: 60_000,
+  });
+}
+
+/** Últimos disparos: pedidos do site (agenda/manual) e os apertos registrados pelo celular. */
 export function useFingerbotDisparos() {
   return useQuery({
     queryKey: CHAVE_DISPAROS,

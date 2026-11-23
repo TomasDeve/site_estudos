@@ -518,16 +518,25 @@ export type Database = {
       }
       fingerbot_config: {
         Row: {
+          celular_bateria: number | null
+          celular_token: string | null
+          celular_visto_em: string | null
           updated_at: string
           user_id: string
           webhook_url: string
         }
         Insert: {
+          celular_bateria?: number | null
+          celular_token?: string | null
+          celular_visto_em?: string | null
           updated_at?: string
           user_id?: string
           webhook_url: string
         }
         Update: {
+          celular_bateria?: number | null
+          celular_token?: string | null
+          celular_visto_em?: string | null
           updated_at?: string
           user_id?: string
           webhook_url?: string
@@ -536,27 +545,36 @@ export type Database = {
       }
       fingerbot_disparos: {
         Row: {
+          bateria: number | null
           criado_em: string
+          detalhe: string
           horario_id: string | null
           id: number
           origem: string
           request_id: number | null
+          resultado: string | null
           user_id: string
         }
         Insert: {
+          bateria?: number | null
           criado_em?: string
+          detalhe?: string
           horario_id?: string | null
           id?: never
           origem: string
           request_id?: number | null
+          resultado?: string | null
           user_id: string
         }
         Update: {
+          bateria?: number | null
           criado_em?: string
+          detalhe?: string
           horario_id?: string | null
           id?: never
           origem?: string
           request_id?: number | null
+          resultado?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1669,6 +1687,21 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      fingerbot_celular_agenda: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      fingerbot_celular_registrar: {
+        Args: {
+          p_token: string
+          p_ok: boolean
+          p_bateria?: number
+          p_horario?: string
+          p_detalhe?: string
+          p_quando?: string
+        }
+        Returns: undefined
+      }
       fingerbot_ultimos_disparos: {
         Args: { p_limite?: number }
         Returns: {
@@ -1678,6 +1711,9 @@ export type Database = {
           criado_em: string
           status_code: number | null
           erro: string | null
+          resultado: string | null
+          bateria: number | null
+          detalhe: string | null
         }[]
       }
       relogio_questoes: {
