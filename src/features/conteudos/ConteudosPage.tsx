@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, NotebookText, Plus } from "lucide-react";
+import { useCadernos } from "@/api/cadernos";
+import { pctGeral } from "@/features/cadernos/progresso";
 import { useConcursoAtual } from "@/layouts/ConcursoLayout";
 import { nomeDaArea } from "@/lib/concursoInfo";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
@@ -23,6 +25,9 @@ export function ConteudosPage() {
   const { data: materias, isLoading: l1 } = useMaterias();
   const { data: vinculos, isLoading: l2 } = useConcursoMaterias();
   const { data: topicos, isLoading: l3 } = useTopicos();
+  const { data: cadernos } = useCadernos();
+  const cadernosDoConcurso = (cadernos ?? []).filter((c) => c.concurso_id === concurso.id);
+  const pctCadernos = cadernosDoConcurso.length > 0 ? pctGeral(cadernosDoConcurso) : null;
 
   const [modalMateria, setModalMateria] = useState(false);
 
@@ -98,9 +103,23 @@ export function ConteudosPage() {
         <p className="text-xs text-mut">
           Escolha uma matéria para estudar sem distrações.
         </p>
-        <Button variant="secondary" size="sm" onClick={() => setModalMateria(true)}>
-          <Plus className="size-4" /> Matéria
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          {/* No celular, "Cadernos" não cabe nas abas nem no topo: o atalho fica aqui */}
+          {pctCadernos !== null && (
+            <Link
+              to={`/concurso/${concurso.id}/cadernos`}
+              className="flex items-center gap-1.5 rounded-xl border border-line/60 bg-navy-700/60 px-2.5 py-1.5 text-xs font-semibold text-dim transition-colors hover:text-txt md:hidden"
+            >
+              <NotebookText className="size-4" /> Cadernos
+              <span className="tabular-nums" style={{ color: concurso.cor }}>
+                {pctCadernos}%
+              </span>
+            </Link>
+          )}
+          <Button variant="secondary" size="sm" onClick={() => setModalMateria(true)}>
+            <Plus className="size-4" /> Matéria
+          </Button>
+        </div>
       </div>
 
       {meusVinculos.length === 0 ? (
@@ -121,7 +140,8 @@ export function ConteudosPage() {
               {nomeDaArea(concurso, area)}
               <span className="h-px flex-1 bg-gradient-to-r from-line/70 to-transparent" aria-hidden />
             </h2>
-            <div className="grid gap-3 sm:grid-cols-2">
+            {/* grid-cols-1 (minmax 0): sem ela, o nome comprido da matéria alargava a coluna no celular */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {meusVinculos
                 .filter((v) => v.area === area)
                 .map((v) => {

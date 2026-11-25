@@ -21,6 +21,7 @@ const RevisaoSemanalPage = lazy(() => import("@/features/revisao/RevisaoSemanalP
 const ResumoPage = lazy(() => import("@/features/resumo/ResumoPage").then((m) => ({ default: m.ResumoPage })));
 const ParagrafosPage = lazy(() => import("@/features/paragrafos/ParagrafosPage").then((m) => ({ default: m.ParagrafosPage })));
 const AulasPage = lazy(() => import("@/features/aulas/AulasPage").then((m) => ({ default: m.AulasPage })));
+const CadernosPage = lazy(() => import("@/features/cadernos/CadernosPage").then((m) => ({ default: m.CadernosPage })));
 const FingerbotPage = lazy(() => import("@/features/fingerbot/FingerbotPage").then((m) => ({ default: m.FingerbotPage })));
 
 function pagina(node: ReactNode) {
@@ -73,6 +74,8 @@ export const router = createBrowserRouter([
           { index: true, element: pagina(<DashboardPage />) },
           { path: "conteudos", element: pagina(<ConteudosPage />) },
           { path: "conteudos/:materiaId", element: pagina(<MateriaPage />) },
+          // cadernos impressos: porcentagem por matéria e capítulos vistos / em andamento / que faltam
+          { path: "cadernos", element: pagina(<CadernosPage />) },
           // seções removidas (Metas virou o plano do Painel; Ciclo, Métricas, Áudios e Rotina saíram): link salvo cai no Painel
           { path: "metas", element: <Navigate to=".." replace /> },
           { path: "ciclo", element: <Navigate to=".." replace /> },

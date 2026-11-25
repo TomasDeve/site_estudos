@@ -11,6 +11,7 @@ import {
   ListChecks,
   LogOut,
   MonitorPlay,
+  NotebookText,
   PenLine,
   Pointer,
   Printer,
@@ -25,6 +26,8 @@ import { useTopicos } from "@/api/topicos";
 import { useContagemImpressao } from "@/api/topicoQuestoes";
 import { useResumoAnkiFaltam } from "@/api/questoesAnki";
 import { useRevisaoPendentes } from "@/api/revisaoSemanal";
+import { useCadernos } from "@/api/cadernos";
+import { pctGeral } from "@/features/cadernos/progresso";
 import { supabase } from "@/lib/supabase";
 import { setConcursoAtual } from "@/lib/currentConcurso";
 import { diasAte, fmtData, fmtMesesSemanasAte } from "@/lib/dates";
@@ -56,6 +59,9 @@ const NAV: {
 }[] = [
   { to: ".", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
+  // cadernos impressos com a porcentagem ao lado; no celular o link fica no topo de Conteúdos
+  // (o topo do celular já não tem espaço para mais um ícone)
+  { to: "cadernos", label: "Cadernos", icon: NotebookText, end: false, soComputador: true },
   // modo misturado: todas as questões do site, em aba própria como o caderno
   { to: "/questoes", label: "Questões", icon: Shuffle, end: false, novaAba: true },
   // questões marcadas (a caixinha 🖨 do card): folha para imprimir + correção, em aba própria
@@ -100,6 +106,10 @@ export function ConcursoLayout() {
   const { data: marcadasImpressao } = useContagemImpressao();
   const { data: faltamNoAnki } = useResumoAnkiFaltam();
   const { data: revisaoPendentes } = useRevisaoPendentes();
+  // Porcentagem de páginas dos cadernos do concurso aberto, ao lado de "Cadernos".
+  const { data: cadernos } = useCadernos();
+  const cadernosDoConcurso = (cadernos ?? []).filter((c) => c.concurso_id === concursoId);
+  const pctCadernos = cadernosDoConcurso.length > 0 ? pctGeral(cadernosDoConcurso) : null;
   const contagemDaAba: Record<string, { n: number; titulo: string } | undefined> = {
     "/revisao-semanal": revisaoPendentes
       ? {
@@ -404,6 +414,14 @@ export function ConcursoLayout() {
                 >
                   <Icon className="size-4.5" />
                   {label}
+                  {to === "cadernos" && pctCadernos !== null && (
+                    <span
+                      className="ml-auto rounded-full bg-navy-700/80 px-1.5 py-0.5 text-[10px] font-bold leading-none tabular-nums text-dim"
+                      title={`${pctCadernos}% das páginas dos cadernos`}
+                    >
+                      {pctCadernos}%
+                    </span>
+                  )}
                 </NavLink>
               );
             }

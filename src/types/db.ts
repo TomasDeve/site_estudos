@@ -235,6 +235,66 @@ export type Database = {
           },
         ]
       }
+      cadernos: {
+        Row: {
+          atualizado_em: string
+          capitulos: Json
+          concurso_id: string | null
+          created_at: string
+          id: string
+          materia_id: string | null
+          observacao: string
+          ordem: number
+          pagina_atual: number
+          titulo: string
+          total_paginas: number
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          capitulos?: Json
+          concurso_id?: string | null
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          observacao?: string
+          ordem?: number
+          pagina_atual?: number
+          titulo?: string
+          total_paginas: number
+          user_id?: string
+        }
+        Update: {
+          atualizado_em?: string
+          capitulos?: Json
+          concurso_id?: string | null
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          observacao?: string
+          ordem?: number
+          pagina_atual?: number
+          titulo?: string
+          total_paginas?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cadernos_concurso_id_fkey"
+            columns: ["concurso_id"]
+            isOneToOne: false
+            referencedRelation: "concursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cadernos_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ciclo_itens: {
         Row: {
           adiado_em: string | null
@@ -1936,6 +1996,13 @@ export type Ferramenta = Tables<"ferramentas">
 export type Audio = Tables<"audios">
 export type AudioGrupo = Tables<"audio_grupos">
 export type Aula = Tables<"aulas">
+export type Caderno = Tables<"cadernos">
+/** Capítulo de um caderno (`cadernos.capitulos`): `pagina` = onde começa; `n` nulo = simulado, apêndice, extras. */
+export interface CapituloCaderno {
+  n: number | null
+  titulo: string
+  pagina: number
+}
 export type FingerbotHorario = Tables<"fingerbot_horarios">
 export type FingerbotAvulso = Tables<"fingerbot_avulsos">
 export type Bateria = Tables<"baterias">
