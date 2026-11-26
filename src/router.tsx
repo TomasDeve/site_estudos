@@ -52,6 +52,9 @@ export const router = createBrowserRouter([
       // baterias: provas separadas para resolver de uma vez e corrigir pelo número (aba própria)
       { path: "baterias", element: pagina(<BateriasPage />) },
       { path: "baterias/:bateriaId", element: pagina(<BateriasPage />) },
+      // simulados (prova inteira): mesma tela das baterias, em seção própria (aba própria)
+      { path: "simulados", element: pagina(<BateriasPage tipo="simulado" />) },
+      { path: "simulados/:bateriaId", element: pagina(<BateriasPage tipo="simulado" />) },
       // revisão ativa da semana: premissas Certo/Errado sobre o que errou ou ficou em dúvida
       // nos cadernos, por matéria (aba própria)
       { path: "revisao-semanal", element: pagina(<RevisaoSemanalPage />) },

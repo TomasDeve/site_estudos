@@ -5,6 +5,7 @@ import {
   Check,
   ChevronRight,
   ChevronsUpDown,
+  Flag,
   Info,
   LayoutDashboard,
   LayoutGrid,
@@ -68,6 +69,8 @@ const NAV: {
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
   // provas separadas para resolver de uma vez e corrigir pelo número, em aba própria
   { to: "/baterias", label: "Baterias", icon: ListChecks, end: false, novaAba: true, soComputador: true },
+  // simulados (a prova inteira), separados das baterias de uma matéria, em aba própria
+  { to: "/simulados", label: "Simulados", icon: Flag, end: false, novaAba: true, soComputador: true },
   // revisão ativa da semana (premissas sobre os erros e dúvidas dos cadernos), em aba própria;
   // no celular fica como ícone no topo
   {

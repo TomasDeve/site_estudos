@@ -67,7 +67,9 @@ export function GradeBateria({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-1">
+      {/* Justificada: cada linha encosta nas duas margens; a última fica à esquerda
+          (o ::after estica e ocupa a sobra dela). */}
+      <div className="flex flex-wrap justify-between gap-1 after:flex-auto after:content-['']">
         {lista.map((q) => {
           const n = numeroDe.get(q.id) ?? 0;
           const feita = estaResolvida(q);
@@ -125,7 +127,7 @@ export function GradeBateria({
         <button
           onClick={() => onSelecionar(null)}
           title="Placar e todas as questões"
-          className={`my-[5px] ml-1 flex h-[30px] cursor-pointer items-center rounded-full border border-line/60 px-3 text-[11px] font-semibold text-dim transition-colors hover:text-txt ${
+          className={`my-[5px] flex h-[30px] cursor-pointer items-center rounded-full border border-line/60 px-3 text-[11px] font-semibold text-dim transition-colors hover:text-txt ${
             atual === null ? "ring-2 ring-gold/80 ring-offset-1 ring-offset-navy-950" : ""
           }`}
         >

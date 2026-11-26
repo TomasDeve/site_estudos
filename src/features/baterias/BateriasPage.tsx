@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ArrowLeft, ChevronRight, ListChecks, Printer, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, Flag, ListChecks, Printer, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Bateria, TopicoQuestao } from "@/types/db";
 import {
@@ -62,10 +62,24 @@ import {
  * ou o "Imprimir" daqui), a correção é aqui pelo mesmo número, com tudo do caderno
  * (comentário, resumo, dúvida com IA). As questões continuam no caderno do assunto;
  * a bateria só as junta. Quem cria é a importação do QConcursos. Abre em aba própria.
+ *
+ * Os simulados (prova inteira, `tipo = 'simulado'`) têm seção própria em /simulados,
+ * com a mesma tela; em /baterias ficam as provas de uma matéria.
  */
-export function BateriasPage() {
+type TipoBateria = Bateria["tipo"];
+
+const SECAO: Record<TipoBateria, { base: string; titulo: string; outra: TipoBateria }> = {
+  bateria: { base: "/baterias", titulo: "Baterias", outra: "simulado" },
+  simulado: { base: "/simulados", titulo: "Simulados", outra: "bateria" },
+};
+
+export function BateriasPage({ tipo = "bateria" }: { tipo?: TipoBateria }) {
   const { bateriaId } = useParams();
-  return bateriaId ? <BateriaAberta bateriaId={bateriaId} /> : <ListaBaterias />;
+  return bateriaId ? (
+    <BateriaAberta bateriaId={bateriaId} tipo={tipo} />
+  ) : (
+    <ListaBaterias tipo={tipo} />
+  );
 }
 
 function placarDe(lista: Parameters<typeof questaoAcertou>[0][]) {
@@ -107,19 +121,22 @@ function Cabecalho({
   );
 }
 
-/** A lista: cada bateria com o placar da correção. */
-function ListaBaterias() {
+/** A lista: cada bateria (ou simulado) com o placar da correção. */
+function ListaBaterias({ tipo }: { tipo: TipoBateria }) {
   const navigate = useNavigate();
-  const { data: baterias, isLoading: carregandoBaterias } = useBaterias();
+  const { data: todas, isLoading: carregandoBaterias } = useBaterias();
   const { data: situacao, isLoading: carregandoSituacao } = useSituacaoBaterias();
+  const secao = SECAO[tipo];
+  const outra = SECAO[secao.outra];
+  const baterias = useMemo(() => (todas ?? []).filter((b) => b.tipo === tipo), [todas, tipo]);
 
   useEffect(() => {
     const anterior = document.title;
-    document.title = "Baterias de questões";
+    document.title = tipo === "simulado" ? "Simulados" : "Baterias de questões";
     return () => {
       document.title = anterior;
     };
-  }, []);
+  }, [tipo]);
 
   const porBateria = useMemo(() => {
     const mapa = new Map<string, NonNullable<typeof situacao>>();
@@ -142,18 +159,40 @@ function ListaBaterias() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <Cabecalho titulo="Baterias" onVoltar={voltar} />
+      <Cabecalho titulo={secao.titulo} onVoltar={voltar}>
+        {/* A outra seção (no celular as duas não estão no menu de baixo) */}
+        <Link
+          to={outra.base}
+          className="ml-auto flex shrink-0 items-center gap-1.5 rounded-lg border border-line/60 px-2.5 py-1.5 text-xs font-medium text-dim transition-colors hover:border-line hover:bg-navy-700/60 hover:text-txt"
+        >
+          {secao.outra === "simulado" ? (
+            <Flag className="size-3.5 text-gold" />
+          ) : (
+            <ListChecks className="size-3.5 text-gold" />
+          )}
+          {outra.titulo}
+        </Link>
+      </Cabecalho>
       <main className="mx-auto w-full max-w-3xl flex-1 px-3 pb-24 pt-4 sm:px-6 sm:py-6">
-        {!baterias?.length ? (
+        {!baterias.length ? (
           <EmptyState
-            icon="📋"
-            title="Nenhuma bateria ainda"
-            message="Uma bateria junta as questões de uma prova na ordem dela, para resolver no papel e corrigir aqui pelo número. Para criar, cole as questões do QConcursos no chat e peça para separar como bateria."
+            icon={tipo === "simulado" ? "🏁" : "📋"}
+            title={tipo === "simulado" ? "Nenhum simulado ainda" : "Nenhuma bateria ainda"}
+            message={
+              tipo === "simulado"
+                ? "Um simulado é a prova inteira, com todas as matérias na ordem dela, para resolver no papel e corrigir aqui pelo número."
+                : "Uma bateria junta as questões de uma prova na ordem dela, para resolver no papel e corrigir aqui pelo número. Para criar, cole as questões do QConcursos no chat e peça para separar como bateria."
+            }
           />
         ) : (
           <ul className="space-y-2.5">
             {baterias.map((b) => (
-              <ItemBateria key={b.id} bateria={b} questoes={porBateria.get(b.id) ?? []} />
+              <ItemBateria
+                key={b.id}
+                bateria={b}
+                base={secao.base}
+                questoes={porBateria.get(b.id) ?? []}
+              />
             ))}
           </ul>
         )}
@@ -164,9 +203,11 @@ function ListaBaterias() {
 
 function ItemBateria({
   bateria: b,
+  base,
   questoes,
 }: {
   bateria: Bateria;
+  base: string;
   questoes: Parameters<typeof questaoAcertou>[0][];
 }) {
   const placar = placarDe(questoes);
@@ -174,7 +215,7 @@ function ItemBateria({
   return (
     <li>
       <Link
-        to={`/baterias/${b.id}`}
+        to={`${base}/${b.id}`}
         className="flex items-center gap-3 rounded-xl border border-line/50 bg-navy-900/40 p-3.5 transition-colors hover:border-line hover:bg-navy-800/60"
       >
         <div className="min-w-0 flex-1">
@@ -205,7 +246,7 @@ function ItemBateria({
 }
 
 /** Uma bateria aberta: a correção pelo número da prova e a folha para imprimir. */
-function BateriaAberta({ bateriaId }: { bateriaId: string }) {
+function BateriaAberta({ bateriaId, tipo }: { bateriaId: string; tipo: TipoBateria }) {
   const navigate = useNavigate();
   const { data: baterias, isLoading: carregandoBaterias } = useBaterias();
   const { data: questoes, isLoading: carregandoQuestoes } = useQuestoesDaBateria(bateriaId);
@@ -249,10 +290,11 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
   useEffect(() => {
     if (!bateria) return;
     const anterior = document.title;
-    const naTela = `Bateria · ${bateria.nome}`;
+    // O nome do simulado já começa com "Simulado".
+    const naTela = bateria.tipo === "simulado" ? bateria.nome : `Bateria · ${bateria.nome}`;
     document.title = naTela;
     const antes = () => {
-      document.title = `Bateria ${bateria.nome}`;
+      document.title = bateria.tipo === "simulado" ? bateria.nome : `Bateria ${bateria.nome}`;
     };
     const depois = () => {
       document.title = naTela;
@@ -331,20 +373,22 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
     return <FullScreenSpinner />;
   }
 
-  const irParaLista = () => navigate("/baterias");
+  // Volta para a seção da prova (um simulado aberto por um link antigo de /baterias vai para /simulados).
+  const secao = SECAO[bateria?.tipo ?? tipo];
+  const irParaLista = () => navigate(secao.base);
 
   if (!bateria) {
     return (
       <div className="flex min-h-dvh flex-col">
-        <Cabecalho titulo="Baterias" onVoltar={irParaLista} />
+        <Cabecalho titulo={secao.titulo} onVoltar={irParaLista} />
         <main className="mx-auto w-full max-w-3xl flex-1 px-3 pt-4 sm:px-6 sm:py-6">
           <EmptyState
             icon="📋"
             title="Bateria não encontrada"
             message="Ela pode ter sido apagada. As questões continuam no caderno de cada assunto."
             action={
-              <Link to="/baterias" className="text-sm font-semibold text-gold hover:underline">
-                Ver as baterias
+              <Link to={secao.base} className="text-sm font-semibold text-gold hover:underline">
+                Ver a lista
               </Link>
             }
           />
@@ -420,7 +464,7 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
     excluir.mutate(bateriaId, {
       onSuccess: () => {
         toast.success("Bateria apagada");
-        navigate("/baterias");
+        navigate(secao.base);
       },
       onError: erro,
     });
@@ -500,7 +544,7 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
                   },
                   {
                     icone: <Trash2 className="size-3.5" />,
-                    label: "Apagar bateria",
+                    label: bateria.tipo === "simulado" ? "Apagar simulado" : "Apagar bateria",
                     onClick: apagarBateria,
                     danger: true,
                   },
