@@ -14,7 +14,6 @@ import {
 } from "@dnd-kit/core";
 import {
   Check,
-  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -25,7 +24,6 @@ import {
   Minus,
   Plus,
   Trash2,
-  Undo2,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -41,13 +39,7 @@ import {
   useSalvarHora,
   useTempoHora,
 } from "@/api/planoHoras";
-import {
-  calcStreak,
-  diaEstaConcluido,
-  useConcluirDia,
-  useDesfazerDia,
-  useDiasConcluidos,
-} from "@/api/diasConcluidos";
+import { useDiasConcluidos, useDiasDaSequencia } from "@/api/diasConcluidos";
 import { useConcursoMaterias, useMaterias } from "@/api/materias";
 import { useSalvarObservacoes, useSalvarProximoEstudo } from "@/api/cicloFila";
 import { fmtMinutos, hojeISO } from "@/lib/dates";
@@ -56,7 +48,6 @@ import { Textarea } from "@/components/Field";
 import { MenuMais } from "@/components/MenuMais";
 import { Modal } from "@/components/Modal";
 import { Spinner } from "@/components/Spinner";
-import { celebrar } from "./celebration";
 import { CicloDasMaterias, PontoDoRank } from "./CicloDasMaterias";
 import { CicloDeEstudos } from "./CicloDeEstudos";
 import { diaDeEstudo } from "./cicloFila";
@@ -121,8 +112,8 @@ interface Edicao {
  * Card próprio).
  * Cada dia é uma coluna de blocos de meia hora (como linhas do Excel): começa
  * com 6 (3h) e dá para acrescentar até 16. Em cada bloco você escolhe a matéria
- * e a atividade e, depois, marca como feito; no fim do dia, "Concluir dia" conta
- * na sequência 🔥. Voltando pelas setas, aparece o histórico (inclusive o que
+ * e a atividade e, depois, marca como feito; um bloco feito no dia já conta na
+ * sequência 🔥 (não precisa fechar o dia). Voltando pelas setas, aparece o histórico (inclusive o que
  * veio da antiga seção Metas). Embaixo da grade, o Ciclo das matérias mostra
  * quantas vezes cada matéria do edital já entrou no plano.
  */
@@ -154,10 +145,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
   const tempoHora = useTempoHora();
   const moverHora = useMoverHora();
   const { data: diasConcluidos } = useDiasConcluidos();
-  const concluirDia = useConcluirDia();
-  const desfazerDia = useDesfazerDia();
-  // Sequência mostrada no modal de comemoração (nulo = fechado).
-  const [modalStreak, setModalStreak] = useState<number | null>(null);
+  const diasDaSequencia = useDiasDaSequencia();
   // Matéria do bloco que acabou de ser marcado feito: pergunta o recado pra próxima vez.
   const [recadoDe, setRecadoDe] = useState<Materia | null>(null);
 
@@ -254,27 +242,6 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           }),
       }
     );
-  }
-
-  /** Fecha o dia (conta na sequência 🔥). Com bloco por fazer, pergunta antes. */
-  async function concluir(data: string) {
-    const blocos = [...(porDia.get(data)?.values() ?? [])];
-    const restam = blocos.filter((l) => !l.feita).length;
-    if (
-      restam > 0 &&
-      !window.confirm(
-        `Ainda ${restam === 1 ? "falta 1 bloco" : `faltam ${restam} blocos`}. Concluir o dia mesmo assim?`
-      )
-    )
-      return;
-    const minFeitos = blocos.filter((l) => l.feita).reduce((s, l) => s + minutosDe(l), 0);
-    try {
-      await concluirDia.mutateAsync({ data, horas_estudadas: minFeitos / 60 });
-      celebrar();
-      setModalStreak(Math.max(calcStreak([...(diasConcluidos ?? []), { data }], hoje), 1));
-    } catch (err) {
-      erro(err);
-    }
   }
 
   async function copiarDoAnterior(data: string) {
@@ -395,10 +362,7 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
                     onReplicar={(l) => replicarHora.mutate(l, { onError: erro })}
                     onCopiarAnterior={() => void copiarDoAnterior(d)}
                     onLimparDia={() => limparDia.mutate(d, { onError: erro })}
-                    concluido={diaEstaConcluido(diasConcluidos, d)}
-                    concluindo={concluirDia.isPending && concluirDia.variables?.data === d}
-                    onConcluir={() => void concluir(d)}
-                    onDesfazerConclusao={() => desfazerDia.mutate(d, { onError: erro })}
+                    naSequencia={!!diasDaSequencia?.has(d)}
                   />
                 ))}
               </div>
@@ -456,32 +420,6 @@ export function PlanoProximosDias({ concursoId }: { concursoId: string }) {
           onClose={() => setRecadoDe(null)}
         />
       )}
-
-      {/* Comemoração ao concluir o dia: a sequência de dias concluídos */}
-      <Modal
-        open={modalStreak !== null}
-        onClose={() => setModalStreak(null)}
-        title="Dia concluído!"
-        width="max-w-sm"
-      >
-        <div className="py-4 text-center">
-          <div className="streak-glow text-6xl">🔥</div>
-          <p className="mt-4 text-3xl font-black text-gold">
-            {modalStreak} {modalStreak === 1 ? "dia" : "dias"}
-          </p>
-          <p className="mt-1 text-sm font-semibold text-txt">
-            {modalStreak === 1 ? "Sequência iniciada!" : "seguidos de estudo!"}
-          </p>
-          <p className="mt-3 text-xs leading-relaxed text-dim">
-            {modalStreak && modalStreak >= 7
-              ? "Constância é o que separa aprovados de quase-aprovados. Você está no caminho. 🏆"
-              : "Volte amanhã e mantenha a chama acesa. Cada dia conta na aprovação."}
-          </p>
-          <Button className="mt-5 w-full" onClick={() => setModalStreak(null)}>
-            Continuar firme 💪
-          </Button>
-        </div>
-      </Modal>
     </div>
   );
 }
@@ -500,10 +438,7 @@ function CaixaDia({
   onTempo,
   onCopiarAnterior,
   onLimparDia,
-  concluido,
-  concluindo,
-  onConcluir,
-  onDesfazerConclusao,
+  naSequencia,
 }: {
   data: string;
   hoje: string;
@@ -519,11 +454,8 @@ function CaixaDia({
   onTempo: (linha: PlanoHora, minutos: number) => void;
   onCopiarAnterior: () => void;
   onLimparDia: () => void;
-  /** O dia já foi concluído (conta na sequência 🔥). */
-  concluido: boolean;
-  concluindo: boolean;
-  onConcluir: () => void;
-  onDesfazerConclusao: () => void;
+  /** O dia tem bloco feito (ou foi fechado no antigo "Concluir dia"): conta na sequência 🔥. */
+  naSequencia: boolean;
 }) {
   const { nome, data: dataCurta } = rotuloDoDia(data, hoje);
   const ehHoje = data === hoje;
@@ -537,8 +469,6 @@ function CaixaDia({
   const visiveis = blocosVisiveis(extras, maiorPreenchido);
   // Só dá para tirar bloco vazio do fim, e nunca abaixo dos 6 iniciais.
   const podeTirar = visiveis > BLOCOS_INICIAIS && visiveis > maiorPreenchido;
-  // Concluir só vale para hoje e dias passados, e com algo planejado.
-  const podeConcluir = data <= hoje && preenchidas > 0;
   // A caixinha mostra no máximo 6 blocos; passou disso, as setas rolam a janela
   // (em vez de a caixinha crescer e desalinhar o layout).
   const janela = Math.min(visiveis, BLOCOS_INICIAIS);
@@ -554,7 +484,7 @@ function CaixaDia({
       className={`flex min-w-0 flex-col overflow-visible rounded-xl border bg-navy-900/50 ${
         ehHoje
           ? "border-gold/60 shadow-[0_0_0_1px_rgb(224_168_62/0.15)]"
-          : concluido
+          : naSequencia
             ? "border-green/35"
             : "border-line/60"
       } ${passado ? "opacity-80" : ""}`}
@@ -682,33 +612,6 @@ function CaixaDia({
           >
             <Minus className="size-3.5" />
           </button>
-        )}
-        {/* Fechar o dia: conta na sequência 🔥 (o selo do topo da página) */}
-        {concluido ? (
-          <span className="flex items-center gap-1 border-l border-line/30 py-1 pl-3 pr-1 text-[11px] font-bold text-green">
-            <CheckCircle2 className="size-3.5" /> Concluído
-            <button
-              onClick={onDesfazerConclusao}
-              className="cursor-pointer rounded-md p-1.5 text-mut transition-colors hover:bg-navy-700/60 hover:text-dim"
-              aria-label={`Desfazer a conclusão de ${nome}`}
-              title="Desfazer a conclusão do dia"
-            >
-              <Undo2 className="size-3" />
-            </button>
-          </span>
-        ) : (
-          podeConcluir && (
-            <button
-              onClick={onConcluir}
-              disabled={concluindo}
-              className={`flex cursor-pointer items-center gap-1 border-l border-line/30 px-3 py-2 text-[11px] font-semibold transition-colors hover:bg-navy-700/40 disabled:cursor-wait disabled:opacity-60 ${
-                completo ? "bg-gold/10 text-gold" : "text-dim hover:text-gold"
-              }`}
-              title="Concluir o dia (conta na sequência 🔥)"
-            >
-              🏁 Concluir dia
-            </button>
-          )
         )}
       </div>
     </div>

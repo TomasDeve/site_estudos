@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
 import type { PlanoHora } from "@/types/db";
 import { blocosQueDescem, primeiraLivre } from "@/features/metas/planoDias";
+import { KEY_DIAS_COM_BLOCO_FEITO } from "./diasConcluidos";
 
 /**
  * Plano dos próximos dias em blocos de meia hora (6 a 16 por dia). Uma linha por
@@ -23,6 +24,8 @@ function useRecarregar() {
   return () => {
     qc.invalidateQueries({ queryKey: KEY });
     qc.invalidateQueries({ queryKey: ["sessoes"] });
+    // A sequência 🔥 conta os dias com bloco feito.
+    qc.invalidateQueries({ queryKey: KEY_DIAS_COM_BLOCO_FEITO });
   };
 }
 
