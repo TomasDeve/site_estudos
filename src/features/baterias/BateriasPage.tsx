@@ -47,7 +47,7 @@ import {
   valorAcerta,
 } from "@/features/conteudos/questaoModelo";
 import { QuestaoImpressaoCard } from "@/features/impressao/ImpressaoPage";
-import { GradeBateria, ancoraQuestao } from "./GradeBateria";
+import { GradeBateria, ancoraQuestao, type GrupoBateria } from "./GradeBateria";
 import { FolhaImpressao } from "@/features/impressao/FolhaImpressao";
 import { useOpcoesFolha } from "@/features/impressao/opcoes";
 import type { MateriaImpressao } from "@/features/impressao/organizar";
@@ -310,22 +310,19 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
     return out;
   }, [lista, topicoPorId, materiaPorId, bateria, bateriaId]);
 
-  // Placar por matéria, na ordem da prova (num simulado, mostra onde se perdeu ponto).
+  // Matérias na ordem da prova: num simulado, a grade se divide por elas (de que
+  // número a que número vai cada uma e onde se perdeu ponto).
   const porMateria = useMemo(() => {
-    const out: { id: string; nome: string; icone: string; total: number; respondidas: number; acertos: number }[] = [];
+    const out: GrupoBateria[] = [];
     for (const q of lista) {
       const mId = topicoPorId.get(q.topico_id)?.materia_id ?? "";
       let g = out.find((x) => x.id === mId);
       if (!g) {
         const m = materiaPorId.get(mId);
-        g = { id: mId, nome: m?.nome ?? "Questões", icone: m?.icone ?? "📋", total: 0, respondidas: 0, acertos: 0 };
+        g = { id: mId, nome: m?.nome ?? "Questões", icone: m?.icone ?? "📋", ids: [] };
         out.push(g);
       }
-      g.total++;
-      if (estaResolvida(q)) {
-        g.respondidas++;
-        if (questaoAcertou(q)) g.acertos++;
-      }
+      g.ids.push(q.id);
     }
     return out;
   }, [lista, topicoPorId, materiaPorId]);
@@ -458,10 +455,20 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
             <GradeBateria
               lista={lista}
               numeroDe={numeroDe}
+              grupos={porMateria}
               atual={questaoFoco?.id ?? null}
               onSelecionar={(id) => {
                 setFoco(id);
-                window.scrollTo({ top: 0 });
+                // A grade dividida por matéria é alta no celular: se a questão aberta
+                // ficaria lá embaixo, rola até ela; senão volta ao topo (grade + questão).
+                requestAnimationFrame(() => {
+                  const card = id ? document.getElementById(ancoraQuestao(id)) : null;
+                  if (card && card.getBoundingClientRect().top + window.scrollY > window.innerHeight * 0.6) {
+                    card.scrollIntoView({ block: "start" });
+                  } else {
+                    window.scrollTo({ top: 0 });
+                  }
+                });
               }}
             />
           )}
@@ -501,34 +508,6 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
               />
             </div>
           </div>
-
-          {porMateria.length > 1 && placar.respondidas > 0 && (
-            <div className="rounded-xl border border-line/50 bg-navy-900/60 px-3 py-2.5">
-              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-mut">Por matéria</p>
-              <ul className="grid gap-x-5 gap-y-1 sm:grid-cols-2">
-                {porMateria.map((g) => {
-                  const pct = g.respondidas ? Math.round((g.acertos / g.respondidas) * 100) : null;
-                  const c = pct !== null ? corDesempenho(pct) : null;
-                  return (
-                    <li key={g.id} className="flex items-center gap-2 text-xs">
-                      <span className="shrink-0">{g.icone}</span>
-                      <span className="min-w-0 flex-1 truncate text-dim" title={g.nome}>
-                        {g.nome}
-                      </span>
-                      <span className={`shrink-0 font-semibold tabular-nums ${c ? c.texto : "text-mut"}`}>
-                        {g.acertos}/{g.total}
-                      </span>
-                      {g.respondidas < g.total && (
-                        <span className="shrink-0 text-[10px] tabular-nums text-mut">
-                          ({g.respondidas} corr.)
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
 
             </>
           )}
