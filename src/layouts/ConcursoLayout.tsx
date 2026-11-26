@@ -49,6 +49,7 @@ export function useConcursoAtual(): Concurso {
 
 // `curto`: rótulo da aba do celular quando o nome inteiro não cabe na coluna.
 // `soComputador`: fica fora das abas do celular (oito colunas não cabem); lá se chega pela Impressão.
+// `fimNoCelular`: no celular vai para a última aba (no computador fica onde está na lista).
 const NAV: {
   to: string;
   label: string;
@@ -57,6 +58,7 @@ const NAV: {
   end: boolean;
   novaAba?: boolean;
   soComputador?: boolean;
+  fimNoCelular?: boolean;
 }[] = [
   { to: ".", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "conteudos", label: "Conteúdos", icon: BookOpen, end: false },
@@ -69,8 +71,9 @@ const NAV: {
   { to: "/impressao", label: "Impressão", icon: Printer, end: false, novaAba: true },
   // provas separadas para resolver de uma vez e corrigir pelo número, em aba própria
   { to: "/baterias", label: "Baterias", icon: ListChecks, end: false, novaAba: true, soComputador: true },
-  // simulados (a prova inteira), separados das baterias de uma matéria, em aba própria
-  { to: "/simulados", label: "Simulados", icon: Flag, end: false, novaAba: true, soComputador: true },
+  // simulados (a prova inteira), separados das baterias de uma matéria, em aba própria;
+  // no celular é a última aba, no lugar da Info
+  { to: "/simulados", label: "Simulados", icon: Flag, end: false, novaAba: true, fimNoCelular: true },
   // revisão ativa da semana (premissas sobre os erros e dúvidas dos cadernos), em aba própria;
   // no celular fica como ícone no topo
   {
@@ -89,7 +92,8 @@ const NAV: {
   { to: "/aulas", label: "Aulas", icon: MonitorPlay, end: false, novaAba: true, soComputador: true },
   // horários do cubo que aperta o botão (via celular + MacroDroid), em aba própria; no celular fica no topo
   { to: "/fingerbot", label: "Fingerbot", icon: Pointer, end: false, novaAba: true, soComputador: true },
-  { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false },
+  // no celular saiu para dar lugar aos Simulados
+  { to: "informacoes", label: "Informações", curto: "Info", icon: Info, end: false, soComputador: true },
 ];
 
 export function ConcursoLayout() {
@@ -212,7 +216,10 @@ export function ConcursoLayout() {
   // Abas do celular: uma coluna por item, ícone em cima e rótulo curto embaixo.
   const itemMobile =
     "relative flex min-w-0 flex-col items-center justify-center gap-1 whitespace-nowrap pb-2 pt-2 text-[10px] font-semibold leading-none tracking-tight transition-colors";
-  const navMobile = NAV.filter((n) => !n.soComputador);
+  const navMobile = [
+    ...NAV.filter((n) => !n.soComputador && !n.fimNoCelular),
+    ...NAV.filter((n) => !n.soComputador && n.fimNoCelular),
+  ];
   const abasMobile = navMobile.map(({ to, label, curto, icon: Icon, end, novaAba }) => {
     if (novaAba) {
       const contagem = contagemDaAba[to];
