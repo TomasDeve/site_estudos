@@ -310,8 +310,8 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
     return out;
   }, [lista, topicoPorId, materiaPorId, bateria, bateriaId]);
 
-  // Matérias na ordem da prova: num simulado, a grade se divide por elas (de que
-  // número a que número vai cada uma e onde se perdeu ponto).
+  // Matérias na ordem da prova: num simulado, cada uma abre com uma etiqueta na grade
+  // ("Português 60%"), para ver onde vai cada matéria e onde se perdeu ponto.
   const porMateria = useMemo(() => {
     const out: GrupoBateria[] = [];
     for (const q of lista) {
@@ -459,8 +459,8 @@ function BateriaAberta({ bateriaId }: { bateriaId: string }) {
               atual={questaoFoco?.id ?? null}
               onSelecionar={(id) => {
                 setFoco(id);
-                // A grade dividida por matéria é alta no celular: se a questão aberta
-                // ficaria lá embaixo, rola até ela; senão volta ao topo (grade + questão).
+                // Num simulado a grade é alta no celular: se a questão aberta ficaria
+                // lá embaixo, rola até ela; senão volta ao topo (grade + questão).
                 requestAnimationFrame(() => {
                   const card = id ? document.getElementById(ancoraQuestao(id)) : null;
                   if (card && card.getBoundingClientRect().top + window.scrollY > window.innerHeight * 0.6) {
